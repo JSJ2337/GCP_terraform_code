@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:docs.aws.amazon.com)",
+      "WebFetch(domain:grafana.com)",
+      "Bash(ls:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(docker-compose:*)"
+    ],
+    "deny": []
+  }
+}

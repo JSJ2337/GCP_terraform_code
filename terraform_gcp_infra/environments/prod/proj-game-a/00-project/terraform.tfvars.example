@@ -1,0 +1,38 @@
+# Project Configuration Example
+# Copy this file to terraform.tfvars and fill in your actual values
+# IMPORTANT: Do not commit terraform.tfvars to version control
+
+project_id      = "your-project-id"
+project_name    = "Game A Production"
+folder_id       = "folders/123456789012"
+billing_account = "ABCDEF-123456-GHIJKL"
+
+labels = {
+  environment = "prod"
+  project     = "game-a"
+  managed_by  = "terraform"
+  cost_center = "gaming"
+}
+
+# APIs to enable
+apis = [
+  "compute.googleapis.com",
+  "iam.googleapis.com",
+  "servicenetworking.googleapis.com",
+  "logging.googleapis.com",
+  "monitoring.googleapis.com",
+  "cloudkms.googleapis.com",
+  "storage.googleapis.com",
+  "cloudresourcemanager.googleapis.com"
+]
+
+# Budget configuration
+enable_budget   = true
+budget_amount   = 1000
+budget_currency = "USD"
+
+# Log retention
+log_retention_days = 30
+
+# Optional: CMEK key for log encryption
+# cmek_key_id = "projects/YOUR_PROJECT/locations/REGION/keyRings/KEYRING/cryptoKeys/KEY"

@@ -1,0 +1,214 @@
+##############################################################################
+# Mimir 최적화 설정 (16GB 서버, sys-lgtm-s3 버킷)
+##############################################################################
+
+##############################################################################
+# 1) 공통 S3 백엔드 설정
+##############################################################################
+common:
+  storage:
+    backend: s3
+    s3:
+      endpoint: s3.ap-northeast-2.amazonaws.com     # 한국 리전
+      region: ap-northeast-2
+      bucket_name: ${MIMIR_S3_BUCKET}               # sys-lgtm-s3
+
+##############################################################################
+# 2) 테넌트별 제한 설정 (멀티테넌트 최적화)
+##############################################################################
+limits:
+  # 데이터 보존 정책
+  compactor_blocks_retention_period: 1y            # 1년 메트릭 보존
+  
+  # 순서 관련 설정
+  out_of_order_time_window: 10m                    # 10분 늦은 데이터 허용 (증가)
+  out_of_order_blocks_external_label_enabled: false
+  
+  # 수집 제한 (테넌트별)
+  ingestion_rate: 100000                            # 초당 10만 샘플
+  ingestion_burst_size: 500000                      # 버스트 50만 샘플
+  max_global_series_per_user: 2000000              # 테넌트당 200만 시리즈
+  max_global_series_per_metric: 300000             # 메트릭당 30만 시리즈
+  max_global_metadata_per_user: 100000             # 테넌트당 메타데이터 10만
+  max_global_metadata_per_metric: 10000            # 메트릭당 메타데이터 1만
+  
+  # 쿼리 제한
+  max_total_query_length: 12000h                   # 최대 쿼리 범위 (1년 + 여유)
+  max_partial_query_length: 744h                   # 부분 쿼리 범위 (31일)
+  max_query_parallelism: 32                        # 쿼리 병렬 처리 (8코어 * 4)
+  max_samples_per_query: 50000000                  # 쿼리당 샘플 제한 (5천만)
+  max_series_per_query: 100000                     # 쿼리당 시리즈 제한 (10만)
+  max_chunks_per_query: 10000000                   # 쿼리당 청크 제한 (1천만)
+  
+  # 라벨 제한
+  max_label_name_length: 1024
+  max_label_value_length: 4096
+  max_label_names_per_series: 30
+  
+  # Compactor 최적화
+  compactor_partial_block_deletion_delay: 1h       # 부분 블록 삭제 지연
+  compactor_block_upload_enabled: true             # 블록 업로드 활성화
+  compactor_cleanup_interval: 15m                  # 정리 간격
+  compactor_tenant_cleanup_delay: 6h               # 테넌트 정리 지연
+
+##############################################################################
+# 3) 단일 노드 모드 설정
+##############################################################################
+memberlist:
+  node_name: mimir-single-node
+  bind_port: 7946
+  join_members: []                                  # 단일 노드
+  
+##############################################################################
+# 4) 블록 스토리지 최적화 (S3)
+##############################################################################
+blocks_storage:
+  backend: s3
+  storage_prefix: blocks                            # 블록 전용 prefix
+  s3:
+    bucket_name: ${MIMIR_S3_BUCKET}                 # sys-lgtm-s3
+    
+  # TSDB 최적화
+  tsdb:
+    retention_period: 48h                           # 로컬 48시간 보존
+    block_ranges_period: ["2h", "12h", "24h"]      # 블록 범위 정의
+    
+  # 버킷 스토어 최적화
+  bucket_store:
+    sync_interval: 5m                               # 동기화 간격
+    block_sync_concurrency: 20                     # 블록 동기화 동시성
+    index_header_lazy_loading_enabled: true        # 지연 로딩
+    index_header_lazy_loading_idle_timeout: 1h     # 유휴 타임아웃
+    
+    # 청크 풀 최적화
+    chunk_pool_default_size: 2097152               # 2MB 기본 크기
+    chunk_pool_max_bucket_size: 67108864           # 64MB 최대 크기
+    
+    # 동시성 제한
+    max_concurrent_get_range_requests: 32
+    max_concurrent_select_series_requests: 32
+
+##############################################################################
+# 5) 분산 처리 및 샤딩 최적화
+##############################################################################
+distributor:
+  ring:
+    heartbeat_period: 5s
+    heartbeat_timeout: 1m
+    
+  # HA 복제 설정 (단일 노드에서는 비활성화)
+  ha_tracker:
+    enable_ha_tracker: false
+    
+  # 원격 쓰기 최적화
+  remote_timeout: 2s
+  extend_writes: true
+
+##############################################################################
+# 6) Ingester 최적화
+##############################################################################
+ingester:
+  ring:
+    heartbeat_period: 5s
+    heartbeat_timeout: 1m
+    final_sleep: 0s
+    
+  # 청크 관리
+  max_chunk_idle: 5m
+  max_stale_chunk_idle: 2m
+  chunk_block_size: 262144                         # 256KB 청크 블록
+  chunk_target_size: 1572864                       # 1.5MB 타겟 크기
+  max_chunk_age: 12h                               # 최대 청크 나이
+  
+  # TSDB 설정
+  tsdb_isolation_enabled: false                    # 격리 비활성화 (성능)
+  
+  # 스트리밍 청크
+  streaming_chunks_per_ingester_series: 256        # 스트리밍 청크 수
+
+##############################################################################
+# 7) Querier 최적화
+##############################################################################
+querier:
+  # 스토어 게이트웨이 설정
+  store_gateway_client:
+    server_address: dns:///ftt-mimir:9095
+    
+  # 쿼리 최적화
+  query_ingesters_within: 13h                      # Ingester 쿼리 범위
+  query_store_for_labels_enabled: true             # 라벨 스토어 쿼리
+  
+  # 동시성 제한
+  max_concurrent: 16                                # 16개 동시 쿼리
+  timeout: 2m
+  
+  # 결과 캐싱
+  cache_results: true
+
+##############################################################################
+# 8) Query Frontend 고급 설정
+##############################################################################
+query_frontend:
+  # 쿼리 분할
+  split_queries_by_interval: 24h
+  cache_split_queries_by_interval: 1h
+  
+  # 결과 캐싱 TTL
+  results_cache_ttl: 1h
+  results_cache_ttl_for_out_of_order_time_window: 10m
+  
+  # 병렬 처리
+  parallelize_shardable_queries: true
+  
+  # 쿼리 통계
+  query_stats_enabled: true
+
+##############################################################################
+# 9) Compactor 고급 설정
+##############################################################################
+compactor:
+  # 정리 작업
+  cleanup_interval: 15m
+  cleanup_concurrency: 1
+  
+  # 블록 삭제
+  deletion_delay: 12h
+  max_closing_blocks_concurrency: 2
+  max_opening_blocks_concurrency: 4
+  symbols_flushers_concurrency: 4
+  
+  # 분할 및 병합 최적화
+  block_sync_concurrency: 8
+  meta_sync_concurrency: 8
+
+##############################################################################
+# 10) Ruler 스토리지 (알람 룰)
+##############################################################################
+ruler_storage:
+  backend: s3
+  storage_prefix: rules
+  s3:
+    bucket_name: ${MIMIR_S3_BUCKET}
+
+##############################################################################
+# 11) Alertmanager 스토리지 (알람 상태)
+##############################################################################
+alertmanager_storage:
+  backend: s3
+  storage_prefix: alerts
+  s3:
+    bucket_name: ${MIMIR_S3_BUCKET}
+
+##############################################################################
+# 12) 운영 최적화
+##############################################################################
+runtime_config:
+  period: 10s                                       # 런타임 설정 리로드 주기
+  
+activity_tracker:
+  filepath: /var/mimir/activity.log
+  max_entries: 1024
+
+# 사용량 통계
+usage_stats:
+  installation_mode: docker-compose-single

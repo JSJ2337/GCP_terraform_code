@@ -1,0 +1,9 @@
+remote_configuration {
+  enabled = true
+
+  storage {
+    local {
+      directory = "/data/alloy-remote-config"
+    }
+  }
+}

@@ -1,0 +1,510 @@
+// ============================================================
+// Alloy CloudWatch -> Mimir (tenant: aws-rag)
+// Region: ap-southeast-1 (Singapore)
+// Live debugging enabled, loglevel=debug
+// ============================================================
+
+logging {
+  level  = "debug"
+  format = "logfmt"
+}
+
+livedebugging {
+  enabled = true
+}
+
+// ------------------------------------------------------------
+// 1) RDS metrics
+// ------------------------------------------------------------
+// --- RDS Instance Metrics ---
+prometheus.exporter.cloudwatch "rds_instance" {
+  sts_region = "ap-southeast-1"
+  
+  discovery {
+    type    = "AWS/RDS"
+    regions = ["ap-southeast-1"]
+    dimension_name_requirements = ["DBInstanceIdentifier"]
+    
+    role {
+      role_arn = "arn:aws:iam::976193250298:role/ftt-lgtm-assumerole-rag"
+    }
+    
+    // tags_to_labels 제거됨! ❌
+    
+    metric {
+      name       = "CPUUtilization"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "3m"
+    }
+    
+    metric {
+      name       = "DatabaseConnections"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "3m"
+    }
+    
+    metric {
+      name       = "FreeableMemory"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "3m"
+    }
+    
+    metric {
+      name       = "FreeStorageSpace"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "3m"
+    }
+    
+    metric {
+      name       = "ReadIOPS"
+      statistics = ["Average", "Sum"]
+      period     = "60s"
+      length     = "3m"
+    }
+    
+    metric {
+      name       = "WriteIOPS"
+      statistics = ["Average", "Sum"]
+      period     = "60s"
+      length     = "3m"
+    }
+    
+    metric {
+      name       = "ReadLatency"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "3m"
+    }
+    
+    metric {
+      name       = "WriteLatency"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "3m"
+    }
+    
+    metric {
+      name       = "ReadThroughput"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "3m"
+    }
+    
+    metric {
+      name       = "WriteThroughput"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "3m"
+    }
+    
+    metric {
+      name       = "DiskQueueDepth"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "3m"
+    }
+    
+    metric {
+      name       = "NetworkReceiveThroughput"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "3m"
+    }
+    
+    metric {
+      name       = "NetworkTransmitThroughput"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "3m"
+    }
+    
+    metric {
+      name       = "ReplicaLag"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "3m"
+    }
+    
+    metric {
+      name       = "BurstBalance"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "3m"
+    }
+    
+    metric {
+      name       = "SwapUsage"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "3m"
+    }
+  }
+}
+
+// --- RDS Cluster Metrics ---
+prometheus.exporter.cloudwatch "rds_cluster" {
+  sts_region = "ap-southeast-1"
+  
+  discovery {
+    type    = "AWS/RDS"
+    regions = ["ap-southeast-1"]
+    dimension_name_requirements = ["DBClusterIdentifier"]
+    
+    role {
+      role_arn = "arn:aws:iam::976193250298:role/ftt-lgtm-assumerole-rag"
+    }
+    
+    // tags_to_labels 제거됨! ❌
+    
+    metric {
+      name       = "VolumeBytesUsed"
+      statistics = ["Average"]
+      period     = "5m"
+      length     = "15m"
+    }
+    
+    metric {
+      name       = "VolumeReadIOPs"
+      statistics = ["Average", "Sum"]
+      period     = "5m"
+      length     = "15m"
+    }
+    
+    metric {
+      name       = "VolumeWriteIOPs"
+      statistics = ["Average", "Sum"]
+      period     = "5m"
+      length     = "15m"
+    }
+  }
+}
+
+// --- RDS Cluster by Role (Aurora Writer/Reader) ---
+prometheus.exporter.cloudwatch "rds_cluster_by_role" {
+  sts_region = "ap-southeast-1"
+  
+  discovery {
+    type    = "AWS/RDS"
+    regions = ["ap-southeast-1"]
+    dimension_name_requirements = ["DBClusterIdentifier", "Role"]
+    
+    role {
+      role_arn = "arn:aws:iam::976193250298:role/ftt-lgtm-assumerole-rag"
+    }
+    
+    // tags_to_labels 제거됨! ❌
+    
+    metric {
+      name       = "DatabaseConnections"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "3m"
+    }
+    
+    metric {
+      name       = "CPUUtilization"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "3m"
+    }
+    
+    metric {
+      name       = "CommitLatency"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "3m"
+    }
+    
+    metric {
+      name       = "CommitThroughput"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "3m"
+    }
+    
+    metric {
+      name       = "SelectLatency"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "3m"
+    }
+    
+    metric {
+      name       = "SelectThroughput"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "3m"
+    }
+  }
+}
+
+
+// ------------------------------------------------------------
+// 2) ALB metrics
+// ------------------------------------------------------------
+prometheus.exporter.cloudwatch "alb_metrics" {
+  sts_region = "ap-southeast-1"
+
+  discovery {
+    type    = "AWS/ApplicationELB"
+    regions = ["ap-southeast-1"]
+
+    role {
+      role_arn    = "arn:aws:iam::976193250298:role/ftt-lgtm-assumerole-rag"
+    }
+
+    metric {
+      name       = "HTTPCode_Target_2XX_Count"
+      statistics = ["Sum"]
+      period     = "60s"
+    }
+    metric {
+      name       = "HTTPCode_Target_3XX_Count"
+      statistics = ["Sum"]
+      period     = "60s"
+    }
+    metric {
+      name       = "HTTPCode_Target_4XX_Count"
+      statistics = ["Sum"]
+      period     = "60s"
+    }
+    metric {
+      name       = "HTTPCode_Target_5XX_Count"
+      statistics = ["Sum"]
+      period     = "60s"
+    }
+
+    metric {
+      name       = "RequestCount"
+      statistics = ["Sum"]
+      period     = "60s"
+    }
+    metric {
+      name       = "TargetResponseTime"
+      statistics = ["Average", "p95", "p99"]
+      period     = "60s"
+    }
+    metric {
+      name       = "TargetConnectionErrorCount"
+      statistics = ["Sum"]
+      period     = "60s"
+    }
+
+    metric {
+      name       = "HealthyHostCount"
+      statistics = ["Average"]
+      period     = "60s"
+    }
+    metric {
+      name       = "UnHealthyHostCount"
+      statistics = ["Average"]
+      period     = "60s"
+    }
+  }
+}
+
+// ------------------------------------------------------------
+// 3) NLB metrics
+// ------------------------------------------------------------
+prometheus.exporter.cloudwatch "nlb_metrics" {
+  sts_region = "ap-southeast-1"
+
+  discovery {
+    type    = "AWS/NetworkELB"
+    regions = ["ap-southeast-1"]
+    
+    role {
+      role_arn    = "arn:aws:iam::976193250298:role/ftt-lgtm-assumerole-rag"
+    }
+
+    metric {
+      name       = "ActiveFlowCount"
+      statistics = ["Average"]
+      period     = "60s"
+    }
+    metric {
+      name       = "NewFlowCount"
+      statistics = ["Sum"]
+      period     = "60s"
+    }
+    metric {
+      name       = "ProcessedBytes"
+      statistics = ["Sum"]
+      period     = "60s"
+    }
+    metric {
+      name       = "ConsumedLCUs"
+      statistics = ["Average"]
+      period     = "60s"
+    }
+    metric {
+      name       = "TCP_Target_Reset_Count"
+      statistics = ["Sum"]
+      period     = "60s"
+    }
+    metric {
+      name       = "Client_Reset_Count"
+      statistics = ["Sum"]
+      period     = "60s"
+    }
+    metric {
+      name       = "TLSNegotiationErrorCount"
+      statistics = ["Sum"]
+      period     = "60s"
+    }
+    metric {
+      name       = "HealthyHostCount"
+      statistics = ["Average"]
+      period     = "60s"
+    }
+    metric {
+      name       = "UnHealthyHostCount"
+      statistics = ["Average"]
+      period     = "60s"
+    }
+  }
+}
+
+// ------------------------------------------------------------
+// 4) ElastiCache metrics
+// ------------------------------------------------------------
+prometheus.exporter.cloudwatch "elasticache_metrics" {
+  sts_region = "ap-southeast-1"
+
+  discovery {
+    type    = "AWS/ElastiCache"
+    regions = ["ap-southeast-1"]
+
+    dimension_name_requirements = ["CacheClusterId", "CacheNodeId"]
+
+    role {
+      role_arn = "arn:aws:iam::976193250298:role/ftt-lgtm-assumerole-rag"
+    }
+
+    // CPU
+    metric {
+      name       = "CPUUtilization"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "10m"
+    }
+    metric {
+      name       = "EngineCPUUtilization"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "10m"
+    }
+
+    // 연결/네트워크
+    metric {
+      name       = "CurrConnections"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "10m"
+    }
+    metric {
+      name       = "NewConnections"
+      statistics = ["Sum"]
+      period     = "60s"
+      length     = "10m"
+    }
+    metric {
+      name       = "NetworkBytesIn"
+      statistics = ["Sum"]
+      period     = "60s"
+      length     = "10m"
+    }
+    metric {
+      name       = "NetworkBytesOut"
+      statistics = ["Sum"]
+      period     = "60s"
+      length     = "10m"
+    }
+
+    // 메모리/용량
+    metric {
+      name       = "FreeableMemory"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "10m"
+    }
+    metric {
+      name       = "BytesUsedForCache"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "10m"
+    }
+    metric {
+      name       = "DatabaseMemoryUsagePercentage"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "10m"
+    }
+
+    // 캐시 효율/드랍
+    metric {
+      name       = "CacheHitRate"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "10m"
+    }
+    metric {
+      name       = "Evictions"
+      statistics = ["Sum"]
+      period     = "60s"
+      length     = "10m"
+    }
+    metric {
+      name       = "Reclaimed"
+      statistics = ["Sum"]
+      period     = "60s"
+      length     = "10m"
+    }
+
+    // 복제 상태
+    metric {
+      name       = "ReplicationLag"
+      statistics = ["Average"]
+      period     = "60s"
+      length     = "10m"
+    }
+    metric {
+      name       = "ReplicationBytes"
+      statistics = ["Sum"]
+      period     = "60s"
+      length     = "10m"
+    }
+  }
+}
+
+// ------------------------------------------------------------
+// 5) Remote write to Mimir
+// ------------------------------------------------------------
+prometheus.remote_write "mimir" {
+  endpoint {
+    url = "http://10.23.50.147:9009/api/v1/push"
+    headers = {
+      "X-Scope-OrgID" = "aws-rag-cloudwatch",
+    }
+  }
+}
+
+// ------------------------------------------------------------
+// 6) Scrape all CloudWatch exporter targets
+// ------------------------------------------------------------
+prometheus.scrape "cloudwatch_all" {
+  targets = array.concat(
+    prometheus.exporter.cloudwatch.rds_instance.targets,
+    prometheus.exporter.cloudwatch.rds_cluster.targets,
+    prometheus.exporter.cloudwatch.rds_cluster_by_role.targets,
+    prometheus.exporter.cloudwatch.alb_metrics.targets,
+    prometheus.exporter.cloudwatch.nlb_metrics.targets,
+    prometheus.exporter.cloudwatch.elasticache_metrics.targets,
+  )
+  scrape_interval = "60s"
+  forward_to      = [prometheus.remote_write.mimir.receiver]
+}

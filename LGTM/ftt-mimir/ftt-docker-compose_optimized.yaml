@@ -1,0 +1,220 @@
+services:
+  # ─────────────────────────────────────────────────────────
+  # 1) Memcached 캐시 서버 (16GB 서버 최적화)
+  # ─────────────────────────────────────────────────────────
+  ftt-mimir-memcache:
+    image: memcached:1.6.28-alpine  # 안정적인 LTS 버전
+    container_name: ftt-mimir-memcache
+    
+    # 16GB 서버에 최적화된 메모리 할당 (4GB)
+    command: ["-m", "4096", "-p", "11211", "-c", "1024", "-vv"]
+    
+    ports:
+      - "11212:11211"  # Loki와 포트 충돌 방지
+    
+    restart: unless-stopped
+    networks:
+      - mimir-net
+    
+    # 헬스체크
+    healthcheck:
+      test: ["CMD-SHELL", "echo stats | nc localhost 11211 | grep -q uptime"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    
+    # 리소스 제한 (16GB 서버 고려)
+    deploy:
+      resources:
+        limits:
+          memory: 4.5GB    # 4GB + overhead
+          cpus: '1.5'      # 1.5코어 할당
+        reservations:
+          memory: 4GB
+          cpus: '1.0'
+    
+    # 로깅 설정
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # 운영 레이블
+    labels:
+      - "app=memcached"
+      - "component=mimir-cache"
+      - "environment=production"
+
+  # ─────────────────────────────────────────────────────────
+  # 2) Mimir Monolithic (최적화된 설정)
+  # ─────────────────────────────────────────────────────────
+  ftt-mimir:
+    image: grafana/mimir:2.16.0  # 안정적인 고정 버전
+    container_name: ftt-mimir
+    restart: unless-stopped
+    
+    # 파일 디스크립터 제한 (운영 환경 필수)
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 1048576
+    
+    # 헬스체크 강화
+    healthcheck:
+      test: ["CMD-SHELL","curl -f http://localhost:8080/-/ready || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s  # 시작 시간 여유
+
+    command:
+      # ──────[공통 / 모드]─────────────────────────────────────────
+      - "-target=all"
+      - "-config.file=/etc/mimir/mimir-config.yaml"
+      - "-config.expand-env=true"
+      - "-log.level=info"
+      - "-log.format=json"  # 구조화된 로그
+
+      # ──────[서버 최적화]─────────────────────────────────────
+      - "-server.http-listen-port=8080"
+      - "-server.grpc-listen-port=9095"
+      - "-server.http-conn-limit=1000"           # HTTP 연결 제한
+      - "-server.grpc-conn-limit=1000"           # gRPC 연결 제한
+      - "-server.graceful-shutdown-timeout=30s"  # 그레이스풀 셧다운
+
+      # ──────[TSDB (Ingester Head & Blocks)]─────────────────────
+      - "-blocks-storage.tsdb.dir=/var/mimir/tsdb"
+      - "-blocks-storage.tsdb.retention-period=48h"
+      - "-blocks-storage.tsdb.wal-compression-enabled=true"
+      - "-blocks-storage.tsdb.flush-blocks-on-shutdown=true"
+
+      # ──────[Ingester 최적화]─────────────────────────────────
+      - "-ingester.ring.replication-factor=1"
+      - "-ingester.ring.heartbeat-period=15s"
+      - "-ingester.ring.heartbeat-timeout=1m"
+      - "-ingester.max-concurrent-flushes=16"        # 16GB 메모리에 맞춘 플러시
+      - "-ingester.active-series-metrics-enabled=true"
+      - "-ingester.active-series-metrics-update-period=30s"
+
+      # ──────[Compactor 최적화]───────────────────────────────
+      - "-compactor.data-dir=/var/mimir/compactor"
+      - "-compactor.compaction-interval=2h"
+      - "-compactor.compaction-concurrency=3"                   # 3개 동시 압축
+      - "-compactor.max-opening-blocks-concurrency=4"           # 블록 열기 동시성
+      - "-compactor.max-closing-blocks-concurrency=2"           # 블록 닫기 동시성
+      - "-compactor.symbols-flushers-concurrency=4"             # 심볼 플러셔 동시성
+
+      # ──────[Store-Gateway 캐싱 최적화]─────────────────────
+      - "-store-gateway.sharding-ring.replication-factor=1"
+      - "-blocks-storage.bucket-store.sync-interval=2m"
+      - "-blocks-storage.bucket-store.ignore-blocks-within=3h"
+      - "-blocks-storage.bucket-store.ignore-deletion-marks-delay=2h"
+      
+      # 인덱스 캐시 (고성능)
+      - "-blocks-storage.bucket-store.index-cache.backend=memcached"
+      - "-blocks-storage.bucket-store.index-cache.memcached.addresses=ftt-mimir-memcache:11211"
+      - "-blocks-storage.bucket-store.index-cache.memcached.timeout=1s"
+      - "-blocks-storage.bucket-store.index-cache.memcached.max-item-size=5MB"
+      - "-blocks-storage.bucket-store.index-cache.memcached.max-async-concurrency=50"
+      
+      # 청크 캐시 (고성능)
+      - "-blocks-storage.bucket-store.chunks-cache.backend=memcached"
+      - "-blocks-storage.bucket-store.chunks-cache.memcached.addresses=ftt-mimir-memcache:11211"
+      - "-blocks-storage.bucket-store.chunks-cache.memcached.timeout=1s" 
+      - "-blocks-storage.bucket-store.chunks-cache.memcached.max-item-size=1MB"
+      - "-blocks-storage.bucket-store.chunks-cache.memcached.max-async-concurrency=50"
+      
+      # 메타데이터 캐시
+      - "-blocks-storage.bucket-store.metadata-cache.backend=memcached"
+      - "-blocks-storage.bucket-store.metadata-cache.memcached.addresses=ftt-mimir-memcache:11211"
+      - "-blocks-storage.bucket-store.metadata-cache.memcached.timeout=1s"
+      - "-blocks-storage.bucket-store.metadata-cache.memcached.max-async-concurrency=20"
+
+      # ──────[Querier 성능 최적화 - 8코어 활용]──────────────
+      - "-querier.max-outstanding-requests-per-tenant=2048"     # 테넌트당 요청 증가
+      - "-querier.max-concurrent=256"                           # 8코어 * 32 = 256
+      - "-querier.timeout=5m"                                   # 타임아웃 5분
+      - "-querier.max-samples=50000000"                         # 샘플 제한 증가
+      - "-querier.default-evaluation-interval=1m"               # 기본 평가 간격
+      - "-querier.lookback-delta=5m"                            # 룩백 델타
+
+      # ──────[Query-Frontend 캐싱 & 분할]───────────────────
+      - "-query-frontend.cache-results=true"
+      - "-query-frontend.results-cache.backend=memcached"
+      - "-query-frontend.results-cache.memcached.addresses=ftt-mimir-memcache:11211"
+      - "-query-frontend.results-cache.memcached.timeout=1s"
+      - "-query-frontend.results-cache.compression=snappy"
+      - "-query-frontend.results-cache.ttl=1h"                  # 캐시 TTL 1시간
+      
+      # 쿼리 분할 최적화
+      - "-query-frontend.query-sharding-target-series-per-shard=25000"  # 샤드당 시리즈 감소
+      - "-query-frontend.split-queries-by-interval=24h"                 # 24시간 단위 분할
+      - "-query-frontend.cache-split-queries-by-interval=1h"            # 캐시 분할 1시간
+      - "-query-frontend.log-queries-longer-than=10s"
+      - "-query-frontend.max-outstanding-requests-per-tenant=512"
+      
+      # ──────[Distributor 최적화]────────────────────────────
+      - "-distributor.ingestion-rate-limit=50000"               # 초당 50K 샘플
+      - "-distributor.ingestion-burst-size=200000"              # 버스트 20만 샘플
+      - "-distributor.remote-timeout=5s"                        # 원격 타임아웃
+      - "-distributor.shard-by-all-labels=true"                 # 모든 라벨로 샤딩
+
+      # ──────[한계치 및 보안]─────────────────────────────────
+      - "-server.http-idle-timeout=120s"
+      - "-server.http-read-timeout=30s" 
+      - "-server.http-write-timeout=30s"
+
+    ports:
+      - "9009:8080"        # HTTP API
+      - "9095:9095"        # gRPC API
+      
+    volumes:
+      - ./config/mimir-config.yaml:/etc/mimir/mimir-config.yaml:ro
+      - ./data/compactor:/var/mimir/compactor
+      - ./data/tsdb:/var/mimir/tsdb
+      
+    environment:
+      # AWS 환경변수 (S3 접근용)
+      AWS_REGION: ap-northeast-2
+      MIMIR_S3_BUCKET: sys-lgtm-s3
+      
+    depends_on:
+      ftt-mimir-memcache:
+        condition: service_healthy
+        
+    networks:
+      - mimir-net
+    
+    # 리소스 제한 (16GB 서버 최적화)
+    deploy:
+      resources:
+        limits:
+          memory: 10GB     # 10GB 메모리 할당
+          cpus: '6.0'      # 6코어 할당 (Memcached 1.5 + 여유)
+        reservations:
+          memory: 8GB
+          cpus: '4.0'
+    
+    # 로깅 설정
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+    
+    # 그레이스풀 종료
+    stop_signal: SIGTERM
+    stop_grace_period: 30s
+    
+    # 운영 레이블
+    labels:
+      - "app=mimir"
+      - "component=metrics-storage"
+      - "environment=production"
+      - "version=2.16.0"
+
+networks:
+  mimir-net:
+    external: true

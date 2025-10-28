@@ -1,0 +1,209 @@
+# GCS Root Module Configuration Example
+
+project_id = "my-project-id"
+
+# Default settings applied to all buckets
+default_labels = {
+  environment = "prod"
+  team        = "platform"
+  managed-by  = "terraform"
+}
+
+default_public_access_prevention = "enforced"
+# default_kms_key_name = "projects/my-project/locations/us-central1/keyRings/main/cryptoKeys/storage"
+
+# Bucket configurations
+buckets = {
+  # Assets bucket for static content
+  "assets" = {
+    name          = "my-app-assets-prod"
+    location      = "US-CENTRAL1"
+    storage_class = "STANDARD"
+
+    labels = {
+      type = "assets"
+    }
+
+    enable_versioning = true
+
+    lifecycle_rules = [
+      {
+        condition = {
+          age = 365  # 1 year
+        }
+        action = {
+          type          = "SetStorageClass"
+          storage_class = "NEARLINE"
+        }
+      },
+      {
+        condition = {
+          age = 1095  # 3 years
+        }
+        action = {
+          type          = "SetStorageClass"
+          storage_class = "COLDLINE"
+        }
+      }
+    ]
+
+    cors_rules = [
+      {
+        origin = ["https://myapp.com", "https://cdn.myapp.com"]
+        method = ["GET", "HEAD"]
+        response_header = ["Content-Type", "Cache-Control"]
+        max_age_seconds = 3600
+      }
+    ]
+
+    iam_bindings = [
+      {
+        role    = "roles/storage.objectViewer"
+        members = [
+          "serviceAccount:app-service@my-project-id.iam.gserviceaccount.com",
+          "allUsers"  # Public read access for CDN
+        ]
+      }
+    ]
+  }
+
+  # Logs bucket for application logs
+  "logs" = {
+    name          = "my-app-logs-prod"
+    location      = "US-CENTRAL1"
+    storage_class = "COLDLINE"
+
+    labels = {
+      type = "logs"
+    }
+
+    lifecycle_rules = [
+      {
+        condition = {
+          age = 90  # 3 months
+        }
+        action = {
+          type = "Delete"
+        }
+      }
+    ]
+
+    retention_policy_days   = 2555  # 7 years for compliance
+    retention_policy_locked = true
+
+    iam_bindings = [
+      {
+        role    = "roles/storage.objectCreator"
+        members = [
+          "serviceAccount:app-service@my-project-id.iam.gserviceaccount.com"
+        ]
+      },
+      {
+        role    = "roles/storage.objectViewer"
+        members = [
+          "group:ops-team@company.com"
+        ]
+      }
+    ]
+  }
+
+  # Backups bucket for database backups
+  "backups" = {
+    name          = "my-app-backups-prod"
+    location      = "US"  # Multi-region for durability
+    storage_class = "ARCHIVE"
+
+    labels = {
+      type = "backups"
+    }
+
+    enable_versioning = true
+
+    lifecycle_rules = [
+      {
+        condition = {
+          num_newer_versions = 5  # Keep only 5 versions
+        }
+        action = {
+          type = "Delete"
+        }
+      }
+    ]
+
+    retention_policy_days   = 3650  # 10 years
+    retention_policy_locked = true
+
+    iam_bindings = [
+      {
+        role    = "roles/storage.objectCreator"
+        members = [
+          "serviceAccount:backup-service@my-project-id.iam.gserviceaccount.com"
+        ]
+      },
+      {
+        role    = "roles/storage.objectViewer"
+        members = [
+          "group:ops-team@company.com"
+        ]
+      }
+    ]
+  }
+
+  # Data lake bucket for analytics
+  "data-lake" = {
+    name          = "my-app-data-lake-prod"
+    location      = "US-CENTRAL1"
+    storage_class = "STANDARD"
+
+    labels = {
+      type = "data-lake"
+    }
+
+    lifecycle_rules = [
+      {
+        condition = {
+          age = 30
+        }
+        action = {
+          type          = "SetStorageClass"
+          storage_class = "NEARLINE"
+        }
+      },
+      {
+        condition = {
+          age = 90
+        }
+        action = {
+          type          = "SetStorageClass"
+          storage_class = "COLDLINE"
+        }
+      },
+      {
+        condition = {
+          age = 365
+        }
+        action = {
+          type          = "SetStorageClass"
+          storage_class = "ARCHIVE"
+        }
+      }
+    ]
+
+    iam_bindings = [
+      {
+        role    = "roles/storage.objectAdmin"
+        members = [
+          "serviceAccount:analytics-service@my-project-id.iam.gserviceaccount.com"
+        ]
+      }
+    ]
+
+    notifications = [
+      {
+        topic          = "projects/my-project-id/topics/data-processing"
+        payload_format = "JSON_API_V1"
+        event_types    = ["OBJECT_FINALIZE"]
+      }
+    ]
+  }
+}

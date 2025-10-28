@@ -1,0 +1,69 @@
+########################
+# Global / Server
+########################
+auth_enabled: true            # 멀티테넌트 활성
+
+server:
+  http_listen_port: 3100      # HTTP API 포트
+  # TLS 설정 제거 (HTTP/gRPC 모두 비암호화)
+
+########################
+# Common (ring & dirs)
+########################
+common:
+  path_prefix: /loki
+  replication_factor: 1       # HA 미적용 환경에서는 1 유지
+  ring:
+    kvstore:
+      store: inmemory         # 단일 인스턴스 모드
+
+########################
+# Schema (TSDB + S3)
+########################
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: tsdb
+      object_store: s3
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+########################
+# Storage (Thanos client)
+########################
+storage_config:
+  use_thanos_objstore: true
+  object_store:
+    s3:
+      endpoint: s3.ap-southeast-1.amazonaws.com
+      bucket_name: ${LOKI_S3_BUCKET}
+      region:      ${AWS_REGION}
+      bucket_lookup_type: path
+    storage_prefix: loki
+  tsdb_shipper:
+    active_index_directory: /loki/index
+    cache_location: /loki/index_cache
+    cache_ttl: 24h
+
+########################
+# Compactor & Limits
+########################
+compactor:
+  working_directory: /loki/compactor
+  compaction_interval: 5m
+  delete_request_store: s3
+
+limits_config:
+  ingestion_rate_mb: 8
+  max_global_streams_per_user: 60000
+  reject_old_samples: false           # 오래된 샘플 거부 여부
+  reject_old_samples_max_age: 720h    # 최대 허용 샘플 연령 (30일)
+
+########################
+# Querier
+########################
+querier:
+  multi_tenant_queries_enabled: true  # 멀티 테넌트 쿼리 활성화
+

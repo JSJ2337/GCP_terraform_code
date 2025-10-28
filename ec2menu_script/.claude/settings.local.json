@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker-compose logs:*)",
+      "Read(//c/Users/sjjeong/.aws/**)",
+      "Bash(docker-compose exec:*)",
+      "Bash(docker-compose restart:*)",
+      "Bash(docker-compose:*)",
+      "Bash(docker system prune:*)",
+      "WebSearch",
+      "WebFetch(domain:stackoverflow.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(grep:*)",
+      "Bash(cat:*)",
+      "Bash(docker exec:*)",
+      "Bash(powershell:*)",
+      "Bash(curl:*)",
+      "Bash(python:*)",
+      "Bash(reg query:*)",
+      "Bash(dir)",
+      "Bash(reg add:*)",
+      "Bash(regedit:*)",
+      "Bash(docker cp:*)",
+      "Bash(timeout 10 docker-compose logs guacamole --follow)",
+      "Bash(timeout 30 docker-compose logs backend --follow)",
+      "Bash(timeout 10 docker-compose logs backend --follow --since=1m)",
+      "Bash(timeout 5 docker-compose logs backend --tail=20)",
+      "Bash(timeout 5 docker-compose logs backend --tail=30)",
+      "Bash(telnet:*)",
+      "Bash(timeout 10 docker-compose logs backend --tail=10)",
+      "Bash(timeout 3 docker-compose logs backend --since=30s)",
+      "Bash(timeout 30 docker-compose logs backend --follow --since=5s)",
+      "Bash(timeout 30 docker-compose logs backend --follow --since=10s)",
+      "Bash(timeout 5 docker-compose logs backend --since=2m)",
+      "Bash(timeout 5 docker-compose logs guacamole --since=2m)",
+      "Bash(timeout 30 docker-compose logs --follow guacamole guacd backend)",
+      "Bash(timeout 10 docker-compose logs guacd --follow --since=10s)",
+      "Bash(timeout 30 docker-compose logs guacd --follow --since=10s)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

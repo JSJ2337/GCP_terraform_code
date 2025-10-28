@@ -1,0 +1,30 @@
+version: "3.8"
+
+networks:
+  mimir-net:
+    external: true
+
+services:
+  ftt-alloy:
+    image: grafana/alloy:1.9.1  # 버전 고정 추천
+    container_name: ftt-alloy
+    command:
+      - run
+      - --stability.level=experimental
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy
+      - /etc/alloy/config.d        # config.d 디렉터리 로드
+#    environment:
+#      - AWS_REGION=ap-southeast-1   # S3/CW 리전
+    ports:
+      - "12345:12345"
+    volumes:
+      - ./config.d:/etc/alloy/config.d:ro   # 멀티 config 지원 디렉터리
+      - ./alloy-data:/var/lib/alloy
+      - ./remote-config:/data/alloy-remote-config   # remote config 저장소 볼륨 추가
+    restart: unless-stopped
+    networks:
+      - mimir-net
+
+volumes:
+  alloy-data:

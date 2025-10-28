@@ -1,0 +1,10 @@
+# Terraform artifacts (do NOT commit)
+**/.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+override.tf
+*_override.tf
+.terraform.tfstate.lock.info
+

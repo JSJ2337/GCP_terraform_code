@@ -1,0 +1,76 @@
+########################
+# Global / Server
+########################
+auth_enabled: true            # 멀티테넌트 활성
+
+server:
+  http_listen_port: 3100      # HTTP API 포트
+
+########################
+# Common (ring & dirs)
+########################
+common:
+  path_prefix: /ftt-loki
+  replication_factor: 1       # HA 미적용 환경에서는 1 유지
+  ring:
+    kvstore:
+      store: inmemory         # 단일 인스턴스 모드
+
+########################
+# Schema (TSDB + S3)
+########################
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: tsdb
+      object_store: s3
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+########################
+# Storage (Thanos client)
+########################
+storage_config:
+  use_thanos_objstore: true
+  object_store:
+    s3:
+      endpoint: s3.ap-northeast-2.amazonaws.com
+      bucket_name: ${LOKI_S3_BUCKET}
+      region: ${AWS_REGION}
+      bucket_lookup_type: path
+    storage_prefix: ftt-loki
+  tsdb_shipper:
+    active_index_directory: /ftt-loki/index
+    cache_location: /ftt-loki/index_cache
+    cache_ttl: 24h
+
+########################
+# Compactor & Limits
+########################
+compactor:
+  working_directory: /ftt-loki/compactor
+  compaction_interval: 5m
+  retention_enabled: true
+  retention_delete_delay: 2h
+  delete_request_store: s3
+
+########################
+# Table Manager (보존 정책)
+########################
+table_manager:
+  retention_deletes_enabled: true
+  retention_period: 8760h     # 1년(365일) 보존
+
+limits_config:
+  ingestion_rate_mb: 25
+  max_global_streams_per_user: 20000
+  reject_old_samples: true
+  reject_old_samples_max_age: 8760h    # 1년
+
+########################
+# Querier
+########################
+querier:
+  multi_tenant_queries_enabled: true  # 멀티 테넌트 쿼리 활성화

@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(terraform fmt:*)",
+      "Bash(terraform init:*)",
+      "Read(//mnt/**)",
+      "Bash(readlink:*)",
+      "Bash(for module in /mnt/d/jsj_wsl_data/terraform_gcp_infra/modules/*)",
+      "Bash(do echo \"=== Validating $module ===\")",
+      "Bash(terraform validate:*)",
+      "Bash(done)",
+      "Bash(curl:*)",
+      "Bash(bash)",
+      "Bash(tfsec:*)",
+      "Bash(cat:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
