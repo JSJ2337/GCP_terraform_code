@@ -1,5 +1,5 @@
 # Network Configuration
-project_id   = "proj-game-a-prod"
+project_id   = "gcp-terraform-imsi"
 vpc_name     = "game-a-vpc"
 routing_mode = "GLOBAL"
 

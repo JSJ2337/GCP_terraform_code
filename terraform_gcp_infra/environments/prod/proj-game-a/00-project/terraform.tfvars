@@ -1,8 +1,8 @@
 # Project Configuration
-project_id      = "proj-game-a-prod"
-project_name    = "Game A Production"
-folder_id       = "folders/123456789012" # Replace with actual folder ID
-billing_account = "012345-678901-234567" # Replace with actual billing account
+project_id      = "gcp-terraform-imsi"
+project_name    = "gcp-terraform-imsi"
+folder_id       = null # No folder (standalone project)
+billing_account = "01076D-327AD5-FC8922"
 
 # Labels
 labels = {

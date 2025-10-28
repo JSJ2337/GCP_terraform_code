@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(docker-compose:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(gcloud --version:*)",
+      "Bash(terraform:*)",
+      "Bash(find:*)",
+      "Bash(cat:*)",
+      "Bash(gcloud compute instances list:*)",
+      "Bash(gsutil ls:*)"
     ],
     "deny": [],
     "ask": []

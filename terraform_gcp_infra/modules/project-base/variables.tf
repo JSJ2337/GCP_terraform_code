@@ -8,7 +8,8 @@ variable "project_name" {
 }
 
 variable "folder_id" {
-  type = string
+  type    = string
+  default = null
 }
 
 variable "billing_account" {

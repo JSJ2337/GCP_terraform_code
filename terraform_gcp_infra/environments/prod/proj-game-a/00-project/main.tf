@@ -13,6 +13,16 @@ terraform {
   }
 }
 
+provider "google" {
+  project = var.project_id
+  region  = "us-central1"
+}
+
+provider "google-beta" {
+  project = var.project_id
+  region  = "us-central1"
+}
+
 # Common locals - shared across all layers
 locals {
   common_labels = {
@@ -25,7 +35,7 @@ locals {
 }
 
 module "project_base" {
-  source = "../../../modules/project-base"
+  source = "../../../../modules/project-base"
 
   project_id      = var.project_id
   project_name    = var.project_name

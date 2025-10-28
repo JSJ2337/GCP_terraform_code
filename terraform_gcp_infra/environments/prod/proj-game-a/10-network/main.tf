@@ -9,6 +9,11 @@ terraform {
   }
 }
 
+provider "google" {
+  project = var.project_id
+  region  = "us-central1"
+}
+
 # Common naming conventions
 locals {
   environment    = "prod"
@@ -20,7 +25,7 @@ locals {
 }
 
 module "net" {
-  source = "../../../modules/network-dedicated-vpc"
+  source = "../../../../modules/network-dedicated-vpc"
 
   project_id   = var.project_id
   vpc_name     = var.vpc_name != "" ? var.vpc_name : local.default_vpc_name

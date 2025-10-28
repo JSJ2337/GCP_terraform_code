@@ -20,7 +20,7 @@ resource "google_storage_bucket" "bucket" {
   labels = var.labels
 
   dynamic "versioning" {
-    for_each = var.enable_versioning ? [1] : []
+    for_each = var.enable_versioning != null && var.enable_versioning ? [1] : []
     content {
       enabled = true
     }
@@ -45,7 +45,7 @@ resource "google_storage_bucket" "bucket" {
   }
 
   dynamic "retention_policy" {
-    for_each = var.retention_policy_days > 0 ? [1] : []
+    for_each = var.retention_policy_days != null && var.retention_policy_days > 0 ? [1] : []
     content {
       retention_period = var.retention_policy_days * 24 * 60 * 60 # Convert days to seconds
       is_locked        = var.retention_policy_locked
@@ -53,14 +53,14 @@ resource "google_storage_bucket" "bucket" {
   }
 
   dynamic "encryption" {
-    for_each = var.kms_key_name != "" ? [1] : []
+    for_each = var.kms_key_name != null && var.kms_key_name != "" ? [1] : []
     content {
       default_kms_key_name = var.kms_key_name
     }
   }
 
   dynamic "logging" {
-    for_each = var.access_log_bucket != "" ? [1] : []
+    for_each = var.access_log_bucket != null && var.access_log_bucket != "" ? [1] : []
     content {
       log_bucket        = var.access_log_bucket
       log_object_prefix = var.access_log_prefix
@@ -68,15 +68,15 @@ resource "google_storage_bucket" "bucket" {
   }
 
   dynamic "website" {
-    for_each = var.website_main_page_suffix != "" || var.website_not_found_page != "" ? [1] : []
+    for_each = (var.website_main_page_suffix != null && var.website_main_page_suffix != "") || (var.website_not_found_page != null && var.website_not_found_page != "") ? [1] : []
     content {
-      main_page_suffix = var.website_main_page_suffix
-      not_found_page   = var.website_not_found_page
+      main_page_suffix = var.website_main_page_suffix != null ? var.website_main_page_suffix : ""
+      not_found_page   = var.website_not_found_page != null ? var.website_not_found_page : ""
     }
   }
 
   dynamic "cors" {
-    for_each = var.cors_rules
+    for_each = var.cors_rules != null ? var.cors_rules : []
     content {
       origin          = cors.value.origin
       method          = cors.value.method
@@ -119,7 +119,7 @@ resource "google_storage_bucket_iam_member" "members" {
 
 # Notification configuration
 resource "google_storage_notification" "notifications" {
-  for_each = { for idx, notif in var.notifications : idx => notif }
+  for_each = var.notifications != null ? { for idx, notif in var.notifications : idx => notif } : {}
 
   bucket         = google_storage_bucket.bucket.name
   payload_format = each.value.payload_format
