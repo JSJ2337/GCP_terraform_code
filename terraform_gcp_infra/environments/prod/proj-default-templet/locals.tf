@@ -16,8 +16,8 @@ locals {
     environment = local.environment
     project     = local.project_name
     managed_by  = "terraform"
-    cost_center = "gaming"
-    created_by  = "platform-team"
+    cost_center = "IT_infra_deps"
+    created_by  = "system-team"
     compliance  = "none"
   }
 
