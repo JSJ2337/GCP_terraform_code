@@ -75,6 +75,8 @@ terraform plan
 - **문서 업데이트**:
   - cloudsql-mysql README에 로깅 섹션 추가
   - 60-database 레이어 로깅 변수 추가
+- **버그 수정**:
+  - deletion_policy → prevent_destroy 변경 (google_project 속성 오류 수정)
 
 ## ⚠️ 주의: State 마이그레이션 필요
 

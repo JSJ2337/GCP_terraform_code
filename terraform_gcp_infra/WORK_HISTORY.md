@@ -247,19 +247,69 @@ query_insights_enabled = true  # ✅ 활성화
 3. 자동 알림 설정 (예: 느린 쿼리가 임계값 초과 시)
 4. 로그 보존 정책 설정
 
+### 🐛 버그 수정 (세션 6 후반)
+
+#### deletion_policy 속성 오류 수정
+
+**문제**:
+- VSCode Terraform 검증에서 에러 발생:
+  ```
+  Unexpected attribute: An attribute named "deletion_policy" is not expected here
+  ```
+- `google_project` 리소스는 `deletion_policy` 속성을 지원하지 않음
+
+**원인**:
+- 세션 4에서 추가한 `deletion_policy` 변수가 Google Provider에서 지원되지 않는 속성
+- `google_project` 리소스는 자체 `deletion_policy` 속성이 없음
+
+**해결책**:
+1. **deletion_policy → prevent_destroy 변경**:
+   - `deletion_policy` (string: DELETE/PREVENT/ABANDON) 제거
+   - `prevent_destroy` (bool: true/false)로 변경
+   - Terraform의 `lifecycle { prevent_destroy }` 블록 사용
+
+2. **변경된 파일**:
+   ```
+   modules/project-base/variables.tf: deletion_policy → prevent_destroy
+   modules/project-base/main.tf: deletion_policy 제거, lifecycle 블록 추가
+   environments/prod/proj-default-templet/00-project/variables.tf
+   environments/prod/proj-default-templet/00-project/main.tf
+   environments/prod/proj-default-templet/00-project/terraform.tfvars.example
+   ```
+
+3. **코드 변경**:
+   ```terraform
+   # Before (잘못됨)
+   resource "google_project" "this" {
+     project_id      = var.project_id
+     deletion_policy = var.deletion_policy  # 지원되지 않음
+   }
+
+   # After (수정됨)
+   resource "google_project" "this" {
+     project_id = var.project_id
+
+     lifecycle {
+       prevent_destroy = var.prevent_destroy
+     }
+   }
+   ```
+
+**변경 사항**:
+- 변수 타입: `string` → `bool`
+- 기본값: `"DELETE"` → `false` (자유롭게 삭제 가능)
+- 프로덕션 권장: `prevent_destroy = true`
+
 ### 📝 커밋 메시지
 
 ```
-feat: Cloud SQL에 로깅 및 Cloud Logging 통합 추가
+fix: deletion_policy를 prevent_destroy로 변경
 
-- 느린 쿼리 로그 자동 구성 (기본 2초)
-- 일반 쿼리 로그 옵션 추가
-- Cloud Logging FILE 출력 지원
-- 로깅 변수 4개 추가 (enable_slow_query_log, slow_query_log_time, enable_general_log, log_output)
-- database_flags와 로깅 플래그 자동 병합
-- 60-database 레이어 로깅 변수 추가
-- cloudsql-mysql README에 로깅 섹션 추가
-- 환경별 로깅 권장 설정 문서화
+- google_project 리소스는 deletion_policy 속성을 지원하지 않음
+- Terraform lifecycle { prevent_destroy } 사용으로 변경
+- boolean 타입으로 단순화 (true: 삭제 방지, false: 자유롭게 삭제)
+- project-base 모듈 및 00-project 레이어 업데이트
+- VSCode Terraform 검증 에러 수정
 
 🤖 Generated with Claude Code
 ```

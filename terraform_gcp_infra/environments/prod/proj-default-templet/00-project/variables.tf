@@ -57,8 +57,8 @@ variable "cmek_key_id" {
   default = ""
 }
 
-variable "deletion_policy" {
-  type        = string
-  default     = "DELETE"
-  description = "프로젝트 삭제 정책: DELETE (자유롭게 삭제 가능) 또는 PREVENT (삭제 방지)"
+variable "prevent_destroy" {
+  type        = bool
+  default     = false
+  description = "프로젝트 삭제 방지 (true: 삭제 차단, false: 자유롭게 삭제 가능)"
 }

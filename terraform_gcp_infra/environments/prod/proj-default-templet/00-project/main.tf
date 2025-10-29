@@ -49,5 +49,5 @@ module "project_base" {
   budget_currency    = var.budget_currency
   log_retention_days = var.log_retention_days
   cmek_key_id        = var.cmek_key_id
-  deletion_policy    = var.deletion_policy
+  prevent_destroy    = var.prevent_destroy
 }

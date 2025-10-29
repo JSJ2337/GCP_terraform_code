@@ -40,8 +40,7 @@ log_retention_days = 30
 # 선택사항: 로그 암호화용 CMEK 키
 # cmek_key_id = "projects/YOUR_PROJECT/locations/REGION/keyRings/KEYRING/cryptoKeys/KEY"
 
-# 프로젝트 삭제 정책
-# DELETE (기본값): terraform destroy로 자유롭게 삭제 가능 (개발/테스트 환경)
-# PREVENT: 실수로 인한 삭제 방지 (프로덕션/중요 인프라)
-# ABANDON: Terraform state에서만 제거, GCP 프로젝트는 유지
-deletion_policy = "DELETE"
+# 프로젝트 삭제 방지
+# false (기본값): terraform destroy로 자유롭게 삭제 가능 (개발/테스트 환경)
+# true: 실수로 인한 삭제 방지 (프로덕션/중요 인프라)
+prevent_destroy = false

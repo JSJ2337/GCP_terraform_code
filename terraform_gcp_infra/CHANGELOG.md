@@ -7,6 +7,15 @@
 
 ## [미배포] - 2025-10-29
 
+### 수정 (Fixed)
+
+#### 프로젝트 삭제 방지 설정
+- **deletion_policy → prevent_destroy 변경**:
+  - `google_project` 리소스는 `deletion_policy` 속성을 지원하지 않음
+  - Terraform의 `lifecycle { prevent_destroy }` 사용으로 변경
+  - boolean 타입으로 단순화 (true: 삭제 방지, false: 자유롭게 삭제)
+  - project-base 모듈 및 00-project 레이어 업데이트
+
 ### 추가 (Added)
 
 #### Observability 개선
