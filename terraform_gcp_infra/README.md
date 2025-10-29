@@ -10,6 +10,13 @@ Google Cloud Platform 인프라를 위한 프로덕션 레디 Terraform 모듈 �
 
 ```
 terraform_gcp_infra/
+├── bootstrap/                  # ⭐ State 관리용 프로젝트 (최우선 배포)
+│   ├── main.tf                # 관리용 프로젝트 및 State 버킷
+│   ├── variables.tf           # 변수 정의
+│   ├── terraform.tfvars       # 실제 설정 값
+│   ├── outputs.tf             # 출력 값
+│   └── README.md              # Bootstrap 가이드
+│
 ├── modules/                    # 재사용 가능한 Terraform 모듈
 │   ├── gcs-root/              # 다중 버킷 관리 래퍼
 │   ├── gcs-bucket/            # 완전한 구성의 단일 GCS 버킷
@@ -24,10 +31,10 @@ terraform_gcp_infra/
         └── proj-game-a/
             ├── 00-project/        # 프로젝트 설정
             ├── 10-network/        # 네트워크 구성
-            ├── 15-storage/        # 스토리지 버킷
-            ├── 20-security/       # 보안 및 IAM
-            ├── 30-observability/  # 모니터링 및 로깅
-            ├── 40-workloads/      # 컴퓨팅 워크로드
+            ├── 20-storage/        # 스토리지 버킷
+            ├── 30-security/       # 보안 및 IAM
+            ├── 40-observability/  # 모니터링 및 로깅
+            ├── 50-workloads/      # 컴퓨팅 워크로드
             └── locals.tf          # 공통 naming 및 labeling 규칙
 ```
 
@@ -40,12 +47,13 @@ terraform_gcp_infra/
 - **포괄적**: 수명 주기 규칙, 버전 관리, 암호화, 모니터링
 
 ### 인프라 레이어
+- **bootstrap**: 중앙 집중식 Terraform State 관리 프로젝트
 - **00-project**: GCP 프로젝트 생성, API 활성화, 예산 알림
 - **10-network**: VPC, 서브넷, Cloud NAT, 방화벽 규칙
-- **15-storage**: 에셋, 로그 및 백업용 GCS 버킷
-- **20-security**: IAM 바인딩 및 서비스 계정
-- **30-observability**: Cloud Logging 싱크 및 모니터링 대시보드
-- **40-workloads**: Compute Engine 인스턴스
+- **20-storage**: 에셋, 로그 및 백업용 GCS 버킷
+- **30-security**: IAM 바인딩 및 서비스 계정
+- **40-observability**: Cloud Logging 싱크 및 모니터링 대시보드
+- **50-workloads**: Compute Engine 인스턴스
 
 ## 시작하기
 
@@ -58,42 +66,81 @@ terraform version
 # GCP 인증
 gcloud auth application-default login
 
-# 프로젝트 설정
-gcloud config set project YOUR_PROJECT_ID
+# Billing Account ID 확인
+gcloud billing accounts list
 ```
 
 ### 초기 설정
 
-1. **저장소 클론**
-   ```bash
-   git clone <repository-url>
-   cd terraform_gcp_infra
-   ```
+#### Step 1: Bootstrap 프로젝트 배포 (최우선!)
 
-2. **Terraform state용 GCS 버킷 생성**
-   ```bash
-   gsutil mb -p YOUR_PROJECT_ID -l US gs://gcp-tfstate-prod
-   gsutil versioning set on gs://gcp-tfstate-prod
-   ```
+⚠️ **중요**: 다른 인프라를 배포하기 전에 반드시 Bootstrap 프로젝트를 먼저 배포해야 합니다.
 
-3. **변수 복사 및 구성**
-   ```bash
-   cd environments/prod/proj-game-a/00-project
-   cp terraform.tfvars.example terraform.tfvars
-   # terraform.tfvars 파일을 실제 값으로 수정
-   ```
+```bash
+# 1. 저장소 클론
+git clone <repository-url>
+cd terraform_gcp_infra
 
-4. **백엔드 구성 업데이트**
-   ```bash
-   # backend.tf를 수정하여 state 버킷 지정
-   vim backend.tf
-   ```
+# 2. Bootstrap 디렉토리로 이동
+cd bootstrap
+
+# 3. terraform.tfvars 확인 및 수정 (필요시)
+cat terraform.tfvars
+# 프로젝트 ID, Billing Account 등 확인
+
+# 4. Bootstrap 배포
+terraform init
+terraform plan
+terraform apply
+
+# 5. 출력 확인
+terraform output
+# → 버킷 이름: delabs-terraform-state-prod
+# → 프로젝트 ID: delabs-system-mgmt
+
+# 6. ⚠️ 로컬 state 파일 백업 (매우 중요!)
+cp terraform.tfstate ~/backup/bootstrap-$(date +%Y%m%d).tfstate
+```
+
+**Bootstrap이 생성하는 것:**
+- 관리용 GCP 프로젝트 (`delabs-system-mgmt`)
+- 중앙 State 저장소 버킷 (`delabs-terraform-state-prod`)
+- Versioning 및 Lifecycle 정책 자동 설정
+
+#### Step 2: 워크로드 프로젝트 배포
+
+Bootstrap 배포 후, 실제 워크로드 프로젝트를 배포합니다:
+
+```bash
+# 1. 환경 디렉토리로 이동
+cd ../environments/prod/proj-game-a/00-project
+
+# 2. 변수 파일 준비
+cp terraform.tfvars.example terraform.tfvars
+vim terraform.tfvars
+# 프로젝트 ID, 이름, Billing Account 등 설정
+
+# 3. Backend는 이미 설정되어 있음
+cat backend.tf
+# bucket = "delabs-terraform-state-prod"
+# prefix = "proj-game-a/00-project"
+
+# 4. 배포
+terraform init  # 중앙 버킷에 연결
+terraform plan
+terraform apply
+```
 
 ### 배포 순서
 
-인프라 레이어를 순서대로 배포:
+인프라 레이어를 **반드시 순서대로** 배포:
 
 ```bash
+# 0. ⭐ Bootstrap (최우선 - 한 번만 실행)
+cd bootstrap
+terraform init && terraform apply
+cd ..
+
 # 1. 프로젝트 생성
 cd environments/prod/proj-game-a/00-project
 terraform init
@@ -107,15 +154,43 @@ terraform plan
 terraform apply
 
 # 3. 스토리지 생성
-cd ../15-storage
+cd ../20-storage
 terraform init
 terraform plan
 terraform apply
 
-# 나머지 레이어도 동일하게 진행...
+# 4. 보안 및 IAM
+cd ../30-security
+terraform init
+terraform plan
+terraform apply
+
+# 5. 모니터링 및 로깅
+cd ../40-observability
+terraform init
+terraform plan
+terraform apply
+
+# 6. 워크로드 (VM 등)
+cd ../50-workloads
+terraform init
+terraform plan
+terraform apply
 ```
 
+**배포 순서가 중요한 이유:**
+- 각 레이어는 이전 레이어의 리소스에 의존
+- State는 `delabs-terraform-state-prod` 버킷에 중앙 관리됨
+- 각 레이어별로 독립적인 State 파일 유지
+
 ## 적용된 베스트 프랙티스
+
+### State 관리 (⭐ 핵심)
+- ✅ **중앙 집중식 State 관리**: 모든 프로젝트의 State를 단일 버킷에서 관리
+- ✅ **Bootstrap 패턴**: 관리 인프라와 워크로드 인프라 분리
+- ✅ **Versioning**: State 파일 버전 관리 (최근 10개 버전 보관)
+- ✅ **Lifecycle 정책**: 30일 지난 State 버전 자동 정리
+- ✅ **환경 및 레이어별 State 분리**: prefix를 통한 격리
 
 ### 보안
 - ✅ Uniform bucket-level access 기본 활성화
@@ -124,10 +199,11 @@ terraform apply
 - ✅ VPC 흐름 로그 활성화
 - ✅ 충돌 방지를 위한 Non-authoritative IAM 바인딩
 - ✅ CMEK 암호화 지원
+- ✅ Bootstrap 프로젝트 삭제 방지 (deletion_policy = PREVENT)
 
 ### 운영
-- ✅ 버전 관리가 적용된 GCS에서 State 관리
-- ✅ 환경 및 레이어별 State 분리
+- ✅ 프로젝트 삭제 시에도 State 보존
+- ✅ 10개 이상 프로젝트 확장 가능한 구조
 - ✅ 예산 알림 구성
 - ✅ 포괄적인 로깅 및 모니터링
 - ✅ locals를 통한 일관된 naming 규칙
@@ -142,8 +218,62 @@ terraform apply
 ## 모듈 문서
 
 각 모듈은 상세한 문서를 제공합니다:
+- [Bootstrap](bootstrap/README.md) - State 관리용 프로젝트 (⭐ 필독)
 - [gcs-root](modules/gcs-root/README.md) - 다중 버킷 관리
 - [gcs-bucket](modules/gcs-bucket/README.md) - 단일 버킷 구성
+- [project-base](modules/project-base/README.md) - GCP 프로젝트 생성
+- [network-dedicated-vpc](modules/network-dedicated-vpc/README.md) - VPC 네트워킹
+- [iam](modules/iam/README.md) - IAM 관리
+- [observability](modules/observability/README.md) - 모니터링 및 로깅
+- [gce-vmset](modules/gce-vmset/README.md) - VM 인스턴스
+
+## State 관리 아키텍처
+
+### 구조
+
+```
+delabs-system-mgmt (관리용 프로젝트)
+└── delabs-terraform-state-prod (GCS 버킷)
+    ├── proj-game-a/
+    │   ├── 00-project/default.tfstate
+    │   ├── 10-network/default.tfstate
+    │   ├── 20-storage/default.tfstate
+    │   └── ...
+    ├── proj-game-b/
+    │   └── ...
+    └── proj-game-c/
+        └── ...
+```
+
+### 새 프로젝트 추가하기
+
+새 프로젝트를 추가할 때는 기존 중앙 버킷을 사용:
+
+```hcl
+# 새 프로젝트의 backend.tf
+terraform {
+  backend "gcs" {
+    bucket = "delabs-terraform-state-prod"
+    prefix = "new-project-name/layer-name"
+  }
+}
+```
+
+### Bootstrap State 백업 (중요!)
+
+Bootstrap 프로젝트의 State는 로컬에 저장되므로 정기적으로 백업:
+
+```bash
+# 수동 백업
+cd bootstrap
+cp terraform.tfstate ~/backup/bootstrap-$(date +%Y%m%d).tfstate
+
+# 또는 GCS에 업로드
+gsutil cp terraform.tfstate gs://your-backup-bucket/bootstrap/
+
+# 주기적 백업 (cron)
+0 0 * * 0 cd /path/to/bootstrap && cp terraform.tfstate ~/backup/bootstrap-$(date +\%Y\%m\%d).tfstate
+```
 
 ## 일반적인 작업
 
