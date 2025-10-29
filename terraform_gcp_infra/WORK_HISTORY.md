@@ -143,6 +143,11 @@ ssl_policy = var.ssl_policy != "" ? var.ssl_policy : null
 - ✅ 의존성 관계 명확히 표시
 - ✅ 확장 계획 포함
 
+**다이어그램 개선**:
+- 4번 모듈 구조를 간단하고 명확하게 재설계
+- 복잡한 subgraph 제거, 단순한 노드 배치로 변경
+- 모듈 목록 표 추가로 가독성 향상
+
 ### 📊 통계
 
 - **추가된 모듈**: 2개 (cloudsql-mysql, load-balancer)

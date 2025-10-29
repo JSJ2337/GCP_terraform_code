@@ -183,57 +183,50 @@ graph TD
 ## 4. 모듈 구조
 
 ```mermaid
-graph TB
-    subgraph "프로젝트 관리"
-        M_PROJ[project-base<br/>프로젝트 생성, API 활성화<br/>예산 알림, 삭제 정책]
-    end
+graph LR
+    M1[project-base<br/>프로젝트 생성]
+    M2[network-dedicated-vpc<br/>VPC 네트워킹]
+    M3[gcs-root<br/>다중 버킷]
+    M4[gcs-bucket<br/>단일 버킷]
+    M5[iam<br/>IAM 관리]
+    M6[observability<br/>모니터링/로깅]
+    M7[gce-vmset<br/>VM 인스턴스]
+    M8[cloudsql-mysql<br/>MySQL DB]
+    M9[load-balancer<br/>Load Balancer]
 
-    subgraph "네트워킹"
-        M_NET[network-dedicated-vpc<br/>VPC, 서브넷, 방화벽<br/>Cloud NAT, Cloud Router]
-    end
+    M3 -->|사용| M4
 
-    subgraph "스토리지"
-        M_ROOT[gcs-root<br/>다중 버킷 관리<br/>공통 설정 중앙화]
-        M_BUCKET[gcs-bucket<br/>단일 버킷 상세 설정<br/>수명주기, 암호화, IAM]
-        M_ROOT --> M_BUCKET
-    end
-
-    subgraph "보안 & IAM"
-        M_IAM[iam<br/>IAM 바인딩<br/>서비스 계정 관리]
-    end
-
-    subgraph "관찰성"
-        M_OBS[observability<br/>Cloud Logging 싱크<br/>모니터링 알림]
-    end
-
-    subgraph "컴퓨팅"
-        M_VM[gce-vmset<br/>VM 인스턴스<br/>Shielded VM, 메타데이터]
-    end
-
-    subgraph "데이터베이스"
-        M_SQL[cloudsql-mysql<br/>MySQL 인스턴스<br/>HA, Private IP<br/>백업, 복제본, Insights]
-    end
-
-    subgraph "로드 밸런싱"
-        M_LB[load-balancer<br/>HTTP(S) LB<br/>Internal LB<br/>Health Check, SSL, CDN]
-    end
-
-    style M_PROJ fill:#e1f5ff
-    style M_NET fill:#d4edda
-    style M_ROOT fill:#fff3cd
-    style M_BUCKET fill:#fff3cd
-    style M_IAM fill:#ffeaa7
-    style M_OBS fill:#dfe6e9
-    style M_VM fill:#fab1a0
-    style M_SQL fill:#74b9ff
-    style M_LB fill:#a29bfe
+    style M1 fill:#e1f5ff,stroke:#333,stroke-width:2px
+    style M2 fill:#d4edda,stroke:#333,stroke-width:2px
+    style M3 fill:#fff3cd,stroke:#333,stroke-width:2px
+    style M4 fill:#fff3cd,stroke:#333,stroke-width:2px
+    style M5 fill:#ffeaa7,stroke:#333,stroke-width:2px
+    style M6 fill:#dfe6e9,stroke:#333,stroke-width:2px
+    style M7 fill:#fab1a0,stroke:#333,stroke-width:2px
+    style M8 fill:#74b9ff,stroke:#333,stroke-width:2px
+    style M9 fill:#a29bfe,stroke:#333,stroke-width:2px
 ```
+
+**모듈 목록 및 주요 기능**:
+
+| 모듈 | 주요 기능 | 카테고리 |
+|------|----------|---------|
+| **project-base** | 프로젝트 생성, API 활성화, 예산 알림, 삭제 정책 | 프로젝트 관리 |
+| **network-dedicated-vpc** | VPC, 서브넷, 방화벽, Cloud NAT, Cloud Router | 네트워킹 |
+| **gcs-root** | 다중 버킷 관리, 공통 설정 중앙화 | 스토리지 |
+| **gcs-bucket** | 단일 버킷 상세 설정, 수명주기, 암호화, IAM | 스토리지 |
+| **iam** | IAM 바인딩, 서비스 계정 관리 | 보안 & IAM |
+| **observability** | Cloud Logging 싱크, 모니터링 알림 | 관찰성 |
+| **gce-vmset** | VM 인스턴스, Shielded VM, 메타데이터 | 컴퓨팅 |
+| **cloudsql-mysql** | MySQL 인스턴스, HA, Private IP, 백업, 복제본 | 데이터베이스 |
+| **load-balancer** | HTTP(S) LB, Internal LB, Health Check, SSL, CDN | 로드 밸런싱 |
 
 **모듈 설계 원칙**:
 - ✅ **Provider 블록 없음**: 모듈 재사용성 향상
 - ✅ **포괄적인 변수**: 유연한 구성
 - ✅ **Optional 속성**: Terraform 1.6+ 활용
 - ✅ **한글 문서화**: 모든 모듈 README 포함
+- ✅ **독립적 실행**: 각 모듈은 독립적으로 사용 가능
 
 ---
 
