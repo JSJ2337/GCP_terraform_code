@@ -49,7 +49,7 @@ resource "google_compute_health_check" "default" {
   }
 
   log_config {
-    enable = var.health_check_logging
+    enabled = var.health_check_logging
   }
 }
 
@@ -95,7 +95,7 @@ resource "google_compute_region_health_check" "internal" {
   }
 
   log_config {
-    enable = var.health_check_logging
+    enabled = var.health_check_logging
   }
 }
 
@@ -153,7 +153,7 @@ resource "google_compute_backend_service" "default" {
 
   # Logging
   log_config {
-    enable      = var.enable_logging
+    enabled     = var.enable_logging
     sample_rate = var.logging_sample_rate
   }
 
