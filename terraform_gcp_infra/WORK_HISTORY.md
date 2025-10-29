@@ -2,6 +2,172 @@
 
 ---
 
+## 📅 세션 5 작업 내역 (2025-10-29)
+
+**작업자**: Claude Code
+**목적**: Cloud SQL MySQL 및 Load Balancer 모듈 추가
+
+### 🎯 작업 요약
+
+데이터베이스와 로드 밸런서 인프라 지원을 위한 새로운 Terraform 모듈 및 환경 레이어를 추가했습니다.
+
+### 완료된 작업 ✅
+
+#### 1. Cloud SQL MySQL 모듈 생성 (`modules/cloudsql-mysql`)
+
+**주요 기능**:
+- MySQL 인스턴스 생성 및 관리
+- High Availability (REGIONAL/ZONAL) 지원
+- Private IP 네트워킹
+- 자동 백업 및 Point-in-Time Recovery
+- 읽기 복제본 (Read Replica) 지원
+- Query Insights 성능 모니터링
+- 데이터베이스 및 사용자 관리
+- 데이터베이스 플래그 커스터마이징
+- 삭제 방지 설정
+
+**생성된 파일**:
+- `main.tf`: 리소스 정의 (instance, databases, users, replicas)
+- `variables.tf`: 입력 변수 (80개 이상)
+- `outputs.tf`: 출력 값 (connection info, IPs)
+- `README.md`: 한글 문서 (사용법, 예제, 베스트 프랙티스)
+
+**지원하는 머신 타입**:
+- Shared-core: `db-f1-micro`, `db-g1-small`
+- Standard: `db-n1-standard-1` ~ `db-n1-standard-96`
+- High-mem: `db-n1-highmem-2` ~ `db-n1-highmem-96`
+
+#### 2. Load Balancer 모듈 생성 (`modules/load-balancer`)
+
+**주요 기능**:
+- **HTTP(S) Load Balancer**: 글로벌, 외부 트래픽
+- **Internal HTTP(S) Load Balancer**: 리전별, 내부 트래픽
+- **Internal TCP/UDP Load Balancer**: 리전별, 내부 트래픽
+- Health Check (Global 및 Regional)
+- SSL/TLS 종료
+- Cloud CDN 통합
+- Identity-Aware Proxy (IAP)
+- URL 라우팅 및 호스트 규칙
+- 세션 친화성 (Session Affinity)
+- 고정 IP 주소 지원
+
+**생성된 파일**:
+- `main.tf`: 리소스 정의 (300+ 줄, 조건부 리소스 생성)
+- `variables.tf`: 입력 변수 (40개 이상)
+- `outputs.tf`: 출력 값 (backend, health check, forwarding rule)
+- `README.md`: 한글 문서 (각 LB 타입별 예제, 비교표)
+
+**지원하는 Load Balancer 타입**:
+| 타입 | 범위 | 프로토콜 | 용도 |
+|------|------|----------|------|
+| HTTP(S) | 글로벌 | HTTP, HTTPS | 외부 웹 트래픽 |
+| Internal HTTP(S) | 리전 | HTTP, HTTPS | 내부 웹 트래픽 |
+| Internal TCP/UDP | 리전 | TCP, UDP | 내부 애플리케이션 |
+
+#### 3. 환경 레이어 추가
+
+**60-database 레이어** (`environments/prod/proj-default-templet/60-database`):
+- Cloud SQL MySQL 배포용
+- Backend state: `proj-default-templet/60-database`
+- 파일: backend.tf, main.tf, variables.tf, outputs.tf, terraform.tfvars.example
+
+**70-loadbalancer 레이어** (`environments/prod/proj-default-templet/70-loadbalancer`):
+- Load Balancer 배포용
+- Backend state: `proj-default-templet/70-loadbalancer`
+- 파일: backend.tf, main.tf, variables.tf, outputs.tf, terraform.tfvars.example
+- 예제: HTTP LB, HTTPS with SSL, Internal LB, Internal TCP LB (4가지)
+
+#### 4. Load Balancer 모듈 버그 수정
+
+**수정 1: Static IP 참조 로직**
+- **문제**: Forwarding rule에서 생성된 static IP를 참조하지 못함
+- **수정**: 조건부 참조 추가
+```terraform
+ip_address = var.create_static_ip ? google_compute_global_address.default[0].address :
+             (var.static_ip_address != "" ? var.static_ip_address : null)
+```
+
+**수정 2: Regional Health Check 지원**
+- **문제**: Internal Classic LB는 regional health check 필요
+- **수정**: `google_compute_region_health_check` 리소스 추가
+
+**수정 3: 리소스 이름 기본값**
+- **문제**: URL Map, Target Proxy 이름이 비어있을 때 에러
+- **수정**: 자동 이름 생성
+```terraform
+name = var.url_map_name != "" ? var.url_map_name : "${var.backend_service_name}-url-map"
+```
+
+**수정 4: SSL Policy null 처리**
+- **문제**: 빈 문자열로 전달 시 에러 발생
+- **수정**: 빈 문자열을 null로 변환
+```terraform
+ssl_policy = var.ssl_policy != "" ? var.ssl_policy : null
+```
+
+**수정 5: IAP enabled 속성**
+- **문제**: IAP 블록에 `enabled` 속성 누락
+- **수정**: `enabled = true` 추가
+
+#### 5. 문서 업데이트
+
+**메인 README.md 업데이트**:
+- 모듈 목록에 `cloudsql-mysql`, `load-balancer` 추가
+- 레이어 구조에 `60-database`, `70-loadbalancer` 추가
+- 배포 순서에 데이터베이스 및 로드 밸런서 단계 추가
+- State 관리 아키텍처 예시 업데이트
+- 프로젝트명 변경: `proj-game-a` → `proj-default-templet`
+
+**locals.tf 레이블 업데이트**:
+- `cost_center`: `gaming` → `IT_infra_deps`
+- `created_by`: `platform-team` → `system-team`
+
+### 📊 통계
+
+- **추가된 모듈**: 2개 (cloudsql-mysql, load-balancer)
+- **추가된 레이어**: 2개 (60-database, 70-loadbalancer)
+- **생성된 파일**: 18개
+- **추가된 코드 라인**: 2,840줄
+- **버그 수정**: 5개
+- **문서 업데이트**: README.md, WORK_HISTORY.md
+
+### 🔧 커밋 이력
+
+1. `feat: Cloud SQL MySQL 및 Load Balancer 모듈 추가` (4ec9839)
+2. `chore: locals.tf 레이블 정보 업데이트` (36a1947)
+3. `fix: Load Balancer 모듈 오류 수정` (ccbad1f)
+4. `fix: log_config 및 IAP 블록 속성 수정` (d9f1eb2)
+5. `docs: README 및 WORK_HISTORY 업데이트` (예정)
+
+### 다음 단계 권장사항
+
+#### 60-database 레이어 배포
+```bash
+cd environments/prod/proj-default-templet/60-database
+cp terraform.tfvars.example terraform.tfvars
+# terraform.tfvars 편집 (프로젝트 ID, 네트워크 설정)
+terraform init
+terraform plan
+terraform apply
+```
+
+#### 70-loadbalancer 레이어 배포
+```bash
+cd ../70-loadbalancer
+cp terraform.tfvars.example terraform.tfvars
+# terraform.tfvars 편집 (LB 타입, 백엔드 설정)
+terraform init
+terraform plan
+terraform apply
+```
+
+### 참고 자료
+- [Cloud SQL MySQL 모듈 문서](modules/cloudsql-mysql/README.md)
+- [Load Balancer 모듈 문서](modules/load-balancer/README.md)
+- [메인 README](README.md)
+
+---
+
 ## 📅 세션 4 작업 내역 (2025-10-29)
 
 **작업자**: Claude Code

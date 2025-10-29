@@ -24,17 +24,21 @@ terraform_gcp_infra/
 │   ├── network-dedicated-vpc/ # 서브넷 및 방화벽이 있는 VPC 네트워킹
 │   ├── iam/                   # IAM 역할 및 서비스 계정
 │   ├── observability/         # 로깅 및 모니터링 설정
-│   └── gce-vmset/             # Compute Engine VM 인스턴스
+│   ├── gce-vmset/             # Compute Engine VM 인스턴스
+│   ├── cloudsql-mysql/        # Cloud SQL MySQL 데이터베이스
+│   └── load-balancer/         # HTTP(S) 및 Internal Load Balancer
 │
 └── environments/              # 환경별 구성
     └── prod/
-        └── proj-game-a/
+        └── proj-default-templet/
             ├── 00-project/        # 프로젝트 설정
             ├── 10-network/        # 네트워크 구성
             ├── 20-storage/        # 스토리지 버킷
             ├── 30-security/       # 보안 및 IAM
             ├── 40-observability/  # 모니터링 및 로깅
             ├── 50-workloads/      # 컴퓨팅 워크로드
+            ├── 60-database/       # Cloud SQL 데이터베이스
+            ├── 70-loadbalancer/   # Load Balancer 설정
             └── locals.tf          # 공통 naming 및 labeling 규칙
 ```
 
@@ -54,6 +58,8 @@ terraform_gcp_infra/
 - **30-security**: IAM 바인딩 및 서비스 계정
 - **40-observability**: Cloud Logging 싱크 및 모니터링 대시보드
 - **50-workloads**: Compute Engine 인스턴스
+- **60-database**: Cloud SQL MySQL 데이터베이스
+- **70-loadbalancer**: HTTP(S) 및 Internal Load Balancer
 
 ## 시작하기
 
@@ -127,7 +133,7 @@ Bootstrap 배포 후, 실제 워크로드 프로젝트를 배포합니다:
 
 ```bash
 # 1. 환경 디렉토리로 이동
-cd ../environments/prod/proj-game-a/00-project
+cd ../environments/prod/proj-default-templet/00-project
 
 # 2. 변수 파일 준비
 cp terraform.tfvars.example terraform.tfvars
@@ -137,7 +143,7 @@ vim terraform.tfvars
 # 3. Backend는 이미 설정되어 있음
 cat backend.tf
 # bucket = "delabs-terraform-state-prod"
-# prefix = "proj-game-a/00-project"
+# prefix = "proj-default-templet/00-project"
 
 # 4. 배포
 terraform init  # 중앙 버킷에 연결
@@ -156,7 +162,7 @@ terraform init && terraform apply
 cd ..
 
 # 1. 프로젝트 생성
-cd environments/prod/proj-game-a/00-project
+cd environments/prod/proj-default-templet/00-project
 terraform init
 terraform plan
 terraform apply
@@ -187,6 +193,18 @@ terraform apply
 
 # 6. 워크로드 (VM 등)
 cd ../50-workloads
+terraform init
+terraform plan
+terraform apply
+
+# 7. 데이터베이스
+cd ../60-database
+terraform init
+terraform plan
+terraform apply
+
+# 8. 로드 밸런서
+cd ../70-loadbalancer
 terraform init
 terraform plan
 terraform apply
@@ -240,6 +258,8 @@ terraform apply
 - [iam](modules/iam/README.md) - IAM 관리
 - [observability](modules/observability/README.md) - 모니터링 및 로깅
 - [gce-vmset](modules/gce-vmset/README.md) - VM 인스턴스
+- [cloudsql-mysql](modules/cloudsql-mysql/README.md) - Cloud SQL MySQL 데이터베이스
+- [load-balancer](modules/load-balancer/README.md) - HTTP(S) 및 Internal Load Balancer
 
 ## State 관리 아키텍처
 
@@ -248,14 +268,16 @@ terraform apply
 ```
 delabs-system-mgmt (관리용 프로젝트)
 └── delabs-terraform-state-prod (GCS 버킷)
-    ├── proj-game-a/
+    ├── proj-default-templet/
     │   ├── 00-project/default.tfstate
     │   ├── 10-network/default.tfstate
     │   ├── 20-storage/default.tfstate
+    │   ├── 60-database/default.tfstate
+    │   ├── 70-loadbalancer/default.tfstate
     │   └── ...
-    ├── proj-game-b/
+    ├── proj-other-a/
     │   └── ...
-    └── proj-game-c/
+    └── proj-other-b/
         └── ...
 ```
 
@@ -294,13 +316,13 @@ gsutil cp terraform.tfstate gs://your-backup-bucket/bootstrap/
 ### 새 버킷 추가
 
 ```hcl
-# environments/prod/proj-game-a/15-storage/main.tf에서
+# environments/prod/proj-default-templet/20-storage/main.tf에서
 # buckets map에 추가:
 buckets = {
   # ... 기존 버킷들 ...
 
   new_bucket = {
-    name          = "myorg-prod-game-a-new"
+    name          = "myorg-prod-default-templet-new"
     location      = "US-CENTRAL1"
     storage_class = "STANDARD"
   }
