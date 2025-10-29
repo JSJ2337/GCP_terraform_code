@@ -122,14 +122,36 @@ ssl_policy = var.ssl_policy != "" ? var.ssl_policy : null
 - `cost_center`: `gaming` → `IT_infra_deps`
 - `created_by`: `platform-team` → `system-team`
 
+#### 6. 아키텍처 다이어그램 문서 생성 (`ARCHITECTURE.md`)
+
+**포함된 다이어그램** (Mermaid 형식):
+1. **전체 시스템 구조**: Bootstrap, Modules, Environments 관계
+2. **State 관리 아키텍처**: 중앙 집중식 State 관리 흐름
+3. **배포 순서 및 의존성**: 8개 레이어 배포 순서와 병렬 처리
+4. **모듈 구조**: 9개 모듈의 역할과 관계
+5. **실제 GCP 리소스 구조**: VPC, VM, DB, LB 등 실제 리소스 배치
+6. **네트워크 아키텍처**: 서브넷, 방화벽, NAT 등 네트워크 흐름
+7. **Terraform 실행 흐름**: init, plan, apply 시퀀스
+8. **모듈 재사용 예제**: 환경별 모듈 재사용 패턴
+9. **주요 설계 결정**: 아키텍처 결정 이유 설명
+10. **확장 로드맵**: Phase 1-4 확장 계획
+
+**문서 특징**:
+- ✅ 10개의 Mermaid 다이어그램
+- ✅ GitHub/GitLab에서 자동 렌더링
+- ✅ 시각적으로 인프라 구조 이해 가능
+- ✅ 의존성 관계 명확히 표시
+- ✅ 확장 계획 포함
+
 ### 📊 통계
 
 - **추가된 모듈**: 2개 (cloudsql-mysql, load-balancer)
 - **추가된 레이어**: 2개 (60-database, 70-loadbalancer)
-- **생성된 파일**: 18개
-- **추가된 코드 라인**: 2,840줄
+- **생성된 파일**: 19개 (모듈/레이어 18개 + ARCHITECTURE.md 1개)
+- **추가된 코드 라인**: 2,840줄 (Terraform) + 600줄 (문서)
 - **버그 수정**: 5개
-- **문서 업데이트**: README.md, WORK_HISTORY.md
+- **생성된 다이어그램**: 10개 (Mermaid)
+- **문서 업데이트**: README.md, WORK_HISTORY.md, QUICK_REFERENCE.md, CHANGELOG.md, ARCHITECTURE.md (신규)
 
 ### 🔧 커밋 이력
 
@@ -162,9 +184,12 @@ terraform apply
 ```
 
 ### 참고 자료
+- [아키텍처 다이어그램](ARCHITECTURE.md) ⭐ 신규
 - [Cloud SQL MySQL 모듈 문서](modules/cloudsql-mysql/README.md)
 - [Load Balancer 모듈 문서](modules/load-balancer/README.md)
 - [메인 README](README.md)
+- [QUICK_REFERENCE](QUICK_REFERENCE.md)
+- [CHANGELOG](CHANGELOG.md)
 
 ---
 

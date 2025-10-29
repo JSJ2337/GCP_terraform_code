@@ -104,9 +104,11 @@ terraform state mv 'module.game_backups_bucket' 'module.game_storage.module.gcs_
 
 | 파일 | 용도 |
 |------|------|
+| ARCHITECTURE.md | 시각적 아키텍처 다이어그램 (⭐ 신규) |
 | WORK_HISTORY.md | 전체 작업 내역 상세 |
 | CHANGELOG.md | 변경 이력 + 마이그레이션 가이드 |
 | README.md | 프로젝트 전체 가이드 |
+| QUICK_REFERENCE.md | 빠른 참조 가이드 (이 문서) |
 | locals.tf | 공통 naming/labeling |
 
 ## 🔧 자주 사용하는 명령어

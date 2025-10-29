@@ -88,10 +88,16 @@
 
 ### 문서화 (Documentation)
 
+- **ARCHITECTURE.md (신규)**: 시각적 아키텍처 다이어그램 문서
+  - 10개의 Mermaid 다이어그램
+  - 전체 시스템 구조, State 관리, 배포 순서
+  - 모듈 구조, GCP 리소스 배치, 네트워크 흐름
+  - Terraform 실행 흐름, 설계 결정, 확장 로드맵
 - **모듈 README**: cloudsql-mysql, load-balancer 한글 문서 추가
 - **메인 README**: 새 모듈 및 레이어 반영, 배포 순서 업데이트
 - **WORK_HISTORY**: 세션 3, 4, 5 작업 상세 기록
-- **QUICK_REFERENCE**: 빠른 참조 가이드 업데이트
+- **QUICK_REFERENCE**: 빠른 참조 가이드 업데이트, ARCHITECTURE.md 링크 추가
+- **CHANGELOG**: 변경 이력 구조화, 마이그레이션 가이드 확장
 
 ## [세션 1-2] - 2025-10-28
 
