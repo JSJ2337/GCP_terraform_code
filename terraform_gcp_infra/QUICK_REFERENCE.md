@@ -13,7 +13,7 @@ terraform fmt -recursive
 # 모든 모듈이 validate 통과
 
 # 4. Plan 확인 (실제 프로젝트가 있다면)
-cd environments/prod/proj-game-a/00-project
+cd environments/prod/proj-default-templet/00-project
 terraform plan
 ```
 
@@ -43,6 +43,29 @@ terraform plan
   - observability/README.md
   - gce-vmset/README.md
 
+### 세션 3: Bootstrap 및 중앙 State 관리 구현
+- Bootstrap 프로젝트 생성 (중앙 State 관리)
+- 모든 레이어의 backend.tf 설정
+- 문서화 업데이트
+
+### 세션 4: 프로젝트 삭제 정책 및 템플릿화
+- JSJ-game-terraform-A 프로젝트 삭제
+- deletion_policy 변수 추가
+- proj-game-a → proj-default-templet 템플릿화
+- locals.tf 레이블 업데이트
+
+### 세션 5: Cloud SQL 및 Load Balancer 모듈 추가 (18개 신규)
+- **새 모듈 (8개 파일)**:
+  - cloudsql-mysql: MySQL 데이터베이스 관리
+  - load-balancer: HTTP(S)/Internal LB 관리
+- **새 레이어 (10개 파일)**:
+  - 60-database: Cloud SQL 배포
+  - 70-loadbalancer: Load Balancer 배포
+- **버그 수정 (5건)**:
+  - Static IP 참조, Regional Health Check, 이름 기본값, SSL Policy, IAP enabled
+- **문서화**:
+  - README.md, WORK_HISTORY.md 업데이트
+
 ## ⚠️ 주의: State 마이그레이션 필요
 
 기존 인프라가 있다면:
@@ -68,7 +91,14 @@ terraform state mv 'module.game_backups_bucket' 'module.game_storage.module.gcs_
 6. ✅ 코드 포맷팅 (terraform fmt)
 7. ✅ 모든 모듈 검증 완료
 8. ✅ 레이어에 locals 적용 (00-project, 10-network, 40-workloads)
-9. ✅ 모듈 README 문서 작성 (5개)
+9. ✅ 모듈 README 문서 작성 (7개 → 9개로 증가)
+10. ✅ Bootstrap 및 중앙 State 관리 구현
+11. ✅ deletion_policy 변수화
+12. ✅ 프로젝트 템플릿화 (proj-default-templet)
+13. ✅ Cloud SQL MySQL 모듈 추가
+14. ✅ Load Balancer 모듈 추가 (3가지 타입 지원)
+15. ✅ 데이터베이스 레이어 추가 (60-database)
+16. ✅ 로드 밸런서 레이어 추가 (70-loadbalancer)
 
 ## 📂 중요 파일
 
@@ -99,6 +129,18 @@ terraform state list
 
 # Output 확인
 terraform output -json | jq
+
+# 데이터베이스 배포
+cd environments/prod/proj-default-templet/60-database
+cp terraform.tfvars.example terraform.tfvars
+# terraform.tfvars 수정 후
+terraform init && terraform plan && terraform apply
+
+# 로드 밸런서 배포
+cd ../70-loadbalancer
+cp terraform.tfvars.example terraform.tfvars
+# terraform.tfvars 수정 후
+terraform init && terraform plan && terraform apply
 ```
 
 ## 📞 문제 해결
@@ -110,16 +152,27 @@ terraform output -json | jq
 ## ⏭️ 다음 작업 (우선순위)
 
 ### 즉시 작업 가능
-1. [ ] tfsec 보안 스캔
-2. [ ] 실제 프로젝트에 배포 (terraform plan/apply)
-3. [ ] State 마이그레이션 (기존 인프라가 있다면)
+1. [ ] 60-database 레이어 배포 (Cloud SQL MySQL)
+   - terraform.tfvars 작성 (프로젝트 ID, 네트워크 설정)
+   - Private IP 설정 확인
+   - 백업 정책 설정
+2. [ ] 70-loadbalancer 레이어 배포 (Load Balancer)
+   - LB 타입 선택 (HTTP(S), Internal, Internal Classic)
+   - 백엔드 인스턴스 그룹 설정
+   - Health Check 설정
+3. [ ] tfsec 보안 스캔 (새 모듈 포함)
+4. [ ] 실제 프로젝트에 배포 (terraform plan/apply)
+5. [ ] State 마이그레이션 (기존 인프라가 있다면)
 
 ### 향후 개선 사항
-4. [ ] Dev/Staging 환경 추가
-5. [ ] CI/CD 파이프라인 구축 (GitHub Actions)
-6. [ ] Pre-commit hooks 설정
-7. [ ] Cost estimation (infracost)
-8. [ ] 20-security, 30-observability 레이어 검증
+6. [ ] PostgreSQL 모듈 추가 (cloudsql-postgresql)
+7. [ ] Redis/Memorystore 모듈 추가
+8. [ ] GKE (Kubernetes) 모듈 추가
+9. [ ] Dev/Staging 환경 추가
+10. [ ] CI/CD 파이프라인 구축 (GitHub Actions)
+11. [ ] Pre-commit hooks 설정
+12. [ ] Cost estimation (infracost)
+13. [ ] Monitoring 대시보드 자동 생성
 
 ---
 
