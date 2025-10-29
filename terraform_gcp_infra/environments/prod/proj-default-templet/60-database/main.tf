@@ -1,0 +1,89 @@
+terraform {
+  required_version = ">= 1.6"
+
+  required_providers {
+    google = {
+      source  = "hashicorp/google"
+      version = ">= 5.30"
+    }
+    google-beta = {
+      source  = "hashicorp/google-beta"
+      version = ">= 5.30"
+    }
+  }
+}
+
+provider "google" {
+  project = var.project_id
+  region  = "us-central1"
+}
+
+provider "google-beta" {
+  project = var.project_id
+  region  = "us-central1"
+}
+
+# Common naming conventions
+locals {
+  environment    = "prod"
+  project_name   = "default-templet"
+  project_prefix = "${local.environment}-${local.project_name}"
+
+  # Default instance name
+  default_instance_name = "${local.project_prefix}-mysql"
+}
+
+module "mysql" {
+  source = "../../../../modules/cloudsql-mysql"
+
+  project_id    = var.project_id
+  instance_name = var.instance_name != "" ? var.instance_name : local.default_instance_name
+  region        = var.region
+
+  database_version  = var.database_version
+  tier              = var.tier
+  availability_type = var.availability_type
+
+  disk_size       = var.disk_size
+  disk_type       = var.disk_type
+  disk_autoresize = var.disk_autoresize
+
+  deletion_protection = var.deletion_protection
+
+  # Backup configuration
+  backup_enabled                     = var.backup_enabled
+  backup_start_time                  = var.backup_start_time
+  point_in_time_recovery_enabled     = var.point_in_time_recovery_enabled
+  transaction_log_retention_days     = var.transaction_log_retention_days
+  backup_retained_count              = var.backup_retained_count
+
+  # Network configuration
+  ipv4_enabled        = var.ipv4_enabled
+  private_network     = var.private_network
+  require_ssl         = var.require_ssl
+  authorized_networks = var.authorized_networks
+
+  # Maintenance window
+  maintenance_window_day          = var.maintenance_window_day
+  maintenance_window_hour         = var.maintenance_window_hour
+  maintenance_window_update_track = var.maintenance_window_update_track
+
+  # Database flags
+  database_flags = var.database_flags
+
+  # Insights
+  query_insights_enabled  = var.query_insights_enabled
+  query_string_length     = var.query_string_length
+  record_application_tags = var.record_application_tags
+
+  # Databases
+  databases = var.databases
+
+  # Users
+  users = var.users
+
+  # Read replicas
+  read_replicas = var.read_replicas
+
+  labels = var.labels
+}

@@ -1,0 +1,92 @@
+# Cloud SQL MySQL 설정 예제
+# 이 파일을 terraform.tfvars로 복사하고 실제 값을 입력하세요
+# 중요: terraform.tfvars 파일은 버전 관리에 커밋하지 마세요
+
+project_id = "your-project-id"
+
+# 인스턴스 설정
+instance_name     = "" # 비어있으면 자동 생성 (prod-default-templet-mysql)
+region            = "us-central1"
+database_version  = "MYSQL_8_0"
+tier              = "db-n1-standard-1"
+availability_type = "ZONAL" # 프로덕션: REGIONAL, 개발: ZONAL
+
+# 디스크 설정
+disk_size       = 20
+disk_type       = "PD_SSD"
+disk_autoresize = true
+
+# 삭제 보호 (프로덕션: true, 개발: false)
+deletion_protection = true
+
+# 백업 설정
+backup_enabled                     = true
+backup_start_time                  = "03:00"
+point_in_time_recovery_enabled     = true
+transaction_log_retention_days     = 7
+backup_retained_count              = 7
+
+# 네트워크 설정
+ipv4_enabled    = false # Private IP 사용 권장
+private_network = "projects/your-project/global/networks/your-vpc"
+require_ssl     = true
+
+# 공개 IP를 사용하는 경우 승인된 네트워크 설정
+# authorized_networks = [
+#   {
+#     name = "office"
+#     cidr = "203.0.113.0/24"
+#   }
+# ]
+
+# 유지보수 설정
+maintenance_window_day          = 7  # 일요일
+maintenance_window_hour         = 3  # 03:00
+maintenance_window_update_track = "stable"
+
+# 데이터베이스 플래그 (옵션)
+database_flags = [
+  {
+    name  = "max_connections"
+    value = "100"
+  }
+]
+
+# Query Insights
+query_insights_enabled  = true
+query_string_length     = 1024
+record_application_tags = false
+
+# 데이터베이스 생성
+databases = [
+  {
+    name = "myapp"
+  }
+]
+
+# 사용자 생성
+# 중요: 비밀번호는 Secret Manager에 저장하고 참조하세요
+users = [
+  {
+    name     = "app_user"
+    password = "CHANGE-ME-secure-password"
+    host     = "%"
+  }
+]
+
+# 읽기 복제본 (옵션)
+# read_replicas = {
+#   replica1 = {
+#     name   = "prod-default-templet-mysql-read-1"
+#     region = "us-central1"
+#     tier   = "db-n1-standard-1"
+#   }
+# }
+
+# 레이블
+labels = {
+  environment = "prod"
+  project     = "default-templet"
+  managed_by  = "terraform"
+  tier        = "database"
+}
