@@ -1,21 +1,21 @@
-# GCS Bucket Module
+# GCS 버킷 모듈
 
-This module creates and manages a single Google Cloud Storage bucket with comprehensive configuration options.
+이 모듈은 포괄적인 구성 옵션을 가진 단일 Google Cloud Storage 버킷을 생성하고 관리합니다.
 
-## Features
+## 기능
 
-- **Security**: Uniform bucket-level access, public access prevention, CMEK encryption
-- **Lifecycle Management**: Automated object lifecycle rules
-- **Versioning**: Optional object versioning
-- **Access Logging**: Optional access log generation
-- **CORS**: Cross-origin resource sharing configuration
-- **IAM**: Fine-grained access control with conditional bindings
-- **Notifications**: Pub/Sub notifications for bucket events
-- **Retention Policy**: Bucket-level retention policies
+- **보안**: 버킷 수준의 통합 액세스, 공개 액세스 방지, CMEK 암호화
+- **수명 주기 관리**: 자동화된 객체 수명 주기 규칙
+- **버전 관리**: 선택적 객체 버전 관리
+- **액세스 로깅**: 선택적 액세스 로그 생성
+- **CORS**: 교차 출처 리소스 공유 구성
+- **IAM**: 조건부 바인딩을 사용한 세밀한 액세스 제어
+- **알림**: 버킷 이벤트에 대한 Pub/Sub 알림
+- **보관 정책**: 버킷 수준 보관 정책
 
-## Usage
+## 사용법
 
-### Basic Bucket
+### 기본 버킷
 
 ```hcl
 module "simple_bucket" {
@@ -27,7 +27,7 @@ module "simple_bucket" {
 }
 ```
 
-### Advanced Bucket with Lifecycle and Versioning
+### 수명 주기 및 버전 관리가 있는 고급 버킷
 
 ```hcl
 module "versioned_bucket" {
@@ -69,7 +69,7 @@ module "versioned_bucket" {
 }
 ```
 
-### Bucket with IAM and CORS
+### IAM 및 CORS가 있는 버킷
 
 ```hcl
 module "public_assets_bucket" {
@@ -97,48 +97,48 @@ module "public_assets_bucket" {
 }
 ```
 
-## Inputs
+## 입력 변수
 
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| project_id | The project ID | `string` | n/a | yes |
-| bucket_name | Name of the bucket (globally unique) | `string` | n/a | yes |
-| location | Bucket location | `string` | `"US"` | no |
-| storage_class | Storage class | `string` | `"STANDARD"` | no |
-| force_destroy | Allow deletion of bucket with objects | `bool` | `false` | no |
-| uniform_bucket_level_access | Enable uniform bucket-level access | `bool` | `true` | no |
-| labels | Labels to apply | `map(string)` | `{}` | no |
-| enable_versioning | Enable object versioning | `bool` | `false` | no |
-| lifecycle_rules | Lifecycle management rules | `list(object)` | `[]` | no |
-| retention_policy_days | Retention policy in days | `number` | `0` | no |
-| kms_key_name | KMS key for encryption | `string` | `""` | no |
-| cors_rules | CORS configuration | `list(object)` | `[]` | no |
-| public_access_prevention | Public access prevention | `string` | `"enforced"` | no |
-| iam_bindings | IAM role bindings | `list(object)` | `[]` | no |
-| notifications | Pub/Sub notifications | `list(object)` | `[]` | no |
+| 이름 | 설명 | 타입 | 기본값 | 필수 |
+|------|------|------|--------|:----:|
+| project_id | 프로젝트 ID | `string` | n/a | yes |
+| bucket_name | 버킷 이름 (전역적으로 고유해야 함) | `string` | n/a | yes |
+| location | 버킷 위치 | `string` | `"US"` | no |
+| storage_class | 스토리지 클래스 | `string` | `"STANDARD"` | no |
+| force_destroy | 객체가 있는 버킷 삭제 허용 | `bool` | `false` | no |
+| uniform_bucket_level_access | 버킷 수준의 통합 액세스 활성화 | `bool` | `true` | no |
+| labels | 적용할 레이블 | `map(string)` | `{}` | no |
+| enable_versioning | 객체 버전 관리 활성화 | `bool` | `false` | no |
+| lifecycle_rules | 수명 주기 관리 규칙 | `list(object)` | `[]` | no |
+| retention_policy_days | 보관 정책 (일) | `number` | `0` | no |
+| kms_key_name | 암호화용 KMS 키 | `string` | `""` | no |
+| cors_rules | CORS 구성 | `list(object)` | `[]` | no |
+| public_access_prevention | 공개 액세스 방지 | `string` | `"enforced"` | no |
+| iam_bindings | IAM 역할 바인딩 | `list(object)` | `[]` | no |
+| notifications | Pub/Sub 알림 | `list(object)` | `[]` | no |
 
-## Outputs
+## 출력 값
 
-| Name | Description |
-|------|-------------|
-| bucket_name | Name of the created bucket |
-| bucket_url | URL of the bucket |
-| bucket_self_link | Self link of the bucket |
-| bucket_location | Location of the bucket |
-| bucket_storage_class | Storage class of the bucket |
+| 이름 | 설명 |
+|------|------|
+| bucket_name | 생성된 버킷 이름 |
+| bucket_url | 버킷 URL |
+| bucket_self_link | 버킷 셀프 링크 |
+| bucket_location | 버킷 위치 |
+| bucket_storage_class | 버킷 스토리지 클래스 |
 
-## Security Considerations
+## 보안 고려사항
 
-1. **Uniform Bucket-Level Access**: Enabled by default for simplified IAM management
-2. **Public Access Prevention**: Set to "enforced" by default to prevent accidental public exposure
-3. **IAM Bindings**: Uses `google_storage_bucket_iam_member` (non-authoritative) to prevent conflicts
-4. **CMEK**: Supports customer-managed encryption keys for data-at-rest encryption
+1. **버킷 수준의 통합 액세스**: 간소화된 IAM 관리를 위해 기본적으로 활성화
+2. **공개 액세스 방지**: 실수로 인한 공개 노출을 방지하기 위해 기본적으로 "enforced"로 설정
+3. **IAM 바인딩**: 충돌을 방지하기 위해 `google_storage_bucket_iam_member` (비권한적) 사용
+4. **CMEK**: 저장 데이터 암호화를 위한 고객 관리 암호화 키 지원
 
-## Best Practices
+## 모범 사례
 
-1. Always use globally unique bucket names
-2. Enable versioning for critical data
-3. Configure lifecycle rules to optimize storage costs
-4. Use CMEK for sensitive data
-5. Apply consistent labeling for cost tracking
-6. Set appropriate retention policies for compliance
+1. 항상 전역적으로 고유한 버킷 이름 사용
+2. 중요한 데이터에 대해 버전 관리 활성화
+3. 스토리지 비용 최적화를 위한 수명 주기 규칙 구성
+4. 민감한 데이터에 CMEK 사용
+5. 비용 추적을 위한 일관된 레이블링 적용
+6. 규정 준수를 위한 적절한 보관 정책 설정

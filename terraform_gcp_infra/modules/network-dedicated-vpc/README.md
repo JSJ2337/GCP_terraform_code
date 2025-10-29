@@ -1,19 +1,19 @@
-# Network Dedicated VPC Module
+# 전용 VPC 네트워크 모듈
 
-This module creates and manages a Google Cloud VPC network with subnets, Cloud NAT, and firewall rules for a dedicated network topology.
+이 모듈은 전용 네트워크 토폴로지를 위한 서브넷, Cloud NAT 및 방화벽 규칙이 포함된 Google Cloud VPC 네트워크를 생성하고 관리합니다.
 
-## Features
+## 기능
 
-- **VPC Network**: Custom VPC with configurable routing mode (GLOBAL or REGIONAL)
-- **Subnets**: Multiple subnets across different regions with secondary IP ranges
-- **Private Google Access**: Enable private access to Google APIs
-- **Cloud NAT**: Managed NAT gateway for private instances to access the internet
-- **Cloud Router**: Required for Cloud NAT and BGP routing
-- **Firewall Rules**: Flexible firewall configuration with protocol and port control
+- **VPC 네트워크**: 구성 가능한 라우팅 모드 (GLOBAL 또는 REGIONAL)를 가진 사용자 정의 VPC
+- **서브넷**: 보조 IP 범위를 가진 여러 지역의 다중 서브넷
+- **비공개 Google 액세스**: Google API에 대한 비공개 액세스 활성화
+- **Cloud NAT**: 프라이빗 인스턴스가 인터넷에 액세스하기 위한 관리형 NAT 게이트웨이
+- **Cloud Router**: Cloud NAT 및 BGP 라우팅에 필요
+- **방화벽 규칙**: 프로토콜 및 포트 제어가 가능한 유연한 방화벽 구성
 
-## Usage
+## 사용법
 
-### Basic VPC with Single Subnet
+### 단일 서브넷이 있는 기본 VPC
 
 ```hcl
 module "vpc" {
@@ -34,7 +34,7 @@ module "vpc" {
 }
 ```
 
-### VPC with Multiple Subnets and Secondary Ranges
+### 여러 서브넷과 보조 범위가 있는 VPC
 
 ```hcl
 module "vpc_multi_region" {
@@ -72,7 +72,7 @@ module "vpc_multi_region" {
 }
 ```
 
-### VPC with Firewall Rules
+### 방화벽 규칙이 있는 VPC
 
 ```hcl
 module "vpc_with_firewall" {
@@ -99,7 +99,7 @@ module "vpc_with_firewall" {
       allow_protocol = "tcp"
       allow_ports    = ["22"]
       priority       = 1000
-      description    = "Allow SSH from Identity-Aware Proxy"
+      description    = "Identity-Aware Proxy에서 SSH 허용"
     },
     {
       name           = "allow-internal"
@@ -107,7 +107,7 @@ module "vpc_with_firewall" {
       ranges         = ["10.0.0.0/8"]
       allow_protocol = "all"
       priority       = 65534
-      description    = "Allow internal traffic"
+      description    = "내부 트래픽 허용"
     },
     {
       name           = "allow-http-from-lb"
@@ -117,13 +117,13 @@ module "vpc_with_firewall" {
       allow_ports    = ["80", "443"]
       target_tags    = ["http-server"]
       priority       = 1000
-      description    = "Allow HTTP/HTTPS from load balancers"
+      description    = "로드 밸런서에서 HTTP/HTTPS 허용"
     }
   ]
 }
 ```
 
-### Complete Production Example
+### 완전한 프로덕션 예제
 
 ```hcl
 module "prod_network" {
@@ -133,7 +133,7 @@ module "prod_network" {
   vpc_name     = "prod-vpc"
   routing_mode = "GLOBAL"
 
-  # Multi-region subnets for high availability
+  # 고가용성을 위한 다중 지역 서브넷
   subnets = {
     app-us-central = {
       region                = "us-central1"
@@ -162,18 +162,18 @@ module "prod_network" {
     }
   }
 
-  # Cloud NAT for outbound internet access
+  # 아웃바운드 인터넷 액세스를 위한 Cloud NAT
   nat_region           = "us-central1"
   nat_min_ports_per_vm = 2048
 
-  # Comprehensive firewall rules
+  # 포괄적인 방화벽 규칙
   firewall_rules = [
     {
       name           = "allow-ssh-iap"
       ranges         = ["35.235.240.0/20"]
       allow_protocol = "tcp"
       allow_ports    = ["22"]
-      description    = "SSH via IAP"
+      description    = "IAP를 통한 SSH"
     },
     {
       name           = "allow-health-checks"
@@ -181,81 +181,81 @@ module "prod_network" {
       allow_protocol = "tcp"
       allow_ports    = ["80", "443"]
       target_tags    = ["http-server"]
-      description    = "Health checks from GCP load balancers"
+      description    = "GCP 로드 밸런서의 상태 확인"
     },
     {
       name           = "allow-internal-all"
       ranges         = ["10.0.0.0/8"]
       allow_protocol = "all"
       priority       = 65534
-      description    = "Internal VPC communication"
+      description    = "내부 VPC 통신"
     }
   ]
 }
 ```
 
-## Inputs
+## 입력 변수
 
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|----------|
-| project_id | GCP project ID | string | - | yes |
-| vpc_name | Name of the VPC network | string | - | yes |
-| routing_mode | Routing mode (GLOBAL or REGIONAL) | string | "GLOBAL" | no |
-| subnets | Map of subnets to create | map(object) | - | yes |
-| nat_region | Region to create Cloud NAT | string | - | yes |
-| nat_min_ports_per_vm | Minimum ports per VM for NAT | number | 1024 | no |
-| firewall_rules | List of firewall rules | list(object) | [] | no |
+| 이름 | 설명 | 타입 | 기본값 | 필수 |
+|------|------|------|--------|------|
+| project_id | GCP 프로젝트 ID | string | - | yes |
+| vpc_name | VPC 네트워크 이름 | string | - | yes |
+| routing_mode | 라우팅 모드 (GLOBAL 또는 REGIONAL) | string | "GLOBAL" | no |
+| subnets | 생성할 서브넷 맵 | map(object) | - | yes |
+| nat_region | Cloud NAT를 생성할 지역 | string | - | yes |
+| nat_min_ports_per_vm | NAT의 VM당 최소 포트 수 | number | 1024 | no |
+| firewall_rules | 방화벽 규칙 목록 | list(object) | [] | no |
 
-### Subnet Object Structure
+### 서브넷 객체 구조
 
 ```hcl
 {
-  region                = string        # Required: GCP region
-  cidr                  = string        # Required: IP CIDR range
-  private_google_access = bool          # Optional: Enable private Google access (default: true)
-  secondary_ranges = list(object({      # Optional: Secondary IP ranges for GKE
+  region                = string        # 필수: GCP 지역
+  cidr                  = string        # 필수: IP CIDR 범위
+  private_google_access = bool          # 선택: 비공개 Google 액세스 활성화 (기본값: true)
+  secondary_ranges = list(object({      # 선택: GKE용 보조 IP 범위
     name = string
     cidr = string
   }))
 }
 ```
 
-### Firewall Rule Object Structure
+### 방화벽 규칙 객체 구조
 
 ```hcl
 {
-  name           = string              # Required: Rule name
-  direction      = string              # Optional: INGRESS or EGRESS (default: INGRESS)
-  ranges         = list(string)        # Optional: Source/destination IP ranges
-  allow_protocol = string              # Optional: tcp, udp, icmp, or all (default: tcp)
-  allow_ports    = list(string)        # Optional: List of ports (default: [])
-  priority       = number              # Optional: Priority (default: 1000)
-  target_tags    = list(string)        # Optional: Target network tags
-  disabled       = bool                # Optional: Disable rule (default: false)
-  description    = string              # Optional: Rule description
+  name           = string              # 필수: 규칙 이름
+  direction      = string              # 선택: INGRESS 또는 EGRESS (기본값: INGRESS)
+  ranges         = list(string)        # 선택: 소스/대상 IP 범위
+  allow_protocol = string              # 선택: tcp, udp, icmp 또는 all (기본값: tcp)
+  allow_ports    = list(string)        # 선택: 포트 목록 (기본값: [])
+  priority       = number              # 선택: 우선순위 (기본값: 1000)
+  target_tags    = list(string)        # 선택: 대상 네트워크 태그
+  disabled       = bool                # 선택: 규칙 비활성화 (기본값: false)
+  description    = string              # 선택: 규칙 설명
 }
 ```
 
-## Outputs
+## 출력 값
 
-| Name | Description |
-|------|-------------|
-| vpc_self_link | Self link of the VPC network |
-| subnet_ids | Map of subnet names to self links |
+| 이름 | 설명 |
+|------|------|
+| vpc_self_link | VPC 네트워크의 셀프 링크 |
+| subnet_ids | 서브넷 이름에서 셀프 링크로의 맵 |
 
-## Best Practices
+## 모범 사례
 
-1. **IP Planning**: Plan your CIDR ranges carefully to avoid conflicts
-2. **Private Google Access**: Enable for subnets that need to access Google APIs without external IPs
-3. **Secondary Ranges**: Use for GKE pod and service IP ranges
-4. **NAT Gateway**: Deploy in multiple regions for high availability
-5. **Firewall Rules**: Follow least privilege principle - only allow necessary traffic
-6. **Network Tags**: Use consistent tagging strategy for firewall rule targeting
-7. **Priority**: Use priority ranges to organize rules (e.g., 100-999 for critical, 1000+ for general)
+1. **IP 계획**: CIDR 범위를 신중하게 계획하여 충돌 방지
+2. **비공개 Google 액세스**: 외부 IP 없이 Google API에 액세스해야 하는 서브넷에 활성화
+3. **보조 범위**: GKE 파드 및 서비스 IP 범위에 사용
+4. **NAT 게이트웨이**: 고가용성을 위해 여러 지역에 배포
+5. **방화벽 규칙**: 최소 권한 원칙 준수 - 필요한 트래픽만 허용
+6. **네트워크 태그**: 방화벽 규칙 타겟팅을 위한 일관된 태그 전략 사용
+7. **우선순위**: 규칙 구성을 위한 우선순위 범위 사용 (예: 100-999는 중요, 1000+ 일반)
 
-## Common Firewall Rule Examples
+## 일반적인 방화벽 규칙 예제
 
-### Allow SSH from IAP
+### IAP에서 SSH 허용
 ```hcl
 {
   name           = "allow-ssh-iap"
@@ -265,7 +265,7 @@ module "prod_network" {
 }
 ```
 
-### Allow Internal Traffic
+### 내부 트래픽 허용
 ```hcl
 {
   name           = "allow-internal"
@@ -275,7 +275,7 @@ module "prod_network" {
 }
 ```
 
-### Allow Load Balancer Health Checks
+### 로드 밸런서 상태 확인 허용
 ```hcl
 {
   name           = "allow-health-checks"
@@ -286,19 +286,19 @@ module "prod_network" {
 }
 ```
 
-## Requirements
+## 요구사항
 
 - Terraform >= 1.6
 - Google Provider >= 5.30
 
-## Permissions Required
+## 필요한 권한
 
-- `roles/compute.networkAdmin` - To create VPC and subnets
-- `roles/compute.securityAdmin` - To create firewall rules
+- `roles/compute.networkAdmin` - VPC 및 서브넷 생성
+- `roles/compute.securityAdmin` - 방화벽 규칙 생성
 
-## Notes
+## 참고사항
 
-- Cloud NAT is created only in the specified `nat_region`
-- For multi-region deployments, create separate NAT gateways per region
-- Private Google Access allows instances without external IPs to access Google APIs
-- Secondary IP ranges are primarily used for GKE clusters (pods and services)
+- Cloud NAT는 지정된 `nat_region`에만 생성됩니다
+- 다중 지역 배포의 경우 지역별로 별도의 NAT 게이트웨이를 생성하세요
+- 비공개 Google 액세스를 사용하면 외부 IP가 없는 인스턴스가 Google API에 액세스할 수 있습니다
+- 보조 IP 범위는 주로 GKE 클러스터 (파드 및 서비스)에 사용됩니다

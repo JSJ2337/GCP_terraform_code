@@ -1,18 +1,18 @@
-# Observability Module
+# 관찰성 모듈
 
-This module configures Google Cloud Logging and Monitoring for centralized log aggregation and custom dashboards.
+이 모듈은 중앙 집중식 로그 수집 및 사용자 정의 대시보드를 위한 Google Cloud Logging 및 Monitoring을 구성합니다.
 
-## Features
+## 기능
 
-- **Centralized Logging**: Export logs from project to a central logging bucket
-- **Log Filtering**: Configure which logs to export using advanced filters
-- **Unique Writer Identity**: Automatically create service account for log sink
-- **Monitoring Dashboards**: Import custom Cloud Monitoring dashboards from JSON files
-- **Multi-Dashboard Support**: Deploy multiple dashboards from file references
+- **중앙 집중식 로깅**: 프로젝트에서 중앙 로깅 버킷으로 로그 내보내기
+- **로그 필터링**: 고급 필터를 사용하여 내보낼 로그 구성
+- **고유 작성자 ID**: 로그 싱크용 서비스 계정 자동 생성
+- **모니터링 대시보드**: JSON 파일에서 사용자 정의 Cloud Monitoring 대시보드 가져오기
+- **다중 대시보드 지원**: 파일 참조에서 여러 대시보드 배포
 
-## Usage
+## 사용법
 
-### Basic Log Sink to Central Project
+### 중앙 프로젝트로 기본 로그 싱크
 
 ```hcl
 module "observability" {
@@ -26,7 +26,7 @@ module "observability" {
 }
 ```
 
-### Log Sink with Custom Filter
+### 사용자 정의 필터가 있는 로그 싱크
 
 ```hcl
 module "observability_filtered" {
@@ -38,315 +38,98 @@ module "observability_filtered" {
   central_logging_project = "logging-project-456"
   central_logging_bucket  = "central-logs"
 
-  # Only export error and critical logs
+  # 오류 및 중요 로그만 내보내기
   log_filter = <<-EOT
     severity >= ERROR
   EOT
 }
 ```
 
-### Monitoring Dashboards Only
+### 모니터링 대시보드만
 
 ```hcl
-module "monitoring" {
+module "observability_dashboards" {
   source = "../../modules/observability"
 
   project_id = "app-project-123"
 
-  # Import dashboards from JSON files
+  enable_central_log_sink = false
+
   dashboard_json_files = [
-    "./dashboards/application-metrics.json",
-    "./dashboards/infrastructure-health.json"
+    "${path.module}/dashboards/app-metrics.json",
+    "${path.module}/dashboards/infrastructure.json"
   ]
 }
 ```
 
-### Complete Observability Setup
+## 입력 변수
 
-```hcl
-module "prod_observability" {
-  source = "../../modules/observability"
+| 이름 | 설명 | 타입 | 기본값 | 필수 |
+|------|------|------|--------|:----:|
+| project_id | 프로젝트 ID | `string` | n/a | yes |
+| enable_central_log_sink | 중앙 로그 싱크 활성화 | `bool` | `false` | no |
+| central_logging_project | 중앙 로깅 프로젝트 ID | `string` | `""` | no |
+| central_logging_bucket | 중앙 로깅 버킷 이름 | `string` | `""` | no |
+| log_filter | 로그 필터 표현식 | `string` | `""` | no |
+| dashboard_json_files | 대시보드 JSON 파일 경로 목록 | `list(string)` | `[]` | no |
 
-  project_id = "prod-app-123"
+## 출력 값
 
-  # Central logging configuration
-  enable_central_log_sink = true
-  central_logging_project = "prod-logging-central"
-  central_logging_bucket  = "prod-logs-aggregated"
+| 이름 | 설명 |
+|------|------|
+| log_sink_writer_identity | 로그 싱크 작성자 서비스 계정 |
+| log_sink_id | 로그 싱크 ID |
+| dashboard_ids | 생성된 대시보드 ID 목록 |
 
-  # Filter to export only important logs
-  log_filter = <<-EOT
-    (
-      severity >= WARNING
-      OR
-      resource.type = "gce_instance"
-      OR
-      resource.type = "cloud_run_revision"
-    )
-    AND NOT (
-      resource.labels.name = "health-check"
-    )
-  EOT
+## 로그 필터 예제
 
-  # Import monitoring dashboards
-  dashboard_json_files = [
-    "./dashboards/overview.json",
-    "./dashboards/compute-resources.json",
-    "./dashboards/application-latency.json",
-    "./dashboards/error-rates.json"
-  ]
-}
-
-# Grant permissions to log sink writer
-resource "google_project_iam_member" "log_sink_writer" {
-  project = "prod-logging-central"
-  role    = "roles/logging.bucketWriter"
-  member  = module.prod_observability.log_sink_writer_identity
-}
+### 심각도별
+```
+severity >= ERROR                    # 오류 및 중요 로그만
+severity = WARNING                   # 경고 로그만
 ```
 
-## Inputs
-
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|----------|
-| project_id | GCP project ID | string | - | yes |
-| enable_central_log_sink | Enable centralized log export | bool | false | no |
-| central_logging_project | Project ID where logs will be sent | string | "" | no |
-| central_logging_bucket | Log bucket name in central project | string | "_Default" | no |
-| log_filter | Advanced filter for logs to export | string | "" | no |
-| dashboard_json_files | List of dashboard JSON file paths | list(string) | [] | no |
-
-## Outputs
-
-| Name | Description |
-|------|-------------|
-| log_sink_writer_identity | Service account identity for log sink (needs bucket write permission) |
-
-## Log Filter Examples
-
-### All Logs (Default)
-```hcl
-log_filter = ""
+### 리소스 타입별
+```
+resource.type = "gce_instance"       # VM 인스턴스 로그
+resource.type = "gcs_bucket"         # GCS 버킷 로그
 ```
 
-### Errors and Critical Only
-```hcl
-log_filter = "severity >= ERROR"
+### 로그 이름별
+```
+logName:"cloudaudit.googleapis.com"  # 감사 로그
+logName:"compute.googleapis.com"     # Compute Engine 로그
 ```
 
-### Specific Resource Types
-```hcl
-log_filter = <<-EOT
-  resource.type = ("gce_instance" OR "cloud_run_revision" OR "k8s_container")
-EOT
-```
+## 모범 사례
 
-### Application Logs Only
-```hcl
-log_filter = <<-EOT
-  logName =~ "projects/.*/logs/app-*"
-EOT
-```
+1. **중앙 집중식 로깅**: 여러 프로젝트의 로그를 단일 프로젝트로 집계
+2. **필터 사용**: 비용 절감을 위해 필요한 로그만 내보내기
+3. **보존 정책**: 규정 준수 요구사항에 따라 적절한 보존 기간 설정
+4. **대시보드**: 주요 메트릭 및 KPI 시각화
+5. **알림**: 비정상 조건에 대한 알림 정책 설정
 
-### Exclude Health Checks
-```hcl
-log_filter = <<-EOT
-  NOT (
-    httpRequest.requestUrl =~ "/health"
-    OR
-    httpRequest.requestUrl =~ "/readiness"
-  )
-EOT
-```
+## 보안 고려사항
 
-### Complex Production Filter
-```hcl
-log_filter = <<-EOT
-  (
-    -- Include all errors
-    severity >= ERROR
-    OR
-    -- Include specific resources
-    (
-      resource.type = "gce_instance"
-      AND severity >= WARNING
-    )
-    OR
-    -- Include audit logs
-    protoPayload.@type = "type.googleapis.com/google.cloud.audit.AuditLog"
-  )
-  AND NOT (
-    -- Exclude health check logs
-    httpRequest.requestUrl =~ "/health"
-    OR
-    -- Exclude specific services
-    resource.labels.service_name = "internal-monitoring"
-  )
-EOT
-```
+1. **액세스 제어**: 중앙 로깅 버킷에 대한 액세스 제한
+2. **작성자 권한**: 로그 싱크 작성자 ID에 대상 버킷에 대한 권한 부여
+3. **민감한 데이터**: 로그에서 민감한 정보 제거 또는 마스킹
+4. **감사**: 로깅 구성 변경사항 추적
 
-## Dashboard Configuration
-
-### Creating Dashboard JSON Files
-
-1. Create dashboard in Cloud Console
-2. Export dashboard JSON:
-   ```bash
-   gcloud monitoring dashboards describe DASHBOARD_ID \
-     --project=PROJECT_ID \
-     --format=json > dashboard.json
-   ```
-
-3. Reference in Terraform:
-   ```hcl
-   dashboard_json_files = ["./dashboards/dashboard.json"]
-   ```
-
-### Dashboard JSON Structure (Simplified)
-
-```json
-{
-  "displayName": "Application Metrics",
-  "mosaicLayout": {
-    "columns": 12,
-    "tiles": [
-      {
-        "width": 6,
-        "height": 4,
-        "widget": {
-          "title": "CPU Utilization",
-          "xyChart": {
-            "dataSets": [
-              {
-                "timeSeriesQuery": {
-                  "timeSeriesFilter": {
-                    "filter": "resource.type=\"gce_instance\"",
-                    "aggregation": {
-                      "perSeriesAligner": "ALIGN_MEAN"
-                    }
-                  }
-                }
-              }
-            ]
-          }
-        }
-      }
-    ]
-  }
-}
-```
-
-## Best Practices
-
-### Logging
-
-1. **Central Logging**: Use a dedicated project for log aggregation
-2. **Log Filtering**: Export only necessary logs to reduce costs
-3. **Retention Policies**: Configure appropriate retention in central bucket
-4. **Access Control**: Restrict access to central logging project
-5. **Cost Management**: Monitor logging costs and adjust filters
-
-### Monitoring
-
-1. **Dashboard Organization**: Create separate dashboards for different concerns
-2. **Key Metrics**: Include SLIs (Service Level Indicators) in dashboards
-3. **Alerting**: Complement dashboards with alerting policies
-4. **Version Control**: Store dashboard JSON files in version control
-5. **Documentation**: Document dashboard purpose and metrics
-
-## Common Log Filter Patterns
-
-### By Severity
-```
-severity >= WARNING
-severity = ERROR
-severity >= CRITICAL
-```
-
-### By Resource Type
-```
-resource.type = "gce_instance"
-resource.type = "k8s_pod"
-resource.type = "cloud_function"
-```
-
-### By Log Name
-```
-logName =~ "projects/.*/logs/application-*"
-logName = "projects/my-project/logs/syslog"
-```
-
-### By HTTP Status
-```
-httpRequest.status >= 400
-httpRequest.status = 500
-```
-
-### By Labels
-```
-resource.labels.region = "us-central1"
-labels.environment = "production"
-```
-
-## Cost Optimization
-
-Logging costs can be significant. Use these strategies to optimize:
-
-1. **Filter Unnecessary Logs**: Exclude debug logs in production
-2. **Sample High-Volume Logs**: Use `sample(insertId, 0.1)` to sample 10%
-3. **Retention Policies**: Set appropriate retention periods
-4. **Log Buckets**: Use custom retention buckets for different log types
-5. **Monitor Usage**: Regularly review log volume and costs
-
-### Example Cost-Optimized Filter
-
-```hcl
-log_filter = <<-EOT
-  (
-    -- Always include errors
-    severity >= ERROR
-    OR
-    -- Sample 10% of INFO logs
-    (severity = INFO AND sample(insertId, 0.1))
-  )
-  AND NOT (
-    -- Exclude high-volume, low-value logs
-    httpRequest.requestUrl =~ "/(health|metrics|ready)"
-  )
-EOT
-```
-
-## Requirements
+## 요구사항
 
 - Terraform >= 1.6
 - Google Provider >= 5.30
 
-## Permissions Required
+## 필요한 권한
 
-### In Source Project
-- `roles/logging.configWriter` - To create log sinks
+- `roles/logging.configWriter` - 로그 싱크 생성
+- `roles/monitoring.dashboardEditor` - 대시보드 생성
+- 대상 프로젝트에서: `roles/logging.bucketWriter` - 로그 버킷에 쓰기
 
-### In Central Logging Project
-- `roles/logging.bucketWriter` - Grant to the sink writer identity
+## 참고사항
 
-## Setup Steps
-
-1. Create central logging project and bucket
-2. Deploy observability module with log sink enabled
-3. Grant `roles/logging.bucketWriter` to the sink writer identity in central project:
-   ```hcl
-   resource "google_project_iam_member" "sink_writer" {
-     project = var.central_logging_project
-     role    = "roles/logging.bucketWriter"
-     member  = module.observability.log_sink_writer_identity
-   }
-   ```
-4. Verify logs are flowing to central bucket
-
-## Notes
-
-- Log sink creates a unique writer identity (service account) automatically
-- The writer identity needs `roles/logging.bucketWriter` in the destination project
-- Dashboard JSON files must be valid Cloud Monitoring dashboard configurations
-- Empty `log_filter` exports all logs (can be expensive)
-- Log filters use Cloud Logging query language
+- 로그 싱크는 고유한 서비스 계정(작성자 ID)을 생성합니다
+- 이 서비스 계정에 대상 로깅 버킷에 쓸 수 있는 권한을 부여해야 합니다
+- 대시보드는 JSON 형식이어야 하며 Cloud Monitoring에서 내보낼 수 있습니다
+- 로그 내보내기는 거의 실시간이지만 약간의 지연이 있을 수 있습니다

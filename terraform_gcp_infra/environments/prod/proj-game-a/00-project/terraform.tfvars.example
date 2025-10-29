@@ -1,6 +1,6 @@
-# Project Configuration Example
-# Copy this file to terraform.tfvars and fill in your actual values
-# IMPORTANT: Do not commit terraform.tfvars to version control
+# 프로젝트 설정 예제
+# 이 파일을 terraform.tfvars로 복사하고 실제 값을 입력하세요
+# 중요: terraform.tfvars 파일은 버전 관리에 커밋하지 마세요
 
 project_id      = "your-project-id"
 project_name    = "Game A Production"
@@ -14,7 +14,7 @@ labels = {
   cost_center = "gaming"
 }
 
-# APIs to enable
+# 활성화할 API 목록
 apis = [
   "compute.googleapis.com",
   "iam.googleapis.com",
@@ -26,16 +26,16 @@ apis = [
   "cloudresourcemanager.googleapis.com"
 ]
 
-# Budget configuration
-# Note: Budget API requires special quota project configuration.
-# Set to false to avoid authentication issues during initial deployment.
-# You can enable it later via GCP Console: Billing → Budgets & alerts
+# 예산 설정
+# 참고: Budget API는 특별한 할당량 프로젝트 설정이 필요합니다.
+# 초기 배포 시 인증 문제를 피하려면 false로 설정하세요.
+# 나중에 GCP 콘솔에서 활성화할 수 있습니다: Billing → Budgets & alerts
 enable_budget   = false
 budget_amount   = 1000
 budget_currency = "USD"
 
-# Log retention
+# 로그 보관 기간 (일)
 log_retention_days = 30
 
-# Optional: CMEK key for log encryption
+# 선택사항: 로그 암호화용 CMEK 키
 # cmek_key_id = "projects/YOUR_PROJECT/locations/REGION/keyRings/KEYRING/cryptoKeys/KEY"

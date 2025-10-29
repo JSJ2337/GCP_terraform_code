@@ -1,17 +1,17 @@
-# IAM Module
+# IAM 모듈
 
-This module manages Google Cloud IAM bindings at the project level and optionally creates service accounts.
+이 모듈은 프로젝트 수준의 Google Cloud IAM 바인딩을 관리하고 선택적으로 서비스 계정을 생성합니다.
 
-## Features
+## 기능
 
-- **IAM Bindings**: Add members to project-level IAM roles (non-authoritative)
-- **Service Accounts**: Create and manage service accounts
-- **Non-Authoritative**: Uses `google_project_iam_member` to safely add permissions without affecting existing bindings
-- **Flexible Configuration**: Support for users, groups, and service accounts
+- **IAM 바인딩**: 프로젝트 수준 IAM 역할에 멤버 추가 (비권한적)
+- **서비스 계정**: 서비스 계정 생성 및 관리
+- **비권한적**: 기존 바인딩에 영향을 주지 않고 권한을 안전하게 추가하기 위해 `google_project_iam_member` 사용
+- **유연한 구성**: 사용자, 그룹 및 서비스 계정 지원
 
-## Usage
+## 사용법
 
-### Basic IAM Bindings
+### 기본 IAM 바인딩
 
 ```hcl
 module "iam" {
@@ -36,7 +36,7 @@ module "iam" {
 }
 ```
 
-### Creating Service Accounts with IAM Bindings
+### IAM 바인딩과 함께 서비스 계정 생성
 
 ```hcl
 module "iam_with_sa" {
@@ -44,7 +44,7 @@ module "iam_with_sa" {
 
   project_id = "my-project-id"
 
-  # Create service accounts
+  # 서비스 계정 생성
   create_service_accounts = true
 
   service_accounts = [
@@ -60,7 +60,7 @@ module "iam_with_sa" {
     }
   ]
 
-  # Grant permissions to service accounts and users
+  # 서비스 계정 및 사용자에게 권한 부여
   bindings = [
     {
       role   = "roles/storage.objectViewer"
@@ -78,204 +78,88 @@ module "iam_with_sa" {
 }
 ```
 
-### Complete Production Example
+## 입력 변수
 
-```hcl
-module "prod_iam" {
-  source = "../../modules/iam"
+| 이름 | 설명 | 타입 | 기본값 | 필수 |
+|------|------|------|--------|:----:|
+| project_id | 프로젝트 ID | `string` | n/a | yes |
+| bindings | IAM 바인딩 목록 | `list(object)` | `[]` | no |
+| create_service_accounts | 서비스 계정 생성 여부 | `bool` | `false` | no |
+| service_accounts | 생성할 서비스 계정 목록 | `list(object)` | `[]` | no |
 
-  project_id = "prod-project-123"
-
-  # Create application service accounts
-  create_service_accounts = true
-
-  service_accounts = [
-    {
-      account_id   = "prod-app"
-      display_name = "Production Application"
-      description  = "Main application service account"
-    },
-    {
-      account_id   = "prod-monitoring"
-      display_name = "Monitoring Agent"
-      description  = "Service account for monitoring and logging"
-    },
-    {
-      account_id   = "prod-backup"
-      display_name = "Backup Service"
-      description  = "Service account for backup operations"
-    }
-  ]
-
-  # IAM bindings for different roles
-  bindings = [
-    # Application permissions
-    {
-      role   = "roles/storage.objectViewer"
-      member = "serviceAccount:prod-app@prod-project-123.iam.gserviceaccount.com"
-    },
-    {
-      role   = "roles/cloudsql.client"
-      member = "serviceAccount:prod-app@prod-project-123.iam.gserviceaccount.com"
-    },
-
-    # Monitoring permissions
-    {
-      role   = "roles/monitoring.metricWriter"
-      member = "serviceAccount:prod-monitoring@prod-project-123.iam.gserviceaccount.com"
-    },
-    {
-      role   = "roles/logging.logWriter"
-      member = "serviceAccount:prod-monitoring@prod-project-123.iam.gserviceaccount.com"
-    },
-
-    # Backup permissions
-    {
-      role   = "roles/storage.admin"
-      member = "serviceAccount:prod-backup@prod-project-123.iam.gserviceaccount.com"
-    },
-
-    # Team access
-    {
-      role   = "roles/viewer"
-      member = "group:developers@example.com"
-    },
-    {
-      role   = "roles/editor"
-      member = "group:platform-team@example.com"
-    },
-    {
-      role   = "roles/owner"
-      member = "user:admin@example.com"
-    }
-  ]
-}
-```
-
-### Member Format Examples
-
-```hcl
-# User
-member = "user:alice@example.com"
-
-# Group
-member = "group:developers@example.com"
-
-# Service Account
-member = "serviceAccount:app@project-id.iam.gserviceaccount.com"
-
-# Domain
-member = "domain:example.com"
-
-# All Authenticated Users
-member = "allAuthenticatedUsers"
-
-# All Users (public)
-member = "allUsers"
-```
-
-## Inputs
-
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|----------|
-| project_id | GCP project ID | string | - | yes |
-| bindings | List of IAM role bindings | list(object) | [] | no |
-| create_service_accounts | Whether to create service accounts | bool | false | no |
-| service_accounts | List of service accounts to create | list(object) | [] | no |
-
-### Bindings Object Structure
+### 바인딩 객체 구조
 
 ```hcl
 {
-  role   = string  # Required: IAM role (e.g., "roles/storage.admin")
-  member = string  # Required: Member identity (e.g., "user:alice@example.com")
+  role   = string              # 필수: IAM 역할 (예: "roles/viewer")
+  member = string              # 필수: 멤버 (예: "user:alice@example.com")
 }
 ```
 
-### Service Account Object Structure
+### 서비스 계정 객체 구조
 
 ```hcl
 {
-  account_id   = string  # Required: Service account ID (max 30 chars, lowercase, hyphens)
-  display_name = string  # Optional: Human-readable name
-  description  = string  # Optional: Description of the service account
+  account_id   = string        # 필수: 서비스 계정 ID
+  display_name = string        # 선택: 표시 이름
+  description  = string        # 선택: 설명
 }
 ```
 
-## Outputs
+## 출력 값
 
-| Name | Description |
-|------|-------------|
-| service_accounts | Map of service account IDs to email addresses |
+| 이름 | 설명 |
+|------|------|
+| service_account_emails | 생성된 서비스 계정 이메일 목록 |
+| service_account_ids | 생성된 서비스 계정 ID 목록 |
 
-## Common IAM Roles
+## 보안 고려사항
 
-### Compute Engine
-- `roles/compute.viewer` - Read-only access
-- `roles/compute.instanceAdmin.v1` - Manage instances
-- `roles/compute.networkAdmin` - Manage networks
+1. **비권한적 바인딩**: `google_project_iam_member`를 사용하여 기존 바인딩과 충돌 방지
+2. **최소 권한 원칙**: 필요한 최소한의 권한만 부여
+3. **서비스 계정**: 애플리케이션마다 별도의 서비스 계정 사용
+4. **감사**: IAM 변경사항은 Cloud Audit Logs에 기록됨
 
-### Storage
-- `roles/storage.objectViewer` - Read objects
-- `roles/storage.objectCreator` - Create objects
-- `roles/storage.objectAdmin` - Full object control
-- `roles/storage.admin` - Full bucket and object control
+## 모범 사례
 
-### BigQuery
-- `roles/bigquery.dataViewer` - Read data
-- `roles/bigquery.dataEditor` - Read and write data
-- `roles/bigquery.admin` - Full access
+1. **역할 분리**: 업무에 따라 적절한 역할 사용
+2. **그룹 사용**: 개별 사용자 대신 그룹에 권한 부여
+3. **서비스 계정 명명**: 명확하고 설명적인 이름 사용
+4. **정기 검토**: IAM 바인딩을 정기적으로 검토하고 불필요한 권한 제거
+5. **문서화**: 각 바인딩의 목적을 주석으로 문서화
 
-### Cloud SQL
-- `roles/cloudsql.client` - Connect to instances
-- `roles/cloudsql.editor` - Manage instances
-- `roles/cloudsql.admin` - Full access
+## 일반적인 IAM 역할
 
-### Logging and Monitoring
-- `roles/logging.viewer` - View logs
-- `roles/logging.logWriter` - Write logs
-- `roles/monitoring.metricWriter` - Write metrics
-- `roles/monitoring.viewer` - View metrics
+### 컴퓨팅 관련
+- `roles/compute.viewer` - Compute Engine 리소스 읽기 전용
+- `roles/compute.admin` - Compute Engine 전체 관리
 
-### General
-- `roles/viewer` - Read-only access to all resources
-- `roles/editor` - Edit access to all resources
-- `roles/owner` - Full access including IAM management
+### 스토리지 관련
+- `roles/storage.objectViewer` - 객체 읽기
+- `roles/storage.objectCreator` - 객체 생성
+- `roles/storage.objectAdmin` - 객체 전체 관리
 
-## Best Practices
+### 네트워킹 관련
+- `roles/compute.networkViewer` - 네트워크 리소스 읽기
+- `roles/compute.networkAdmin` - 네트워크 전체 관리
 
-1. **Least Privilege**: Grant only the minimum required permissions
-2. **Use Groups**: Assign roles to groups rather than individual users
-3. **Service Accounts**: Create dedicated service accounts for each application
-4. **Avoid Owner Role**: Use more specific roles instead of `roles/owner`
-5. **Regular Audits**: Review IAM bindings regularly
-6. **Naming Convention**: Use consistent naming for service accounts (e.g., `app-name-purpose`)
-7. **Documentation**: Document the purpose of each service account
-8. **Non-Authoritative**: This module uses non-authoritative bindings, which is safer
+### 모니터링 관련
+- `roles/logging.viewer` - 로그 읽기
+- `roles/monitoring.metricWriter` - 메트릭 작성
 
-## Security Considerations
-
-- **Avoid allUsers and allAuthenticatedUsers** in production
-- **Rotate service account keys** regularly
-- **Enable audit logging** for IAM changes
-- **Use workload identity** for GKE instead of service account keys
-- **Review permissions** before granting editor or owner roles
-
-## Requirements
+## 요구사항
 
 - Terraform >= 1.6
 - Google Provider >= 5.30
 
-## Permissions Required
+## 필요한 권한
 
-- `roles/iam.serviceAccountAdmin` - To create service accounts
-- `roles/resourcemanager.projectIamAdmin` - To manage project IAM bindings
+- `roles/resourcemanager.projectIamAdmin` - IAM 바인딩 관리
+- `roles/iam.serviceAccountAdmin` - 서비스 계정 생성 및 관리
 
-## Notes
+## 참고사항
 
-- This module uses `google_project_iam_member` (non-authoritative), which means:
-  - It only manages the specific bindings you define
-  - It won't remove existing bindings created elsewhere
-  - Multiple Terraform modules can safely add bindings to the same role
-- Service account email format: `{account_id}@{project_id}.iam.gserviceaccount.com`
-- Service account `account_id` must be 6-30 characters, lowercase letters, digits, and hyphens
+- 이 모듈은 비권한적 방식으로 IAM 바인딩을 추가합니다 (기존 바인딩을 제거하지 않음)
+- 서비스 계정 이메일은 `{account_id}@{project_id}.iam.gserviceaccount.com` 형식입니다
+- IAM 변경사항이 전파되는데 최대 7분이 걸릴 수 있습니다
+- 민감한 역할 부여 시 특히 주의하세요 (예: `roles/owner`, `roles/editor`)
