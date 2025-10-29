@@ -3,13 +3,13 @@
 # 중요: terraform.tfvars 파일은 버전 관리에 커밋하지 마세요
 
 project_id      = "your-project-id"
-project_name    = "Game A Production"
+project_name    = "Default Template Production"
 folder_id       = "folders/123456789012"
 billing_account = "ABCDEF-123456-GHIJKL"
 
 labels = {
   environment = "prod"
-  project     = "game-a"
+  project     = "default-templet"
   managed_by  = "terraform"
   cost_center = "gaming"
 }

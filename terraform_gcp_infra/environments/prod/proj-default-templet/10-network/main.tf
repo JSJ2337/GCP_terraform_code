@@ -17,7 +17,7 @@ provider "google" {
 # Common naming conventions
 locals {
   environment    = "prod"
-  project_name   = "game-a"
+  project_name   = "default-templet"
   project_prefix = "${local.environment}-${local.project_name}"
 
   # Default VPC name following naming convention

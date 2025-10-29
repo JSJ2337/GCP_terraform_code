@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
     bucket = "delabs-terraform-state-prod"
-    prefix = "proj-game-a/40-observability"
+    prefix = "proj-default-templet/30-security"
   }
 }

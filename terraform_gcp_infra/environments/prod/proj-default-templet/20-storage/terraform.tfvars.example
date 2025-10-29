@@ -7,7 +7,7 @@ project_id = "your-project-id"
 # 공통 설정
 default_labels = {
   environment = "prod"
-  project     = "game-a"
+  project     = "default-templet"
   managed_by  = "terraform"
 }
 
@@ -18,11 +18,11 @@ public_access_prevention    = "enforced"
 # kms_key_name = "projects/YOUR_PROJECT/locations/REGION/keyRings/KEYRING/cryptoKeys/KEY"
 
 # 에셋 버킷 - 게임 에셋, 이미지, 비디오용
-assets_bucket_name          = "myorg-prod-game-a-assets"
+assets_bucket_name          = "myorg-prod-default-templet-assets"
 assets_bucket_location      = "US-CENTRAL1"
 assets_bucket_storage_class = "STANDARD"
 assets_bucket_labels = {
-  purpose = "game-assets"
+  purpose = "default-templetssets"
 }
 assets_enable_versioning = true
 assets_lifecycle_rules = [
@@ -52,7 +52,7 @@ assets_iam_bindings = [
 ]
 
 # 로그 버킷 - 애플리케이션 및 시스템 로그용
-logs_bucket_name          = "myorg-prod-game-a-logs"
+logs_bucket_name          = "myorg-prod-default-templet-logs"
 logs_bucket_location      = "US-CENTRAL1"
 logs_bucket_storage_class = "COLDLINE"
 logs_bucket_labels = {
@@ -73,7 +73,7 @@ logs_retention_policy_locked = false
 logs_iam_bindings            = []
 
 # 백업 버킷 - 데이터베이스 및 애플리케이션 백업용
-backups_bucket_name          = "myorg-prod-game-a-backups"
+backups_bucket_name          = "myorg-prod-default-templet-backups"
 backups_bucket_location      = "US"
 backups_bucket_storage_class = "ARCHIVE"
 backups_bucket_labels = {

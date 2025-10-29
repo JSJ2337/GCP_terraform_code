@@ -27,7 +27,7 @@ provider "google-beta" {
 locals {
   common_labels = {
     environment = "prod"
-    project     = "game-a"
+    project     = "default-templet"
     managed_by  = "terraform"
     cost_center = "gaming"
     created_by  = "platform-team"

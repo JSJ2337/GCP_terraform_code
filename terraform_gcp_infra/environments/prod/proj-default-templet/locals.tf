@@ -2,7 +2,7 @@
 locals {
   # Environment and project info
   environment    = "prod"
-  project_name   = "game-a"
+  project_name   = "default-templet"
   organization   = "myorg" # Update with your organization name
   region_primary = "us-central1"
   region_backup  = "us-east1"

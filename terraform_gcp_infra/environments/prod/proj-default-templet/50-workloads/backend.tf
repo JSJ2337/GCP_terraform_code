@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
     bucket = "delabs-terraform-state-prod"
-    prefix = "proj-game-a/50-workloads"
+    prefix = "proj-default-templet/50-workloads"
   }
 }

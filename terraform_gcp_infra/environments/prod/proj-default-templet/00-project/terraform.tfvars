@@ -7,7 +7,7 @@ billing_account = "01076D-327AD5-FC8922"
 # Labels
 labels = {
   environment = "prod"
-  project     = "game-a"
+  project     = "default-templet"
   team        = "game-dev"
   cost-center = "engineering"
 }

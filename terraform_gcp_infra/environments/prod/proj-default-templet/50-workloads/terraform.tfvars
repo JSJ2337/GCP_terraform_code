@@ -1,18 +1,18 @@
 # Workloads Configuration
 project_id           = "gcp-terraform-imsi"
 zone                 = "us-central1-a"
-subnetwork_self_link = "projects/gcp-terraform-imsi/regions/us-central1/subnetworks/game-a-subnet-us-central1"
+subnetwork_self_link = "projects/gcp-terraform-imsi/regions/us-central1/subnetworks/default-templet-subnet-us-central1"
 
 # VM configuration
 instance_count   = 2
-name_prefix      = "game-a-gce"
+name_prefix      = "default-templet-gce"
 machine_type     = "e2-micro"
 enable_public_ip = false
 enable_os_login  = true
 preemptible      = false
 
 # Service account
-service_account_email = "game-a-compute@gcp-terraform-imsi.iam.gserviceaccount.com"
+service_account_email = "default-templet-compute@gcp-terraform-imsi.iam.gserviceaccount.com"
 service_account_scopes = [
   "https://www.googleapis.com/auth/cloud-platform"
 ]
@@ -44,7 +44,7 @@ EOF
 # Tags and labels
 tags = ["game", "app", "ssh-allowed"]
 labels = {
-  app        = "game-a"
+  app        = "default-templet"
   env        = "prod"
   component  = "game-server"
   managed-by = "terraform"
