@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket = "gcp-tfstate-prod"
+    bucket = "delabs-terraform-state-prod"
     prefix = "proj-game-a/30-security"
   }
 }
