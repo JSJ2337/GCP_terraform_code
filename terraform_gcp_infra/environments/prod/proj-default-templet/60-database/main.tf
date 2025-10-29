@@ -76,6 +76,12 @@ module "mysql" {
   query_string_length     = var.query_string_length
   record_application_tags = var.record_application_tags
 
+  # Logging
+  enable_slow_query_log = var.enable_slow_query_log
+  slow_query_log_time   = var.slow_query_log_time
+  enable_general_log    = var.enable_general_log
+  log_output            = var.log_output
+
   # Databases
   databases = var.databases
 

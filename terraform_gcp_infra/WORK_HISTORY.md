@@ -2,6 +2,270 @@
 
 ---
 
+## 📅 세션 6 작업 내역 (2025-10-29)
+
+**작업자**: Claude Code
+**목적**: Cloud SQL MySQL 로깅 및 Observability 개선
+
+### 🎯 작업 요약
+
+Cloud SQL 모듈에 쿼리 로깅 기능을 추가하여 성능 모니터링 및 디버깅을 위한 Cloud Logging 통합을 구현했습니다.
+
+### 완료된 작업 ✅
+
+#### 1. Cloud SQL 모듈 로깅 변수 추가
+
+**추가된 변수** (`modules/cloudsql-mysql/variables.tf`):
+- `enable_slow_query_log` (bool, 기본값: `true`): 느린 쿼리 로깅 활성화
+- `slow_query_log_time` (number, 기본값: `2`): 느린 쿼리 기준 시간 (초)
+- `enable_general_log` (bool, 기본값: `false`): 일반 쿼리 로깅 활성화
+- `log_output` (string, 기본값: `"FILE"`): 로그 출력 방식 (FILE/TABLE)
+
+**검증 규칙**:
+- `log_output`은 "FILE" 또는 "TABLE"만 허용
+- FILE: Cloud Logging으로 자동 전송 (권장)
+- TABLE: MySQL 테이블에 저장
+
+#### 2. Cloud SQL main.tf 로깅 구성
+
+**자동 플래그 생성** (`modules/cloudsql-mysql/main.tf`):
+```terraform
+locals {
+  logging_flags = concat(
+    var.enable_slow_query_log ? [
+      { name = "slow_query_log", value = "on" },
+      { name = "long_query_time", value = tostring(var.slow_query_log_time) }
+    ] : [],
+    var.enable_general_log ? [
+      { name = "general_log", value = "on" }
+    ] : [],
+    [
+      { name = "log_output", value = var.log_output }
+    ]
+  )
+  all_database_flags = concat(var.database_flags, local.logging_flags)
+}
+```
+
+**동작 방식**:
+- 사용자가 설정한 `database_flags`와 로깅 플래그를 자동으로 병합
+- 조건부 플래그 생성으로 불필요한 플래그 제외
+- 기존 database_flags 동적 블록은 `local.all_database_flags` 사용
+
+#### 3. 60-database 레이어 업데이트
+
+**수정된 파일**:
+- `variables.tf`: 로깅 변수 4개 추가
+- `main.tf`: 모듈 호출 시 로깅 변수 전달
+  ```terraform
+  # Logging
+  enable_slow_query_log = var.enable_slow_query_log
+  slow_query_log_time   = var.slow_query_log_time
+  enable_general_log    = var.enable_general_log
+  log_output            = var.log_output
+  ```
+- `terraform.tfvars.example`: 로깅 설정 섹션 및 주석 추가
+
+#### 4. Cloud SQL README 문서화
+
+**추가된 섹션**:
+1. **기능 목록**: "로깅: 느린 쿼리 및 일반 쿼리 로깅, Cloud Logging 통합" 추가
+2. **사용 예제**: "로깅 및 모니터링 설정" 예제 추가
+3. **입력 변수 테이블**: 로깅 변수 4개 추가
+4. **모범 사례**: 모니터링 섹션에 로깅 가이드 추가
+5. **로깅 및 모니터링 섹션** (신규):
+   - Cloud Logging 통합 설명
+   - 느린 쿼리 로그, 일반 로그, 로그 출력 방식 설명
+   - Cloud Logging에서 로그 확인하는 gcloud 명령어
+   - Query Insights 설명
+   - 로깅 비용 최적화 가이드 (환경별 권장 설정)
+
+**gcloud 로그 확인 명령어**:
+```bash
+# 느린 쿼리 로그
+gcloud logging read "resource.type=cloudsql_database AND
+  logName=projects/PROJECT_ID/logs/cloudsql.googleapis.com%2Fmysql-slow.log"
+
+# 일반 쿼리 로그
+gcloud logging read "resource.type=cloudsql_database AND
+  logName=projects/PROJECT_ID/logs/cloudsql.googleapis.com%2Fmysql.log"
+
+# 에러 로그
+gcloud logging read "resource.type=cloudsql_database AND
+  logName=projects/PROJECT_ID/logs/cloudsql.googleapis.com%2Fmysql.err"
+```
+
+#### 5. 문서 업데이트
+
+**CHANGELOG.md**:
+- "Observability 개선" 섹션 추가
+- Cloud SQL 로깅 기능 상세 설명
+
+**QUICK_REFERENCE.md**:
+- 세션 6 요약 추가
+- 완료 항목에 17번 추가
+
+**WORK_HISTORY.md**:
+- 세션 6 상세 작업 내역 추가 (이 문서)
+
+### 📊 통계
+
+- **수정된 파일**: 7개
+  - `modules/cloudsql-mysql/variables.tf` (로깅 변수 추가)
+  - `modules/cloudsql-mysql/main.tf` (로깅 플래그 로직 추가)
+  - `modules/cloudsql-mysql/README.md` (로깅 섹션 추가)
+  - `environments/prod/proj-default-templet/60-database/variables.tf`
+  - `environments/prod/proj-default-templet/60-database/main.tf`
+  - `environments/prod/proj-default-templet/60-database/terraform.tfvars.example`
+  - 문서 3개 (CHANGELOG.md, QUICK_REFERENCE.md, WORK_HISTORY.md)
+
+- **추가된 코드 라인**: 약 150줄
+  - Variables: 30줄
+  - Locals 로직: 15줄
+  - README 문서: 90줄
+  - 기타: 15줄
+
+### 🔍 기술적 결정
+
+#### 1. 왜 database_flags를 직접 사용하지 않고 별도 변수를 만들었나?
+
+**이유**:
+- **사용자 친화성**: 복잡한 database_flags 구조 대신 간단한 boolean/number 변수 제공
+- **자동화**: 로깅 활성화 시 필요한 여러 플래그를 자동으로 구성
+- **기본값 제공**: 프로덕션 환경에 적합한 기본값 설정
+- **충돌 방지**: 사용자가 수동으로 로깅 플래그를 설정할 필요 없음
+
+**예시**:
+```hcl
+# Before (복잡함)
+database_flags = [
+  { name = "slow_query_log", value = "on" },
+  { name = "long_query_time", value = "2" },
+  { name = "log_output", value = "FILE" }
+]
+
+# After (간단함)
+enable_slow_query_log = true
+slow_query_log_time   = 2
+```
+
+#### 2. 왜 일반 로그의 기본값을 false로 설정했나?
+
+**이유**:
+- **성능 영향**: 모든 쿼리를 로깅하면 성능 저하 발생
+- **비용 증가**: Cloud Logging 비용이 크게 증가
+- **프로덕션 안전성**: 실수로 활성화되는 것을 방지
+- **용도 제한**: 디버깅 및 감사 목적으로만 사용
+
+**권장 사용 시나리오**:
+- ✅ 개발/스테이징 환경에서 디버깅
+- ✅ 보안 감사가 필요한 경우
+- ✅ 특정 문제 재현 시 임시 활성화
+- ❌ 프로덕션 환경에서 상시 활성화
+
+#### 3. 로그 출력 방식으로 FILE을 기본값으로 선택한 이유
+
+**FILE의 장점**:
+- Cloud Logging으로 자동 전송
+- 중앙 집중식 로그 관리
+- Logs Explorer에서 쿼리 및 필터링 가능
+- 다른 GCP 서비스와 통합 용이
+- 알림 및 모니터링 설정 가능
+
+**TABLE의 단점**:
+- 로그가 MySQL 테이블에 저장됨
+- 추가 스토리지 비용 발생
+- 로그 조회를 위해 SQL 쿼리 필요
+- Cloud Logging 통합 안 됨
+
+### 🎓 학습 내용
+
+#### Cloud SQL 로깅 메커니즘
+
+1. **Database Flags**:
+   - MySQL 서버 변수를 동적으로 설정
+   - 인스턴스 재시작 없이 적용 가능 (대부분의 플래그)
+   - `slow_query_log`, `general_log`, `log_output` 등
+
+2. **Cloud Logging 통합**:
+   - `log_output = "FILE"`로 설정하면 자동 전송
+   - 로그 타입별 별도의 로그 스트림:
+     - `mysql-slow.log`: 느린 쿼리
+     - `mysql.log`: 일반 쿼리 (활성화 시)
+     - `mysql.err`: 에러 로그
+
+3. **Query Insights vs 로깅**:
+   - **Query Insights**:
+     - GUI 기반 쿼리 성능 분석
+     - 상위 N개 쿼리 자동 식별
+     - CPU/메모리 사용량 포함
+     - 추가 비용 없음
+   - **Slow Query Log**:
+     - 기준 시간 이상 쿼리만 기록
+     - 텍스트 로그 형식
+     - Cloud Logging 비용 발생
+     - 더 상세한 쿼리 정보
+
+### 💡 베스트 프랙티스
+
+#### 환경별 로깅 설정 권장
+
+**프로덕션**:
+```hcl
+enable_slow_query_log = true   # ✅ 활성화
+slow_query_log_time   = 2      # 2초 이상
+enable_general_log    = false  # ❌ 비활성화
+query_insights_enabled = true  # ✅ 활성화
+```
+
+**스테이징**:
+```hcl
+enable_slow_query_log = true   # ✅ 활성화
+slow_query_log_time   = 1      # 1초 이상 (더 민감하게)
+enable_general_log    = false  # ❌ 비활성화 (필요시만)
+query_insights_enabled = true  # ✅ 활성화
+```
+
+**개발**:
+```hcl
+enable_slow_query_log = true   # ✅ 활성화
+slow_query_log_time   = 1      # 1초 이상
+enable_general_log    = true   # ✅ 디버깅을 위해 활성화 가능
+query_insights_enabled = true  # ✅ 활성화
+```
+
+### 🔄 다음 단계
+
+**즉시 가능**:
+1. 실제 Cloud SQL 인스턴스 배포 및 로깅 테스트
+2. Cloud Logging에서 로그 확인
+3. 로깅 기반 알림 설정
+
+**향후 개선**:
+1. PostgreSQL 모듈에도 동일한 로깅 기능 추가
+2. 로그 기반 메트릭 (log-based metrics) 생성
+3. 자동 알림 설정 (예: 느린 쿼리가 임계값 초과 시)
+4. 로그 보존 정책 설정
+
+### 📝 커밋 메시지
+
+```
+feat: Cloud SQL에 로깅 및 Cloud Logging 통합 추가
+
+- 느린 쿼리 로그 자동 구성 (기본 2초)
+- 일반 쿼리 로그 옵션 추가
+- Cloud Logging FILE 출력 지원
+- 로깅 변수 4개 추가 (enable_slow_query_log, slow_query_log_time, enable_general_log, log_output)
+- database_flags와 로깅 플래그 자동 병합
+- 60-database 레이어 로깅 변수 추가
+- cloudsql-mysql README에 로깅 섹션 추가
+- 환경별 로깅 권장 설정 문서화
+
+🤖 Generated with Claude Code
+```
+
+---
+
 ## 📅 세션 5 작업 내역 (2025-10-29)
 
 **작업자**: Claude Code

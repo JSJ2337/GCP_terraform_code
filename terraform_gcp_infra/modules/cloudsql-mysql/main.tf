@@ -12,6 +12,26 @@ terraform {
   }
 }
 
+# Logging flags for Cloud SQL
+locals {
+  # 기본 로깅 플래그 구성
+  logging_flags = concat(
+    var.enable_slow_query_log ? [
+      { name = "slow_query_log", value = "on" },
+      { name = "long_query_time", value = tostring(var.slow_query_log_time) }
+    ] : [],
+    var.enable_general_log ? [
+      { name = "general_log", value = "on" }
+    ] : [],
+    [
+      { name = "log_output", value = var.log_output }
+    ]
+  )
+
+  # 사용자 정의 플래그와 로깅 플래그 병합
+  all_database_flags = concat(var.database_flags, local.logging_flags)
+}
+
 # Cloud SQL MySQL Instance
 resource "google_sql_database_instance" "instance" {
   name             = var.instance_name
@@ -62,9 +82,9 @@ resource "google_sql_database_instance" "instance" {
       update_track = var.maintenance_window_update_track
     }
 
-    # Database flags
+    # Database flags (includes logging configuration)
     dynamic "database_flags" {
-      for_each = var.database_flags
+      for_each = local.all_database_flags
       content {
         name  = database_flags.value.name
         value = database_flags.value.value

@@ -159,6 +159,30 @@ variable "record_application_tags" {
   default     = false
 }
 
+variable "enable_slow_query_log" {
+  type        = bool
+  description = "느린 쿼리 로깅 활성화"
+  default     = true
+}
+
+variable "slow_query_log_time" {
+  type        = number
+  description = "느린 쿼리 기준 시간 (초)"
+  default     = 2
+}
+
+variable "enable_general_log" {
+  type        = bool
+  description = "일반 쿼리 로깅 활성화"
+  default     = false
+}
+
+variable "log_output" {
+  type        = string
+  description = "로그 출력 방식"
+  default     = "FILE"
+}
+
 variable "databases" {
   type = list(object({
     name      = string

@@ -162,6 +162,35 @@ variable "record_application_tags" {
   default     = false
 }
 
+# Logging configuration
+variable "enable_slow_query_log" {
+  type        = bool
+  description = "느린 쿼리 로깅 활성화 (성능 모니터링용)"
+  default     = true
+}
+
+variable "slow_query_log_time" {
+  type        = number
+  description = "느린 쿼리 기준 시간 (초) - 이 시간보다 오래 걸리는 쿼리를 로깅"
+  default     = 2
+}
+
+variable "enable_general_log" {
+  type        = bool
+  description = "일반 쿼리 로깅 활성화 (모든 쿼리 로깅, 프로덕션에서는 비권장)"
+  default     = false
+}
+
+variable "log_output" {
+  type        = string
+  description = "로그 출력 방식 (FILE 또는 TABLE, Cloud Logging으로 전송하려면 FILE 사용)"
+  default     = "FILE"
+  validation {
+    condition     = contains(["FILE", "TABLE"], var.log_output)
+    error_message = "log_output은 FILE 또는 TABLE이어야 합니다."
+  }
+}
+
 # Databases
 variable "databases" {
   type = list(object({

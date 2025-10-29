@@ -9,6 +9,16 @@
 
 ### 추가 (Added)
 
+#### Observability 개선
+- **Cloud SQL 로깅**: MySQL 쿼리 로깅 및 Cloud Logging 통합
+  - 느린 쿼리 로그 (Slow Query Log) 자동 구성
+  - 일반 쿼리 로그 (General Log) 옵션
+  - Cloud Logging으로 자동 전송 (FILE 출력)
+  - 로깅 변수: `enable_slow_query_log`, `slow_query_log_time`, `enable_general_log`, `log_output`
+  - 기본값: 느린 쿼리 로그 활성화 (2초 기준), 일반 로그 비활성화
+
+### 추가 (Added) - 세션 5
+
 #### 새로운 모듈
 - **cloudsql-mysql**: Cloud SQL MySQL 데이터베이스 관리 모듈
   - High Availability (REGIONAL/ZONAL) 지원

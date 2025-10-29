@@ -66,6 +66,16 @@ terraform plan
 - **문서화**:
   - README.md, WORK_HISTORY.md 업데이트
 
+### 세션 6: Cloud SQL 로깅 기능 추가
+- **Observability 개선**:
+  - Cloud SQL 느린 쿼리 로깅 (기본 2초)
+  - 일반 쿼리 로깅 옵션 (디버깅용)
+  - Cloud Logging 자동 통합
+  - 로깅 변수 4개 추가
+- **문서 업데이트**:
+  - cloudsql-mysql README에 로깅 섹션 추가
+  - 60-database 레이어 로깅 변수 추가
+
 ## ⚠️ 주의: State 마이그레이션 필요
 
 기존 인프라가 있다면:
@@ -99,6 +109,7 @@ terraform state mv 'module.game_backups_bucket' 'module.game_storage.module.gcs_
 14. ✅ Load Balancer 모듈 추가 (3가지 타입 지원)
 15. ✅ 데이터베이스 레이어 추가 (60-database)
 16. ✅ 로드 밸런서 레이어 추가 (70-loadbalancer)
+17. ✅ Cloud SQL 로깅 기능 추가 (느린 쿼리 로그, Cloud Logging 통합)
 
 ## 📂 중요 파일
 

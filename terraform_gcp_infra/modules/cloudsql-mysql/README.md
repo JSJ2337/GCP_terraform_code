@@ -12,6 +12,7 @@
 - **읽기 복제본**: 다중 리전 읽기 복제본 지원
 - **데이터베이스 및 사용자**: 자동 생성 및 관리
 - **쿼리 인사이트**: 성능 모니터링
+- **로깅**: 느린 쿼리 및 일반 쿼리 로깅, Cloud Logging 통합
 - **자동 디스크 확장**: 용량 자동 증설
 
 ## 사용법
@@ -129,17 +130,19 @@ module "mysql_with_replicas" {
     }
   }
 
-  # 데이터베이스 플래그
+  # 데이터베이스 플래그 (커스텀 설정)
   database_flags = [
     {
       name  = "max_connections"
       value = "1000"
-    },
-    {
-      name  = "slow_query_log"
-      value = "on"
     }
   ]
+
+  # 로깅 설정 (자동으로 database_flags에 추가됨)
+  enable_slow_query_log = true
+  slow_query_log_time   = 2
+  enable_general_log    = false
+  log_output            = "FILE"
 
   databases = [
     {
@@ -153,6 +156,61 @@ module "mysql_with_replicas" {
       password = var.db_password
     }
   ]
+}
+```
+
+### 로깅 및 모니터링 설정
+
+```hcl
+module "mysql_with_logging" {
+  source = "../../modules/cloudsql-mysql"
+
+  project_id    = "my-project-id"
+  instance_name = "monitored-mysql"
+  region        = "us-central1"
+
+  tier = "db-n1-standard-2"
+
+  # Query Insights 활성화
+  query_insights_enabled  = true
+  query_string_length     = 2048
+  record_application_tags = true
+
+  # 느린 쿼리 로깅 (성능 모니터링)
+  enable_slow_query_log = true
+  slow_query_log_time   = 2  # 2초 이상 걸리는 쿼리 로깅
+
+  # 일반 쿼리 로깅 (디버깅 시에만 사용)
+  enable_general_log = false  # 프로덕션에서는 false 권장
+
+  # 로그 출력 방식 (FILE로 설정하면 Cloud Logging으로 전송)
+  log_output = "FILE"
+
+  # 추가 데이터베이스 플래그
+  database_flags = [
+    {
+      name  = "max_connections"
+      value = "500"
+    }
+  ]
+
+  databases = [
+    {
+      name = "myapp"
+    }
+  ]
+
+  users = [
+    {
+      name     = "app_user"
+      password = var.db_password
+    }
+  ]
+
+  labels = {
+    environment = "prod"
+    monitoring  = "enabled"
+  }
 }
 ```
 
@@ -219,6 +277,11 @@ module "mysql_public" {
 | ipv4_enabled | 공개 IP 활성화 | `bool` | `false` | no |
 | private_network | VPC 네트워크 셀프 링크 | `string` | `""` | no |
 | require_ssl | SSL 연결 필수 | `bool` | `true` | no |
+| query_insights_enabled | 쿼리 인사이트 활성화 | `bool` | `true` | no |
+| enable_slow_query_log | 느린 쿼리 로깅 활성화 | `bool` | `true` | no |
+| slow_query_log_time | 느린 쿼리 기준 시간 (초) | `number` | `2` | no |
+| enable_general_log | 일반 쿼리 로깅 활성화 | `bool` | `false` | no |
+| log_output | 로그 출력 방식 (FILE/TABLE) | `string` | `"FILE"` | no |
 | databases | 생성할 데이터베이스 목록 | `list(object)` | `[]` | no |
 | users | 생성할 사용자 목록 | `list(object)` | `[]` | no |
 | read_replicas | 읽기 복제본 설정 | `map(object)` | `{}` | no |
@@ -297,10 +360,13 @@ gcloud services vpc-peerings connect \
    - 읽기 부하 분산을 위해 복제본 사용
    - 다른 리전에 배치하여 지연 시간 감소
 
-6. **모니터링**
-   - Query Insights 활성화
+6. **모니터링 및 로깅**
+   - Query Insights 활성화 (쿼리 성능 분석)
+   - 느린 쿼리 로깅 활성화 (`enable_slow_query_log = true`)
+   - 적절한 느린 쿼리 기준 시간 설정 (기본 2초)
+   - 로그는 FILE로 출력하여 Cloud Logging으로 전송
+   - 일반 쿼리 로깅은 디버깅 시에만 활성화 (성능 영향)
    - Cloud Monitoring 알림 설정
-   - 슬로우 쿼리 로그 활성화
 
 7. **보안**
    - 삭제 보호 활성화 (프로덕션)
@@ -371,6 +437,89 @@ conn = mysql.connector.connect(
 - `roles/compute.networkAdmin` - 네트워크 구성 (Private IP용)
 - `roles/servicenetworking.networksAdmin` - 서비스 네트워킹 (Private IP용)
 
+## 로깅 및 모니터링
+
+### Cloud Logging 통합
+
+이 모듈은 다음 로깅 기능을 자동으로 구성합니다:
+
+1. **느린 쿼리 로그 (Slow Query Log)**
+   - 지정된 시간보다 오래 걸리는 쿼리를 기록
+   - 기본값: 2초 이상 걸리는 쿼리
+   - 성능 문제 쿼리 식별에 유용
+   ```hcl
+   enable_slow_query_log = true
+   slow_query_log_time   = 2  # 초 단위
+   ```
+
+2. **일반 쿼리 로그 (General Log)**
+   - 모든 SQL 쿼리를 기록 (프로덕션에서는 비권장)
+   - 디버깅 또는 감사 목적으로만 사용
+   - 성능에 영향을 줄 수 있음
+   ```hcl
+   enable_general_log = false  # 기본값
+   ```
+
+3. **로그 출력 방식**
+   - `FILE`: 로그 파일에 기록, Cloud Logging으로 자동 전송 (권장)
+   - `TABLE`: MySQL 테이블에 기록
+   ```hcl
+   log_output = "FILE"  # 기본값
+   ```
+
+### Cloud Logging에서 로그 확인
+
+```bash
+# 느린 쿼리 로그 확인
+gcloud logging read "resource.type=cloudsql_database AND
+  logName=projects/PROJECT_ID/logs/cloudsql.googleapis.com%2Fmysql-slow.log" \
+  --project=PROJECT_ID \
+  --limit=50
+
+# 일반 쿼리 로그 확인
+gcloud logging read "resource.type=cloudsql_database AND
+  logName=projects/PROJECT_ID/logs/cloudsql.googleapis.com%2Fmysql.log" \
+  --project=PROJECT_ID \
+  --limit=50
+
+# 에러 로그 확인
+gcloud logging read "resource.type=cloudsql_database AND
+  logName=projects/PROJECT_ID/logs/cloudsql.googleapis.com%2Fmysql.err" \
+  --project=PROJECT_ID \
+  --limit=50
+```
+
+### Query Insights
+
+Query Insights는 쿼리 성능을 분석하고 최적화 제안을 제공합니다:
+
+- 실행 시간이 가장 긴 쿼리 식별
+- 쿼리 실행 빈도 분석
+- CPU 및 I/O 사용량 모니터링
+- 인덱스 최적화 제안
+
+GCP Console에서 확인:
+```
+Cloud SQL > 인스턴스 선택 > Query Insights
+```
+
+### 로깅 비용 최적화
+
+1. **프로덕션**
+   - 느린 쿼리 로그: ✅ 활성화
+   - 일반 로그: ❌ 비활성화
+   - Query Insights: ✅ 활성화
+
+2. **개발/스테이징**
+   - 느린 쿼리 로그: ✅ 활성화
+   - 일반 로그: ⚠️ 필요시에만 활성화
+   - Query Insights: ✅ 활성화
+
+3. **디버깅**
+   - 느린 쿼리 로그: ✅ 활성화
+   - 일반 로그: ✅ 임시 활성화
+   - Query Insights: ✅ 활성화
+
 ## 참고사항
 
 - 인스턴스 생성에 5-10분 소요
@@ -379,3 +528,5 @@ conn = mysql.connector.connect(
 - 읽기 복제본은 비동기 복제 사용
 - 디스크 크기는 증가만 가능 (감소 불가)
 - deletion_protection 활성화 시 수동으로 비활성화 후 삭제 필요
+- 로깅 변수는 자동으로 database_flags에 추가됨
+- 일반 로그는 많은 양의 로그를 생성하므로 Cloud Logging 비용 증가 가능

@@ -57,6 +57,12 @@ query_insights_enabled  = true
 query_string_length     = 1024
 record_application_tags = false
 
+# 로깅 설정
+enable_slow_query_log = true   # 느린 쿼리 로깅 활성화
+slow_query_log_time   = 2      # 2초 이상 걸리는 쿼리를 느린 쿼리로 간주
+enable_general_log    = false  # 모든 쿼리 로깅 (프로덕션: false, 디버깅: true)
+log_output            = "FILE" # FILE (Cloud Logging 전송) 또는 TABLE
+
 # 데이터베이스 생성
 databases = [
   {
