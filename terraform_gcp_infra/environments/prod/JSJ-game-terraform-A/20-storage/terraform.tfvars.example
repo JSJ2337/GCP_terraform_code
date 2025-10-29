@@ -1,0 +1,95 @@
+# Storage Configuration Example
+# Copy this file to terraform.tfvars and fill in your actual values
+# IMPORTANT: Do not commit terraform.tfvars to version control
+
+project_id = "your-project-id"
+
+# Common settings
+default_labels = {
+  environment = "prod"
+  project     = "game-a"
+  managed_by  = "terraform"
+}
+
+uniform_bucket_level_access = true
+public_access_prevention    = "enforced"
+
+# Optional: KMS key for bucket encryption
+# kms_key_name = "projects/YOUR_PROJECT/locations/REGION/keyRings/KEYRING/cryptoKeys/KEY"
+
+# Assets Bucket - for game assets, images, videos
+assets_bucket_name          = "myorg-prod-game-a-assets"
+assets_bucket_location      = "US-CENTRAL1"
+assets_bucket_storage_class = "STANDARD"
+assets_bucket_labels = {
+  purpose = "game-assets"
+}
+assets_enable_versioning = true
+assets_lifecycle_rules = [
+  {
+    condition = {
+      num_newer_versions = 3
+    }
+    action = {
+      type = "Delete"
+    }
+  }
+]
+assets_cors_rules = [
+  {
+    origin          = ["https://yourgame.com"]
+    method          = ["GET", "HEAD"]
+    response_header = ["*"]
+    max_age_seconds = 3600
+  }
+]
+assets_iam_bindings = [
+  # Example: Grant read access to all authenticated users
+  # {
+  #   role    = "roles/storage.objectViewer"
+  #   members = ["allAuthenticatedUsers"]
+  # }
+]
+
+# Logs Bucket - for application and system logs
+logs_bucket_name          = "myorg-prod-game-a-logs"
+logs_bucket_location      = "US-CENTRAL1"
+logs_bucket_storage_class = "COLDLINE"
+logs_bucket_labels = {
+  purpose = "application-logs"
+}
+logs_lifecycle_rules = [
+  {
+    condition = {
+      age = 90
+    }
+    action = {
+      type = "Delete"
+    }
+  }
+]
+logs_retention_policy_days   = 7
+logs_retention_policy_locked = false
+logs_iam_bindings            = []
+
+# Backups Bucket - for database and application backups
+backups_bucket_name          = "myorg-prod-game-a-backups"
+backups_bucket_location      = "US"
+backups_bucket_storage_class = "ARCHIVE"
+backups_bucket_labels = {
+  purpose = "backups"
+}
+backups_enable_versioning = true
+backups_lifecycle_rules = [
+  {
+    condition = {
+      age = 365
+    }
+    action = {
+      type = "Delete"
+    }
+  }
+]
+backups_retention_policy_days   = 30
+backups_retention_policy_locked = false
+backups_iam_bindings            = []
