@@ -14,6 +14,7 @@ resource "google_project" "this" {
   billing_account     = var.billing_account
   labels              = var.labels
   auto_create_network = false
+  deletion_policy     = var.deletion_policy
 }
 
 # 1) 필수 API

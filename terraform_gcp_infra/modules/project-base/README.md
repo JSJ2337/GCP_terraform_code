@@ -5,6 +5,7 @@
 ## 기능
 
 - **프로젝트 생성**: 폴더 내에 결제 계정이 연결된 GCP 프로젝트 생성
+- **삭제 정책**: 프로젝트 삭제 동작 제어 (기본값: 자유롭게 삭제 가능)
 - **API 관리**: 필요한 Google Cloud API 활성화
 - **예산 알림**: 선택적 예산 모니터링 및 이메일 알림
 - **로그 보관**: 프로젝트의 기본 로그 보관 기간 설정
@@ -88,6 +89,32 @@ module "secure_project" {
 }
 ```
 
+### 삭제 방지가 설정된 중요 프로젝트
+
+```hcl
+module "production_project" {
+  source = "../../modules/project-base"
+
+  project_id      = "critical-prod-123"
+  project_name    = "Critical Production"
+  folder_id       = "folders/123456789012"
+  billing_account = "ABCDEF-123456-GHIJKL"
+
+  # 실수로 인한 삭제 방지
+  deletion_policy = "PREVENT"
+
+  labels = {
+    environment = "prod"
+    criticality = "high"
+  }
+}
+```
+
+**참고**:
+- `deletion_policy = "DELETE"` (기본값): Terraform으로 프로젝트 자유롭게 삭제 가능 (개발/테스트 환경에 권장)
+- `deletion_policy = "PREVENT"`: Terraform destroy 시 프로젝트 삭제 차단 (프로덕션/부트스트랩 프로젝트에 권장)
+- `deletion_policy = "ABANDON"`: Terraform state에서만 제거, GCP에는 프로젝트 유지
+
 ## 입력 변수
 
 | 이름 | 설명 | 타입 | 기본값 | 필수 |
@@ -96,6 +123,7 @@ module "secure_project" {
 | project_name | 프로젝트 표시 이름 | string | "" | no |
 | folder_id | 프로젝트를 생성할 폴더 ID | string | - | yes |
 | billing_account | 프로젝트에 연결할 결제 계정 | string | - | yes |
+| deletion_policy | 프로젝트 삭제 정책 (DELETE/PREVENT/ABANDON) | string | "DELETE" | no |
 | labels | 프로젝트에 적용할 레이블 | map(string) | {} | no |
 | apis | 활성화할 API 목록 | list(string) | 아래 참조 | no |
 | enable_budget | 예산 모니터링 활성화 | bool | false | no |
@@ -125,11 +153,15 @@ module "secure_project" {
 ## 모범 사례
 
 1. **폴더 구성**: 환경, 팀 또는 사업부별로 프로젝트를 구성하기 위해 폴더 사용
-2. **예산 알림**: 예상치 못한 비용을 방지하기 위해 프로덕션 프로젝트에 예산 모니터링 활성화
-3. **API 관리**: 공격 표면을 줄이기 위해 실제로 필요한 API만 활성화
-4. **레이블**: 비용 할당 및 리소스 관리를 위한 일관된 레이블 전략 사용
-5. **로그 보관**: 규정 준수 요구사항에 따라 적절한 로그 보관 기간 설정
-6. **CMEK**: 민감한 프로젝트에는 고객 관리 암호화 키 사용
+2. **삭제 정책**:
+   - 개발/테스트 환경: `deletion_policy = "DELETE"` (기본값) 사용하여 자유롭게 생성/삭제
+   - 프로덕션/중요 인프라: `deletion_policy = "PREVENT"` 설정하여 실수로 인한 삭제 방지
+   - 부트스트랩/관리 프로젝트: 반드시 `deletion_policy = "PREVENT"` 사용
+3. **예산 알림**: 예상치 못한 비용을 방지하기 위해 프로덕션 프로젝트에 예산 모니터링 활성화
+4. **API 관리**: 공격 표면을 줄이기 위해 실제로 필요한 API만 활성화
+5. **레이블**: 비용 할당 및 리소스 관리를 위한 일관된 레이블 전략 사용
+6. **로그 보관**: 규정 준수 요구사항에 따라 적절한 로그 보관 기간 설정
+7. **CMEK**: 민감한 프로젝트에는 고객 관리 암호화 키 사용
 
 ## 요구사항
 
@@ -147,6 +179,9 @@ module "secure_project" {
 ## 참고사항
 
 - 프로젝트는 기본 네트워크 생성을 피하기 위해 `auto_create_network = false`로 생성됩니다
+- **삭제 정책**: 기본값은 `DELETE`이므로 terraform destroy로 자유롭게 삭제 가능합니다
+  - 중요한 프로젝트는 반드시 `deletion_policy = "PREVENT"` 설정 권장
+  - `PREVENT` 설정 시 프로젝트를 삭제하려면 먼저 정책을 `DELETE`로 변경 후 apply 필요
 - 예산 알림은 결제 계정 관리자에게 이메일로 전송됩니다
 - 로그 보관은 프로젝트 수준에서 구성되며 모든 로그에 적용됩니다
 - 로그용 CMEK 암호화는 키가 미리 생성되어 있어야 합니다
