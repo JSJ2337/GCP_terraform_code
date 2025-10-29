@@ -2,6 +2,269 @@
 
 ---
 
+## 📅 세션 4 작업 내역 (2025-10-29)
+
+**작업자**: Claude Code
+**목적**: 프로젝트 삭제 정책 개선 및 템플릿화
+
+### 🎯 작업 요약
+
+테스트 프로젝트 삭제, deletion_policy 변수 추가, 프로젝트 템플릿화를 진행했습니다.
+
+### 완료된 작업 ✅
+
+#### 1. JSJ-game-terraform-A 프로젝트 완전 삭제
+
+**삭제 순서** (역순 의존성):
+```bash
+# 50-workloads → 40-observability → 30-security → 20-storage → 10-network → 00-project
+```
+
+**삭제된 리소스 상세**:
+
+1. **50-workloads (워크로드)**
+   - VM 인스턴스 2개 삭제
+
+2. **40-observability (관찰성)**
+   - 리소스 없음 (이미 깨끗한 상태)
+
+3. **30-security (보안)**
+   - 서비스 계정 3개 삭제
+
+4. **20-storage (스토리지)**
+   - GCS 버킷 3개 삭제 (assets, logs, backups)
+   - 버킷의 보존 정책으로 인한 lien 제거 필요
+
+5. **10-network (네트워크)**
+   - VPC 네트워크, 서브넷, 방화벽 규칙, Cloud NAT, Cloud Router 등 8개 리소스 삭제
+
+6. **00-project (프로젝트)**
+   - 문제: `deletion_policy = "PREVENT"` 설정으로 인한 삭제 차단
+   - 해결: 모듈 수정하여 `deletion_policy = "DELETE"` 적용
+   - 문제: GCS 버킷 보존 정책으로 인한 lien 생성
+   - 해결: `gcloud alpha resource-manager liens delete` 실행
+   - GCP 프로젝트 완전 삭제 성공
+
+**Lien 제거 과정**:
+```bash
+# Lien 확인
+gcloud alpha resource-manager liens list --project=jsj-game-terraform-a
+# NAME: p421548908971-l9ae65f3f-9edc-4361-bb8e-95dbaed5928f
+# ORIGIN: storage.googleapis.com
+# REASON: Retention policy
+
+# Lien 삭제
+gcloud alpha resource-manager liens delete p421548908971-l9ae65f3f-9edc-4361-bb8e-95dbaed5928f
+
+# 프로젝트 삭제
+terraform destroy -auto-approve
+```
+
+#### 2. deletion_policy 변수 추가 (프로젝트 생성/삭제 유연성 향상)
+
+**문제점**:
+- 프로젝트를 삭제하려면 매번 모듈 코드를 수정해야 함
+- 개발/테스트 환경에서 자유로운 생성/삭제가 어려움
+
+**해결책**:
+변수로 만들어 기본값은 자유롭게 삭제 가능하게, 필요시 보호
+
+**변경된 파일**:
+
+1. **modules/project-base/variables.tf**
+```terraform
+variable "deletion_policy" {
+  type        = string
+  default     = "DELETE"
+  description = "프로젝트 삭제 정책: DELETE (자유롭게 삭제 가능) 또는 PREVENT (삭제 방지)"
+  validation {
+    condition     = contains(["DELETE", "PREVENT", "ABANDON"], var.deletion_policy)
+    error_message = "deletion_policy는 DELETE, PREVENT, ABANDON 중 하나여야 합니다."
+  }
+}
+```
+
+2. **modules/project-base/main.tf**
+```terraform
+resource "google_project" "this" {
+  project_id          = var.project_id
+  name                = var.project_name != "" ? var.project_name : var.project_id
+  folder_id           = var.folder_id
+  billing_account     = var.billing_account
+  labels              = var.labels
+  auto_create_network = false
+  deletion_policy     = var.deletion_policy  # ← 추가
+}
+```
+
+3. **modules/project-base/README.md**
+   - deletion_policy 변수 문서화
+   - 사용 예제 추가 (삭제 방지가 설정된 중요 프로젝트)
+   - 모범 사례에 환경별 정책 가이드 추가
+
+4. **environments/prod/proj-default-templet/00-project/variables.tf**
+```terraform
+variable "deletion_policy" {
+  type        = string
+  default     = "DELETE"
+  description = "프로젝트 삭제 정책: DELETE (자유롭게 삭제 가능) 또는 PREVENT (삭제 방지)"
+}
+```
+
+5. **environments/prod/proj-default-templet/00-project/main.tf**
+```terraform
+module "project_base" {
+  source = "../../../../modules/project-base"
+  # ... 기존 변수들
+  deletion_policy = var.deletion_policy  # ← 추가
+}
+```
+
+6. **environments/prod/proj-default-templet/00-project/terraform.tfvars.example**
+```terraform
+# 프로젝트 삭제 정책
+# DELETE (기본값): terraform destroy로 자유롭게 삭제 가능 (개발/테스트 환경)
+# PREVENT: 실수로 인한 삭제 방지 (프로덕션/중요 인프라)
+# ABANDON: Terraform state에서만 제거, GCP 프로젝트는 유지
+deletion_policy = "DELETE"
+```
+
+**사용 권장사항**:
+- 개발/테스트 환경: `DELETE` (기본값) - 자유롭게 생성/삭제
+- 프로덕션/중요 인프라: `PREVENT` - 실수로 인한 삭제 방지
+- 부트스트랩/관리 프로젝트: `PREVENT` - 반드시 보호 필요
+
+**Bootstrap 프로젝트 보호**:
+```terraform
+# bootstrap/main.tf에서는 직접 하드코딩
+resource "google_project" "mgmt" {
+  project_id      = var.project_id
+  name            = var.project_name
+  billing_account = var.billing_account
+  # ...
+  deletion_policy = "PREVENT"  # 실수로 삭제 방지
+}
+```
+
+#### 3. proj-game-a를 proj-default-templet으로 리네임
+
+**목적**: 범용적인 템플릿 이름으로 변경하여 새 프로젝트 생성 시 복사하여 사용
+
+**변경 내역**:
+
+1. **디렉토리 이름 변경**
+```bash
+mv environments/prod/proj-game-a environments/prod/proj-default-templet
+```
+
+2. **모든 파일에서 "game-a" → "default-templet" 참조 업데이트**
+
+**업데이트된 파일 (37개)**:
+- `locals.tf`: `project_name = "default-templet"`
+- 모든 `backend.tf`: `prefix = "proj-default-templet/..."`
+- `00-project/main.tf`: 레이블에서 `project = "default-templet"`
+- `00-project/terraform.tfvars.example`: `project_name = "Default Template Production"`
+- `10-network/main.tf`: `project_name = "default-templet"`
+- `20-storage/terraform.tfvars`: 버킷 이름 및 레이블
+- `30-security/terraform.tfvars`: 서비스 계정 이름
+- `40-observability`: backend prefix
+- `50-workloads/main.tf`: `project_name = "default-templet"`
+- 모든 `.tfvars` 및 `.tfvars.example` 파일
+
+3. **검증**
+```bash
+# game-a 참조가 남아있는지 확인
+grep -r "game-a" --include="*.tf" --include="*.tfvars" .
+# 결과: 없음 (모두 업데이트 완료)
+```
+
+### 📊 Git 커밋 내역
+
+**커밋 1**: `011e26d` - feat: 프로젝트 삭제 정책을 제어할 수 있는 deletion_policy 변수 추가
+- modules/project-base에 deletion_policy 변수 추가
+- 3 files changed, 51 insertions(+), 5 deletions(-)
+
+**커밋 2**: `495042d` - feat: proj-game-a 루트 모듈에 deletion_policy 변수 적용
+- environments/prod/proj-game-a/00-project 업데이트
+- 3 files changed, 13 insertions(+)
+
+**커밋 3**: `c9db5a7` - refactor: proj-game-a를 proj-default-templet으로 리네임
+- 디렉토리 이름 변경 및 모든 참조 업데이트
+- 37 files changed, 46 insertions(+), 46 deletions(-)
+
+### 💡 베스트 프랙티스 적용
+
+1. **유연한 프로젝트 관리**
+   - 환경별로 적절한 deletion_policy 설정 가능
+   - 기본값은 자유롭게 삭제 가능하게 설정 (개발 친화적)
+   - validation으로 잘못된 값 입력 방지
+
+2. **안전한 인프라 삭제**
+   - 의존성 역순으로 삭제 (50 → 00)
+   - lien 제거 후 프로젝트 삭제
+   - 각 단계에서 리소스 확인
+
+3. **템플릿화**
+   - 범용적인 이름으로 변경
+   - 새 프로젝트 생성 시 복사하여 사용 가능
+   - 모든 참조 일관성 있게 업데이트
+
+### 🚀 다음 세션 작업 (우선순위)
+
+#### Priority 1: 템플릿 기반 새 프로젝트 생성
+```bash
+# proj-default-templet을 복사하여 새 프로젝트 생성
+cp -r environments/prod/proj-default-templet environments/prod/proj-new-project
+
+# 모든 파일에서 "default-templet" → "new-project" 치환
+find environments/prod/proj-new-project -type f \( -name "*.tf" -o -name "*.tfvars" \) \
+  -exec sed -i 's/default-templet/new-project/g' {} +
+```
+
+#### Priority 2: 문서화
+1. 템플릿 사용 가이드 작성
+2. 프로젝트 생성 자동화 스크립트 작성
+3. deletion_policy 사용 가이드 추가
+
+#### Priority 3: Bootstrap 프로젝트 검증
+- Bootstrap 프로젝트가 PREVENT 정책을 사용하는지 확인
+- Bootstrap state 파일 백업 상태 확인
+
+### ⚠️ 주요 학습 사항
+
+#### Lien 관련
+- GCS 버킷의 보존 정책(retention policy)은 프로젝트 삭제 시 자동으로 lien 생성
+- lien이 있으면 프로젝트 삭제 불가
+- `gcloud alpha resource-manager liens list`로 확인
+- `gcloud alpha resource-manager liens delete`로 제거 후 삭제 가능
+
+#### Deletion Policy
+- 모듈 수준에서 하드코딩하는 것보다 변수로 관리하는 것이 유연함
+- 기본값은 개발 환경에 맞게 `DELETE`로 설정
+- 프로덕션/중요 인프라는 명시적으로 `PREVENT` 설정
+- Bootstrap 프로젝트는 하드코딩으로 `PREVENT` 강제
+
+### 📝 변경된 파일 목록
+
+**수정된 파일 (43개)**:
+1. `modules/project-base/main.tf`
+2. `modules/project-base/variables.tf`
+3. `modules/project-base/README.md`
+4. `environments/prod/proj-default-templet/00-project/variables.tf`
+5. `environments/prod/proj-default-templet/00-project/main.tf`
+6. `environments/prod/proj-default-templet/00-project/terraform.tfvars.example`
+7. `environments/prod/proj-default-templet/00-project/backend.tf`
+8. `environments/prod/proj-default-templet/00-project/terraform.tfvars`
+9. `environments/prod/proj-default-templet/10-network/backend.tf`
+10. `environments/prod/proj-default-templet/10-network/main.tf`
+11. `environments/prod/proj-default-templet/10-network/terraform.tfvars`
+12. ... (총 37개 파일 리네임 및 내용 업데이트)
+
+**삭제된 인프라**:
+- JSJ-game-terraform-A 프로젝트 및 모든 하위 리소스
+
+---
+
 ## 📅 세션 3 작업 내역 (2025-10-29)
 
 **작업자**: Claude Code
