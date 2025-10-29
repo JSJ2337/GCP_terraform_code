@@ -25,7 +25,10 @@ apis = [
 ]
 
 # Budget settings
-enable_budget   = true
+# Note: Budget API requires special quota project configuration
+# Disabled by default to avoid authentication issues during deployment
+# You can enable it manually via GCP Console: Billing → Budgets & alerts
+enable_budget   = false
 budget_amount   = 1000
 budget_currency = "USD"
 

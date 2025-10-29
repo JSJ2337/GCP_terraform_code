@@ -107,6 +107,20 @@ cp terraform.tfstate ~/backup/bootstrap-$(date +%Y%m%d).tfstate
 - 중앙 State 저장소 버킷 (`delabs-terraform-state-prod`)
 - Versioning 및 Lifecycle 정책 자동 설정
 
+#### Step 1.5: 인증 설정 (중요!)
+
+Bootstrap 배포 후, 워크로드 프로젝트 배포 전에 인증을 설정해야 합니다:
+
+```bash
+# 중앙 State 버킷이 있는 프로젝트로 설정
+gcloud config set project delabs-system-mgmt
+
+# Application Default Credentials의 quota project 설정
+gcloud auth application-default set-quota-project delabs-system-mgmt
+```
+
+⚠️ **이 단계를 생략하면 "storage: bucket doesn't exist" 오류가 발생합니다!**
+
 #### Step 2: 워크로드 프로젝트 배포
 
 Bootstrap 배포 후, 실제 워크로드 프로젝트를 배포합니다:
@@ -351,6 +365,79 @@ brew install infracost
 
 # 비용 추정
 infracost breakdown --path .
+```
+
+## 트러블슈팅
+
+### 문제 1: "storage: bucket doesn't exist"
+
+**증상:**
+```
+Error: Failed to get existing workspaces: querying Cloud Storage failed: storage: bucket doesn't exist
+```
+
+**해결:**
+```bash
+# 중앙 State 버킷이 있는 프로젝트로 변경
+gcloud config set project delabs-system-mgmt
+gcloud auth application-default set-quota-project delabs-system-mgmt
+
+# terraform 재시도
+terraform init -reconfigure
+```
+
+### 문제 2: State Lock 걸림
+
+**증상:**
+```
+Error: Error acquiring the state lock
+Lock Info:
+  ID: 1761705035859250
+```
+
+**해결:**
+```bash
+# Lock 강제 해제 (Lock ID는 에러 메시지에서 확인)
+terraform force-unlock -force 1761705035859250
+```
+
+### 문제 3: Budget API 권한 오류
+
+**증상:**
+```
+Error creating Budget: googleapi: Error 403
+billingbudgets.googleapis.com API requires a quota project
+```
+
+**해결:**
+이것은 알려진 문제이며, Budget 리소스만 영향을 받습니다 (다른 모든 리소스는 정상 생성됨).
+
+**옵션 1:** terraform.tfvars에서 비활성화 (권장)
+```hcl
+enable_budget = false
+```
+
+**옵션 2:** GCP Console에서 수동 설정
+- GCP Console → Billing → Budgets & alerts에서 예산 알림 생성
+
+### 문제 4: 프로젝트 삭제 실패 (Lien)
+
+**증상:**
+```
+Error: Cannot destroy project as deletion_policy is set to PREVENT
+또는
+Error: A lien to prevent deletion was placed on the project
+```
+
+**해결:**
+```bash
+# Lien 확인
+gcloud alpha resource-manager liens list --project=PROJECT_ID
+
+# Lien 삭제
+gcloud alpha resource-manager liens delete LIEN_ID
+
+# deletion_policy 변경 후 재시도
 ```
 
 ## 기여하기
