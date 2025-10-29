@@ -2,7 +2,7 @@ output "backend_service_id" {
   description = "백엔드 서비스 ID"
   value = var.lb_type == "http" || var.lb_type == "internal" ? (
     length(google_compute_backend_service.default) > 0 ? google_compute_backend_service.default[0].id : null
-  ) : (
+    ) : (
     length(google_compute_region_backend_service.internal) > 0 ? google_compute_region_backend_service.internal[0].id : null
   )
 }
@@ -11,19 +11,23 @@ output "backend_service_self_link" {
   description = "백엔드 서비스 셀프 링크"
   value = var.lb_type == "http" || var.lb_type == "internal" ? (
     length(google_compute_backend_service.default) > 0 ? google_compute_backend_service.default[0].self_link : null
-  ) : (
+    ) : (
     length(google_compute_region_backend_service.internal) > 0 ? google_compute_region_backend_service.internal[0].self_link : null
   )
 }
 
 output "health_check_id" {
   description = "헬스 체크 ID"
-  value       = length(google_compute_health_check.default) > 0 ? google_compute_health_check.default[0].id : null
+  value = length(google_compute_health_check.default) > 0 ? google_compute_health_check.default[0].id : (
+    length(google_compute_region_health_check.internal) > 0 ? google_compute_region_health_check.internal[0].id : null
+  )
 }
 
 output "health_check_self_link" {
   description = "헬스 체크 셀프 링크"
-  value       = length(google_compute_health_check.default) > 0 ? google_compute_health_check.default[0].self_link : null
+  value = length(google_compute_health_check.default) > 0 ? google_compute_health_check.default[0].self_link : (
+    length(google_compute_region_health_check.internal) > 0 ? google_compute_region_health_check.internal[0].self_link : null
+  )
 }
 
 output "url_map_id" {

@@ -135,11 +135,11 @@ variable "backend_timeout" {
 
 variable "backends" {
   type = list(object({
-    group            = string
-    balancing_mode   = optional(string)
-    capacity_scaler  = optional(number)
-    description      = optional(string)
-    max_utilization  = optional(number)
+    group           = string
+    balancing_mode  = optional(string)
+    capacity_scaler = optional(number)
+    description     = optional(string)
+    max_utilization = optional(number)
   }))
   description = "백엔드 그룹 목록"
   default     = []

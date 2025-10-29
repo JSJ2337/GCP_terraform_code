@@ -8,12 +8,58 @@ terraform {
   }
 }
 
-# Health Check
+# Global Health Check - for HTTP(S) and Internal LB
 resource "google_compute_health_check" "default" {
-  count = var.create_health_check ? 1 : 0
+  count = var.create_health_check && var.lb_type != "internal_classic" ? 1 : 0
 
   name    = var.health_check_name
   project = var.project_id
+
+  timeout_sec         = var.health_check_timeout
+  check_interval_sec  = var.health_check_interval
+  healthy_threshold   = var.health_check_healthy_threshold
+  unhealthy_threshold = var.health_check_unhealthy_threshold
+
+  dynamic "http_health_check" {
+    for_each = var.health_check_type == "http" ? [1] : []
+    content {
+      port               = var.health_check_port
+      request_path       = var.health_check_request_path
+      response           = var.health_check_response
+      port_specification = var.health_check_port_specification
+    }
+  }
+
+  dynamic "https_health_check" {
+    for_each = var.health_check_type == "https" ? [1] : []
+    content {
+      port               = var.health_check_port
+      request_path       = var.health_check_request_path
+      response           = var.health_check_response
+      port_specification = var.health_check_port_specification
+    }
+  }
+
+  dynamic "tcp_health_check" {
+    for_each = var.health_check_type == "tcp" ? [1] : []
+    content {
+      port               = var.health_check_port
+      port_specification = var.health_check_port_specification
+    }
+  }
+
+  log_config {
+    enable = var.health_check_logging
+  }
+}
+
+# Regional Health Check - for Internal Classic LB
+resource "google_compute_region_health_check" "internal" {
+  count = var.create_health_check && var.lb_type == "internal_classic" ? 1 : 0
+
+  name    = var.health_check_name
+  project = var.project_id
+  region  = var.region
 
   timeout_sec         = var.health_check_timeout
   check_interval_sec  = var.health_check_interval
@@ -77,7 +123,7 @@ resource "google_compute_backend_service" "default" {
   }
 
   # Session affinity
-  session_affinity = var.session_affinity
+  session_affinity        = var.session_affinity
   affinity_cookie_ttl_sec = var.session_affinity == "GENERATED_COOKIE" ? var.affinity_cookie_ttl : null
 
   # Connection draining
@@ -87,12 +133,12 @@ resource "google_compute_backend_service" "default" {
   dynamic "cdn_policy" {
     for_each = var.lb_type == "http" && var.enable_cdn ? [1] : []
     content {
-      cache_mode                   = var.cdn_cache_mode
-      default_ttl                  = var.cdn_default_ttl
-      max_ttl                      = var.cdn_max_ttl
-      client_ttl                   = var.cdn_client_ttl
-      negative_caching             = var.cdn_negative_caching
-      serve_while_stale            = var.cdn_serve_while_stale
+      cache_mode        = var.cdn_cache_mode
+      default_ttl       = var.cdn_default_ttl
+      max_ttl           = var.cdn_max_ttl
+      client_ttl        = var.cdn_client_ttl
+      negative_caching  = var.cdn_negative_caching
+      serve_while_stale = var.cdn_serve_while_stale
     }
   }
 
@@ -115,7 +161,7 @@ resource "google_compute_backend_service" "default" {
   load_balancing_scheme = var.lb_type == "internal" ? "INTERNAL_MANAGED" : "EXTERNAL_MANAGED"
 }
 
-# Regional Backend Service - for Internal LB
+# Regional Backend Service - for Internal Classic LB
 resource "google_compute_region_backend_service" "internal" {
   count = var.lb_type == "internal_classic" ? 1 : 0
 
@@ -124,7 +170,7 @@ resource "google_compute_region_backend_service" "internal" {
   region   = var.region
   protocol = "TCP"
 
-  health_checks = var.create_health_check ? [google_compute_health_check.default[0].id] : var.health_check_ids
+  health_checks = var.create_health_check ? [google_compute_region_health_check.internal[0].id] : var.health_check_ids
 
   dynamic "backend" {
     for_each = var.backends
@@ -144,7 +190,7 @@ resource "google_compute_region_backend_service" "internal" {
 resource "google_compute_url_map" "default" {
   count = var.lb_type == "http" ? 1 : 0
 
-  name            = var.url_map_name
+  name            = var.url_map_name != "" ? var.url_map_name : "${var.backend_service_name}-url-map"
   project         = var.project_id
   default_service = google_compute_backend_service.default[0].id
 
@@ -177,7 +223,7 @@ resource "google_compute_url_map" "default" {
 resource "google_compute_target_http_proxy" "default" {
   count = var.lb_type == "http" && !var.use_ssl ? 1 : 0
 
-  name    = var.target_http_proxy_name
+  name    = var.target_http_proxy_name != "" ? var.target_http_proxy_name : "${var.backend_service_name}-http-proxy"
   project = var.project_id
   url_map = google_compute_url_map.default[0].id
 }
@@ -186,11 +232,11 @@ resource "google_compute_target_http_proxy" "default" {
 resource "google_compute_target_https_proxy" "default" {
   count = var.lb_type == "http" && var.use_ssl ? 1 : 0
 
-  name             = var.target_https_proxy_name
+  name             = var.target_https_proxy_name != "" ? var.target_https_proxy_name : "${var.backend_service_name}-https-proxy"
   project          = var.project_id
   url_map          = google_compute_url_map.default[0].id
   ssl_certificates = var.ssl_certificates
-  ssl_policy       = var.ssl_policy
+  ssl_policy       = var.ssl_policy != "" ? var.ssl_policy : null
 }
 
 # Global Forwarding Rule - HTTP
@@ -201,7 +247,7 @@ resource "google_compute_global_forwarding_rule" "http" {
   project    = var.project_id
   target     = google_compute_target_http_proxy.default[0].id
   port_range = "80"
-  ip_address = var.static_ip_address
+  ip_address = var.create_static_ip ? google_compute_global_address.default[0].address : (var.static_ip_address != "" ? var.static_ip_address : null)
 
   load_balancing_scheme = "EXTERNAL_MANAGED"
 }
@@ -214,7 +260,7 @@ resource "google_compute_global_forwarding_rule" "https" {
   project    = var.project_id
   target     = google_compute_target_https_proxy.default[0].id
   port_range = "443"
-  ip_address = var.static_ip_address
+  ip_address = var.create_static_ip ? google_compute_global_address.default[0].address : (var.static_ip_address != "" ? var.static_ip_address : null)
 
   load_balancing_scheme = "EXTERNAL_MANAGED"
 }
@@ -230,7 +276,7 @@ resource "google_compute_forwarding_rule" "internal" {
   subnetwork            = var.subnetwork
   backend_service       = var.lb_type == "internal" ? google_compute_backend_service.default[0].id : google_compute_region_backend_service.internal[0].id
   load_balancing_scheme = var.lb_type == "internal" ? "INTERNAL_MANAGED" : "INTERNAL"
-  ip_address            = var.static_ip_address
+  ip_address            = var.create_static_ip ? google_compute_address.internal[0].address : (var.static_ip_address != "" ? var.static_ip_address : null)
   ports                 = var.forwarding_rule_ports
   all_ports             = var.forwarding_rule_all_ports
 }
