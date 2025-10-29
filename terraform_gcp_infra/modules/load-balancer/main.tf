@@ -49,7 +49,7 @@ resource "google_compute_health_check" "default" {
   }
 
   log_config {
-    enabled = var.health_check_logging
+    enable = var.health_check_logging
   }
 }
 
@@ -95,7 +95,7 @@ resource "google_compute_region_health_check" "internal" {
   }
 
   log_config {
-    enabled = var.health_check_logging
+    enable = var.health_check_logging
   }
 }
 
@@ -146,6 +146,7 @@ resource "google_compute_backend_service" "default" {
   dynamic "iap" {
     for_each = var.lb_type == "http" && var.enable_iap ? [1] : []
     content {
+      enabled              = true
       oauth2_client_id     = var.iap_oauth2_client_id
       oauth2_client_secret = var.iap_oauth2_client_secret
     }
@@ -153,7 +154,7 @@ resource "google_compute_backend_service" "default" {
 
   # Logging
   log_config {
-    enabled     = var.enable_logging
+    enable      = var.enable_logging
     sample_rate = var.logging_sample_rate
   }
 
