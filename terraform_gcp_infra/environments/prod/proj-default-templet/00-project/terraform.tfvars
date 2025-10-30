@@ -1,4 +1,5 @@
 # Project Configuration
+# Common labels and naming conventions are defined in ../locals.tf
 project_id      = "gcp-terraform-imsi"
 project_name    = "gcp-terraform-imsi"
 folder_id       = null # No folder (standalone project)

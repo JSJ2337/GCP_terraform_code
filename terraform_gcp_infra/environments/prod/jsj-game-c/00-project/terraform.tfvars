@@ -1,4 +1,5 @@
 # Project Configuration
+# Common labels and naming conventions are defined in ../locals.tf
 # Project ID format: organization-environment-project (jsj-prod-game-c)
 project_id      = "jsj-prod-game-c"
 project_name    = "jsj-prod-game-c"

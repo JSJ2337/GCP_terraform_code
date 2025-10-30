@@ -1,15 +1,12 @@
-# 스토리지 설정 예제
+# Storage Configuration
+# Bucket names are auto-generated from ../locals.tf (bucket_name_prefix)
+# Common labels are defined in ../locals.tf (common_labels)
 # 이 파일을 terraform.tfvars로 복사하고 실제 값을 입력하세요
-# 중요: terraform.tfvars 파일은 버전 관리에 커밋하지 마세요
 
 project_id = "your-project-id"
 
-# 공통 설정
-default_labels = {
-  environment = "prod"
-  project     = "default-templet"
-  managed_by  = "terraform"
-}
+# Default labels for all buckets (will be merged with common_labels from locals.tf)
+default_labels = {}
 
 uniform_bucket_level_access = true
 public_access_prevention    = "enforced"
@@ -17,12 +14,13 @@ public_access_prevention    = "enforced"
 # 선택사항: 버킷 암호화용 KMS 키
 # kms_key_name = "projects/YOUR_PROJECT/locations/REGION/keyRings/KEYRING/cryptoKeys/KEY"
 
-# 에셋 버킷 - 게임 에셋, 이미지, 비디오용
-assets_bucket_name          = "myorg-prod-default-templet-assets"
+# Assets bucket - for game assets, images, configurations
+# Name will be: {bucket_name_prefix}-assets (from locals.tf)
+assets_bucket_name          = "" # Auto-generated from locals.tf
 assets_bucket_location      = "US-CENTRAL1"
 assets_bucket_storage_class = "STANDARD"
 assets_bucket_labels = {
-  purpose = "default-templetssets"
+  type = "assets"
 }
 assets_enable_versioning = true
 assets_lifecycle_rules = [
@@ -51,12 +49,13 @@ assets_iam_bindings = [
   # }
 ]
 
-# 로그 버킷 - 애플리케이션 및 시스템 로그용
-logs_bucket_name          = "myorg-prod-default-templet-logs"
+# Logs bucket - for application and system logs
+# Name will be: {bucket_name_prefix}-logs (from locals.tf)
+logs_bucket_name          = "" # Auto-generated from locals.tf
 logs_bucket_location      = "US-CENTRAL1"
 logs_bucket_storage_class = "COLDLINE"
 logs_bucket_labels = {
-  purpose = "application-logs"
+  type = "logs"
 }
 logs_lifecycle_rules = [
   {
@@ -72,12 +71,13 @@ logs_retention_policy_days   = 7
 logs_retention_policy_locked = false
 logs_iam_bindings            = []
 
-# 백업 버킷 - 데이터베이스 및 애플리케이션 백업용
-backups_bucket_name          = "myorg-prod-default-templet-backups"
-backups_bucket_location      = "US"
+# Backups bucket - for database and configuration backups
+# Name will be: {bucket_name_prefix}-backups (from locals.tf)
+backups_bucket_name          = "" # Auto-generated from locals.tf
+backups_bucket_location      = "US" # Multi-region for durability
 backups_bucket_storage_class = "ARCHIVE"
 backups_bucket_labels = {
-  purpose = "backups"
+  type = "backups"
 }
 backups_enable_versioning = true
 backups_lifecycle_rules = [

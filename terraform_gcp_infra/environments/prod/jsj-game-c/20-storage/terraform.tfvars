@@ -1,12 +1,10 @@
-# Storage Configuration for Game A Production
+# Storage Configuration
+# Bucket names are auto-generated from ../locals.tf (bucket_name_prefix)
+# Common labels are defined in ../locals.tf (common_labels)
 project_id = "jsj-prod-game-c"
 
-# Default labels for all buckets
-default_labels = {
-  environment = "prod"
-  project     = "default-templet"
-  managed_by  = "terraform"
-}
+# Default labels for all buckets (will be merged with common_labels from locals.tf)
+default_labels = {}
 
 # Common settings
 uniform_bucket_level_access = true
@@ -14,14 +12,12 @@ public_access_prevention    = "enforced"
 # kms_key_name = "projects/proj-default-templet-prod/locations/us-central1/keyRings/game-ring/cryptoKeys/storage-key"
 
 # Assets bucket - for game assets, images, configurations
-assets_bucket_name          = "gcp-tf-imsi-assets-prod"
+# Name will be: {bucket_name_prefix}-assets (from locals.tf)
+assets_bucket_name          = "" # Auto-generated from locals.tf
 assets_bucket_location      = "US-CENTRAL1"
 assets_bucket_storage_class = "STANDARD"
 assets_bucket_labels = {
-  type        = "assets"
-  game        = "default-templet"
-  environment = "prod"
-  managed-by  = "terraform"
+  type = "assets"
 }
 
 assets_enable_versioning = true
@@ -60,14 +56,12 @@ assets_cors_rules = [
 assets_iam_bindings = []
 
 # Logs bucket - for application and system logs
-logs_bucket_name          = "gcp-tf-imsi-logs-prod"
+# Name will be: {bucket_name_prefix}-logs (from locals.tf)
+logs_bucket_name          = "" # Auto-generated from locals.tf
 logs_bucket_location      = "US-CENTRAL1"
 logs_bucket_storage_class = "COLDLINE"
 logs_bucket_labels = {
-  type        = "logs"
-  game        = "default-templet"
-  environment = "prod"
-  managed-by  = "terraform"
+  type = "logs"
 }
 
 logs_lifecycle_rules = [
@@ -87,14 +81,12 @@ logs_retention_policy_locked = true
 logs_iam_bindings = []
 
 # Backups bucket - for database and configuration backups
-backups_bucket_name          = "gcp-tf-imsi-backups-prod"
+# Name will be: {bucket_name_prefix}-backups (from locals.tf)
+backups_bucket_name          = "" # Auto-generated from locals.tf
 backups_bucket_location      = "US" # Multi-region for durability
 backups_bucket_storage_class = "ARCHIVE"
 backups_bucket_labels = {
-  type        = "backups"
-  game        = "default-templet"
-  environment = "prod"
-  managed-by  = "terraform"
+  type = "backups"
 }
 
 backups_enable_versioning = true

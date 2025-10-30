@@ -1,4 +1,5 @@
 # Observability Configuration
+# Resource names are auto-generated from ../locals.tf
 project_id = "gcp-terraform-imsi"
 
 # Central logging configuration (disabled for now)
