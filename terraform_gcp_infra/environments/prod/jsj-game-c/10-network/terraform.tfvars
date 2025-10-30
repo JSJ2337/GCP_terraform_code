@@ -1,35 +1,17 @@
 # Network Configuration
+# Resource names are auto-generated from ../locals.tf
 project_id   = "jsj-prod-game-c"
-vpc_name     = "" # Empty = use default from locals.tf (prod-game-c-vpc)
 routing_mode = "GLOBAL"
 
-# Subnets configuration
-subnets = {
-  "prod-game-c-subnet-us-central1" = {
-    region                = "us-central1"
-    cidr                  = "10.1.0.0/20"
-    private_google_access = true
-    secondary_ranges = [
-      {
-        name = "prod-game-c-pods"
-        cidr = "10.1.16.0/20"
-      },
-      {
-        name = "prod-game-c-services"
-        cidr = "10.1.32.0/20"
-      }
-    ]
-  }
-  "prod-game-c-subnet-us-east1" = {
-    region                = "us-east1"
-    cidr                  = "10.2.0.0/20"
-    private_google_access = true
-    secondary_ranges      = []
-  }
-}
+# Subnet CIDR blocks (names come from locals.tf)
+subnet_primary_cidr = "10.1.0.0/20"
+subnet_backup_cidr  = "10.2.0.0/20"
 
-# NAT configuration
-nat_region           = "us-central1"
+# GKE Secondary IP ranges
+pods_cidr     = "10.1.16.0/20"
+services_cidr = "10.1.32.0/20"
+
+# Cloud NAT configuration
 nat_min_ports_per_vm = 1024
 
 # Firewall rules

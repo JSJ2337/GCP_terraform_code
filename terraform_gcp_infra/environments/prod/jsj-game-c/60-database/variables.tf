@@ -3,12 +3,6 @@ variable "project_id" {
   description = "GCP 프로젝트 ID"
 }
 
-variable "instance_name" {
-  type        = string
-  description = "Cloud SQL 인스턴스 이름 (비어있으면 자동 생성)"
-  default     = ""
-}
-
 variable "region" {
   type        = string
   description = "인스턴스를 생성할 리전"

@@ -1,35 +1,43 @@
 variable "project_id" {
-  type = string
-}
-
-variable "vpc_name" {
-  type = string
+  type        = string
+  description = "GCP 프로젝트 ID"
 }
 
 variable "routing_mode" {
-  type    = string
-  default = "GLOBAL"
+  type        = string
+  description = "VPC 라우팅 모드 (GLOBAL/REGIONAL)"
+  default     = "GLOBAL"
 }
 
-variable "subnets" {
-  type = map(object({
-    region                = string
-    cidr                  = string
-    private_google_access = optional(bool, true)
-    secondary_ranges = optional(list(object({
-      name = string
-      cidr = string
-    })), [])
-  }))
+# Subnet CIDR blocks
+variable "subnet_primary_cidr" {
+  type        = string
+  description = "Primary 리전 서브넷 CIDR"
+  default     = "10.1.0.0/20"
 }
 
-variable "nat_region" {
-  type = string
+variable "subnet_backup_cidr" {
+  type        = string
+  description = "Backup 리전 서브넷 CIDR"
+  default     = "10.2.0.0/20"
+}
+
+variable "pods_cidr" {
+  type        = string
+  description = "GKE Pods용 Secondary IP 범위 CIDR"
+  default     = "10.1.16.0/20"
+}
+
+variable "services_cidr" {
+  type        = string
+  description = "GKE Services용 Secondary IP 범위 CIDR"
+  default     = "10.1.32.0/20"
 }
 
 variable "nat_min_ports_per_vm" {
-  type    = number
-  default = 1024
+  type        = number
+  description = "Cloud NAT VM당 최소 포트 수"
+  default     = 1024
 }
 
 variable "firewall_rules" {

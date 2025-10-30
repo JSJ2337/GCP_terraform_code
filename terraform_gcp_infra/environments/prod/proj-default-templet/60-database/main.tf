@@ -30,7 +30,7 @@ module "mysql" {
   source = "../../../../modules/cloudsql-mysql"
 
   project_id    = var.project_id
-  instance_name = var.instance_name != "" ? var.instance_name : "${local.project_prefix}-mysql"
+  instance_name = local.db_instance_name # Use naming from locals.tf
   region        = var.region
 
   database_version  = var.database_version

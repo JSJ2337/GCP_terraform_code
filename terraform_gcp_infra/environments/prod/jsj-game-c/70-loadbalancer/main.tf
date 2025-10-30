@@ -29,7 +29,7 @@ module "load_balancer" {
   subnetwork = var.subnetwork
 
   # Backend Service
-  backend_service_name = var.backend_service_name != "" ? var.backend_service_name : "${local.project_prefix}-backend"
+  backend_service_name = local.backend_service_name # Use naming from locals.tf
   backend_protocol     = var.backend_protocol
   backend_port_name    = var.backend_port_name
   backend_timeout      = var.backend_timeout
@@ -42,7 +42,7 @@ module "load_balancer" {
 
   # Health Check
   create_health_check                = var.create_health_check
-  health_check_name                  = var.health_check_name != "" ? var.health_check_name : "${local.project_prefix}-health"
+  health_check_name                  = local.health_check_name # Use naming from locals.tf
   health_check_type                  = var.health_check_type
   health_check_port                  = var.health_check_port
   health_check_request_path          = var.health_check_request_path
@@ -87,7 +87,7 @@ module "load_balancer" {
   target_https_proxy_name = var.target_https_proxy_name
 
   # Forwarding Rule
-  forwarding_rule_name      = var.forwarding_rule_name != "" ? var.forwarding_rule_name : "${local.project_prefix}-lb"
+  forwarding_rule_name      = local.forwarding_rule_name # Use naming from locals.tf
   forwarding_rule_ports     = var.forwarding_rule_ports
   forwarding_rule_all_ports = var.forwarding_rule_all_ports
 
