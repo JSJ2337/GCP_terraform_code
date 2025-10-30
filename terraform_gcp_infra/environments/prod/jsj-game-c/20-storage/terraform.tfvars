@@ -60,6 +60,7 @@ assets_iam_bindings = []
 logs_bucket_name          = "" # Auto-generated from locals.tf
 logs_bucket_location      = "US-CENTRAL1"
 logs_bucket_storage_class = "COLDLINE"
+logs_enable_versioning    = false
 logs_bucket_labels = {
   type = "logs"
 }
@@ -78,6 +79,7 @@ logs_lifecycle_rules = [
 logs_retention_policy_days   = 2555 # 7 years for compliance
 logs_retention_policy_locked = true
 
+logs_cors_rules   = []
 logs_iam_bindings = []
 
 # Backups bucket - for database and configuration backups
@@ -105,4 +107,5 @@ backups_lifecycle_rules = [
 backups_retention_policy_days   = 3650 # 10 years
 backups_retention_policy_locked = true
 
+backups_cors_rules   = []
 backups_iam_bindings = []

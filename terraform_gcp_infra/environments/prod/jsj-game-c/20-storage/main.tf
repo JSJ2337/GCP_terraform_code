@@ -43,9 +43,9 @@ module "game_storage" {
       uniform_bucket_level_access = var.uniform_bucket_level_access
       labels                      = var.logs_bucket_labels
 
-      enable_versioning       = false
+      enable_versioning       = var.logs_enable_versioning
       lifecycle_rules         = var.logs_lifecycle_rules
-      cors_rules              = []
+      cors_rules              = var.logs_cors_rules
       retention_policy_days   = var.logs_retention_policy_days
       retention_policy_locked = var.logs_retention_policy_locked
       iam_bindings            = var.logs_iam_bindings
@@ -60,7 +60,7 @@ module "game_storage" {
 
       enable_versioning       = var.backups_enable_versioning
       lifecycle_rules         = var.backups_lifecycle_rules
-      cors_rules              = []
+      cors_rules              = var.backups_cors_rules
       retention_policy_days   = var.backups_retention_policy_days
       retention_policy_locked = var.backups_retention_policy_locked
       iam_bindings            = var.backups_iam_bindings
