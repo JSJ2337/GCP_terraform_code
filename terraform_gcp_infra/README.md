@@ -61,6 +61,28 @@ terraform_gcp_infra/
 - **60-database**: Cloud SQL MySQL 데이터베이스
 - **70-loadbalancer**: HTTP(S) 및 Internal Load Balancer
 
+### Locals를 통한 중앙 집중식 Naming
+모든 프로젝트에는 **`locals.tf`** 파일이 포함되어 있으며, 모든 리소스 이름을 자동으로 생성합니다:
+
+```hcl
+# environments/prod/your-project/locals.tf
+locals {
+  project_name = "your-project"  # 이것만 변경하면
+  organization = "your-org"
+
+  # 모든 리소스 이름이 자동 생성됨
+  vpc_name            = "${local.project_name}-${local.environment}-vpc"
+  subnet_name_primary = "${local.project_name}-${local.environment}-subnet-${local.region_primary}"
+  db_instance_name    = "${local.project_name}-${local.environment}-mysql"
+  # ... 등등
+}
+```
+
+**이점:**
+- ✅ 새 프로젝트 생성 시 `locals.tf`만 수정
+- ✅ 모든 리소스 이름이 일관된 패턴으로 자동 생성
+- ✅ terraform.tfvars는 실제 설정값(CIDR, 포트 등)만 포함
+
 ## 시작하기
 
 ### 사전 요구사항
@@ -283,16 +305,57 @@ delabs-system-mgmt (관리용 프로젝트)
 
 ### 새 프로젝트 추가하기
 
-새 프로젝트를 추가할 때는 기존 중앙 버킷을 사용:
+**Step 1: 템플릿 복사**
+
+```bash
+# 템플릿 프로젝트 복사
+cd environments/prod
+cp -r proj-default-templet your-new-project
+cd your-new-project
+```
+
+**Step 2: locals.tf 수정** (가장 중요!)
 
 ```hcl
-# 새 프로젝트의 backend.tf
-terraform {
-  backend "gcs" {
-    bucket = "delabs-terraform-state-prod"
-    prefix = "new-project-name/layer-name"
-  }
+# your-new-project/locals.tf
+locals {
+  project_name = "your-new-project"  # ← 이것만 변경!
+  organization = "your-org"          # ← 조직명 변경
+  environment  = "prod"
+
+  # 나머지는 자동으로 계산됨
+  # VPC 이름: your-new-project-prod-vpc
+  # 서브넷: your-new-project-prod-subnet-us-central1
+  # DB: your-new-project-prod-mysql
+  # 등등...
 }
+```
+
+**Step 3: backend.tf 업데이트** (모든 레이어)
+
+```bash
+# 모든 레이어의 backend.tf에서 prefix만 변경
+for dir in */; do
+  sed -i 's/proj-default-templet/your-new-project/g' "$dir/backend.tf"
+done
+```
+
+**Step 4: terraform.tfvars 수정**
+
+```bash
+# 각 레이어의 terraform.tfvars에서 project_id만 변경
+# 리소스 이름은 locals.tf에서 자동 생성되므로 수정 불필요!
+```
+
+**Step 5: 배포**
+
+```bash
+# 순서대로 배포
+cd 00-project
+terraform init && terraform apply
+cd ../10-network
+terraform init && terraform apply
+# ... 계속
 ```
 
 ### Bootstrap State 백업 (중요!)

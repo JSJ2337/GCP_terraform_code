@@ -5,6 +5,39 @@
 형식: [Keep a Changelog](https://keepachangelog.com/ko/1.0.0/) 기반
 버저닝: [Semantic Versioning](https://semver.org/lang/ko/) 준수
 
+## [미배포] - 2025-10-30
+
+### 변경 (Changed) - 세션 7
+
+#### 프로젝트 설정 가능성 개선
+- **Region 변수 추가**: 모든 레이어(00-project ~ 70-loadbalancer)에 region 변수 추가
+  - Provider 블록의 하드코딩된 "us-central1"을 `var.region`으로 변경
+  - 모든 terraform.tfvars에 region 설정 추가
+  - 기본값: "us-central1" (필요 시 변경 가능)
+  - 다중 지역 배포 시 각 레이어별로 region 설정 가능
+
+#### 하드코딩 제거
+- **20-storage 레이어**: 하드코딩된 값들을 변수화
+  - `logs_enable_versioning`: 로그 버킷 버전 관리 (기본값: false)
+  - `logs_cors_rules`: 로그 버킷 CORS 규칙 (기본값: [])
+  - `backups_cors_rules`: 백업 버킷 CORS 규칙 (기본값: [])
+  - 모든 설정이 terraform.tfvars에서 관리 가능
+
+#### terraform.tfvars 완성
+- **60-database, 70-loadbalancer**: 실제 terraform.tfvars 파일 생성
+  - 이전에는 .example 파일만 존재
+  - 모든 레이어가 이제 실제 terraform.tfvars 포함
+  - 기본 설정값으로 즉시 배포 가능
+  - 프로젝트 복제 시 수정 용이
+
+#### 문서화
+- **README.md**: locals.tf 중앙 집중식 naming 섹션 추가
+  - locals.tf의 역할과 이점 설명
+  - 새 프로젝트 추가 가이드 개선
+  - Step-by-step 프로젝트 생성 절차
+- **QUICK_REFERENCE.md**: 세션 7 작업 내용 추가
+- **CHANGELOG.md**: 변경 이력 업데이트
+
 ## [미배포] - 2025-10-29
 
 ### 수정 (Fixed)

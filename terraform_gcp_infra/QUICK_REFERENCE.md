@@ -80,6 +80,24 @@ terraform plan
   - 2차: lifecycle 메타-인자는 변수 사용 불가 (Terraform 제한)
   - 최종: prevent_destroy 제거, 주석 안내로 변경
 
+### 세션 7: 프로젝트 리뷰 및 변수화 개선
+- **Region 변수 추가**:
+  - 모든 레이어(00-project ~ 70-loadbalancer)에 region 변수 추가
+  - Provider 블록의 하드코딩된 "us-central1"을 var.region으로 변경
+  - terraform.tfvars에 region 설정 추가
+- **하드코딩 제거**:
+  - 20-storage: enable_versioning, cors_rules 변수화
+  - 모든 설정값이 terraform.tfvars에서 관리 가능
+- **terraform.tfvars 완성**:
+  - 60-database, 70-loadbalancer에 실제 terraform.tfvars 파일 생성
+  - 모든 레이어가 이제 terraform.tfvars 포함 (.example만 아님)
+- **프로젝트 정리**:
+  - jsj-game-b 프로젝트 검토 및 locals.tf 중복 제거
+  - proj-default-templet을 기준으로 명명 규칙 통일
+- **문서화**:
+  - README.md에 locals.tf 중앙 집중식 naming 섹션 추가
+  - 새 프로젝트 추가 가이드 개선
+
 ## ⚠️ 주의: State 마이그레이션 필요
 
 기존 인프라가 있다면:
@@ -114,6 +132,10 @@ terraform state mv 'module.game_backups_bucket' 'module.game_storage.module.gcs_
 15. ✅ 데이터베이스 레이어 추가 (60-database)
 16. ✅ 로드 밸런서 레이어 추가 (70-loadbalancer)
 17. ✅ Cloud SQL 로깅 기능 추가 (느린 쿼리 로그, Cloud Logging 통합)
+18. ✅ 모든 레이어에 region 변수 추가 (완전한 지역 설정 가능)
+19. ✅ 하드코딩 제거 (20-storage enable_versioning, cors_rules)
+20. ✅ 모든 레이어에 terraform.tfvars 생성 (60-database, 70-loadbalancer 포함)
+21. ✅ 중앙 집중식 Naming 문서화 (locals.tf 사용법)
 
 ## 📂 중요 파일
 
