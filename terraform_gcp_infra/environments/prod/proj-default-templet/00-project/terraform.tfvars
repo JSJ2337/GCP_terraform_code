@@ -5,12 +5,9 @@ project_name    = "gcp-terraform-imsi"
 folder_id       = null # No folder (standalone project)
 billing_account = "01076D-327AD5-FC8922"
 
-# Labels
+# Labels (only add extra labels here, common_labels from locals.tf will be merged)
 labels = {
-  environment = "prod"
-  project     = "default-templet"
-  team        = "game-dev"
-  cost-center = "engineering"
+  team = "game-dev"
 }
 
 # APIs to enable
