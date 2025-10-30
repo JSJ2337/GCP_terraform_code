@@ -1,0 +1,95 @@
+# 스토리지 설정 예제
+# 이 파일을 terraform.tfvars로 복사하고 실제 값을 입력하세요
+# 중요: terraform.tfvars 파일은 버전 관리에 커밋하지 마세요
+
+project_id = "your-project-id"
+
+# 공통 설정
+default_labels = {
+  environment = "prod"
+  project     = "default-templet"
+  managed_by  = "terraform"
+}
+
+uniform_bucket_level_access = true
+public_access_prevention    = "enforced"
+
+# 선택사항: 버킷 암호화용 KMS 키
+# kms_key_name = "projects/YOUR_PROJECT/locations/REGION/keyRings/KEYRING/cryptoKeys/KEY"
+
+# 에셋 버킷 - 게임 에셋, 이미지, 비디오용
+assets_bucket_name          = "myorg-prod-default-templet-assets"
+assets_bucket_location      = "US-CENTRAL1"
+assets_bucket_storage_class = "STANDARD"
+assets_bucket_labels = {
+  purpose = "default-templetssets"
+}
+assets_enable_versioning = true
+assets_lifecycle_rules = [
+  {
+    condition = {
+      num_newer_versions = 3
+    }
+    action = {
+      type = "Delete"
+    }
+  }
+]
+assets_cors_rules = [
+  {
+    origin          = ["https://yourgame.com"]
+    method          = ["GET", "HEAD"]
+    response_header = ["*"]
+    max_age_seconds = 3600
+  }
+]
+assets_iam_bindings = [
+  # 예제: 모든 인증된 사용자에게 읽기 권한 부여
+  # {
+  #   role    = "roles/storage.objectViewer"
+  #   members = ["allAuthenticatedUsers"]
+  # }
+]
+
+# 로그 버킷 - 애플리케이션 및 시스템 로그용
+logs_bucket_name          = "myorg-prod-default-templet-logs"
+logs_bucket_location      = "US-CENTRAL1"
+logs_bucket_storage_class = "COLDLINE"
+logs_bucket_labels = {
+  purpose = "application-logs"
+}
+logs_lifecycle_rules = [
+  {
+    condition = {
+      age = 90
+    }
+    action = {
+      type = "Delete"
+    }
+  }
+]
+logs_retention_policy_days   = 7
+logs_retention_policy_locked = false
+logs_iam_bindings            = []
+
+# 백업 버킷 - 데이터베이스 및 애플리케이션 백업용
+backups_bucket_name          = "myorg-prod-default-templet-backups"
+backups_bucket_location      = "US"
+backups_bucket_storage_class = "ARCHIVE"
+backups_bucket_labels = {
+  purpose = "backups"
+}
+backups_enable_versioning = true
+backups_lifecycle_rules = [
+  {
+    condition = {
+      age = 365
+    }
+    action = {
+      type = "Delete"
+    }
+  }
+]
+backups_retention_policy_days   = 30
+backups_retention_policy_locked = false
+backups_iam_bindings            = []
