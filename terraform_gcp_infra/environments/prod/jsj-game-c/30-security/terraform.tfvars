@@ -1,3 +1,6 @@
+# Region Configuration
+region = "us-central1"
+
 # Security Configuration
 project_id = "jsj-prod-game-c"
 

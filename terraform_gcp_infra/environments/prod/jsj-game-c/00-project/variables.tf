@@ -7,6 +7,12 @@ variable "project_name" {
   default = ""
 }
 
+variable "region" {
+  type        = string
+  description = "Default GCP region for resources"
+  default     = "us-central1"
+}
+
 variable "folder_id" {
   type = string
 }

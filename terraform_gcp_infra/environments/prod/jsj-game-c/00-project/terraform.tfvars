@@ -3,6 +3,7 @@
 # Project ID format: organization-environment-project (jsj-prod-game-c)
 project_id      = "jsj-prod-game-c"
 project_name    = "jsj-prod-game-c"
+region          = "us-central1"
 folder_id       = null # No folder (standalone project)
 billing_account = "01076D-327AD5-FC8922"
 

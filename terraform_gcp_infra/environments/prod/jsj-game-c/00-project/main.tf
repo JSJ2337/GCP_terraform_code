@@ -15,12 +15,12 @@ terraform {
 
 provider "google" {
   project = var.project_id
-  region  = "us-central1"
+  region  = var.region
 }
 
 provider "google-beta" {
   project = var.project_id
-  region  = "us-central1"
+  region  = var.region
 }
 
 # Common labels imported from parent locals.tf

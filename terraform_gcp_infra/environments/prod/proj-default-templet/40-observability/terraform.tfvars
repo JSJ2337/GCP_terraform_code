@@ -1,3 +1,6 @@
+# Region Configuration
+region = "us-central1"
+
 # Observability Configuration
 # Resource names are auto-generated from ../locals.tf
 project_id = "gcp-terraform-imsi"

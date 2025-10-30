@@ -1,3 +1,6 @@
+# Region Configuration
+region = "us-central1"
+
 # Load Balancer 설정 예제
 # 이 파일을 terraform.tfvars로 복사하고 실제 값을 입력하세요
 # 중요: terraform.tfvars 파일은 버전 관리에 커밋하지 마세요

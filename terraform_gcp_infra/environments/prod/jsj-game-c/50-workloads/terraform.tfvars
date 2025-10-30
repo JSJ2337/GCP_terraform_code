@@ -1,3 +1,6 @@
+# Region Configuration
+region = "us-central1"
+
 # Workloads Configuration
 # Resource names are auto-generated from ../locals.tf
 # VM names will use: vm_name_prefix, subnet names from: subnet_name_primary

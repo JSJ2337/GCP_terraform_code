@@ -2,6 +2,7 @@
 # Common labels and naming conventions are defined in ../locals.tf
 project_id      = "gcp-terraform-imsi"
 project_name    = "gcp-terraform-imsi"
+region          = "us-central1"
 folder_id       = null # No folder (standalone project)
 billing_account = "01076D-327AD5-FC8922"
 
