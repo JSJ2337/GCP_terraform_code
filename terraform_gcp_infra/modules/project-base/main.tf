@@ -14,6 +14,7 @@ resource "google_project" "this" {
   billing_account     = var.billing_account
   labels              = var.labels
   auto_create_network = false
+  deletion_policy     = "DELETE" # Allow terraform destroy
 
   # 참고: 프로덕션 환경에서 삭제 방지가 필요한 경우
   # 아래 lifecycle 블록의 주석을 해제하세요
