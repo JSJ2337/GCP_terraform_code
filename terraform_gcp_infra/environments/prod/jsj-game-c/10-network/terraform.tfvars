@@ -1,26 +1,26 @@
 # Network Configuration
-project_id   = "gcp-terraform-imsi"
-vpc_name     = "default-templet-vpc"
+project_id   = "jsj-prod-game-c"
+vpc_name     = "" # Empty = use default from locals.tf (prod-game-c-vpc)
 routing_mode = "GLOBAL"
 
 # Subnets configuration
 subnets = {
-  "default-templet-subnet-us-central1" = {
+  "prod-game-c-subnet-us-central1" = {
     region                = "us-central1"
     cidr                  = "10.1.0.0/20"
     private_google_access = true
     secondary_ranges = [
       {
-        name = "default-templet-pods"
+        name = "prod-game-c-pods"
         cidr = "10.1.16.0/20"
       },
       {
-        name = "default-templet-services"
+        name = "prod-game-c-services"
         cidr = "10.1.32.0/20"
       }
     ]
   }
-  "default-templet-subnet-us-east1" = {
+  "prod-game-c-subnet-us-east1" = {
     region                = "us-east1"
     cidr                  = "10.2.0.0/20"
     private_google_access = true

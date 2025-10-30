@@ -1,7 +1,7 @@
 # Workloads Configuration
-project_id           = "gcp-terraform-imsi"
+project_id           = "jsj-prod-game-c"
 zone                 = "us-central1-a"
-subnetwork_self_link = "projects/gcp-terraform-imsi/regions/us-central1/subnetworks/default-templet-subnet-us-central1"
+subnetwork_self_link = "projects/jsj-prod-game-c/regions/us-central1/subnetworks/default-templet-subnet-us-central1"
 
 # VM configuration
 instance_count   = 2
@@ -12,7 +12,7 @@ enable_os_login  = true
 preemptible      = false
 
 # Service account
-service_account_email = "default-templet-compute@gcp-terraform-imsi.iam.gserviceaccount.com"
+service_account_email = "default-templet-compute@jsj-prod-game-c.iam.gserviceaccount.com"
 service_account_scopes = [
   "https://www.googleapis.com/auth/cloud-platform"
 ]

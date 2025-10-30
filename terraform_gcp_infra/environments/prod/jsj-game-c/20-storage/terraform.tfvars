@@ -1,5 +1,5 @@
 # Storage Configuration for Game A Production
-project_id = "gcp-terraform-imsi"
+project_id = "jsj-prod-game-c"
 
 # Default labels for all buckets
 default_labels = {

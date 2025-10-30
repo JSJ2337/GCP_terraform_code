@@ -1,5 +1,5 @@
 # Security Configuration
-project_id = "gcp-terraform-imsi"
+project_id = "jsj-prod-game-c"
 
 # IAM bindings (empty for now - add real users/groups later)
 bindings = []

@@ -13,12 +13,12 @@ locals {
 
   # Common labels applied to all resources
   common_labels = {
-    environment = local.environment
-    project     = local.project_name
-    managed_by  = "terraform"
-    cost_center = "IT_infra_deps"
-    created_by  = "system-team"
-    compliance  = "none"
+    environment  = local.environment
+    project      = local.project_name
+    managed-by   = "terraform"
+    cost-center  = "engineering"
+    created-by   = "system-team"
+    compliance   = "none"
   }
 
   # GCS bucket naming (must be globally unique, lowercase, hyphens)

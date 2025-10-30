@@ -1,5 +1,5 @@
 # Observability Configuration
-project_id = "gcp-terraform-imsi"
+project_id = "jsj-prod-game-c"
 
 # Central logging configuration (disabled for now)
 enable_central_log_sink = false
