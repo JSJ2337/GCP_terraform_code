@@ -3,6 +3,12 @@ variable "project_id" {
   description = "GCP 프로젝트 ID"
 }
 
+variable "region" {
+  type        = string
+  description = "Default GCP region for resources"
+  default     = "us-central1"
+}
+
 variable "routing_mode" {
   type        = string
   description = "VPC 라우팅 모드 (GLOBAL/REGIONAL)"
