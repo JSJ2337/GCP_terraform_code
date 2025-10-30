@@ -15,9 +15,11 @@ resource "google_project" "this" {
   labels              = var.labels
   auto_create_network = false
 
-  lifecycle {
-    prevent_destroy = var.prevent_destroy
-  }
+  # 참고: 프로덕션 환경에서 삭제 방지가 필요한 경우
+  # 아래 lifecycle 블록의 주석을 해제하세요
+  # lifecycle {
+  #   prevent_destroy = true
+  # }
 }
 
 # 1) 필수 API

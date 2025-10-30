@@ -10,11 +10,12 @@
 ### 수정 (Fixed)
 
 #### 프로젝트 삭제 방지 설정
-- **deletion_policy → prevent_destroy 변경**:
+- **deletion_policy 제거 및 주석 안내로 변경**:
   - `google_project` 리소스는 `deletion_policy` 속성을 지원하지 않음
-  - Terraform의 `lifecycle { prevent_destroy }` 사용으로 변경
-  - boolean 타입으로 단순화 (true: 삭제 방지, false: 자유롭게 삭제)
-  - project-base 모듈 및 00-project 레이어 업데이트
+  - Terraform의 `lifecycle` 블록은 변수 사용 불가 (메타-인자 제한)
+  - 해결: 주석 처리된 lifecycle 블록으로 사용자가 필요 시 활성화
+  - project-base 모듈의 main.tf에 주석으로 안내 추가
+  - 프로덕션 환경에서는 수동으로 주석 해제하여 사용
 
 ### 추가 (Added)
 

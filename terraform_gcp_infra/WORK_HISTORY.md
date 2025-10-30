@@ -251,64 +251,72 @@ query_insights_enabled = true  # ✅ 활성화
 
 #### deletion_policy 속성 오류 수정
 
-**문제**:
+**문제 1 (첫 번째 시도)**:
 - VSCode Terraform 검증에서 에러 발생:
   ```
   Unexpected attribute: An attribute named "deletion_policy" is not expected here
   ```
 - `google_project` 리소스는 `deletion_policy` 속성을 지원하지 않음
 
-**원인**:
-- 세션 4에서 추가한 `deletion_policy` 변수가 Google Provider에서 지원되지 않는 속성
-- `google_project` 리소스는 자체 `deletion_policy` 속성이 없음
+**해결 시도 1**:
+- `deletion_policy` → `prevent_destroy` 변수로 변경
+- `lifecycle { prevent_destroy = var.prevent_destroy }` 사용
 
-**해결책**:
-1. **deletion_policy → prevent_destroy 변경**:
-   - `deletion_policy` (string: DELETE/PREVENT/ABANDON) 제거
-   - `prevent_destroy` (bool: true/false)로 변경
-   - Terraform의 `lifecycle { prevent_destroy }` 블록 사용
+**문제 2 (두 번째 에러)**:
+- 같은 에러 계속 발생:
+  ```
+  Unexpected attribute: An attribute named "prevent_destroy" is not expected here
+  ```
+- **근본 원인**: Terraform의 `lifecycle` 블록은 **메타-인자**이며 변수를 사용할 수 없음
+- `lifecycle { prevent_destroy }` 값은 반드시 **상수(literal)**여야 함
+- 이는 Terraform의 설계 제한사항
+
+**최종 해결책**:
+1. **prevent_destroy 변수 완전 제거**:
+   - 모듈 변수로 제어할 수 없음
+   - 주석 처리된 lifecycle 블록으로 대체
 
 2. **변경된 파일**:
    ```
-   modules/project-base/variables.tf: deletion_policy → prevent_destroy
-   modules/project-base/main.tf: deletion_policy 제거, lifecycle 블록 추가
+   modules/project-base/variables.tf: prevent_destroy 변수 제거
+   modules/project-base/main.tf: lifecycle 블록 주석 처리 + 안내 추가
    environments/prod/proj-default-templet/00-project/variables.tf
    environments/prod/proj-default-templet/00-project/main.tf
    environments/prod/proj-default-templet/00-project/terraform.tfvars.example
    ```
 
-3. **코드 변경**:
+3. **최종 코드**:
    ```terraform
-   # Before (잘못됨)
-   resource "google_project" "this" {
-     project_id      = var.project_id
-     deletion_policy = var.deletion_policy  # 지원되지 않음
-   }
-
-   # After (수정됨)
    resource "google_project" "this" {
      project_id = var.project_id
+     # ... 기타 속성 ...
 
-     lifecycle {
-       prevent_destroy = var.prevent_destroy
-     }
+     # 참고: 프로덕션 환경에서 삭제 방지가 필요한 경우
+     # 아래 lifecycle 블록의 주석을 해제하세요
+     # lifecycle {
+     #   prevent_destroy = true
+     # }
    }
    ```
 
-**변경 사항**:
-- 변수 타입: `string` → `bool`
-- 기본값: `"DELETE"` → `false` (자유롭게 삭제 가능)
-- 프로덕션 권장: `prevent_destroy = true`
+**사용 방법**:
+- 개발/테스트 환경: 주석 유지 (자유롭게 삭제 가능)
+- 프로덕션 환경: 주석 해제하여 `prevent_destroy = true` 활성화
+
+**학습 내용**:
+- Terraform의 메타-인자 (`lifecycle`, `depends_on`, `count`, `for_each`)는 동적 값을 사용할 수 없음
+- 이러한 값들은 Terraform이 실행 계획을 세우기 전에 평가되어야 함
+- 변수를 통한 동적 제어가 필요하다면 별도의 리소스나 모듈 분리 필요
 
 ### 📝 커밋 메시지
 
 ```
-fix: deletion_policy를 prevent_destroy로 변경
+fix: prevent_destroy 변수 제거 및 주석 안내로 변경
 
-- google_project 리소스는 deletion_policy 속성을 지원하지 않음
-- Terraform lifecycle { prevent_destroy } 사용으로 변경
-- boolean 타입으로 단순화 (true: 삭제 방지, false: 자유롭게 삭제)
-- project-base 모듈 및 00-project 레이어 업데이트
+- Terraform lifecycle 블록은 변수 사용 불가 (메타-인자 제한)
+- prevent_destroy 변수 완전 제거
+- 주석 처리된 lifecycle 블록으로 사용자가 필요 시 활성화
+- project-base 모듈에 주석으로 사용 안내 추가
 - VSCode Terraform 검증 에러 수정
 
 🤖 Generated with Claude Code

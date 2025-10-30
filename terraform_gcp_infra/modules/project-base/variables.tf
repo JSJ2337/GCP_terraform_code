@@ -57,9 +57,3 @@ variable "cmek_key_id" {
   type    = string
   default = ""
 }
-
-variable "prevent_destroy" {
-  type        = bool
-  default     = false
-  description = "프로젝트 삭제 방지 (true: 삭제 차단, false: 자유롭게 삭제 가능)"
-}

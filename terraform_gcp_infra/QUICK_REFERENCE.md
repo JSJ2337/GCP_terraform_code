@@ -66,7 +66,7 @@ terraform plan
 - **문서화**:
   - README.md, WORK_HISTORY.md 업데이트
 
-### 세션 6: Cloud SQL 로깅 기능 추가
+### 세션 6: Cloud SQL 로깅 기능 추가 및 버그 수정
 - **Observability 개선**:
   - Cloud SQL 느린 쿼리 로깅 (기본 2초)
   - 일반 쿼리 로깅 옵션 (디버깅용)
@@ -75,8 +75,10 @@ terraform plan
 - **문서 업데이트**:
   - cloudsql-mysql README에 로깅 섹션 추가
   - 60-database 레이어 로깅 변수 추가
-- **버그 수정**:
-  - deletion_policy → prevent_destroy 변경 (google_project 속성 오류 수정)
+- **버그 수정** (2단계):
+  - 1차: deletion_policy → prevent_destroy 변경 시도
+  - 2차: lifecycle 메타-인자는 변수 사용 불가 (Terraform 제한)
+  - 최종: prevent_destroy 제거, 주석 안내로 변경
 
 ## ⚠️ 주의: State 마이그레이션 필요
 

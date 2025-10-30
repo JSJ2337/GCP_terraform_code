@@ -40,7 +40,5 @@ log_retention_days = 30
 # 선택사항: 로그 암호화용 CMEK 키
 # cmek_key_id = "projects/YOUR_PROJECT/locations/REGION/keyRings/KEYRING/cryptoKeys/KEY"
 
-# 프로젝트 삭제 방지
-# false (기본값): terraform destroy로 자유롭게 삭제 가능 (개발/테스트 환경)
-# true: 실수로 인한 삭제 방지 (프로덕션/중요 인프라)
-prevent_destroy = false
+# 참고: 프로덕션 환경에서 프로젝트 삭제 방지가 필요한 경우
+# modules/project-base/main.tf의 lifecycle 블록 주석을 해제하세요
