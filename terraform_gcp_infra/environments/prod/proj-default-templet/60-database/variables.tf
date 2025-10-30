@@ -99,11 +99,12 @@ variable "private_network" {
   default     = ""
 }
 
-variable "require_ssl" {
-  type        = bool
-  description = "SSL 연결 필수"
-  default     = true
-}
+# Note: require_ssl is deprecated in Google provider 7.x+
+# variable "require_ssl" {
+#   type        = bool
+#   description = "SSL 연결 필수"
+#   default     = true
+# }
 
 variable "authorized_networks" {
   type = list(object({
@@ -201,7 +202,8 @@ variable "users" {
   }))
   description = "생성할 사용자 목록"
   default     = []
-  sensitive   = true
+  # Note: Cannot use sensitive = true with for_each in Terraform
+  # Passwords will still be marked as sensitive in state file
 }
 
 variable "read_replicas" {

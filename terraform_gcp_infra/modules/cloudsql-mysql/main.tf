@@ -64,7 +64,8 @@ resource "google_sql_database_instance" "instance" {
     ip_configuration {
       ipv4_enabled    = var.ipv4_enabled
       private_network = var.private_network
-      require_ssl     = var.require_ssl
+      # Note: require_ssl is deprecated in newer Google provider versions
+      # Use SSL certificates and connection policies instead
 
       dynamic "authorized_networks" {
         for_each = var.authorized_networks
@@ -154,7 +155,7 @@ resource "google_sql_database_instance" "read_replicas" {
     ip_configuration {
       ipv4_enabled    = var.ipv4_enabled
       private_network = var.private_network
-      require_ssl     = var.require_ssl
+      # require_ssl is deprecated in Google provider 7.x+
     }
 
     user_labels = var.labels

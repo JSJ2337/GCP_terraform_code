@@ -29,7 +29,7 @@ backup_retained_count              = 7
 # 네트워크 설정
 ipv4_enabled    = false # Private IP 사용 권장
 private_network = "projects/your-project/global/networks/your-vpc"
-require_ssl     = true
+# require_ssl is deprecated in Google provider 7.x+
 
 # 공개 IP를 사용하는 경우 승인된 네트워크 설정
 # authorized_networks = [

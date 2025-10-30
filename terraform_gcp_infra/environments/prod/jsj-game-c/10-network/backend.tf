@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
     bucket = "delabs-terraform-state-prod"
-    prefix = "proj-default-templet/10-network"
+    prefix = "jsj-game-c/10-network"
   }
 }

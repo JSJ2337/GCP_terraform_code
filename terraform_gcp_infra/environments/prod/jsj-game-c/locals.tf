@@ -2,7 +2,7 @@
 locals {
   # Environment and project info
   environment    = "prod"
-  project_name   = "game-b"
+  project_name   = "game-c"
   organization   = "jsj" # Update with your organization name
   region_primary = "us-central1"
   region_backup  = "us-east1"

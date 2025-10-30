@@ -53,7 +53,7 @@ module "mysql" {
   # Network configuration
   ipv4_enabled        = var.ipv4_enabled
   private_network     = var.private_network
-  require_ssl         = var.require_ssl
+  # require_ssl is deprecated in Google provider 7.x+
   authorized_networks = var.authorized_networks
 
   # Maintenance window

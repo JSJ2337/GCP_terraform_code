@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
     bucket = "delabs-terraform-state-prod"
-    prefix = "proj-default-templet/30-security"
+    prefix = "jsj-game-c/50-workloads"
   }
 }
