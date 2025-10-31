@@ -94,6 +94,10 @@ terraform plan
 - **프로젝트 정리**:
   - jsj-game-b 프로젝트 검토 및 locals.tf 중복 제거
   - proj-default-templet을 기준으로 명명 규칙 통일
+- **템플릿 동기화**:
+  - proj-default-templet과 jsj-game-c 완전 동기화
+  - 변수 구조 오류 수정 (00-project, 30-security)
+  - 20-storage 누락 변수 추가 및 하드코딩 제거
 - **문서화**:
   - README.md에 locals.tf 중앙 집중식 naming 섹션 추가
   - 새 프로젝트 추가 가이드 개선
