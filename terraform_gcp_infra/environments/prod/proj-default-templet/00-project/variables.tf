@@ -1,16 +1,16 @@
 variable "project_id" {
-
-variable "region" {
-  type        = string
-  description = "Default GCP region for resources"
-  default     = "us-central1"
-}
   type = string
 }
 
 variable "project_name" {
   type    = string
   default = ""
+}
+
+variable "region" {
+  type        = string
+  description = "Default GCP region for resources"
+  default     = "us-central1"
 }
 
 variable "folder_id" {

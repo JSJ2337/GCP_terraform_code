@@ -125,6 +125,12 @@ variable "logs_bucket_labels" {
   default     = {}
 }
 
+variable "logs_enable_versioning" {
+  type        = bool
+  description = "Enable versioning for logs bucket"
+  default     = false
+}
+
 variable "logs_lifecycle_rules" {
   type = list(object({
     condition = object({
@@ -166,6 +172,17 @@ variable "logs_iam_bindings" {
     }))
   }))
   description = "IAM bindings for logs bucket"
+  default     = []
+}
+
+variable "logs_cors_rules" {
+  type = list(object({
+    origin          = list(string)
+    method          = list(string)
+    response_header = optional(list(string))
+    max_age_seconds = optional(number)
+  }))
+  description = "CORS rules for logs bucket"
   default     = []
 }
 
@@ -240,5 +257,16 @@ variable "backups_iam_bindings" {
     }))
   }))
   description = "IAM bindings for backups bucket"
+  default     = []
+}
+
+variable "backups_cors_rules" {
+  type = list(object({
+    origin          = list(string)
+    method          = list(string)
+    response_header = optional(list(string))
+    max_age_seconds = optional(number)
+  }))
+  description = "CORS rules for backups bucket"
   default     = []
 }
