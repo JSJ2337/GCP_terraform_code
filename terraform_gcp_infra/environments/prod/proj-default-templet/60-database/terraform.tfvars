@@ -19,7 +19,7 @@ deletion_protection = false # Set to true for production
 # Backup configuration
 backup_enabled                     = true
 backup_start_time                  = "03:00"
-point_in_time_recovery_enabled     = true
+binary_log_enabled                 = true
 transaction_log_retention_days     = 7
 backup_retained_count              = 7
 

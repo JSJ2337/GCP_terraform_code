@@ -68,9 +68,9 @@ variable "backup_start_time" {
   default     = "03:00"
 }
 
-variable "point_in_time_recovery_enabled" {
+variable "binary_log_enabled" {
   type        = bool
-  description = "Point-in-time 복구 활성화"
+  description = "Binary 로그 활성화 (MySQL의 Point-in-time 복구용)"
   default     = true
 }
 
