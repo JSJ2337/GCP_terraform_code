@@ -3,10 +3,39 @@ variable "project_id" {
   description = "The project ID"
 }
 
+variable "project_name" {
+  type        = string
+  description = "Project name used for naming conventions"
+}
+
+variable "environment" {
+  type        = string
+  description = "Environment identifier"
+  default     = "prod"
+}
+
+variable "organization" {
+  type        = string
+  description = "Organization prefix"
+  default     = "myorg"
+}
+
+variable "region_primary" {
+  type        = string
+  description = "Primary region for naming"
+  default     = "us-central1"
+}
+
+variable "region_backup" {
+  type        = string
+  description = "Backup region for naming"
+  default     = "us-east1"
+}
+
 # Common settings
 variable "default_labels" {
   type        = map(string)
-  description = "Additional labels merged with common_labels from locals.tf"
+  description = "Additional labels merged with modules/naming.common_labels"
   default     = {}
 }
 

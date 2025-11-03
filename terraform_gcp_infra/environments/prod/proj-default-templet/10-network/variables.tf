@@ -3,6 +3,35 @@ variable "project_id" {
   description = "GCP 프로젝트 ID"
 }
 
+variable "project_name" {
+  type        = string
+  description = "프로젝트 명 (네이밍 규칙에 사용)"
+}
+
+variable "environment" {
+  type        = string
+  description = "환경 값 (예: prod, stg)"
+  default     = "prod"
+}
+
+variable "organization" {
+  type        = string
+  description = "조직/비즈니스 단위 접두어"
+  default     = "myorg"
+}
+
+variable "region_primary" {
+  type        = string
+  description = "Primary 리전"
+  default     = "us-central1"
+}
+
+variable "region_backup" {
+  type        = string
+  description = "Backup 리전"
+  default     = "us-east1"
+}
+
 variable "region" {
   type        = string
   description = "Default GCP region for resources"

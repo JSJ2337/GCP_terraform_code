@@ -7,6 +7,26 @@ variable "project_name" {
   default = ""
 }
 
+variable "environment" {
+  type    = string
+  default = "prod"
+}
+
+variable "organization" {
+  type    = string
+  default = "myorg"
+}
+
+variable "region_primary" {
+  type    = string
+  default = "us-central1"
+}
+
+variable "region_backup" {
+  type    = string
+  default = "us-east1"
+}
+
 variable "region" {
   type        = string
   description = "Default GCP region for resources"

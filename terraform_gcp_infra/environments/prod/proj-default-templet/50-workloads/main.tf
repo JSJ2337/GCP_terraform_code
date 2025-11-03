@@ -14,23 +14,31 @@ provider "google" {
   region  = var.region
 }
 
+module "naming" {
+  source         = "../../../../modules/naming"
+  project_name   = var.project_name
+  environment    = var.environment
+  organization   = var.organization
+  region_primary = var.region_primary
+  region_backup  = var.region_backup
+}
+
 locals {
-  default_zone = "${var.region}-a"
+  default_zone = module.naming.default_zone
 
   zone = length(trimspace(var.zone)) > 0 ? var.zone : local.default_zone
 
-  subnetwork_self_link = length(trimspace(var.subnetwork_self_link)) > 0 ? var.subnetwork_self_link : "projects/${var.project_id}/regions/${local.region_primary}/subnetworks/${local.subnet_name_primary}"
+  subnetwork_self_link = length(trimspace(var.subnetwork_self_link)) > 0 ? var.subnetwork_self_link : "projects/${var.project_id}/regions/${module.naming.region_primary}/subnetworks/${module.naming.subnet_name_primary}"
 
-  name_prefix = length(trimspace(var.name_prefix)) > 0 ? var.name_prefix : local.vm_name_prefix
+  name_prefix = length(trimspace(var.name_prefix)) > 0 ? var.name_prefix : module.naming.vm_name_prefix
 
-  service_account_email = length(trimspace(var.service_account_email)) > 0 ? var.service_account_email : "${local.sa_name_prefix}-compute@${var.project_id}.iam.gserviceaccount.com"
+  service_account_email = length(trimspace(var.service_account_email)) > 0 ? var.service_account_email : "${module.naming.sa_name_prefix}-compute@${var.project_id}.iam.gserviceaccount.com"
 
-  tags   = distinct(concat(local.common_tags, var.tags))
-  labels = merge(local.common_labels, var.labels)
+  tags   = distinct(concat(module.naming.common_tags, var.tags))
+  labels = merge(module.naming.common_labels, var.labels)
 }
 
-# Naming conventions imported from parent locals.tf
-# local.vm_name_prefix is already defined in parent
+# Naming conventions supplied by modules/naming
 
 module "gce_vmset" {
   source = "../../../../modules/gce-vmset"

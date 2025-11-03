@@ -1,12 +1,16 @@
 # Project Configuration
-# Common labels and naming conventions are defined in ../locals.tf
+# Naming is handled by modules/naming (see project_name/environment/organization below)
 project_id      = "gcp-terraform-imsi"
 project_name    = "gcp-terraform-imsi"
+environment     = "prod"
+organization    = "myorg"
+region_primary  = "us-central1"
+region_backup   = "us-east1"
 region          = "us-central1"
 folder_id       = null # No folder (standalone project)
 billing_account = "01076D-327AD5-FC8922"
 
-# Labels (only add extra labels here, common_labels from locals.tf will be merged)
+# Labels (only add extra labels here; modules/naming.common_labels will be merged)
 labels = {
   team = "game-dev"
 }

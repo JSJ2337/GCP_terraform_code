@@ -26,7 +26,8 @@ terraform_gcp_infra/
 │   ├── observability/         # 로깅 및 모니터링 설정
 │   ├── gce-vmset/             # Compute Engine VM 인스턴스
 │   ├── cloudsql-mysql/        # Cloud SQL MySQL 데이터베이스
-│   └── load-balancer/         # HTTP(S) 및 Internal Load Balancer
+│   ├── load-balancer/         # HTTP(S) 및 Internal Load Balancer
+│   └── naming/                # 공통 네이밍/라벨 규칙 계산
 │
 └── environments/              # 환경별 구성
     └── prod/
@@ -38,8 +39,7 @@ terraform_gcp_infra/
             ├── 40-observability/  # 모니터링 및 로깅
             ├── 50-workloads/      # 컴퓨팅 워크로드
             ├── 60-database/       # Cloud SQL 데이터베이스
-            ├── 70-loadbalancer/   # Load Balancer 설정
-            └── locals.tf          # 공통 naming 및 labeling 규칙
+            └── 70-loadbalancer/   # Load Balancer 설정
 ```
 
 ## 주요 기능
@@ -61,28 +61,20 @@ terraform_gcp_infra/
 - **60-database**: Cloud SQL MySQL 데이터베이스
 - **70-loadbalancer**: HTTP(S) 및 Internal Load Balancer
 
-### Locals를 통한 중앙 집중식 Naming
-모든 프로젝트에는 **`locals.tf`** 파일이 포함되어 있으며, 모든 리소스 이름을 자동으로 생성합니다:
+### modules/naming을 통한 중앙 집중식 Naming
+각 레이어는 `modules/naming` 모듈을 호출해 일관된 리소스 이름과 공통 라벨을 계산합니다. 프로젝트별 입력 값은 각 레이어의 `terraform.tfvars` 상단에 있는 다음 항목으로 통일했습니다:
 
 ```hcl
-# environments/prod/your-project/locals.tf
-locals {
-  project_name = "your-project"  # 이것만 변경하면
-  organization = "your-org"
-
-  # 모든 리소스 이름이 자동 생성됨
-  vpc_name            = "${local.project_name}-${local.environment}-vpc"
-  subnet_name_primary = "${local.project_name}-${local.environment}-subnet-${local.region_primary}"
-  db_instance_name    = "${local.project_name}-${local.environment}-mysql"
-  # ... 등등
-}
+# 공통 네이밍 입력 (terraform.tfvars)
+project_id     = "gcp-terraform-imsi"
+project_name   = "default-templet"
+environment    = "prod"
+organization   = "myorg"
+region_primary = "us-central1"
+region_backup  = "us-east1"
 ```
 
-**이점:**
-- ✅ 새 프로젝트 생성 시 `locals.tf`만 수정
-- ✅ 모든 리소스 이름이 일관된 패턴으로 자동 생성
-- ✅ terraform.tfvars는 실제 설정값(CIDR, 포트 등)만 포함
-- ✅ 버킷, 서비스 계정, Cloud SQL, Load Balancer 이름은 locals 기반 기본값을 자동 사용하므로 필요한 경우에만 override
+`modules/naming`은 위 값을 이용해 `vpc_name`, `bucket_name_prefix`, `db_instance_name`, `sa_name_prefix`, `forwarding_rule_name` 등을 자동으로 만들어 주며, 공통 라벨(`common_labels`)과 태그(`common_tags`)도 함께 제공합니다. 리소스 이름을 수정하고 싶은 경우 해당 tfvars에서 값만 변경하면 모든 레이어가 동일하게 업데이트됩니다.
 
 ## 시작하기
 
@@ -261,7 +253,7 @@ terraform apply
 - ✅ 10개 이상 프로젝트 확장 가능한 구조
 - ✅ 예산 알림 구성
 - ✅ 포괄적인 로깅 및 모니터링
-- ✅ locals를 통한 일관된 naming 규칙
+- ✅ modules/naming을 통한 일관된 naming 규칙
 
 ### 코드 품질
 - ✅ 모듈 내 provider 블록 없음
@@ -315,21 +307,17 @@ cp -r proj-default-templet your-new-project
 cd your-new-project
 ```
 
-**Step 2: locals.tf 수정** (가장 중요!)
+**Step 2: naming 입력 수정** (프로젝트/환경 정보)
+
+각 레이어의 `terraform.tfvars` 상단에 있는 다음 값을 새 프로젝트에 맞게 변경합니다.
 
 ```hcl
-# your-new-project/locals.tf
-locals {
-  project_name = "your-new-project"  # ← 이것만 변경!
-  organization = "your-org"          # ← 조직명 변경
-  environment  = "prod"
-
-  # 나머지는 자동으로 계산됨
-  # VPC 이름: your-new-project-prod-vpc
-  # 서브넷: your-new-project-prod-subnet-us-central1
-  # DB: your-new-project-prod-mysql
-  # 등등...
-}
+project_id     = "your-project-id"
+project_name   = "your-new-project"
+environment    = "prod"
+organization   = "your-org"
+region_primary = "us-central1"
+region_backup  = "us-east1"
 ```
 
 **Step 3: backend.tf 업데이트** (모든 레이어)
@@ -341,12 +329,9 @@ for dir in */; do
 done
 ```
 
-**Step 4: terraform.tfvars 수정**
-
-```bash
-# 각 레이어의 terraform.tfvars에서 project_id만 변경
-# 리소스 이름은 locals.tf에서 자동 생성되므로 수정 불필요!
-```
+**Step 4: terraform.tfvars 상세 설정**
+- 네트워크 CIDR, 버킷 정책, VM 스펙 등 환경별 값만 필요에 따라 조정합니다.
+- 이름과 라벨은 Step 2에서 입력한 값에 맞춰 `modules/naming`이 자동 생성합니다.
 
 **Step 5: 배포**
 
@@ -531,7 +516,7 @@ gcloud alpha resource-manager liens delete LIEN_ID
 1. 기존 모듈 구조 따르기
 2. 새 모듈에 README.md 포함
 3. terraform.tfvars.example 파일 추가
-4. locals를 통한 일관된 naming 사용
+4. modules/naming 기반 일관된 naming 사용
 5. 보안 기능 기본 활성화
 6. `terraform validate` 및 `tfsec`로 테스트
 

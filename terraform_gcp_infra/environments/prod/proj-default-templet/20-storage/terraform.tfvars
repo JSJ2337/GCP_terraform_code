@@ -1,7 +1,12 @@
 # Storage configuration for default template
-project_id = "gcp-terraform-imsi"
+project_id     = "gcp-terraform-imsi"
+project_name   = "default-templet"
+environment    = "prod"
+organization   = "myorg"
+region_primary = "us-central1"
+region_backup  = "us-east1"
 
-# Additional labels merged with common_labels from locals.tf
+# Additional labels merged with module.naming.common_labels
 default_labels = {
   component = "storage"
 }

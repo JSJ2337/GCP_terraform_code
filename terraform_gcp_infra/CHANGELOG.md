@@ -24,8 +24,8 @@
 - GCS 보존 설정으로 생성된 lien(`p861601542676-l299e11ad-124f-42de-92ae-198e8dd6ede6`)을 해제하여 프로젝트 삭제 완료
 
 ### 변경 (Changed)
-- `proj-default-templet` 템플릿의 공통 라벨을 하이픈(`cost-center`, `managed-by`) 기준으로 통일하고 예제와 locals 간 키가 일치하도록 정리
-- 20-storage, 30-security, 50-workloads, 60-database, 70-loadbalancer 레이어가 `locals.tf` 기반 기본 이름과 라벨을 자동 사용하도록 정비
+- `proj-default-templet` 템플릿의 공통 라벨을 하이픈(`cost-center`, `managed-by`) 기준으로 통일하고 예제와 naming 입력 간 키가 일치하도록 정리
+- 20-storage, 30-security, 50-workloads, 60-database, 70-loadbalancer 레이어가 `modules/naming` 기반 기본 이름과 라벨을 자동 사용하도록 정비
   - GCS 버킷/서비스 계정/Load Balancer 이름은 `terraform.tfvars`에서 생략해도 규칙에 맞춰 생성
   - VM 서브넷·서비스 계정 이메일·Private IP 네트워크가 자동 계산되도록 기본값 추가
 
@@ -68,8 +68,8 @@
   - 프로젝트 복제 시 수정 용이
 
 #### 문서화
-- **README.md**: locals.tf 중앙 집중식 naming 섹션 추가
-  - locals.tf의 역할과 이점 설명
+- **README.md**: naming 모듈 기반 중앙 집중식 naming 섹션 추가
+  - naming 모듈과 공통 입력값의 역할 설명
   - 새 프로젝트 추가 가이드 개선
   - Step-by-step 프로젝트 생성 절차
 - **QUICK_REFERENCE.md**: 세션 7 작업 내용 추가

@@ -13,19 +13,28 @@ provider "google" {
   project = var.project_id
 }
 
+module "naming" {
+  source         = "../../../../modules/naming"
+  project_name   = var.project_name
+  environment    = var.environment
+  organization   = var.organization
+  region_primary = var.region_primary
+  region_backup  = var.region_backup
+}
+
 locals {
   # Merge environment-wide labels with per-module overrides
-  default_labels = merge(local.common_labels, var.default_labels)
+  default_labels = merge(module.naming.common_labels, var.default_labels)
 
   # Automatically derive bucket names when not explicitly provided
-  assets_bucket_name  = length(trimspace(var.assets_bucket_name)) > 0 ? var.assets_bucket_name : "${local.bucket_name_prefix}-assets"
-  logs_bucket_name    = length(trimspace(var.logs_bucket_name)) > 0 ? var.logs_bucket_name : "${local.bucket_name_prefix}-logs"
-  backups_bucket_name = length(trimspace(var.backups_bucket_name)) > 0 ? var.backups_bucket_name : "${local.bucket_name_prefix}-backups"
+  assets_bucket_name  = length(trimspace(var.assets_bucket_name)) > 0 ? var.assets_bucket_name : "${module.naming.bucket_name_prefix}-assets"
+  logs_bucket_name    = length(trimspace(var.logs_bucket_name)) > 0 ? var.logs_bucket_name : "${module.naming.bucket_name_prefix}-logs"
+  backups_bucket_name = length(trimspace(var.backups_bucket_name)) > 0 ? var.backups_bucket_name : "${module.naming.bucket_name_prefix}-backups"
 
   # Merge bucket-specific labels with common labels
-  assets_bucket_labels  = merge(local.common_labels, { bucket = "assets" }, var.assets_bucket_labels)
-  logs_bucket_labels    = merge(local.common_labels, { bucket = "logs" }, var.logs_bucket_labels)
-  backups_bucket_labels = merge(local.common_labels, { bucket = "backups" }, var.backups_bucket_labels)
+  assets_bucket_labels  = merge(module.naming.common_labels, { bucket = "assets" }, var.assets_bucket_labels)
+  logs_bucket_labels    = merge(module.naming.common_labels, { bucket = "logs" }, var.logs_bucket_labels)
+  backups_bucket_labels = merge(module.naming.common_labels, { bucket = "backups" }, var.backups_bucket_labels)
 }
 
 # Use gcs-root module to manage multiple buckets

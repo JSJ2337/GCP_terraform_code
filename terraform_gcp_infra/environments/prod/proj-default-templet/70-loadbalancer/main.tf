@@ -14,25 +14,31 @@ provider "google" {
   region  = var.region
 }
 
+module "naming" {
+  source         = "../../../../modules/naming"
+  project_name   = var.project_name
+  environment    = var.environment
+  organization   = var.organization
+  region_primary = var.region_primary
+  region_backup  = var.region_backup
+}
+
 locals {
   network = length(trimspace(var.network)) > 0 ? var.network : (
-    var.lb_type == "http" ? "" : "projects/${var.project_id}/global/networks/${local.vpc_name}"
+    var.lb_type == "http" ? "" : "projects/${var.project_id}/global/networks/${module.naming.vpc_name}"
   )
 
   subnetwork = length(trimspace(var.subnetwork)) > 0 ? var.subnetwork : (
-    contains(["internal", "internal_classic"], var.lb_type) ? "projects/${var.project_id}/regions/${local.region_primary}/subnetworks/${local.subnet_name_primary}" : ""
+    contains(["internal", "internal_classic"], var.lb_type) ? "projects/${var.project_id}/regions/${module.naming.region_primary}/subnetworks/${module.naming.subnet_name_primary}" : ""
   )
 
-  url_map_name = length(trimspace(var.url_map_name)) > 0 ? var.url_map_name : "${local.backend_service_name}-url-map"
+  url_map_name = length(trimspace(var.url_map_name)) > 0 ? var.url_map_name : "${module.naming.backend_service_name}-url-map"
 
-  target_http_proxy_name  = length(trimspace(var.target_http_proxy_name)) > 0 ? var.target_http_proxy_name : "${local.forwarding_rule_name}-http-proxy"
-  target_https_proxy_name = length(trimspace(var.target_https_proxy_name)) > 0 ? var.target_https_proxy_name : "${local.forwarding_rule_name}-https-proxy"
+  target_http_proxy_name  = length(trimspace(var.target_http_proxy_name)) > 0 ? var.target_http_proxy_name : "${module.naming.forwarding_rule_name}-http-proxy"
+  target_https_proxy_name = length(trimspace(var.target_https_proxy_name)) > 0 ? var.target_https_proxy_name : "${module.naming.forwarding_rule_name}-https-proxy"
 
-  static_ip_name = length(trimspace(var.static_ip_name)) > 0 ? var.static_ip_name : "${local.forwarding_rule_name}-ip"
+  static_ip_name = length(trimspace(var.static_ip_name)) > 0 ? var.static_ip_name : "${module.naming.forwarding_rule_name}-ip"
 }
-
-# Naming conventions imported from parent locals.tf
-# local.project_prefix is already defined in parent
 
 module "load_balancer" {
   source = "../../../../modules/load-balancer"
@@ -46,7 +52,7 @@ module "load_balancer" {
   subnetwork = local.subnetwork
 
   # Backend Service
-  backend_service_name = local.backend_service_name # Use naming from locals.tf
+  backend_service_name = module.naming.backend_service_name
   backend_protocol     = var.backend_protocol
   backend_port_name    = var.backend_port_name
   backend_timeout      = var.backend_timeout
@@ -59,7 +65,7 @@ module "load_balancer" {
 
   # Health Check
   create_health_check              = var.create_health_check
-  health_check_name                = local.health_check_name # Use naming from locals.tf
+  health_check_name                = module.naming.health_check_name
   health_check_type                = var.health_check_type
   health_check_port                = var.health_check_port
   health_check_request_path        = var.health_check_request_path
@@ -104,7 +110,7 @@ module "load_balancer" {
   target_https_proxy_name = local.target_https_proxy_name
 
   # Forwarding Rule
-  forwarding_rule_name      = local.forwarding_rule_name # Use naming from locals.tf
+  forwarding_rule_name      = module.naming.forwarding_rule_name
   forwarding_rule_ports     = var.forwarding_rule_ports
   forwarding_rule_all_ports = var.forwarding_rule_all_ports
 

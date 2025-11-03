@@ -3,6 +3,35 @@ variable "project_id" {
   description = "GCP 프로젝트 ID"
 }
 
+variable "project_name" {
+  type        = string
+  description = "프로젝트 이름"
+}
+
+variable "environment" {
+  type        = string
+  description = "환경 값"
+  default     = "prod"
+}
+
+variable "organization" {
+  type        = string
+  description = "조직 접두어"
+  default     = "myorg"
+}
+
+variable "region_primary" {
+  type        = string
+  description = "Primary 리전"
+  default     = "us-central1"
+}
+
+variable "region_backup" {
+  type        = string
+  description = "Backup 리전"
+  default     = "us-east1"
+}
+
 variable "lb_type" {
   type        = string
   description = "로드 밸런서 타입 (http, internal, internal_classic)"
@@ -46,11 +75,11 @@ variable "backend_timeout" {
 
 variable "backends" {
   type = list(object({
-    group            = string
-    balancing_mode   = optional(string)
-    capacity_scaler  = optional(number)
-    description      = optional(string)
-    max_utilization  = optional(number)
+    group           = string
+    balancing_mode  = optional(string)
+    capacity_scaler = optional(number)
+    description     = optional(string)
+    max_utilization = optional(number)
   }))
   description = "백엔드 그룹 목록"
   default     = []

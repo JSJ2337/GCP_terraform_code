@@ -23,19 +23,25 @@ provider "google-beta" {
   region  = var.region
 }
 
-locals {
-  private_network = length(trimspace(var.private_network)) > 0 ? var.private_network : "projects/${var.project_id}/global/networks/${local.vpc_name}"
-  labels          = merge(local.common_labels, var.labels)
+module "naming" {
+  source         = "../../../../modules/naming"
+  project_name   = var.project_name
+  environment    = var.environment
+  organization   = var.organization
+  region_primary = var.region_primary
+  region_backup  = var.region_backup
 }
 
-# Naming conventions imported from parent locals.tf
-# local.project_prefix is already defined in parent
+locals {
+  private_network = length(trimspace(var.private_network)) > 0 ? var.private_network : "projects/${var.project_id}/global/networks/${module.naming.vpc_name}"
+  labels          = merge(module.naming.common_labels, var.labels)
+}
 
 module "mysql" {
   source = "../../../../modules/cloudsql-mysql"
 
   project_id    = var.project_id
-  instance_name = local.db_instance_name # Use naming from locals.tf
+  instance_name = module.naming.db_instance_name
   region        = var.region
 
   database_version  = var.database_version

@@ -113,8 +113,8 @@ terraform plan
 - **project-base 모듈**:
   - 필수 API 활성화 후 로깅 버킷·서비스 계정이 생성되도록 `depends_on` 추가
   - `google_project_service`에 project ID 명시
-- **locals 자동화**:
-  - Storage/보안/워크로드/Database/Load Balancer 레이어가 locals 기반 기본 이름을 자동 사용 (tfvars에서 이름 생략 가능)
+- **modules/naming 자동화**:
+  - Storage/보안/워크로드/Database/Load Balancer 레이어가 naming 모듈 기반 기본 이름을 자동 사용 (tfvars에서 이름 생략 가능)
 - **라벨 통일**:
   - proj-default-templet locals/tfvars 예제를 하이픈 키(`managed-by`, `cost-center`)로 정리
 - **운영 작업**:
@@ -141,11 +141,11 @@ terraform state mv 'module.game_backups_bucket' 'module.game_storage.module.gcs_
 1. ✅ Provider 블록 제거 → 모듈 재사용성 ↑
 2. ✅ IAM binding → member → 충돌 방지
 3. ✅ 15-storage gcs-root 사용 → 코드 간소화
-4. ✅ locals.tf 추가 → naming 일관성
+4. ✅ modules/naming 도입 → naming 일관성
 5. ✅ 모듈 오류 수정 (project-base, network-dedicated-vpc, observability)
 6. ✅ 코드 포맷팅 (terraform fmt)
 7. ✅ 모든 모듈 검증 완료
-8. ✅ 레이어에 locals 적용 (00-project, 10-network, 40-workloads)
+8. ✅ 레이어에 naming 모듈 연동 (00-project, 10-network, 40-workloads)
 9. ✅ 모듈 README 문서 작성 (7개 → 9개로 증가)
 10. ✅ Bootstrap 및 중앙 State 관리 구현
 11. ✅ deletion_policy 변수화
@@ -158,7 +158,7 @@ terraform state mv 'module.game_backups_bucket' 'module.game_storage.module.gcs_
 18. ✅ 모든 레이어에 region 변수 추가 (완전한 지역 설정 가능)
 19. ✅ 하드코딩 제거 (20-storage enable_versioning, cors_rules)
 20. ✅ 모든 레이어에 terraform.tfvars 생성 (60-database, 70-loadbalancer 포함)
-21. ✅ 중앙 집중식 Naming 문서화 (locals.tf 사용법)
+21. ✅ 중앙 집중식 Naming 문서화 (modules/naming 사용법)
 
 ## 📂 중요 파일
 
@@ -169,7 +169,7 @@ terraform state mv 'module.game_backups_bucket' 'module.game_storage.module.gcs_
 | CHANGELOG.md | 변경 이력 + 마이그레이션 가이드 |
 | README.md | 프로젝트 전체 가이드 |
 | QUICK_REFERENCE.md | 빠른 참조 가이드 (이 문서) |
-| locals.tf | 공통 naming/labeling |
+| modules/naming | 공통 naming/labeling |
 
 ## 🔧 자주 사용하는 명령어
 

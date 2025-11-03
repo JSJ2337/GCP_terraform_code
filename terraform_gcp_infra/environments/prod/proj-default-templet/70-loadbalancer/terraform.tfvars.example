@@ -2,7 +2,12 @@
 # 이 파일을 terraform.tfvars로 복사하고 실제 값을 입력하세요
 # 중요: terraform.tfvars 파일은 버전 관리에 커밋하지 마세요
 
-project_id = "your-project-id"
+project_id     = "your-project-id"
+project_name   = "default-templet"
+environment    = "prod"
+organization   = "myorg"
+region_primary = "us-central1"
+region_backup  = "us-east1"
 
 # 로드 밸런서 타입
 # - http: HTTP(S) Load Balancer (글로벌, 외부)
@@ -12,7 +17,7 @@ lb_type = "http"
 
 # 리전 및 네트워크 (Internal LB용)
 region = "us-central1"
-# network, subnetwork 값을 비워두면 locals.tf에서 정의한 VPC/서브넷을 사용합니다.
+# network, subnetwork 값을 비워두면 modules/naming에서 정의한 VPC/서브넷을 사용합니다.
 
 # 백엔드 서비스 설정
 backend_protocol  = "HTTP"

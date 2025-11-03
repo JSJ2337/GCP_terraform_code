@@ -2,14 +2,18 @@
 region = "us-central1"
 
 # Workloads Configuration
-# Resource names are auto-generated from ../locals.tf
-# VM names will use: vm_name_prefix, subnet names from: subnet_name_primary
-project_id = "gcp-terraform-imsi"
-zone       = "us-central1-a"
+# Resource names are generated via modules/naming
+project_id     = "gcp-terraform-imsi"
+project_name   = "default-templet"
+environment    = "prod"
+organization   = "myorg"
+region_primary = "us-central1"
+region_backup  = "us-east1"
+zone           = "us-central1-a"
 
 # VM configuration
-instance_count = 2
-machine_type   = "e2-micro"
+instance_count   = 2
+machine_type     = "e2-micro"
 enable_public_ip = false
 enable_os_login  = true
 preemptible      = false
@@ -44,4 +48,3 @@ labels = {
   app       = "default-templet"
   component = "game-server"
 }
-
