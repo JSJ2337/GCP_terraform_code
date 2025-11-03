@@ -6,15 +6,13 @@
 # 1. WORK_HISTORY.md 읽기
 cat WORK_HISTORY.md
 
-# 2. 코드 포맷팅 및 검증 (완료됨)
+# 2. 코드 포맷팅 (필요 시)
 terraform fmt -recursive
 
-# 3. 각 레이어 검증 (완료됨)
-# 모든 모듈이 validate 통과
-
-# 4. Plan 확인 (실제 프로젝트가 있다면)
+# 3. Terragrunt 플랜 (예: 00-project)
 cd environments/prod/proj-default-templet/00-project
-terraform plan -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+terragrunt init --non-interactive
+terragrunt plan
 ```
 
 ## 📝 변경된 파일 요약
@@ -121,15 +119,28 @@ terraform plan -var-file=../common.naming.tfvars -var-file=terraform.tfvars
   - 테스트 환경(jsj-game-d) 전면 제거 및 디렉터리 정리
   - Storage retention lien 제거 후 프로젝트 삭제 완료
 
+### 세션 9: Terragrunt 기반 실행 전환 (2025-11-03)
+- **구조 변경**:
+  - `environments/prod/proj-default-templet` 루트 및 모든 레이어에 `terragrunt.hcl` 도입
+  - 빈 `backend "gcs" {}` 블록만 남기고 기존 `backend.tf` 파일 제거
+  - Terragrunt가 `common.naming.tfvars`와 각 레이어의 `terraform.tfvars`를 자동 병합하도록 구성
+- **자동화**:
+  - 의존성(`dependencies`)으로 레이어 순서를 선언하여 상위 레이어 완료 후 실행 보장
+  - Terragrunt 0.92 CLI에 맞춰 `terragrunt init/plan/apply` 커맨드 가이드 추가
+  - `/root/.bashrc`에 `terragrunt` alias (`/mnt/d/jsj_wsl_data/terragrunt_linux_amd64`) 등록
+- **문서 업데이트**:
+  - README, QUICK_REFERENCE, CHANGELOG, WORK_HISTORY 등 전반을 Terragrunt 흐름으로 갱신
+  - WSL 환경에서 provider 소켓 오류가 발생할 수 있어 대체 실행 환경을 안내
+
 ## ⚠️ 주의: State 마이그레이션 필요
 
 기존 인프라가 있다면:
 
 ```bash
 # 15-storage 리팩토링
-terraform state mv 'module.game_assets_bucket' 'module.game_storage.module.gcs_buckets["assets"]'
-terraform state mv 'module.game_logs_bucket' 'module.game_storage.module.gcs_buckets["logs"]'
-terraform state mv 'module.game_backups_bucket' 'module.game_storage.module.gcs_buckets["backups"]'
+terragrunt state mv 'module.game_assets_bucket' 'module.game_storage.module.gcs_buckets["assets"]'
+terragrunt state mv 'module.game_logs_bucket' 'module.game_storage.module.gcs_buckets["logs"]'
+terragrunt state mv 'module.game_backups_bucket' 'module.game_storage.module.gcs_buckets["backups"]'
 
 # IAM 변경 시 (binding → member)
 # WORK_HISTORY.md의 트러블슈팅 섹션 참조
@@ -159,6 +170,7 @@ terraform state mv 'module.game_backups_bucket' 'module.game_storage.module.gcs_
 19. ✅ 하드코딩 제거 (20-storage enable_versioning, cors_rules)
 20. ✅ 모든 레이어에 terraform.tfvars 생성 (60-database, 70-loadbalancer 포함)
 21. ✅ 중앙 집중식 Naming 문서화 (modules/naming 사용법)
+22. ✅ Terragrunt 기반 실행으로 전환 (공통 입력/원격 상태 자동화)
 
 ## 📂 중요 파일
 
@@ -177,39 +189,34 @@ terraform state mv 'module.game_backups_bucket' 'module.game_storage.module.gcs_
 # 포맷팅
 terraform fmt -recursive
 
-# 검증
-terraform validate
+# Terragrunt 실행 (예: 00-project)
+cd environments/prod/proj-default-templet/00-project
+terragrunt init --non-interactive
+terragrunt plan
+terragrunt apply
+# ~/.bashrc에 alias terragrunt='/mnt/d/jsj_wsl_data/terragrunt_linux_amd64' 등록됨
 
-# Plan
-terraform plan \
-  -var-file=../common.naming.tfvars \
-  -var-file=terraform.tfvars \
-  -out=tfplan
+# State / Output
+terragrunt state list
+terragrunt output -json | jq
 
-# Apply
-terraform apply tfplan
+# 데이터베이스 배포 (60-database)
+cd ../60-database
+cp terraform.tfvars.example terraform.tfvars  # 최초 1회
+terragrunt init --non-interactive
+terragrunt plan
+terragrunt apply
 
-# State 확인
-terraform state list
-
-# Output 확인
-terraform output -json | jq
-
-# 데이터베이스 배포
-cd environments/prod/proj-default-templet/60-database
-cp terraform.tfvars.example terraform.tfvars
-# terraform.tfvars 수정 후
-terraform init
-terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
-terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
-
-# 로드 밸런서 배포
+# 로드 밸런서 배포 (70-loadbalancer)
 cd ../70-loadbalancer
-cp terraform.tfvars.example terraform.tfvars
-# terraform.tfvars 수정 후
-terraform init
-terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
-terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+cp terraform.tfvars.example terraform.tfvars  # 최초 1회
+terragrunt init --non-interactive
+terragrunt plan
+terragrunt apply
+
+# Bootstrap 프로젝트는 여전히 순수 Terraform
+cd ../../../../bootstrap
+terraform init && terraform apply
 ```
 
 ## 📞 문제 해결
@@ -217,6 +224,7 @@ terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
 - **Plan에서 리소스 재생성 감지**: WORK_HISTORY.md "증상 1" 참조
 - **Bucket 재생성 시도**: WORK_HISTORY.md "증상 2" 참조
 - **Provider 오류**: WORK_HISTORY.md "증상 3" 참조
+- **WSL setsockopt 오류**: README.md "Terragrunt 기반 실행" 섹션 참고 (Linux/컨테이너 권장)
 
 ## ⏭️ 다음 작업 (우선순위)
 
@@ -230,7 +238,7 @@ terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
    - 백엔드 인스턴스 그룹 설정
    - Health Check 설정
 3. [ ] tfsec 보안 스캔 (새 모듈 포함)
-4. [ ] 실제 프로젝트에 배포 (terraform plan/apply)
+4. [ ] 실제 프로젝트에 배포 (terragrunt plan/apply)
 5. [ ] State 마이그레이션 (기존 인프라가 있다면)
 
 ### 향후 개선 사항
@@ -242,6 +250,7 @@ terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
 11. [ ] Pre-commit hooks 설정
 12. [ ] Cost estimation (infracost)
 13. [ ] Monitoring 대시보드 자동 생성
+14. [ ] Terragrunt stack 실행 자동화(스크립트/CI) 및 WSL 대안 환경 마련
 
 ---
 

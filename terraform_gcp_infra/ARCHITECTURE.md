@@ -402,39 +402,39 @@ graph LR
 
 ---
 
-## 7. Terraform 실행 흐름
+## 7. Terragrunt 실행 흐름
 
 ```mermaid
 sequenceDiagram
     participant Dev as 개발자
-    participant TF as Terraform CLI
+    participant TG as Terragrunt CLI
     participant GCS as State 버킷
     participant GCP as GCP API
 
-    Dev->>TF: terraform init
-    TF->>GCS: backend 초기화
-    GCS-->>TF: State 로드
+    Dev->>TG: terragrunt init
+    TG->>GCS: backend 초기화
+    GCS-->>TG: State 로드
 
-    Dev->>TF: terraform plan
-    TF->>GCS: 현재 State 가져오기
-    TF->>GCP: 실제 리소스 상태 확인
-    GCP-->>TF: 현재 상태 반환
-    TF-->>Dev: 변경 계획 표시
+    Dev->>TG: terragrunt plan
+    TG->>GCS: 현재 State 가져오기
+    TG->>GCP: 실제 리소스 상태 확인
+    GCP-->>TG: 현재 상태 반환
+    TG-->>Dev: 변경 계획 표시
 
-    Dev->>TF: terraform apply
-    TF->>GCP: 리소스 생성/수정
-    GCP-->>TF: 완료 확인
-    TF->>GCS: 새로운 State 저장
-    GCS-->>TF: State 저장 완료
-    TF-->>Dev: 적용 완료
+    Dev->>TG: terragrunt apply
+    TG->>GCP: 리소스 생성/수정
+    GCP-->>TG: 완료 확인
+    TG->>GCS: 새로운 State 저장
+    GCS-->>TG: State 저장 완료
+    TG-->>Dev: 적용 완료
 
     Note over Dev,GCP: State는 항상 GCS에 중앙 관리됨
 ```
 
 **실행 단계**:
-1. **init**: Backend 초기화, State 로드
-2. **plan**: 현재 상태와 목표 상태 비교
-3. **apply**: 실제 리소스 생성/수정
+1. **terragrunt init**: Backend 초기화, State 로드
+2. **terragrunt plan**: 현재 상태와 목표 상태 비교
+3. **terragrunt apply**: 실제 리소스 생성/수정
 4. **State 저장**: 변경사항을 GCS에 저장
 
 ---

@@ -76,13 +76,23 @@ region_backup  = "us-east1"
 
 `modules/naming`은 위 값을 이용해 `vpc_name`, `bucket_name_prefix`, `db_instance_name`, `sa_name_prefix`, `forwarding_rule_name` 등을 자동으로 만들어 주며, 공통 라벨(`common_labels`)과 태그(`common_tags`)도 함께 제공합니다. 리소스 이름을 변경하고 싶다면 `common.naming.tfvars`만 수정하면 모든 레이어가 동일하게 업데이트됩니다.
 
+### Terragrunt 기반 실행
+- 각 레이어에는 `terragrunt.hcl`이 존재하며, 공통 입력(`common.naming.tfvars`)과 레이어 전용 `terraform.tfvars`를 자동 병합합니다.
+- 원격 상태(GCS)는 Terragrunt가 관리하며, Terraform 코드에는 빈 `backend "gcs" {}` 블록만 있으면 됩니다.
+- Terragrunt 0.92 이상을 사용하면 `terragrunt init/plan/apply`로 Terraform 명령을 그대로 호출할 수 있습니다.
+- 루트(`environments/prod/proj-default-templet/terragrunt.hcl`)에서 원격 상태 버킷과 prefix를 정의하고, 각 레이어는 의존 관계(`dependencies` 블록)로 실행 순서를 보장합니다.
+- `common.naming.tfvars`를 직접 `-var-file`로 넘길 필요가 없으며, Terragrunt가 자동으로 주입합니다.
+
 ## 시작하기
 
 ### 사전 요구사항
 
 ```bash
-# Terraform >= 1.6 설치
+# Terraform >= 1.6
 terraform version
+
+# Terragrunt >= 0.92
+terragrunt --version  # alias 또는 절대 경로(`/mnt/d/jsj_wsl_data/terragrunt_linux_amd64`) 사용 가능
 
 # GCP 인증
 gcloud auth application-default login
@@ -150,23 +160,22 @@ Bootstrap 배포 후, 실제 워크로드 프로젝트를 배포합니다:
 # 1. 환경 디렉토리로 이동
 cd ../environments/prod/proj-default-templet/00-project
 
-# 2. 변수 파일 준비
+# 2. 변수 파일 준비 (처음 한 번)
 cp terraform.tfvars.example terraform.tfvars
 vim terraform.tfvars
-# 프로젝트 ID, 이름, Billing Account 등 설정
+# 프로젝트 ID, Billing Account, 라벨 등 설정
 
-# 3. Backend는 이미 설정되어 있음
-cat backend.tf
-# bucket = "delabs-terraform-state-prod"
-# prefix = "proj-default-templet/00-project"
+# 3. Terragrunt 실행 (Terraform 명령과 동일하게 사용 가능)
+terragrunt init   --non-interactive  # 원격 상태 및 provider 다운로드
+terragrunt plan   --non-interactive
+terragrunt apply  --non-interactive  # 검토 후 --non-interactive 옵션 제거 가능
 
-# 4. 배포
-terraform init  # 중앙 버킷에 연결
-terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
-terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+# 또는 에일리어스를 사용하지 않는 경우 (절대 경로)
+/mnt/d/jsj_wsl_data/terragrunt_linux_amd64 plan
 ```
 
-> 모든 레이어에서 `terraform plan/apply` 실행 시 `-var-file=../common.naming.tfvars -var-file=terraform.tfvars` 옵션을 함께 전달해야 합니다. 반복 사용을 위해 래퍼 스크립트나 Makefile에 위 옵션을 포함시키면 실수를 줄일 수 있습니다.
+> Terragrunt가 `common.naming.tfvars`와 현재 레이어의 `terraform.tfvars`를 자동으로 병합하므로 `-var-file` 옵션을 수동으로 전달할 필요가 없습니다.
+> ⚠️ WSL1/일부 WSL2 빌드에서는 Google Provider가 Unix 소켓 옵션을 설정하지 못해 `setsockopt: operation not permitted` 오류가 발생할 수 있습니다. 이 경우 Windows 터미널이 아닌 Linux VM/컨테이너에서 Terragrunt를 실행하거나, 최신 WSL2 커널로 업데이트하세요.
 
 ### 배포 순서
 
@@ -180,51 +189,51 @@ cd ..
 
 # 1. 프로젝트 생성
 cd environments/prod/proj-default-templet/00-project
-terraform init
-terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
-terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+terragrunt init --non-interactive
+terragrunt plan
+terragrunt apply
 
 # 2. 네트워크 생성
 cd ../10-network
-terraform init
-terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
-terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+terragrunt init --non-interactive
+terragrunt plan
+terragrunt apply
 
 # 3. 스토리지 생성
 cd ../20-storage
-terraform init
-terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
-terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+terragrunt init --non-interactive
+terragrunt plan
+terragrunt apply
 
 # 4. 보안 및 IAM
 cd ../30-security
-terraform init
-terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
-terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+terragrunt init --non-interactive
+terragrunt plan
+terragrunt apply
 
 # 5. 모니터링 및 로깅
 cd ../40-observability
-terraform init
-terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
-terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+terragrunt init --non-interactive
+terragrunt plan
+terragrunt apply
 
 # 6. 워크로드 (VM 등)
 cd ../50-workloads
-terraform init
-terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
-terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+terragrunt init --non-interactive
+terragrunt plan
+terragrunt apply
 
 # 7. 데이터베이스
 cd ../60-database
-terraform init
-terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
-terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+terragrunt init --non-interactive
+terragrunt plan
+terragrunt apply
 
 # 8. 로드 밸런서
 cd ../70-loadbalancer
-terraform init
-terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
-terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+terragrunt init --non-interactive
+terragrunt plan
+terragrunt apply
 ```
 
 **배포 순서가 중요한 이유:**
@@ -240,6 +249,7 @@ terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
 - ✅ **Versioning**: State 파일 버전 관리 (최근 10개 버전 보관)
 - ✅ **Lifecycle 정책**: 30일 지난 State 버전 자동 정리
 - ✅ **환경 및 레이어별 State 분리**: prefix를 통한 격리
+- ✅ **Terragrunt 자동화**: 각 레이어의 원격 상태 prefix와 공통 변수를 Terragrunt가 일관되게 관리
 
 ### 보안
 - ✅ Uniform bucket-level access 기본 활성화
@@ -256,6 +266,7 @@ terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
 - ✅ 예산 알림 구성
 - ✅ 포괄적인 로깅 및 모니터링
 - ✅ modules/naming을 통한 일관된 naming 규칙
+- ✅ Terragrunt 도입 완료 (WSL에서 provider 소켓 제약이 있는 경우 Linux/컨테이너 환경에서 실행 권장)
 
 ### 코드 품질
 - ✅ 모듈 내 provider 블록 없음
@@ -322,31 +333,27 @@ region_primary = "us-central1"
 region_backup  = "us-east1"
 ```
 
-**Step 3: backend.tf 업데이트** (모든 레이어)
-
-```bash
-# 모든 레이어의 backend.tf에서 prefix만 변경
-for dir in */; do
-  sed -i 's/proj-default-templet/your-new-project/g' "$dir/backend.tf"
-done
-```
+**Step 3: Terragrunt prefix 업데이트**
+- `environments/prod/your-new-project/terragrunt.hcl`의 `project_state_prefix` 값을 새 프로젝트 이름으로 변경합니다.
+- 각 레이어의 `terragrunt.hcl`은 상대 경로를 사용하므로 별도 수정이 필요 없습니다.
 
 **Step 4: 레이어별 terraform.tfvars 세부 값만 조정**
 - 네트워크 CIDR, 버킷 정책, VM 스펙 등 환경별 값만 필요에 따라 조정합니다.
 - 이름과 라벨은 Step 2에서 입력한 값에 맞춰 `modules/naming`이 자동 생성합니다.
 
-**Step 5: 배포**
+**Step 5: Terragrunt로 배포**
 
 ```bash
 # 순서대로 배포
 cd 00-project
-terraform init
-terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
-terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+terragrunt init --non-interactive
+terragrunt plan
+terragrunt apply
+
 cd ../10-network
-terraform init
-terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
-terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+terragrunt init --non-interactive
+terragrunt plan
+terragrunt apply
 # ... 계속
 ```
 

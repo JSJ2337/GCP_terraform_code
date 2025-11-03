@@ -5,6 +5,20 @@
 형식: [Keep a Changelog](https://keepachangelog.com/ko/1.0.0/) 기반
 버저닝: [Semantic Versioning](https://semver.org/lang/ko/) 준수
 
+## [미배포] - 2025-11-03
+
+### 변경 (Changed)
+- `environments/prod/proj-default-templet` 전역을 Terragrunt 구조로 전환
+  - 루트 및 각 레이어에 `terragrunt.hcl` 추가하고 의존 관계를 선언해 실행 순서 자동화
+  - Terraform 코드에는 빈 `backend "gcs" {}` 블록만 유지하여 Terragrunt가 원격 상태를 관리하도록 조정
+  - `common.naming.tfvars`와 레이어별 `terraform.tfvars`를 Terragrunt가 자동 병합하도록 구성해 `-var-file` 전달이 불필요해짐
+- README/QUICK_REFERENCE/ARCHITECTURE/WORK_HISTORY 등 문서를 Terragrunt 플로우와 호환되도록 업데이트
+- Terragrunt 0.92 CLI 기준 명령 예시(`terragrunt init/plan/apply`, `terragrunt state/output`)로 가이드 갱신
+
+### 운영 (Operations)
+- `/root/.bashrc`에 Terragrunt 바이너리 alias(`terragrunt='/mnt/d/jsj_wsl_data/terragrunt_linux_amd64'`)를 등록해 모든 세션에서 동일한 명령 사용
+- WSL에서 Google provider가 소켓 옵션을 설정하지 못하는 이슈를 문서화하고, Linux/컨테이너 등 대안 실행 환경을 안내
+
 ## [미배포] - 2025-10-31
 
 ### 수정 (Fixed)
@@ -29,6 +43,7 @@
   - GCS 버킷/서비스 계정/Load Balancer 이름은 `terraform.tfvars`에서 생략해도 규칙에 맞춰 생성
   - VM 서브넷·서비스 계정 이메일·Private IP 네트워크가 자동 계산되도록 기본값 추가
 - 공통 입력 파일 `common.naming.tfvars`를 추가하여 프로젝트/환경/조직/리전 값을 한 곳에서 관리
+- Terragrunt 기반 구조로 전환을 준비했으나, 현재 WSL 환경에서 바이너리 다운로드가 차단되어 적용 보류 중
 
 ## [미배포] - 2025-10-30
 
