@@ -23,6 +23,11 @@ provider "google-beta" {
   region  = var.region
 }
 
+locals {
+  private_network = length(trimspace(var.private_network)) > 0 ? var.private_network : "projects/${var.project_id}/global/networks/${local.vpc_name}"
+  labels          = merge(local.common_labels, var.labels)
+}
+
 # Naming conventions imported from parent locals.tf
 # local.project_prefix is already defined in parent
 
@@ -44,15 +49,15 @@ module "mysql" {
   deletion_protection = var.deletion_protection
 
   # Backup configuration
-  backup_enabled                     = var.backup_enabled
-  backup_start_time                  = var.backup_start_time
-  binary_log_enabled                 = var.binary_log_enabled
-  transaction_log_retention_days     = var.transaction_log_retention_days
-  backup_retained_count              = var.backup_retained_count
+  backup_enabled                 = var.backup_enabled
+  backup_start_time              = var.backup_start_time
+  binary_log_enabled             = var.binary_log_enabled
+  transaction_log_retention_days = var.transaction_log_retention_days
+  backup_retained_count          = var.backup_retained_count
 
   # Network configuration
-  ipv4_enabled        = var.ipv4_enabled
-  private_network     = var.private_network
+  ipv4_enabled    = var.ipv4_enabled
+  private_network = local.private_network
   # require_ssl is deprecated in Google provider 7.x+
   authorized_networks = var.authorized_networks
 
@@ -84,5 +89,5 @@ module "mysql" {
   # Read replicas
   read_replicas = var.read_replicas
 
-  labels = var.labels
+  labels = local.labels
 }

@@ -11,9 +11,8 @@ project_id = "gcp-terraform-imsi"
 lb_type = "http"
 
 # Region and network (for Internal LB)
-region     = "us-central1"
-network    = ""
-subnetwork = ""
+region = "us-central1"
+# network/subnetwork can be left blank to use values from locals.tf
 
 # Backend service configuration
 backend_protocol  = "HTTP"
@@ -61,7 +60,6 @@ enable_logging      = true
 logging_sample_rate = 1.0
 
 # URL Map (HTTP(S) LB only)
-url_map_name  = ""
 host_rules    = []
 path_matchers = []
 
@@ -71,8 +69,6 @@ ssl_certificates = []
 ssl_policy       = ""
 
 # Target Proxies (HTTP(S) LB only)
-target_http_proxy_name  = ""
-target_https_proxy_name = ""
 
 # Forwarding rule
 # Internal LB port configuration
@@ -80,6 +76,6 @@ forwarding_rule_ports     = []
 forwarding_rule_all_ports = false
 
 # Static IP
-create_static_ip  = false
-static_ip_name    = ""
+create_static_ip = false
 static_ip_address = ""
+

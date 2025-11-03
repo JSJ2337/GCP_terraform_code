@@ -113,6 +113,8 @@ terraform plan
 - **project-base 모듈**:
   - 필수 API 활성화 후 로깅 버킷·서비스 계정이 생성되도록 `depends_on` 추가
   - `google_project_service`에 project ID 명시
+- **locals 자동화**:
+  - Storage/보안/워크로드/Database/Load Balancer 레이어가 locals 기반 기본 이름을 자동 사용 (tfvars에서 이름 생략 가능)
 - **라벨 통일**:
   - proj-default-templet locals/tfvars 예제를 하이픈 키(`managed-by`, `cost-center`)로 정리
 - **운영 작업**:

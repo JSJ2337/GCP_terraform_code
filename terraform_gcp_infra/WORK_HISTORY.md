@@ -32,7 +32,14 @@
    - `proj-default-templet` 템플릿의 공통 라벨을 하이픈 스타일로 통일
    - `terraform.tfvars.example` 예제와 locals.tf 간 키 일관성 확보
 
-5. **jsj-game-d 테스트 환경 제거**
+5. **locals 기반 네이밍 자동화**
+   - GCS 버킷 이름과 라벨을 자동 생성하도록 20-storage 레이어 리팩터링 (tfvars는 정책/규칙만 정의)
+   - service_accounts 목록을 비워두면 locals 프리픽스로 기본 계정을 만드는 로직 추가 (30-security)
+   - 50-workloads에서 존/서브넷/서비스 계정 이메일/태그·레이블을 locals 기반 기본값으로 계산
+   - Cloud SQL은 private network와 라벨을 locals와 merge하여 자동 적용 (60-database)
+   - Load Balancer 네트워크·URL Map·타깃 프록시·Static IP 이름을 locals 규칙으로 자동 생성 (70-loadbalancer)
+
+6. **jsj-game-d 테스트 환경 제거**
    - 70 → 00 순으로 각 레이어에서 `terraform destroy` 재실행해 잔여 리소스 없는지 확인
    - `p861601542676-l299e11ad-124f-42de-92ae-198e8dd6ede6` lien을 삭제 후 프로젝트 제거 및 디렉터리 정리 완료
 

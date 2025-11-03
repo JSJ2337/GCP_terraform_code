@@ -30,7 +30,7 @@ module "project_base" {
   source = "../../../../modules/project-base"
 
   project_id      = var.project_id
-  project_name    = var.project_name
+  project_name    = var.project_name != "" ? var.project_name : local.project_name
   folder_id       = var.folder_id
   billing_account = var.billing_account
   labels          = merge(local.common_labels, var.labels)

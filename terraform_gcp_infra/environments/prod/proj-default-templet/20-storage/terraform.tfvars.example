@@ -5,8 +5,10 @@
 
 project_id = "your-project-id"
 
-# Default labels for all buckets (will be merged with common_labels from locals.tf)
-default_labels = {}
+# Additional labels merged with common_labels from locals.tf
+default_labels = {
+  component = "storage"
+}
 
 uniform_bucket_level_access = true
 public_access_prevention    = "enforced"
@@ -15,12 +17,10 @@ public_access_prevention    = "enforced"
 # kms_key_name = "projects/YOUR_PROJECT/locations/REGION/keyRings/KEYRING/cryptoKeys/KEY"
 
 # Assets bucket - for game assets, images, configurations
-# Name will be: {bucket_name_prefix}-assets (from locals.tf)
-assets_bucket_name          = "" # Auto-generated from locals.tf
 assets_bucket_location      = "US-CENTRAL1"
 assets_bucket_storage_class = "STANDARD"
 assets_bucket_labels = {
-  type = "assets"
+  bucket_type = "assets"
 }
 assets_enable_versioning = true
 assets_lifecycle_rules = [
@@ -50,13 +50,11 @@ assets_iam_bindings = [
 ]
 
 # Logs bucket - for application and system logs
-# Name will be: {bucket_name_prefix}-logs (from locals.tf)
-logs_bucket_name          = "" # Auto-generated from locals.tf
 logs_bucket_location      = "US-CENTRAL1"
 logs_bucket_storage_class = "COLDLINE"
 logs_enable_versioning    = false
 logs_bucket_labels = {
-  type = "logs"
+  bucket_type = "logs"
 }
 logs_lifecycle_rules = [
   {
@@ -74,12 +72,10 @@ logs_cors_rules              = []
 logs_iam_bindings            = []
 
 # Backups bucket - for database and configuration backups
-# Name will be: {bucket_name_prefix}-backups (from locals.tf)
-backups_bucket_name          = "" # Auto-generated from locals.tf
 backups_bucket_location      = "US" # Multi-region for durability
 backups_bucket_storage_class = "ARCHIVE"
 backups_bucket_labels = {
-  type = "backups"
+  bucket_type = "backups"
 }
 backups_enable_versioning = true
 backups_lifecycle_rules = [

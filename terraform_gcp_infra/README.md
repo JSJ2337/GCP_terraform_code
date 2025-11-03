@@ -82,6 +82,7 @@ locals {
 - ✅ 새 프로젝트 생성 시 `locals.tf`만 수정
 - ✅ 모든 리소스 이름이 일관된 패턴으로 자동 생성
 - ✅ terraform.tfvars는 실제 설정값(CIDR, 포트 등)만 포함
+- ✅ 버킷, 서비스 계정, Cloud SQL, Load Balancer 이름은 locals 기반 기본값을 자동 사용하므로 필요한 경우에만 override
 
 ## 시작하기
 

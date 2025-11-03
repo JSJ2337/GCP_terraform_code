@@ -13,22 +13,37 @@ provider "google" {
   project = var.project_id
 }
 
+locals {
+  # Merge environment-wide labels with per-module overrides
+  default_labels = merge(local.common_labels, var.default_labels)
+
+  # Automatically derive bucket names when not explicitly provided
+  assets_bucket_name  = length(trimspace(var.assets_bucket_name)) > 0 ? var.assets_bucket_name : "${local.bucket_name_prefix}-assets"
+  logs_bucket_name    = length(trimspace(var.logs_bucket_name)) > 0 ? var.logs_bucket_name : "${local.bucket_name_prefix}-logs"
+  backups_bucket_name = length(trimspace(var.backups_bucket_name)) > 0 ? var.backups_bucket_name : "${local.bucket_name_prefix}-backups"
+
+  # Merge bucket-specific labels with common labels
+  assets_bucket_labels  = merge(local.common_labels, { bucket = "assets" }, var.assets_bucket_labels)
+  logs_bucket_labels    = merge(local.common_labels, { bucket = "logs" }, var.logs_bucket_labels)
+  backups_bucket_labels = merge(local.common_labels, { bucket = "backups" }, var.backups_bucket_labels)
+}
+
 # Use gcs-root module to manage multiple buckets
 module "game_storage" {
   source = "../../../../modules/gcs-root"
 
   project_id                       = var.project_id
-  default_labels                   = var.default_labels
+  default_labels                   = local.default_labels
   default_kms_key_name             = var.kms_key_name
   default_public_access_prevention = var.public_access_prevention
 
   buckets = {
     assets = {
-      name                        = var.assets_bucket_name
+      name                        = local.assets_bucket_name
       location                    = var.assets_bucket_location
       storage_class               = var.assets_bucket_storage_class
       uniform_bucket_level_access = var.uniform_bucket_level_access
-      labels                      = var.assets_bucket_labels
+      labels                      = local.assets_bucket_labels
 
       enable_versioning = var.assets_enable_versioning
       lifecycle_rules   = var.assets_lifecycle_rules
@@ -37,11 +52,11 @@ module "game_storage" {
     }
 
     logs = {
-      name                        = var.logs_bucket_name
+      name                        = local.logs_bucket_name
       location                    = var.logs_bucket_location
       storage_class               = var.logs_bucket_storage_class
       uniform_bucket_level_access = var.uniform_bucket_level_access
-      labels                      = var.logs_bucket_labels
+      labels                      = local.logs_bucket_labels
 
       enable_versioning       = var.logs_enable_versioning
       lifecycle_rules         = var.logs_lifecycle_rules
@@ -52,11 +67,11 @@ module "game_storage" {
     }
 
     backups = {
-      name                        = var.backups_bucket_name
+      name                        = local.backups_bucket_name
       location                    = var.backups_bucket_location
       storage_class               = var.backups_bucket_storage_class
       uniform_bucket_level_access = var.uniform_bucket_level_access
-      labels                      = var.backups_bucket_labels
+      labels                      = local.backups_bucket_labels
 
       enable_versioning       = var.backups_enable_versioning
       lifecycle_rules         = var.backups_lifecycle_rules

@@ -25,6 +25,9 @@
 
 ### 변경 (Changed)
 - `proj-default-templet` 템플릿의 공통 라벨을 하이픈(`cost-center`, `managed-by`) 기준으로 통일하고 예제와 locals 간 키가 일치하도록 정리
+- 20-storage, 30-security, 50-workloads, 60-database, 70-loadbalancer 레이어가 `locals.tf` 기반 기본 이름과 라벨을 자동 사용하도록 정비
+  - GCS 버킷/서비스 계정/Load Balancer 이름은 `terraform.tfvars`에서 생략해도 규칙에 맞춰 생성
+  - VM 서브넷·서비스 계정 이메일·Private IP 네트워크가 자동 계산되도록 기본값 추가
 
 ## [미배포] - 2025-10-30
 

@@ -14,6 +14,23 @@ provider "google" {
   region  = var.region
 }
 
+locals {
+  network = length(trimspace(var.network)) > 0 ? var.network : (
+    var.lb_type == "http" ? "" : "projects/${var.project_id}/global/networks/${local.vpc_name}"
+  )
+
+  subnetwork = length(trimspace(var.subnetwork)) > 0 ? var.subnetwork : (
+    contains(["internal", "internal_classic"], var.lb_type) ? "projects/${var.project_id}/regions/${local.region_primary}/subnetworks/${local.subnet_name_primary}" : ""
+  )
+
+  url_map_name = length(trimspace(var.url_map_name)) > 0 ? var.url_map_name : "${local.backend_service_name}-url-map"
+
+  target_http_proxy_name  = length(trimspace(var.target_http_proxy_name)) > 0 ? var.target_http_proxy_name : "${local.forwarding_rule_name}-http-proxy"
+  target_https_proxy_name = length(trimspace(var.target_https_proxy_name)) > 0 ? var.target_https_proxy_name : "${local.forwarding_rule_name}-https-proxy"
+
+  static_ip_name = length(trimspace(var.static_ip_name)) > 0 ? var.static_ip_name : "${local.forwarding_rule_name}-ip"
+}
+
 # Naming conventions imported from parent locals.tf
 # local.project_prefix is already defined in parent
 
@@ -25,8 +42,8 @@ module "load_balancer" {
   region     = var.region
 
   # Network (Internal LB용)
-  network    = var.network
-  subnetwork = var.subnetwork
+  network    = local.network
+  subnetwork = local.subnetwork
 
   # Backend Service
   backend_service_name = local.backend_service_name # Use naming from locals.tf
@@ -41,27 +58,27 @@ module "load_balancer" {
   connection_draining_timeout = var.connection_draining_timeout
 
   # Health Check
-  create_health_check                = var.create_health_check
-  health_check_name                  = local.health_check_name # Use naming from locals.tf
-  health_check_type                  = var.health_check_type
-  health_check_port                  = var.health_check_port
-  health_check_request_path          = var.health_check_request_path
-  health_check_response              = var.health_check_response
-  health_check_port_specification    = var.health_check_port_specification
-  health_check_timeout               = var.health_check_timeout
-  health_check_interval              = var.health_check_interval
-  health_check_healthy_threshold     = var.health_check_healthy_threshold
-  health_check_unhealthy_threshold   = var.health_check_unhealthy_threshold
-  health_check_logging               = var.health_check_logging
+  create_health_check              = var.create_health_check
+  health_check_name                = local.health_check_name # Use naming from locals.tf
+  health_check_type                = var.health_check_type
+  health_check_port                = var.health_check_port
+  health_check_request_path        = var.health_check_request_path
+  health_check_response            = var.health_check_response
+  health_check_port_specification  = var.health_check_port_specification
+  health_check_timeout             = var.health_check_timeout
+  health_check_interval            = var.health_check_interval
+  health_check_healthy_threshold   = var.health_check_healthy_threshold
+  health_check_unhealthy_threshold = var.health_check_unhealthy_threshold
+  health_check_logging             = var.health_check_logging
 
   # CDN (HTTP(S) LB만 해당)
-  enable_cdn                = var.enable_cdn
-  cdn_cache_mode            = var.cdn_cache_mode
-  cdn_default_ttl           = var.cdn_default_ttl
-  cdn_max_ttl               = var.cdn_max_ttl
-  cdn_client_ttl            = var.cdn_client_ttl
-  cdn_negative_caching      = var.cdn_negative_caching
-  cdn_serve_while_stale     = var.cdn_serve_while_stale
+  enable_cdn            = var.enable_cdn
+  cdn_cache_mode        = var.cdn_cache_mode
+  cdn_default_ttl       = var.cdn_default_ttl
+  cdn_max_ttl           = var.cdn_max_ttl
+  cdn_client_ttl        = var.cdn_client_ttl
+  cdn_negative_caching  = var.cdn_negative_caching
+  cdn_serve_while_stale = var.cdn_serve_while_stale
 
   # IAP (HTTP(S) LB만 해당)
   enable_iap               = var.enable_iap
@@ -69,22 +86,22 @@ module "load_balancer" {
   iap_oauth2_client_secret = var.iap_oauth2_client_secret
 
   # Logging
-  enable_logging       = var.enable_logging
-  logging_sample_rate  = var.logging_sample_rate
+  enable_logging      = var.enable_logging
+  logging_sample_rate = var.logging_sample_rate
 
   # URL Map (HTTP(S) LB만 해당)
-  url_map_name   = var.url_map_name
-  host_rules     = var.host_rules
-  path_matchers  = var.path_matchers
+  url_map_name  = local.url_map_name
+  host_rules    = var.host_rules
+  path_matchers = var.path_matchers
 
   # SSL (HTTP(S) LB만 해당)
-  use_ssl           = var.use_ssl
-  ssl_certificates  = var.ssl_certificates
-  ssl_policy        = var.ssl_policy
+  use_ssl          = var.use_ssl
+  ssl_certificates = var.ssl_certificates
+  ssl_policy       = var.ssl_policy
 
   # Target Proxies (HTTP(S) LB만 해당)
-  target_http_proxy_name  = var.target_http_proxy_name
-  target_https_proxy_name = var.target_https_proxy_name
+  target_http_proxy_name  = local.target_http_proxy_name
+  target_https_proxy_name = local.target_https_proxy_name
 
   # Forwarding Rule
   forwarding_rule_name      = local.forwarding_rule_name # Use naming from locals.tf
@@ -92,7 +109,7 @@ module "load_balancer" {
   forwarding_rule_all_ports = var.forwarding_rule_all_ports
 
   # Static IP
-  create_static_ip   = var.create_static_ip
-  static_ip_name     = var.static_ip_name
-  static_ip_address  = var.static_ip_address
+  create_static_ip  = var.create_static_ip
+  static_ip_name    = local.static_ip_name
+  static_ip_address = var.static_ip_address
 }

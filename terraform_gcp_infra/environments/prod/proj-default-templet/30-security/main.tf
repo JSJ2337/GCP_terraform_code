@@ -14,6 +14,20 @@ provider "google" {
   region  = var.region
 }
 
+locals {
+  default_service_account_suffixes = ["compute", "monitoring", "deployment"]
+
+  default_service_accounts = [
+    for suffix in local.default_service_account_suffixes : {
+      account_id   = "${local.sa_name_prefix}-${suffix}"
+      display_name = "${title(replace(local.project_name, "-", " "))} ${title(replace(suffix, "-", " "))} Service Account"
+      description  = "Service account for ${local.project_name} ${replace(suffix, "-", " ")} workloads"
+    }
+  ]
+
+  service_accounts = length(var.service_accounts) > 0 ? var.service_accounts : local.default_service_accounts
+}
+
 module "iam" {
   source = "../../../../modules/iam"
 
@@ -22,5 +36,5 @@ module "iam" {
   bindings = var.bindings
 
   create_service_accounts = var.create_service_accounts
-  service_accounts        = var.service_accounts
+  service_accounts        = local.service_accounts
 }

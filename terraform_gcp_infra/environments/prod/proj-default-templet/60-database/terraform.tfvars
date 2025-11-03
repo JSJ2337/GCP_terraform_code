@@ -24,8 +24,8 @@ transaction_log_retention_days     = 7
 backup_retained_count              = 7
 
 # Network configuration
-ipv4_enabled        = false # Use Private IP
-private_network     = "" # Will be set after VPC is created
+ipv4_enabled = false # Use Private IP
+# Leave private_network empty to use the VPC defined in locals.tf
 authorized_networks = []
 
 # Maintenance window

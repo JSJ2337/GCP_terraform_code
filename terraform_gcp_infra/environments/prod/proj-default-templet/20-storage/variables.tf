@@ -6,7 +6,7 @@ variable "project_id" {
 # Common settings
 variable "default_labels" {
   type        = map(string)
-  description = "Default labels to apply to all buckets"
+  description = "Additional labels merged with common_labels from locals.tf"
   default     = {}
 }
 
@@ -31,7 +31,8 @@ variable "kms_key_name" {
 # Assets bucket configuration
 variable "assets_bucket_name" {
   type        = string
-  description = "Name for the assets bucket"
+  description = "Override name for the assets bucket (leave blank for automatic naming)"
+  default     = ""
 }
 
 variable "assets_bucket_location" {
@@ -104,7 +105,8 @@ variable "assets_iam_bindings" {
 # Logs bucket configuration
 variable "logs_bucket_name" {
   type        = string
-  description = "Name for the logs bucket"
+  description = "Override name for the logs bucket (leave blank for automatic naming)"
+  default     = ""
 }
 
 variable "logs_bucket_location" {
@@ -189,7 +191,8 @@ variable "logs_cors_rules" {
 # Backups bucket configuration
 variable "backups_bucket_name" {
   type        = string
-  description = "Name for the backups bucket"
+  description = "Override name for the backups bucket (leave blank for automatic naming)"
+  default     = ""
 }
 
 variable "backups_bucket_location" {

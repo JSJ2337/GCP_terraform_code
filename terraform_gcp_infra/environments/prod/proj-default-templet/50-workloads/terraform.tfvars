@@ -4,23 +4,15 @@ region = "us-central1"
 # Workloads Configuration
 # Resource names are auto-generated from ../locals.tf
 # VM names will use: vm_name_prefix, subnet names from: subnet_name_primary
-project_id           = "gcp-terraform-imsi"
-zone                 = "us-central1-a"
-subnetwork_self_link = "" # Auto-generated from locals.tf
+project_id = "gcp-terraform-imsi"
+zone       = "us-central1-a"
 
 # VM configuration
-instance_count   = 2
-name_prefix      = "" # Auto-generated from locals.tf (vm_name_prefix)
-machine_type     = "e2-micro"
+instance_count = 2
+machine_type   = "e2-micro"
 enable_public_ip = false
 enable_os_login  = true
 preemptible      = false
-
-# Service account
-service_account_email = "" # Auto-generated from locals.tf (sa_name_prefix)
-service_account_scopes = [
-  "https://www.googleapis.com/auth/cloud-platform"
-]
 
 # Startup script
 startup_script = <<-EOF
@@ -49,8 +41,7 @@ EOF
 # Tags and labels
 tags = ["game", "app", "ssh-allowed"]
 labels = {
-  app        = "default-templet"
-  env        = "prod"
-  component  = "game-server"
-  managed-by = "terraform"
+  app       = "default-templet"
+  component = "game-server"
 }
+
