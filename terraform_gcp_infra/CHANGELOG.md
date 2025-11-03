@@ -20,11 +20,11 @@
   - README에 동작 설명 주석 추가
 
 ### 운영 (Operations)
-- `jsj-game-d` 환경 전체 `terraform destroy` 수행
+- 테스트 환경(jsj-game-d) 전체 `terraform destroy` 및 디렉터리 정리
 - GCS 보존 설정으로 생성된 lien(`p861601542676-l299e11ad-124f-42de-92ae-198e8dd6ede6`)을 해제하여 프로젝트 삭제 완료
 
 ### 변경 (Changed)
-- `proj-default-templet` 템플릿과 `jsj-game-d` 환경의 공통 라벨을 하이픈(`cost-center`, `managed-by`) 기준으로 통일하고 예제와 locals 간 키가 일치하도록 정리
+- `proj-default-templet` 템플릿의 공통 라벨을 하이픈(`cost-center`, `managed-by`) 기준으로 통일하고 예제와 locals 간 키가 일치하도록 정리
 
 ## [미배포] - 2025-10-30
 

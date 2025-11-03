@@ -114,9 +114,9 @@ terraform plan
   - 필수 API 활성화 후 로깅 버킷·서비스 계정이 생성되도록 `depends_on` 추가
   - `google_project_service`에 project ID 명시
 - **라벨 통일**:
-  - proj-default-templet 및 jsj-game-d locals/tfvars 예제를 하이픈 키(`managed-by`, `cost-center`)로 정리
+  - proj-default-templet locals/tfvars 예제를 하이픈 키(`managed-by`, `cost-center`)로 정리
 - **운영 작업**:
-  - jsj-game-d 환경 전체 `terraform destroy`
+  - 테스트 환경(jsj-game-d) 전면 제거 및 디렉터리 정리
   - Storage retention lien 제거 후 프로젝트 삭제 완료
 
 ## ⚠️ 주의: State 마이그레이션 필요
