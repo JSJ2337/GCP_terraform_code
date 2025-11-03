@@ -28,6 +28,7 @@
 - 20-storage, 30-security, 50-workloads, 60-database, 70-loadbalancer 레이어가 `modules/naming` 기반 기본 이름과 라벨을 자동 사용하도록 정비
   - GCS 버킷/서비스 계정/Load Balancer 이름은 `terraform.tfvars`에서 생략해도 규칙에 맞춰 생성
   - VM 서브넷·서비스 계정 이메일·Private IP 네트워크가 자동 계산되도록 기본값 추가
+- 공통 입력 파일 `common.naming.tfvars`를 추가하여 프로젝트/환경/조직/리전 값을 한 곳에서 관리
 
 ## [미배포] - 2025-10-30
 

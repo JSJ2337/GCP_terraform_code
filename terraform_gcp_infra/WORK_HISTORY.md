@@ -38,6 +38,7 @@
    - 50-workloads는 naming 모듈에서 제공한 기본 zone/서브넷/서비스 계정 값을 이용해 VM 설정을 최소화
    - 60-database는 naming 모듈의 VPC 이름과 라벨을 merge하여 Cloud SQL 네트워크/태그를 일관되게 유지
    - 70-loadbalancer는 naming 모듈이 제공하는 URL Map, 프록시, Static IP 이름을 활용해 override가 필요 없도록 구성
+   - `common.naming.tfvars`에 project/environment/organization/region 정보를 한 곳에서 관리하도록 통합
 
 6. **jsj-game-d 테스트 환경 제거**
    - 70 → 00 순으로 각 레이어에서 `terraform destroy` 재실행해 잔여 리소스 없는지 확인

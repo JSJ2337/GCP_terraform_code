@@ -2,13 +2,6 @@
 # 이 파일을 terraform.tfvars로 복사하고 실제 값을 입력하세요
 # 중요: terraform.tfvars 파일은 버전 관리에 커밋하지 마세요
 
-project_id     = "your-project-id"
-project_name   = "default-templet"
-environment    = "prod"
-organization   = "myorg"
-region_primary = "us-central1"
-region_backup  = "us-east1"
-
 # 로드 밸런서 타입
 # - http: HTTP(S) Load Balancer (글로벌, 외부)
 # - internal: Internal HTTP(S) Load Balancer (리전별, 내부)

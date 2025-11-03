@@ -14,7 +14,7 @@ terraform fmt -recursive
 
 # 4. Plan 확인 (실제 프로젝트가 있다면)
 cd environments/prod/proj-default-templet/00-project
-terraform plan
+terraform plan -var-file=../common.naming.tfvars -var-file=terraform.tfvars
 ```
 
 ## 📝 변경된 파일 요약
@@ -181,7 +181,10 @@ terraform fmt -recursive
 terraform validate
 
 # Plan
-terraform plan -out=tfplan
+terraform plan \
+  -var-file=../common.naming.tfvars \
+  -var-file=terraform.tfvars \
+  -out=tfplan
 
 # Apply
 terraform apply tfplan
@@ -196,13 +199,17 @@ terraform output -json | jq
 cd environments/prod/proj-default-templet/60-database
 cp terraform.tfvars.example terraform.tfvars
 # terraform.tfvars 수정 후
-terraform init && terraform plan && terraform apply
+terraform init
+terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
 
 # 로드 밸런서 배포
 cd ../70-loadbalancer
 cp terraform.tfvars.example terraform.tfvars
 # terraform.tfvars 수정 후
-terraform init && terraform plan && terraform apply
+terraform init
+terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
 ```
 
 ## 📞 문제 해결

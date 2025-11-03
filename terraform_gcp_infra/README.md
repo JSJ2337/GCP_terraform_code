@@ -62,10 +62,10 @@ terraform_gcp_infra/
 - **70-loadbalancer**: HTTP(S) 및 Internal Load Balancer
 
 ### modules/naming을 통한 중앙 집중식 Naming
-각 레이어는 `modules/naming` 모듈을 호출해 일관된 리소스 이름과 공통 라벨을 계산합니다. 프로젝트별 입력 값은 각 레이어의 `terraform.tfvars` 상단에 있는 다음 항목으로 통일했습니다:
+각 레이어는 `modules/naming` 모듈을 호출해 일관된 리소스 이름과 공통 라벨을 계산합니다. 입력 값은 프로젝트 루트의 `environments/prod/proj-default-templet/common.naming.tfvars` 한 곳에서 관리합니다:
 
 ```hcl
-# 공통 네이밍 입력 (terraform.tfvars)
+# common.naming.tfvars
 project_id     = "gcp-terraform-imsi"
 project_name   = "default-templet"
 environment    = "prod"
@@ -74,7 +74,7 @@ region_primary = "us-central1"
 region_backup  = "us-east1"
 ```
 
-`modules/naming`은 위 값을 이용해 `vpc_name`, `bucket_name_prefix`, `db_instance_name`, `sa_name_prefix`, `forwarding_rule_name` 등을 자동으로 만들어 주며, 공통 라벨(`common_labels`)과 태그(`common_tags`)도 함께 제공합니다. 리소스 이름을 수정하고 싶은 경우 해당 tfvars에서 값만 변경하면 모든 레이어가 동일하게 업데이트됩니다.
+`modules/naming`은 위 값을 이용해 `vpc_name`, `bucket_name_prefix`, `db_instance_name`, `sa_name_prefix`, `forwarding_rule_name` 등을 자동으로 만들어 주며, 공통 라벨(`common_labels`)과 태그(`common_tags`)도 함께 제공합니다. 리소스 이름을 변경하고 싶다면 `common.naming.tfvars`만 수정하면 모든 레이어가 동일하게 업데이트됩니다.
 
 ## 시작하기
 
@@ -162,9 +162,11 @@ cat backend.tf
 
 # 4. 배포
 terraform init  # 중앙 버킷에 연결
-terraform plan
-terraform apply
+terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
 ```
+
+> 모든 레이어에서 `terraform plan/apply` 실행 시 `-var-file=../common.naming.tfvars -var-file=terraform.tfvars` 옵션을 함께 전달해야 합니다. 반복 사용을 위해 래퍼 스크립트나 Makefile에 위 옵션을 포함시키면 실수를 줄일 수 있습니다.
 
 ### 배포 순서
 
@@ -179,50 +181,50 @@ cd ..
 # 1. 프로젝트 생성
 cd environments/prod/proj-default-templet/00-project
 terraform init
-terraform plan
-terraform apply
+terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
 
 # 2. 네트워크 생성
 cd ../10-network
 terraform init
-terraform plan
-terraform apply
+terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
 
 # 3. 스토리지 생성
 cd ../20-storage
 terraform init
-terraform plan
-terraform apply
+terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
 
 # 4. 보안 및 IAM
 cd ../30-security
 terraform init
-terraform plan
-terraform apply
+terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
 
 # 5. 모니터링 및 로깅
 cd ../40-observability
 terraform init
-terraform plan
-terraform apply
+terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
 
 # 6. 워크로드 (VM 등)
 cd ../50-workloads
 terraform init
-terraform plan
-terraform apply
+terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
 
 # 7. 데이터베이스
 cd ../60-database
 terraform init
-terraform plan
-terraform apply
+terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
 
 # 8. 로드 밸런서
 cd ../70-loadbalancer
 terraform init
-terraform plan
-terraform apply
+terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
 ```
 
 **배포 순서가 중요한 이유:**
@@ -307,9 +309,9 @@ cp -r proj-default-templet your-new-project
 cd your-new-project
 ```
 
-**Step 2: naming 입력 수정** (프로젝트/환경 정보)
+**Step 2: 공통 네이밍 입력 수정**
 
-각 레이어의 `terraform.tfvars` 상단에 있는 다음 값을 새 프로젝트에 맞게 변경합니다.
+`common.naming.tfvars` 파일에서 프로젝트/환경/조직 정보를 새 값으로 변경합니다.
 
 ```hcl
 project_id     = "your-project-id"
@@ -329,7 +331,7 @@ for dir in */; do
 done
 ```
 
-**Step 4: terraform.tfvars 상세 설정**
+**Step 4: 레이어별 terraform.tfvars 세부 값만 조정**
 - 네트워크 CIDR, 버킷 정책, VM 스펙 등 환경별 값만 필요에 따라 조정합니다.
 - 이름과 라벨은 Step 2에서 입력한 값에 맞춰 `modules/naming`이 자동 생성합니다.
 
@@ -338,9 +340,13 @@ done
 ```bash
 # 순서대로 배포
 cd 00-project
-terraform init && terraform apply
+terraform init
+terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
 cd ../10-network
-terraform init && terraform apply
+terraform init
+terraform plan  -var-file=../common.naming.tfvars -var-file=terraform.tfvars
+terraform apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars
 # ... 계속
 ```
 

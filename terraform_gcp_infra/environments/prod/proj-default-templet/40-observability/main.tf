@@ -14,6 +14,15 @@ provider "google" {
   region  = var.region
 }
 
+module "naming" {
+  source         = "../../../../modules/naming"
+  project_name   = var.project_name
+  environment    = var.environment
+  organization   = var.organization
+  region_primary = var.region_primary
+  region_backup  = var.region_backup
+}
+
 module "obs" {
   source = "../../../../modules/observability"
 
