@@ -159,6 +159,8 @@ module "mysql_with_replicas" {
 }
 ```
 
+> **참고**: `database_flags`에 `log_output`을 직접 지정하면 모듈이 동일 플래그를 다시 추가하지 않아 중복 오류를 방지합니다.
+
 ### 로깅 및 모니터링 설정
 
 ```hcl

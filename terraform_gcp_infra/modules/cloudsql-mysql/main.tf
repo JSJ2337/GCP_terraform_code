@@ -14,18 +14,27 @@ terraform {
 
 # Logging flags for Cloud SQL
 locals {
+  existing_database_flag_names = toset([for flag in var.database_flags : flag.name])
+
   # 기본 로깅 플래그 구성
-  logging_flags = concat(
+  base_logging_flags = concat(
     var.enable_slow_query_log ? [
       { name = "slow_query_log", value = "on" },
       { name = "long_query_time", value = tostring(var.slow_query_log_time) }
     ] : [],
     var.enable_general_log ? [
       { name = "general_log", value = "on" }
-    ] : [],
-    [
-      { name = "log_output", value = var.log_output }
-    ]
+    ] : []
+  )
+
+  # 사용자가 database_flags에 log_output을 직접 설정한 경우 중복 추가 방지
+  log_output_flag = contains(local.existing_database_flag_names, "log_output") ? [] : [
+    { name = "log_output", value = var.log_output }
+  ]
+
+  logging_flags = concat(
+    local.base_logging_flags,
+    local.log_output_flag
   )
 
   # 사용자 정의 플래그와 로깅 플래그 병합

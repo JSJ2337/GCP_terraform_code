@@ -5,6 +5,21 @@
 형식: [Keep a Changelog](https://keepachangelog.com/ko/1.0.0/) 기반
 버저닝: [Semantic Versioning](https://semver.org/lang/ko/) 준수
 
+## [미배포] - 2025-10-31
+
+### 수정 (Fixed)
+
+- **네트워크 모듈 EGRESS 지원**:
+  - `modules/network-dedicated-vpc`에서 방화벽 규칙을 정규화하여 `name` 참조 오류를 수정
+  - EGRESS 규칙 기본 목적지를 `0.0.0.0/0`으로 설정하고 `source_ranges`/`destination_ranges`가 자동으로 분기되도록 조정
+- **Cloud SQL 로그 플래그 중복 제거**:
+  - `modules/cloudsql-mysql`이 `database_flags`에 이미 `log_output`이 있을 경우 중복으로 추가하지 않도록 수정
+  - README에 동작 설명 주석 추가
+
+### 운영 (Operations)
+- `jsj-game-d` 환경 전체 `terraform destroy` 수행
+- GCS 보존 설정으로 생성된 lien(`p861601542676-l299e11ad-124f-42de-92ae-198e8dd6ede6`)을 해제하여 프로젝트 삭제 완료
+
 ## [미배포] - 2025-10-30
 
 ### 수정 (Fixed) - 세션 7

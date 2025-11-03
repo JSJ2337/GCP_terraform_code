@@ -102,6 +102,18 @@ terraform plan
   - README.md에 locals.tf 중앙 집중식 naming 섹션 추가
   - 새 프로젝트 추가 가이드 개선
 
+### 세션 8: 네트워크/DB 모듈 안정화 및 환경 정리
+- **네트워크 모듈**:
+  - 방화벽 규칙 입력 정규화, `name = each.key` 수정
+  - EGRESS 기본 목적지를 `0.0.0.0/0`으로 설정
+  - README에 EGRESS 동작 문서화
+- **Cloud SQL 모듈**:
+  - `log_output` 중복 추가를 방지하도록 로직 개선
+  - README에 동작 설명 주석 추가
+- **운영 작업**:
+  - jsj-game-d 환경 전체 `terraform destroy`
+  - Storage retention lien 제거 후 프로젝트 삭제 완료
+
 ## ⚠️ 주의: State 마이그레이션 필요
 
 기존 인프라가 있다면:

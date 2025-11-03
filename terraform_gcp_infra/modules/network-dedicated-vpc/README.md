@@ -226,7 +226,7 @@ module "prod_network" {
 {
   name           = string              # 필수: 규칙 이름
   direction      = string              # 선택: INGRESS 또는 EGRESS (기본값: INGRESS)
-  ranges         = list(string)        # 선택: 소스/대상 IP 범위
+  ranges         = list(string)        # 선택: 소스/대상 IP 범위 (INGRESS는 source, EGRESS는 destination)
   allow_protocol = string              # 선택: tcp, udp, icmp 또는 all (기본값: tcp)
   allow_ports    = list(string)        # 선택: 포트 목록 (기본값: [])
   priority       = number              # 선택: 우선순위 (기본값: 1000)
@@ -235,6 +235,9 @@ module "prod_network" {
   description    = string              # 선택: 규칙 설명
 }
 ```
+
+> **참고**: `direction = "EGRESS"`인 경우 `ranges`는 `destination_ranges`로 적용되며, INGRESS일 때는 `source_ranges`로 적용됩니다.
+> **기본값**: EGRESS에서 `ranges`를 생략하면 자동으로 `["0.0.0.0/0"]`이 적용되어 모든 아웃바운드 트래픽이 허용됩니다.
 
 ## 출력 값
 

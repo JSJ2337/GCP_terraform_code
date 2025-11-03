@@ -2,6 +2,43 @@
 
 ---
 
+## 📅 세션 8 작업 내역 (2025-10-31)
+
+**작업자**: Codex
+**목적**: 네트워크/데이터베이스 모듈 안정화 및 jsj-game-d 환경 종료
+
+### 🎯 작업 요약
+- 네트워크 모듈의 EGRESS 규칙 지원을 보완하고 `each.key` 참조 오류를 수정했습니다.
+- Cloud SQL 모듈에서 `log_output` 플래그가 중복 추가되어 apply가 실패하던 문제를 해결했습니다.
+- `jsj-game-d` 환경 전체를 `terraform destroy`로 정리하고, 프로젝트 삭제를 막던 lien을 제거했습니다.
+
+### 완료된 작업 ✅
+
+1. **network-dedicated-vpc 모듈 보강**
+   - 방화벽 입력을 정규화하여 direction/ports 기본값을 일관 적용
+   - `name = each.key`로 수정해 destroy 시 발생하던 `Unsupported attribute` 오류 제거
+   - EGRESS 규칙에서 `ranges`가 비어 있으면 자동으로 `["0.0.0.0/0"]`을 적용하도록 개선
+   - README에 EGRESS 기본 동작을 문서화
+
+2. **cloudsql-mysql 모듈 버그 수정**
+   - `database_flags`에 이미 `log_output`이 존재하면 중복 추가하지 않도록 로직 분기
+   - README에 해당 동작을 안내하는 주석 추가
+
+3. **jsj-game-d 환경 제거**
+   - 70 → 00 순으로 각 레이어에서 `terraform destroy` 재실행해 잔여 리소스 없는지 확인
+   - `p861601542676-l299e11ad-124f-42de-92ae-198e8dd6ede6` lien을 삭제 후 프로젝트 제거 완료
+
+### 산출물 🗂️
+- `modules/network-dedicated-vpc/main.tf`, `README.md`
+- `modules/cloudsql-mysql/main.tf`, `README.md`
+- `CHANGELOG.md`, `WORK_HISTORY.md`
+
+### 검증 ✅
+- 모든 레이어에서 `terraform destroy -auto-approve` 및 `terraform plan -destroy` 재실행 → 잔여 리소스 없음 확인
+- `terraform fmt`로 수정된 Terraform 파일 포맷 정리
+
+---
+
 ## 📅 세션 6 작업 내역 (2025-10-29)
 
 **작업자**: Claude Code
