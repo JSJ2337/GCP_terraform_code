@@ -35,7 +35,16 @@
       "Bash(if ! grep -q \"variable \"\"region\"\"\" \"$file\")",
       "Bash(git log:*)",
       "Bash(else)",
-      "Bash(head:*)"
+      "Bash(head:*)",
+      "Bash(ln:*)",
+      "Bash(if [ -f \"environments/prod/jsj-game-d/$dir/terraform.tfvars\" ])",
+      "Bash(gcloud config:*)",
+      "Bash(gcloud organizations:*)",
+      "Bash(gcloud projects list:*)",
+      "Bash(gcloud projects create:*)",
+      "Bash(gcloud billing projects link:*)",
+      "Bash(gcloud auth:*)",
+      "Bash(gcloud projects get-iam-policy:*)"
     ],
     "deny": [],
     "ask": []
