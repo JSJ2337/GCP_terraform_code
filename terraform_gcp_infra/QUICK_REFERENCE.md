@@ -110,6 +110,11 @@ terraform plan
 - **Cloud SQL 모듈**:
   - `log_output` 중복 추가를 방지하도록 로직 개선
   - README에 동작 설명 주석 추가
+- **project-base 모듈**:
+  - 필수 API 활성화 후 로깅 버킷·서비스 계정이 생성되도록 `depends_on` 추가
+  - `google_project_service`에 project ID 명시
+- **라벨 통일**:
+  - proj-default-templet 및 jsj-game-d locals/tfvars 예제를 하이픈 키(`managed-by`, `cost-center`)로 정리
 - **운영 작업**:
   - jsj-game-d 환경 전체 `terraform destroy`
   - Storage retention lien 제거 후 프로젝트 삭제 완료

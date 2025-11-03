@@ -12,6 +12,9 @@
 - **네트워크 모듈 EGRESS 지원**:
   - `modules/network-dedicated-vpc`에서 방화벽 규칙을 정규화하여 `name` 참조 오류를 수정
   - EGRESS 규칙 기본 목적지를 `0.0.0.0/0`으로 설정하고 `source_ranges`/`destination_ranges`가 자동으로 분기되도록 조정
+- **project-base API 의존성 정리**:
+  - `google_project_service`에 프로젝트 ID를 명시해 모듈 호출 시 안전성 향상
+  - Logging 버킷/서비스 계정이 API 활성화 이후에 생성되도록 `depends_on` 추가
 - **Cloud SQL 로그 플래그 중복 제거**:
   - `modules/cloudsql-mysql`이 `database_flags`에 이미 `log_output`이 있을 경우 중복으로 추가하지 않도록 수정
   - README에 동작 설명 주석 추가
@@ -19,6 +22,9 @@
 ### 운영 (Operations)
 - `jsj-game-d` 환경 전체 `terraform destroy` 수행
 - GCS 보존 설정으로 생성된 lien(`p861601542676-l299e11ad-124f-42de-92ae-198e8dd6ede6`)을 해제하여 프로젝트 삭제 완료
+
+### 변경 (Changed)
+- `proj-default-templet` 템플릿과 `jsj-game-d` 환경의 공통 라벨을 하이픈(`cost-center`, `managed-by`) 기준으로 통일하고 예제와 locals 간 키가 일치하도록 정리
 
 ## [미배포] - 2025-10-30
 

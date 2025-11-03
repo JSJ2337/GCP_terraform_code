@@ -10,8 +10,8 @@ billing_account = "ABCDEF-123456-GHIJKL"
 labels = {
   environment = "prod"
   project     = "default-templet"
-  managed_by  = "terraform"
-  cost_center = "gaming"
+  managed-by  = "terraform"
+  cost-center = "gaming"
 }
 
 # 활성화할 API 목록

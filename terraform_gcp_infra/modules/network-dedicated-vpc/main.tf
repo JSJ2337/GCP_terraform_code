@@ -90,11 +90,13 @@ resource "google_compute_firewall" "rules" {
     ports    = each.value.allow_ports
   }
 
-  source_ranges      = each.value.direction == "INGRESS" ? each.value.ranges : null
-  destination_ranges = each.value.direction == "EGRESS" ? coalescelist(each.value.ranges, ["0.0.0.0/0"]) : null
-  target_tags        = each.value.target_tags
-  disabled           = each.value.disabled
-  description        = each.value.description
+  source_ranges = each.value.direction == "INGRESS" ? each.value.ranges : null
+  destination_ranges = each.value.direction == "EGRESS" ? (
+    length(coalesce(each.value.ranges, [])) > 0 ? each.value.ranges : ["0.0.0.0/0"]
+  ) : null
+  target_tags = each.value.target_tags
+  disabled    = each.value.disabled
+  description = each.value.description
 }
 
 output "vpc_self_link" {

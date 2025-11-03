@@ -17,20 +17,29 @@
 1. **network-dedicated-vpc 모듈 보강**
    - 방화벽 입력을 정규화하여 direction/ports 기본값을 일관 적용
    - `name = each.key`로 수정해 destroy 시 발생하던 `Unsupported attribute` 오류 제거
-   - EGRESS 규칙에서 `ranges`가 비어 있으면 자동으로 `["0.0.0.0/0"]`을 적용하도록 개선
+   - EGRESS 규칙에서 `ranges`가 비어 있으면 자동으로 `["0.0.0.0/0"]`을 적용하도록 개선 (빈 리스트/미지정 케이스 포함)
    - README에 EGRESS 기본 동작을 문서화
 
 2. **cloudsql-mysql 모듈 버그 수정**
    - `database_flags`에 이미 `log_output`이 존재하면 중복 추가하지 않도록 로직 분기
    - README에 해당 동작을 안내하는 주석 추가
 
-3. **jsj-game-d 환경 제거**
+3. **project-base 의존성 정리**
+   - `google_project_service`에 프로젝트 ID를 명시
+   - Logging 버킷/서비스 계정은 API 활성화 후 생성되도록 `depends_on` 추가
+
+4. **라벨 표준화**
+   - `proj-default-templet` 템플릿과 `jsj-game-d` 환경의 공통 라벨을 하이픈 스타일로 통일
+   - `terraform.tfvars.example` 예제와 locals.tf 간 키 일관성 확보
+
+5. **jsj-game-d 환경 제거**
    - 70 → 00 순으로 각 레이어에서 `terraform destroy` 재실행해 잔여 리소스 없는지 확인
    - `p861601542676-l299e11ad-124f-42de-92ae-198e8dd6ede6` lien을 삭제 후 프로젝트 제거 완료
 
 ### 산출물 🗂️
 - `modules/network-dedicated-vpc/main.tf`, `README.md`
 - `modules/cloudsql-mysql/main.tf`, `README.md`
+- `modules/project-base/main.tf`
 - `CHANGELOG.md`, `WORK_HISTORY.md`
 
 ### 검증 ✅

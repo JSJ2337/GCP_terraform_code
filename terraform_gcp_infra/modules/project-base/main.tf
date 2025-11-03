@@ -25,6 +25,7 @@ resource "google_project" "this" {
 
 # 1) 필수 API
 resource "google_project_service" "services" {
+  project            = google_project.this.project_id
   for_each           = toset(var.apis)
   service            = each.key
   disable_on_destroy = false
@@ -57,6 +58,8 @@ resource "google_logging_project_bucket_config" "default" {
   location       = "global"
   retention_days = var.log_retention_days
   bucket_id      = "_Default"
+
+  depends_on = [google_project_service.services]
 }
 
 # 4) CMEK 참조(옵션) – 실제 키는 외부에서 제공
@@ -65,6 +68,8 @@ resource "google_project_service_identity" "logging_sa" {
   provider = google-beta
   service  = "logging.googleapis.com"
   project  = google_project.this.project_id
+
+  depends_on = [google_project_service.services]
 }
 
 resource "google_kms_crypto_key_iam_member" "cmek_bind_logging" {
