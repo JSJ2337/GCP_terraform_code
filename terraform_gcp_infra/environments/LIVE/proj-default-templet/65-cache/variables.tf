@@ -35,7 +35,7 @@ variable "region_backup" {
 variable "region" {
   type        = string
   description = "Memorystore 리전을 지정 (location_id)"
-  default     = "us-central1"
+  default     = ""
 }
 
 variable "instance_name" {
@@ -53,7 +53,7 @@ variable "alternative_location_id" {
 variable "alternative_location_suffix" {
   type        = string
   description = "대체 존을 region에 접미사 형태로 지정하고 싶을 때 사용 (예: b => us-central1-b)"
-  default     = "b"
+  default     = ""
 }
 
 variable "authorized_network" {

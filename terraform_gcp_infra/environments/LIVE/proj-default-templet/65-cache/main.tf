@@ -26,6 +26,7 @@ module "naming" {
 }
 
 locals {
+  region_effective = length(trimspace(var.region)) > 0 ? trimspace(var.region) : module.naming.region_primary
   instance_name      = length(trimspace(var.instance_name)) > 0 ? var.instance_name : module.naming.redis_instance_name
   authorized_network = length(trimspace(var.authorized_network)) > 0 ? var.authorized_network : "projects/${var.project_id}/global/networks/${module.naming.vpc_name}"
   labels             = merge(module.naming.common_labels, var.labels)
@@ -33,10 +34,10 @@ locals {
     length(trimspace(var.alternative_location_id)) > 0
     ? trimspace(var.alternative_location_id)
     : (
-      length(trimspace(var.alternative_location_suffix)) > 0
-      ? "${var.region}-${trimspace(var.alternative_location_suffix)}"
-      : ""
-    )
+        length(trimspace(var.alternative_location_suffix)) > 0
+        ? "${local.region_effective}-${trimspace(var.alternative_location_suffix)}"
+        : ""
+      )
   )
 }
 
@@ -45,7 +46,7 @@ module "cache" {
 
   project_id                      = var.project_id
   instance_name                   = local.instance_name
-  region                          = var.region
+  region                          = local.region_effective
   alternative_location_id         = local.alternative_location
   alternative_location_suffix     = var.alternative_location_suffix
   tier                            = var.tier

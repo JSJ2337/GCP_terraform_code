@@ -4,13 +4,13 @@
 
 project_id = "your-project-id"
 
-# 리전/환경 설정
+# 리전/환경 설정 (region은 비워두면 common.naming.tfvars의 region_primary 사용)
 project_name   = "default-templet"
 environment    = "prod"
 organization   = "myorg"
 region_primary = "us-central1"
 region_backup  = "us-east1"
-region         = "us-central1"
+region         = ""
 
 # Memorystore 설정
 instance_name = "" # 비워두면 naming 모듈 기준으로 자동 생성

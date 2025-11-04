@@ -51,7 +51,7 @@ resource "google_redis_instance" "this" {
   lifecycle {
     precondition {
       condition     = var.tier != "STANDARD_HA" || length(local.alternative_location_id) > 0
-      error_message = "STANDARD_HA tier requires alternative_location_id (e.g., us-central1-b)."
+      error_message = "STANDARD_HA tier requires alternative_location_id (e.g., us-central1-b) or alternative_location_suffix."
     }
   }
 }
