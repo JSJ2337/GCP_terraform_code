@@ -67,4 +67,4 @@ terragrunt run-all apply --terragrunt-include-dir 10-network
 - [ ] Terraform/Terragrunt 상태 버킷에 새로운 Prefix가 생성되었는지 확인
 - [ ] README/작업 내역(CHANGELOG 등)에 신규 환경 추가 기록
 
-필요 시 `WORK_HISTORY.md`에 신규 배포 이력을 남기고, 후속 자동화(CI/CD, tfsec 등)를 연동해주세요.
+필요 시 `04_WORK_HISTORY.md`에 신규 배포 이력을 남기고, 후속 자동화(CI/CD, tfsec 등)를 연동해주세요.

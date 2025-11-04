@@ -108,12 +108,12 @@
   - 프로젝트 복제 시 수정 용이
 
 #### 문서화
-- **README.md**: naming 모듈 기반 중앙 집중식 naming 섹션 추가
+- **00_README.md**: naming 모듈 기반 중앙 집중식 naming 섹션 추가
   - naming 모듈과 공통 입력값의 역할 설명
   - 새 프로젝트 추가 가이드 개선
   - Step-by-step 프로젝트 생성 절차
-- **QUICK_REFERENCE.md**: 세션 7 작업 내용 추가
-- **CHANGELOG.md**: 변경 이력 업데이트
+- **03_QUICK_REFERENCE.md**: 세션 7 작업 내용 추가
+- **02_CHANGELOG.md**: 변경 이력 업데이트
 
 ## [미배포] - 2025-10-29
 
@@ -218,7 +218,7 @@
 
 ### 문서화 (Documentation)
 
-- **ARCHITECTURE.md (신규)**: 시각적 아키텍처 다이어그램 문서
+- **01_ARCHITECTURE.md (신규)**: 시각적 아키텍처 다이어그램 문서
   - 10개의 Mermaid 다이어그램
   - 전체 시스템 구조, State 관리, 배포 순서
   - 모듈 구조, GCP 리소스 배치, 네트워크 흐름
@@ -227,7 +227,7 @@
 - **모듈 README**: cloudsql-mysql, load-balancer 한글 문서 추가
 - **메인 README**: 새 모듈 및 레이어 반영, 배포 순서 업데이트
 - **WORK_HISTORY**: 세션 3, 4, 5 작업 상세 기록
-- **QUICK_REFERENCE**: 빠른 참조 가이드 업데이트, ARCHITECTURE.md 링크 추가
+- **03_QUICK_REFERENCE**: 빠른 참조 가이드 업데이트, 01_ARCHITECTURE.md 링크 추가
 - **CHANGELOG**: 변경 이력 구조화, 마이그레이션 가이드 확장
 
 ## [세션 1-2] - 2025-10-28

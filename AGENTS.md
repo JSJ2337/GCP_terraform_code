@@ -20,4 +20,4 @@ Terraform 변경 시마다 `terraform validate`와 영향 환경의 `terraform p
 Git 기록은 Conventional Commit 접두사(`feat:`, `refactor:`, `chore:`)와 간결한 한글 요약을 혼용합니다. 동사를 포함한 명령형 제목과 선택적 스코프(예: `infra`)를 지켜 주세요. Terraform, 스크립트, 문서 수정은 관련된 것끼리 묶고 설명을 명확히 남깁니다. PR에는 수동 apply 절차, 관련 plan/log, 이슈 링크를 포함합니다. 프로덕션 영향 변경은 다른 인프라 엔지니어의 리뷰를 받고, 후속 작업이 있으면 본문에 정리합니다.
 
 ## 보안 및 설정 팁
-민감한 시크릿이나 실제 `.tfstate` 파일은 버전에 올리지 마세요. 예제 공유가 필요하면 민감 정보는 마스킹합니다. 임시 산출물은 `tmp_plugin_dir/` 또는 로컬 워크스페이스에 보관하고, 새 임시 경로는 `.gitignore`에 추가합니다. 높은 권한이 필요한 GCP/IAM 설정을 만들면 `terraform_gcp_infra/ARCHITECTURE.md`에 요구 사항을 기록해 추후 작업자가 맥락을 이해하도록 돕습니다.
+민감한 시크릿이나 실제 `.tfstate` 파일은 버전에 올리지 마세요. 예제 공유가 필요하면 민감 정보는 마스킹합니다. 임시 산출물은 `tmp_plugin_dir/` 또는 로컬 워크스페이스에 보관하고, 새 임시 경로는 `.gitignore`에 추가합니다. 높은 권한이 필요한 GCP/IAM 설정을 만들면 `terraform_gcp_infra/01_ARCHITECTURE.md`에 요구 사항을 기록해 추후 작업자가 맥락을 이해하도록 돕습니다.

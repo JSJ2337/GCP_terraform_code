@@ -558,10 +558,10 @@ graph LR
 
 ## 참고 자료
 
-- [메인 README](README.md)
-- [WORK_HISTORY](WORK_HISTORY.md)
-- [CHANGELOG](CHANGELOG.md)
-- [QUICK_REFERENCE](QUICK_REFERENCE.md)
+- [메인 README](00_README.md)
+- [WORK_HISTORY](04_WORK_HISTORY.md)
+- [CHANGELOG](02_CHANGELOG.md)
+- [QUICK_REFERENCE](03_QUICK_REFERENCE.md)
 
 각 모듈의 상세 아키텍처는 해당 모듈의 README.md를 참조하세요:
 - [cloudsql-mysql/README.md](modules/cloudsql-mysql/README.md)

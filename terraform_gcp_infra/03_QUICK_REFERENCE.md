@@ -3,8 +3,8 @@
 ## 🚀 다음 세션 시작 시
 
 ```bash
-# 1. WORK_HISTORY.md 읽기
-cat WORK_HISTORY.md
+# 1. 04_WORK_HISTORY.md 읽기
+cat 04_WORK_HISTORY.md
 
 # 2. 코드 포맷팅 (필요 시)
 terraform fmt -recursive
@@ -21,7 +21,7 @@ terragrunt plan
 - 10-network 템플릿에 Private Service Connect 예약 리소스(`google_service_networking_connection`) 추가 및 tfvars 토글 제공
 - 30-security 템플릿이 naming 모듈 출력으로 기본 서비스 계정을 자동 생성하도록 개선
 - 모든 레이어에 한글 `terraform.tfvars.example` 배포 (신규 4개, 갱신 4개) → 복사 후 값만 수정하면 바로 실행 가능
-- README / ARCHITECTURE / CHANGELOG / WORK_HISTORY / QUICK_REFERENCE 문서에 새 흐름과 주의사항 반영
+- 00_README / 01_ARCHITECTURE / 02_CHANGELOG / 04_WORK_HISTORY / 03_QUICK_REFERENCE 문서에 새 흐름과 주의사항 반영
 - jsj-game-e 환경 destroy 재시도 → Service Networking 연결 해제 후 완전 삭제 완료
 
 ### 세션 11: Memorystore Redis 템플릿 추가 (2025-11-04)
@@ -29,14 +29,14 @@ terragrunt plan
 - `environments/LIVE/proj-default-templet/65-cache` Terragrunt 레이어 추가 및 예시 tfvars/README 작성
 - `modules/naming`에 `redis_instance_name` 출력 추가로 캐시 네이밍 일관성 확보
 - `modules/observability` 기본 Alert 템플릿을 확장하고 40-observability 레이어가 GCE/Cloud SQL/Memorystore/HTTPS LB 경보를 자동 배포하도록 갱신
-- ARCHITECTURE / QUICK_REFERENCE / CHANGELOG 문서를 Redis/Monitoring 흐름을 포함하도록 갱신
+- 01_ARCHITECTURE / 03_QUICK_REFERENCE / 02_CHANGELOG 문서를 Redis/Monitoring 흐름을 포함하도록 갱신
 
 ### 세션 1: 초기 베스트 프랙티스 적용 (11개 수정, 9개 신규)
 - 모듈 7개: provider 블록 제거
 - 15-storage 3개: gcs-root 사용으로 리팩토링
 - locals.tf: 공통 naming
 - *.tfvars.example: 설정 예제
-- README.md, CHANGELOG.md, .gitignore
+- 00_README.md, 02_CHANGELOG.md, .gitignore
 
 ### 세션 2: 오류 수정 및 문서화 (3개 수정, 5개 신규)
 - **오류 수정 (3개)**:
@@ -76,7 +76,7 @@ terragrunt plan
 - **버그 수정 (5건)**:
   - Static IP 참조, Regional Health Check, 이름 기본값, SSL Policy, IAP enabled
 - **문서화**:
-  - README.md, WORK_HISTORY.md 업데이트
+  - 00_README.md, 04_WORK_HISTORY.md 업데이트
 
 ### 세션 6: Cloud SQL 로깅 기능 추가 및 버그 수정
 - **Observability 개선**:
@@ -111,7 +111,7 @@ terragrunt plan
   - 변수 구조 오류 수정 (00-project, 30-security)
   - 20-storage 누락 변수 추가 및 하드코딩 제거
 - **문서화**:
-  - README.md에 locals.tf 중앙 집중식 naming 섹션 추가
+  - 00_README.md에 locals.tf 중앙 집중식 naming 섹션 추가
   - 새 프로젝트 추가 가이드 개선
 
 ### 세션 8: 네트워크/DB 모듈 안정화 및 환경 정리
@@ -157,7 +157,7 @@ terragrunt state mv 'module.game_logs_bucket' 'module.game_storage.module.gcs_bu
 terragrunt state mv 'module.game_backups_bucket' 'module.game_storage.module.gcs_buckets["backups"]'
 
 # IAM 변경 시 (binding → member)
-# WORK_HISTORY.md의 트러블슈팅 섹션 참조
+# 04_WORK_HISTORY.md의 트러블슈팅 섹션 참조
 ```
 
 ## 🎯 핵심 변경 내용
@@ -192,11 +192,11 @@ terragrunt state mv 'module.game_backups_bucket' 'module.game_storage.module.gcs
 
 | 파일 | 용도 |
 |------|------|
-| ARCHITECTURE.md | 시각적 아키텍처 다이어그램 10개 (⭐ 신규, 개선됨) |
-| WORK_HISTORY.md | 전체 작업 내역 상세 |
-| CHANGELOG.md | 변경 이력 + 마이그레이션 가이드 |
-| README.md | 프로젝트 전체 가이드 |
-| QUICK_REFERENCE.md | 빠른 참조 가이드 (이 문서) |
+| 01_ARCHITECTURE.md | 시각적 아키텍처 다이어그램 10개 (⭐ 신규, 개선됨) |
+| 04_WORK_HISTORY.md | 전체 작업 내역 상세 |
+| 02_CHANGELOG.md | 변경 이력 + 마이그레이션 가이드 |
+| 00_README.md | 프로젝트 전체 가이드 |
+| 03_QUICK_REFERENCE.md | 빠른 참조 가이드 (이 문서) |
 | modules/naming | 공통 naming/labeling |
 
 ## 🔧 자주 사용하는 명령어
@@ -244,10 +244,10 @@ terraform init && terraform apply
 
 ## 📞 문제 해결
 
-- **Plan에서 리소스 재생성 감지**: WORK_HISTORY.md "증상 1" 참조
-- **Bucket 재생성 시도**: WORK_HISTORY.md "증상 2" 참조
-- **Provider 오류**: WORK_HISTORY.md "증상 3" 참조
-- **WSL setsockopt 오류**: README.md "Terragrunt 기반 실행" 섹션 참고 (Linux/컨테이너 권장)
+- **Plan에서 리소스 재생성 감지**: 04_WORK_HISTORY.md "증상 1" 참조
+- **Bucket 재생성 시도**: 04_WORK_HISTORY.md "증상 2" 참조
+- **Provider 오류**: 04_WORK_HISTORY.md "증상 3" 참조
+- **WSL setsockopt 오류**: 00_README.md "Terragrunt 기반 실행" 섹션 참고 (Linux/컨테이너 권장)
 
 ## ⏭️ 다음 작업 (우선순위)
 
@@ -280,4 +280,4 @@ terraform init && terraform apply
 
 ---
 
-**상세 내용**: WORK_HISTORY.md 참조
+**상세 내용**: 04_WORK_HISTORY.md 참조

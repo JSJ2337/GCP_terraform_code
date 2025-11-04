@@ -29,10 +29,10 @@
    - Private Service Connect, 중앙 로그 싱크, IAP, Query Insights 등 핵심 옵션에 대한 사용 가이드 포함
 
 4. **문서 업데이트**
-   - README: Private Service Connect 소개, 레이어별 tfvars 예시 템플릿 섹션, 복사 절차 주석 추가
-   - ARCHITECTURE: 네트워크 아키텍처에 Service Networking 연결 흐름 명시
-   - QUICK_REFERENCE: 세션 10 작업 요약을 추가해 최근 변경 사항 한눈에 파악 가능
-   - CHANGELOG / WORK_HISTORY: 금일 작업 내역 기록 및 마이그레이션 노트 정리
+   - 00_README: Private Service Connect 소개, 레이어별 tfvars 예시 템플릿 섹션, 복사 절차 주석 추가
+   - 01_ARCHITECTURE: 네트워크 아키텍처에 Service Networking 연결 흐름 명시
+   - 03_QUICK_REFERENCE: 세션 10 작업 요약을 추가해 최근 변경 사항 한눈에 파악 가능
+   - 02_CHANGELOG / 04_WORK_HISTORY: 금일 작업 내역 기록 및 마이그레이션 노트 정리
 
 5. **운영 작업**
    - `modules/network-dedicated-vpc`에 Private Service Connect 예약/연결 로직을 통합해 템플릿 외부에서도 동일 옵션을 활용 가능하도록 개선
@@ -44,7 +44,7 @@
 - `environments/prod/proj-default-templet/30-security/main.tf`
 - `environments/prod/proj-default-templet/*/terraform.tfvars.example` (8개)
 - modules/network-dedicated-vpc/{main.tf, variables.tf, README.md}
-- README.md, ARCHITECTURE.md, CHANGELOG.md, QUICK_REFERENCE.md, WORK_HISTORY.md
+- 00_README.md, 01_ARCHITECTURE.md, 02_CHANGELOG.md, 03_QUICK_REFERENCE.md, 04_WORK_HISTORY.md
 
 ### 검증 ✅
 - `terragrunt --non-interactive stack run --queue-strict-include --queue-include-dir './10-network' destroy` 3회차 재시도 → Service Networking 연결 삭제 및 VPC 제거 확인
@@ -79,7 +79,7 @@
    - Terragrunt 버전 확인 및 PATH 미등록 시 절대 경로 예시 문서화
 
 4. **문서 일괄 업데이트**
-   - README, QUICK_REFERENCE, CHANGELOG, ARCHITECTURE, WORK_HISTORY에 Terragrunt 명령과 주의사항 반영
+   - 00_README, 03_QUICK_REFERENCE, 02_CHANGELOG, 01_ARCHITECTURE, 04_WORK_HISTORY에 Terragrunt 명령과 주의사항 반영
    - `common.naming.tfvars` 수동 전달 지침 제거, Terragrunt 자동 병합 설명 추가
    - WSL에서 `setsockopt: operation not permitted` 발생 시 대체 환경/커널 업데이트 안내
 
@@ -92,7 +92,7 @@
 - `environments/prod/proj-default-templet/*/terragrunt.hcl`
 - `environments/prod/proj-default-templet/*/main.tf` (backend 블록 추가)
 - `/root/.bashrc`
-- README.md, QUICK_REFERENCE.md, CHANGELOG.md, ARCHITECTURE.md, WORK_HISTORY.md
+- 00_README.md, 03_QUICK_REFERENCE.md, 02_CHANGELOG.md, 01_ARCHITECTURE.md, 04_WORK_HISTORY.md
 
 ### 검증 ✅
 - Terragrunt CLI에서 `terragrunt --version` 확인 (v0.92.1)
@@ -148,7 +148,7 @@
 - `modules/network-dedicated-vpc/main.tf`, `README.md`
 - `modules/cloudsql-mysql/main.tf`, `README.md`
 - `modules/project-base/main.tf`
-- `CHANGELOG.md`, `WORK_HISTORY.md`
+- `02_CHANGELOG.md`, `04_WORK_HISTORY.md`
 
 ### 검증 ✅
 - 모든 레이어에서 `terraform destroy -auto-approve` 및 `terraform plan -destroy` 재실행 → 잔여 리소스 없음 확인
@@ -251,15 +251,15 @@ gcloud logging read "resource.type=cloudsql_database AND
 
 #### 5. 문서 업데이트
 
-**CHANGELOG.md**:
+**02_CHANGELOG.md**:
 - "Observability 개선" 섹션 추가
 - Cloud SQL 로깅 기능 상세 설명
 
-**QUICK_REFERENCE.md**:
+**03_QUICK_REFERENCE.md**:
 - 세션 6 요약 추가
 - 완료 항목에 17번 추가
 
-**WORK_HISTORY.md**:
+**04_WORK_HISTORY.md**:
 - 세션 6 상세 작업 내역 추가 (이 문서)
 
 ### 📊 통계
@@ -271,7 +271,7 @@ gcloud logging read "resource.type=cloudsql_database AND
   - `environments/prod/proj-default-templet/60-database/variables.tf`
   - `environments/prod/proj-default-templet/60-database/main.tf`
   - `environments/prod/proj-default-templet/60-database/terraform.tfvars.example`
-  - 문서 3개 (CHANGELOG.md, QUICK_REFERENCE.md, WORK_HISTORY.md)
+  - 문서 3개 (02_CHANGELOG.md, 03_QUICK_REFERENCE.md, 04_WORK_HISTORY.md)
 
 - **추가된 코드 라인**: 약 150줄
   - Variables: 30줄
@@ -587,7 +587,7 @@ ssl_policy = var.ssl_policy != "" ? var.ssl_policy : null
 
 #### 5. 문서 업데이트
 
-**메인 README.md 업데이트**:
+**메인 00_README.md 업데이트**:
 - 모듈 목록에 `cloudsql-mysql`, `load-balancer` 추가
 - 레이어 구조에 `60-database`, `70-loadbalancer` 추가
 - 배포 순서에 데이터베이스 및 로드 밸런서 단계 추가
@@ -598,7 +598,7 @@ ssl_policy = var.ssl_policy != "" ? var.ssl_policy : null
 - `cost_center`: `gaming` → `IT_infra_deps`
 - `created_by`: `platform-team` → `system-team`
 
-#### 6. 아키텍처 다이어그램 문서 생성 (`ARCHITECTURE.md`)
+#### 6. 아키텍처 다이어그램 문서 생성 (`01_ARCHITECTURE.md`)
 
 **포함된 다이어그램** (Mermaid 형식):
 1. **전체 시스템 구조**: Bootstrap, Modules, Environments 관계
@@ -628,11 +628,11 @@ ssl_policy = var.ssl_policy != "" ? var.ssl_policy : null
 
 - **추가된 모듈**: 2개 (cloudsql-mysql, load-balancer)
 - **추가된 레이어**: 2개 (60-database, 70-loadbalancer)
-- **생성된 파일**: 19개 (모듈/레이어 18개 + ARCHITECTURE.md 1개)
+- **생성된 파일**: 19개 (모듈/레이어 18개 + 01_ARCHITECTURE.md 1개)
 - **추가된 코드 라인**: 2,840줄 (Terraform) + 600줄 (문서)
 - **버그 수정**: 5개
 - **생성된 다이어그램**: 10개 (Mermaid)
-- **문서 업데이트**: README.md, WORK_HISTORY.md, QUICK_REFERENCE.md, CHANGELOG.md, ARCHITECTURE.md (신규)
+- **문서 업데이트**: 00_README.md, 04_WORK_HISTORY.md, 03_QUICK_REFERENCE.md, 02_CHANGELOG.md, 01_ARCHITECTURE.md (신규)
 
 ### 🔧 커밋 이력
 
@@ -665,12 +665,12 @@ terraform apply
 ```
 
 ### 참고 자료
-- [아키텍처 다이어그램](ARCHITECTURE.md) ⭐ 신규
+- [아키텍처 다이어그램](01_ARCHITECTURE.md) ⭐ 신규
 - [Cloud SQL MySQL 모듈 문서](modules/cloudsql-mysql/README.md)
 - [Load Balancer 모듈 문서](modules/load-balancer/README.md)
-- [메인 README](README.md)
-- [QUICK_REFERENCE](QUICK_REFERENCE.md)
-- [CHANGELOG](CHANGELOG.md)
+- [메인 README](00_README.md)
+- [QUICK_REFERENCE](03_QUICK_REFERENCE.md)
+- [CHANGELOG](02_CHANGELOG.md)
 
 ---
 
@@ -971,7 +971,7 @@ terraform_gcp_infra/bootstrap/
 ├── variables.tf         # 변수 정의
 ├── terraform.tfvars     # 실제 설정 값
 ├── outputs.tf           # 출력 값
-├── README.md            # 상세 문서
+├── 00_README.md            # 상세 문서
 └── .terraform.lock.hcl  # Provider 버전 잠금
 ```
 
@@ -1763,7 +1763,7 @@ vim terraform.tfvars
 
 **신규 파일** (5개):
 
-#### 7.1 `README.md` (Main Project README)
+#### 7.1 `00_README.md` (Main Project README)
 - 전체 프로젝트 구조 설명
 - Getting Started 가이드
 - 배포 순서 안내
@@ -1782,7 +1782,7 @@ vim terraform.tfvars
 - 보안 고려사항
 - 베스트 프랙티스
 
-#### 7.4 `CHANGELOG.md`
+#### 7.4 `02_CHANGELOG.md`
 - 모든 변경 사항 기록
 - 마이그레이션 가이드
 - 기존 인프라 업데이트 방법
@@ -1838,11 +1838,11 @@ vim terraform.tfvars
 2. `environments/prod/proj-game-a/00-project/terraform.tfvars.example` - 프로젝트 설정 예제
 3. `environments/prod/proj-game-a/15-storage/terraform.tfvars.example` - 스토리지 설정 예제
 4. `.gitignore` - Git 제외 설정
-5. `README.md` - 메인 프로젝트 문서
+5. `00_README.md` - 메인 프로젝트 문서
 6. `modules/gcs-root/README.md` - gcs-root 모듈 문서
 7. `modules/gcs-bucket/README.md` - gcs-bucket 모듈 문서
-8. `CHANGELOG.md` - 변경 이력 및 마이그레이션 가이드
-9. `WORK_HISTORY.md` - 이 파일
+8. `02_CHANGELOG.md` - 변경 이력 및 마이그레이션 가이드
+9. `04_WORK_HISTORY.md` - 이 파일
 
 ---
 
@@ -1869,7 +1869,7 @@ vim terraform.tfvars
    ```bash
    # 기존 인프라가 있다면
    terraform state list
-   # 필요시 state mv 명령 실행 (CHANGELOG.md 참조)
+   # 필요시 state mv 명령 실행 (02_CHANGELOG.md 참조)
    ```
 
 ### 추가 개선 작업 (선택사항)
@@ -2115,8 +2115,8 @@ terraform output -json | jq '.bucket_names.value'
 - [x] terraform.tfvars.example 파일 생성
 - [x] README 문서 작성
 - [x] .gitignore 추가
-- [x] CHANGELOG.md 작성
-- [x] WORK_HISTORY.md 작성
+- [x] 02_CHANGELOG.md 작성
+- [x] 04_WORK_HISTORY.md 작성
 
 ### 다음 세션 체크리스트 ⏭️
 
@@ -2207,7 +2207,7 @@ terraform output -json | jq '.bucket_names.value'
    - 스타트업 스크립트 예시
 
 #### 5. 문서 업데이트
-- ✅ **QUICK_REFERENCE.md** 업데이트
+- ✅ **03_QUICK_REFERENCE.md** 업데이트
   - 세션 2 작업 내역 추가
   - 완료된 작업 체크리스트 업데이트
   - 다음 작업 우선순위 재정리
@@ -2230,7 +2230,7 @@ terraform output -json | jq '.bucket_names.value'
 4. environments/prod/proj-game-a/00-project/main.tf
 5. environments/prod/proj-game-a/10-network/main.tf
 6. environments/prod/proj-game-a/40-workloads/main.tf
-7. QUICK_REFERENCE.md
+7. 03_QUICK_REFERENCE.md
 
 **신규 파일 (6개)**:
 1. modules/project-base/README.md
@@ -2280,12 +2280,12 @@ terraform output -json | jq '.bucket_names.value'
 ---
 
 **다음 세션 시작 방법**:
-1. 이 파일 (WORK_HISTORY.md) 읽기
-2. CHANGELOG.md에서 마이그레이션 가이드 확인
-3. QUICK_REFERENCE.md에서 빠른 참조
+1. 이 파일 (04_WORK_HISTORY.md) 읽기
+2. 02_CHANGELOG.md에서 마이그레이션 가이드 확인
+3. 03_QUICK_REFERENCE.md에서 빠른 참조
 
 **문제 발생 시**:
 - "주의사항 및 트러블슈팅" 섹션 참조
-- CHANGELOG.md의 Migration Guide 확인
+- 02_CHANGELOG.md의 Migration Guide 확인
 - 각 모듈의 README.md 참조
 - tfsec-report.txt에서 보안 권장사항 확인
