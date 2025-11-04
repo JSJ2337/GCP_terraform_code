@@ -1,14 +1,7 @@
 # Region Configuration
-region = "us-central1"
 
 # Workloads Configuration
 # Resource names are generated via modules/naming
-project_id     = "gcp-terraform-imsi"
-project_name   = "default-templet"
-environment    = "prod"
-organization   = "myorg"
-region_primary = "us-central1"
-region_backup  = "us-east1"
 zone           = "us-central1-a"
 
 # VM configuration

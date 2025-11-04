@@ -8,7 +8,7 @@
 lb_type = "http"
 
 # Region and network (for Internal LB)
-region = "us-central1"
+region = ""
 # network/subnetwork can be left blank to use values derived from modules/naming
 
 # Backend service configuration

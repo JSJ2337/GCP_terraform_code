@@ -1,5 +1,5 @@
 # Region Configuration
-region = "us-central1"
+region = ""
 
 # Observability Configuration
 

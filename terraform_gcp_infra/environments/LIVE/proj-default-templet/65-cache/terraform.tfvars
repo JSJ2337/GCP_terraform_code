@@ -1,10 +1,4 @@
 # Region & Project (region은 비워두면 Terragrunt가 region_primary를 사용)
-project_id     = "gcp-terraform-imsi"
-project_name   = "default-templet"
-environment    = "prod"
-organization   = "myorg"
-region_primary = "us-central1"
-region_backup  = "us-east1"
 region         = ""
 
 # Memorystore configuration
