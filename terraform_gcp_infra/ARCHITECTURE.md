@@ -35,6 +35,7 @@ graph TB
         M7[gce-vmset<br/>VM 인스턴스]
         M8[cloudsql-mysql<br/>MySQL DB]
         M9[load-balancer<br/>로드 밸런서]
+        M10[memorystore-redis<br/>Redis 캐시]
     end
 
     subgraph "환경별 배포 (environments/prod/proj-default-templet/)"
@@ -45,7 +46,8 @@ graph TB
         E4[40-observability<br/>관찰성]
         E5[50-workloads<br/>워크로드]
         E6[60-database<br/>데이터베이스]
-        E7[70-loadbalancer<br/>로드밸런서]
+        E7[65-cache<br/>Redis 캐시]
+        E8[70-loadbalancer<br/>로드밸런서]
     end
 
     B_BUCKET -.State 저장.-> E0
@@ -56,6 +58,7 @@ graph TB
     B_BUCKET -.State 저장.-> E5
     B_BUCKET -.State 저장.-> E6
     B_BUCKET -.State 저장.-> E7
+    B_BUCKET -.State 저장.-> E8
 
     E0 --> M3
     E1 --> M4
@@ -64,7 +67,8 @@ graph TB
     E4 --> M6
     E5 --> M7
     E6 --> M8
-    E7 --> M9
+    E7 --> M10
+    E8 --> M9
 
     style B fill:#e1f5ff
     style B_BUCKET fill:#fff3cd
@@ -76,6 +80,7 @@ graph TB
     style E5 fill:#d4edda
     style E6 fill:#d4edda
     style E7 fill:#d4edda
+    style E8 fill:#d4edda
 ```
 
 **설명**:
@@ -105,7 +110,8 @@ graph LR
             S5[proj-default-templet/<br/>40-observability/default.tfstate]
             S6[proj-default-templet/<br/>50-workloads/default.tfstate]
             S7[proj-default-templet/<br/>60-database/default.tfstate]
-            S8[proj-default-templet/<br/>70-loadbalancer/default.tfstate]
+            S8[proj-default-templet/<br/>65-cache/default.tfstate]
+            S9[proj-default-templet/<br/>70-loadbalancer/default.tfstate]
         end
     end
 
@@ -118,6 +124,8 @@ graph LR
     BUCKET --> S5
     BUCKET --> S6
     BUCKET --> S7
+    BUCKET --> S8
+    BUCKET --> S9
     BUCKET --> S8
 
     style BUCKET fill:#fff3cd
@@ -153,10 +161,11 @@ graph TD
     E4 --> E5
     E1 --> E6[7. 60-database<br/>Cloud SQL]
 
-    E5 --> E7[8. 70-loadbalancer<br/>Load Balancer]
+    E5 --> E7[8. 65-cache<br/>Memorystore Redis]
     E6 --> E7
+    E7 --> E8[9. 70-loadbalancer<br/>Load Balancer]
 
-    E7 --> END([완료])
+    E8 --> END([완료])
 
     style B fill:#e1f5ff
     style E0 fill:#d4edda
@@ -167,6 +176,7 @@ graph TD
     style E5 fill:#d4edda
     style E6 fill:#d4edda
     style E7 fill:#d4edda
+    style E8 fill:#d4edda
     style PARALLEL fill:#ffeaa7
 ```
 
@@ -176,7 +186,8 @@ graph TD
 3. **10-network**: 데이터베이스 Private IP, VM 네트워킹에 필요
 4. **병렬 배포**: 20-storage, 30-security, 40-observability는 병렬 배포 가능
 5. **60-database**: 네트워크 구성 필요 (Private IP)
-6. **70-loadbalancer**: VM 인스턴스(백엔드) 필요
+6. **65-cache**: 전용 VPC(10-network) 이후 배포, 애플리케이션이 의존하기 전 캐시 엔드포인트 준비
+7. **70-loadbalancer**: VM 인스턴스(백엔드) 필요
 
 ---
 
@@ -193,6 +204,7 @@ graph LR
     M7[gce-vmset<br/>VM 인스턴스]
     M8[cloudsql-mysql<br/>MySQL DB]
     M9[load-balancer<br/>Load Balancer]
+    M10[memorystore-redis<br/>Redis 캐시]
 
     M3 -->|사용| M4
 
@@ -205,6 +217,7 @@ graph LR
     style M7 fill:#fab1a0,stroke:#333,stroke-width:2px
     style M8 fill:#74b9ff,stroke:#333,stroke-width:2px
     style M9 fill:#a29bfe,stroke:#333,stroke-width:2px
+    style M10 fill:#ffeaa7,stroke:#333,stroke-width:2px
 ```
 
 **모듈 목록 및 주요 기능**:
@@ -219,6 +232,7 @@ graph LR
 | **observability** | Cloud Logging 싱크, 모니터링 알림 | 관찰성 |
 | **gce-vmset** | VM 인스턴스, Shielded VM, 메타데이터 | 컴퓨팅 |
 | **cloudsql-mysql** | MySQL 인스턴스, HA, Private IP, 백업, 복제본 | 데이터베이스 |
+| **memorystore-redis** | Redis 캐시, Standard HA/Enterprise 구성, 유지보수 창 | 캐시 |
 | **load-balancer** | HTTP(S) LB, Internal LB, Health Check, SSL, CDN | 로드 밸런싱 |
 
 **모듈 설계 원칙**:
@@ -277,6 +291,12 @@ graph TB
             SQL -.복제.-> REPLICA
         end
 
+        subgraph "Cache Layer"
+            REDIS[Memorystore Redis<br/>Private IP]
+        end
+
+        REDIS --> SUBNET2
+
         subgraph "Load Balancer Layer"
             LB[Load Balancer]
             HC[Health Check]
@@ -307,10 +327,12 @@ graph TB
     VM1 -.로그.-> LOG
     VM2 -.로그.-> LOG
     SQL -.로그.-> LOG
+    REDIS -.모니터링.-> MON
     MON --> ALERT
 
     style VPC fill:#d4edda
     style SQL fill:#74b9ff
+    style REDIS fill:#ffeaa7
     style LB fill:#a29bfe
     style GCS1 fill:#fff3cd
     style GCS2 fill:#fff3cd
@@ -322,9 +344,10 @@ graph TB
 2. **Storage**: 독립적으로 관리
 3. **Compute**: 네트워크에 의존
 4. **Database**: Private IP로 VPC에 연결
-5. **Load Balancer**: Compute 인스턴스를 백엔드로 사용
-6. **Security**: 모든 리소스에 IAM 적용
-7. **Observability**: 모든 리소스 모니터링
+5. **Cache**: Memorystore Redis로 저지연 세션/캐시 제공
+6. **Load Balancer**: Compute 인스턴스를 백엔드로 사용
+7. **Security**: 모든 리소스에 IAM 적용
+8. **Observability**: 모든 리소스 모니터링
 
 ---
 
@@ -350,6 +373,7 @@ graph LR
         subgraph "App Subnet (10.0.2.0/24)"
             APP1[App VM 1<br/>10.0.2.10]
             APP2[App VM 2<br/>10.0.2.11]
+            CACHE[Redis Cache<br/>Private IP<br/>10.0.2.25]
         end
 
         subgraph "DB Subnet (10.0.3.0/24)"
@@ -371,6 +395,8 @@ graph LR
 
     APP1 -->|Private IP| DB
     APP2 -->|Private IP| DB
+    APP1 -->|저지연 캐시| CACHE
+    APP2 -->|저지연 캐시| CACHE
 
     WEB1 -.Outbound.-> NAT_GW
     WEB2 -.Outbound.-> NAT_GW
@@ -383,6 +409,7 @@ graph LR
     style WEB2 fill:#fab1a0
     style APP1 fill:#fab1a0
     style APP2 fill:#fab1a0
+    style CACHE fill:#ffeaa7
     style DB fill:#74b9ff
     style NAT_GW fill:#d4edda
     style USER fill:#e1f5ff
@@ -392,11 +419,12 @@ graph LR
 1. **외부 → LB**: 사용자가 Public IP로 접근
 2. **LB → Web**: Health Check 후 트래픽 분산
 3. **Web → App**: 내부 통신
-4. **App → DB**: Private IP로 DB 접근
-5. **Internal → NAT**: 외부 API 호출 시 NAT 게이트웨이 사용
+4. **App → Cache**: 동일 서브넷 Private IP로 Redis 접근
+5. **App → DB**: Private IP로 DB 접근
+6. **Internal → NAT**: 외부 API 호출 시 NAT 게이트웨이 사용
 
 **보안**:
-- ✅ DB는 Private IP만 사용 (외부 노출 없음)
+- ✅ Redis/DB는 Private IP만 사용 (외부 노출 없음)
 - ✅ 방화벽 규칙으로 트래픽 제어
 - ✅ VPC에는 Cloud SQL Private IP를 위한 Service Networking(Private Service Connect) 피어링이 예약되어
       데이터베이스 레이어가 별도 수동 작업 없이 바로 연결됩니다.

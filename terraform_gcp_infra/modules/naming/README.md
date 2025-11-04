@@ -1,6 +1,6 @@
 # naming 모듈
 
-공통 프로젝트 정보(`project_name`, `environment`, `organization`)와 주요 리전 값을 입력하면 GCP 리소스에 사용할 일관된 네이밍, 라벨, 태그를 계산해 줍니다. 각 인프라 레이어는 이 모듈의 출력을 사용해 버킷, 네트워크, 서비스 계정, Cloud SQL, Load Balancer 등의 이름을 통일된 패턴으로 생성할 수 있습니다.
+공통 프로젝트 정보(`project_name`, `environment`, `organization`)와 주요 리전 값을 입력하면 GCP 리소스에 사용할 일관된 네이밍, 라벨, 태그를 계산해 줍니다. 각 인프라 레이어는 이 모듈의 출력을 사용해 버킷, 네트워크, 서비스 계정, Cloud SQL, Memorystore Redis, Load Balancer 등의 이름을 통일된 패턴으로 생성할 수 있습니다.
 
 ## 입력 변수
 
@@ -28,6 +28,7 @@
 | cloud_router_name, cloud_nat_name | 네트워크 관련 리소스 이름 |
 | vm_name_prefix, instance_group_name, instance_template_name | GCE 워크로드 네이밍 |
 | db_instance_name | Cloud SQL 인스턴스 이름 |
+| redis_instance_name | Memorystore Redis 인스턴스 이름 |
 | backend_service_name, forwarding_rule_name, health_check_name | Load Balancer 네이밍 |
 | sa_name_prefix, kms_keyring_name | IAM/보안 관련 네이밍 |
 | default_zone | `{region_primary}-{default_zone_suffix}` |

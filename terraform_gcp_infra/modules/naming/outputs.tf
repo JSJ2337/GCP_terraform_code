@@ -90,6 +90,10 @@ output "health_check_name" {
   value = local.health_check_name
 }
 
+output "redis_instance_name" {
+  value = local.redis_instance_name
+}
+
 output "sa_name_prefix" {
   value = local.sa_name_prefix
 }

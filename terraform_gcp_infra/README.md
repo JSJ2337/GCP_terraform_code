@@ -27,6 +27,7 @@ terraform_gcp_infra/
 │   ├── gce-vmset/             # Compute Engine VM 인스턴스
 │   ├── cloudsql-mysql/        # Cloud SQL MySQL 데이터베이스
 │   ├── load-balancer/         # HTTP(S) 및 Internal Load Balancer
+│   ├── memorystore-redis/     # Memorystore Redis 캐시
 │   └── naming/                # 공통 네이밍/라벨 규칙 계산
 │
 └── environments/              # 환경별 구성
@@ -39,6 +40,7 @@ terraform_gcp_infra/
             ├── 40-observability/  # 모니터링 및 로깅
             ├── 50-workloads/      # 컴퓨팅 워크로드
             ├── 60-database/       # Cloud SQL 데이터베이스
+            ├── 65-cache/          # Memorystore Redis 캐시
             └── 70-loadbalancer/   # Load Balancer 설정
 ```
 
@@ -59,6 +61,7 @@ terraform_gcp_infra/
 - **40-observability**: Cloud Logging 싱크 및 모니터링 대시보드
 - **50-workloads**: Compute Engine 인스턴스
 - **60-database**: Cloud SQL MySQL (Private IP, PSC 연동)
+- **65-cache**: Memorystore Redis (Standard HA, Direct Peering)
 - **70-loadbalancer**: HTTP(S) 및 Internal Load Balancer
 
 ### modules/naming을 통한 중앙 집중식 Naming
@@ -93,6 +96,7 @@ region_backup  = "us-east1"
   - `40-observability/terraform.tfvars.example`: 중앙 로그 싱크 및 대시보드 정의
   - `50-workloads/terraform.tfvars.example`: VM 수량, 머신 타입, 스타트업 스크립트
   - `60-database/terraform.tfvars.example`: Cloud SQL Private IP, 백업/로깅 세부 설정
+  - `65-cache/terraform.tfvars.example`: Memorystore Redis 메모리 크기, 대체 존, 유지보수 창
   - `70-loadbalancer/terraform.tfvars.example`: LB 타입, CDN, IAP, 헬스 체크
 - 템플릿에는 Private Service Connect, 라벨, 로그 정책 등 자주 묻는 항목에 대한 주석이 포함되어 있어 표준 구성을 빠르게 적용할 수 있습니다.
 

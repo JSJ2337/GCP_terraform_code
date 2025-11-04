@@ -21,6 +21,7 @@ locals {
   backend_service_name = "${local.project_prefix}-backend"
   forwarding_rule_name = "${local.project_prefix}-lb"
   health_check_name    = "${local.project_prefix}-health"
+  redis_instance_name  = "${local.project_prefix}-redis"
 
   sa_name_prefix   = "${local.project_prefix}-sa"
   kms_keyring_name = "${local.project_prefix}-keyring"

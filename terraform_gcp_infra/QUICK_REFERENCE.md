@@ -24,6 +24,12 @@ terragrunt plan
 - README / ARCHITECTURE / CHANGELOG / WORK_HISTORY / QUICK_REFERENCE 문서에 새 흐름과 주의사항 반영
 - jsj-game-e 환경 destroy 재시도 → Service Networking 연결 해제 후 완전 삭제 완료
 
+### 세션 11: Memorystore Redis 템플릿 추가 (2025-11-04)
+- `modules/memorystore-redis` 모듈 신설 (STANDARD_HA 구성을 기본값으로 제공)
+- `environments/LIVE/proj-default-templet/65-cache` Terragrunt 레이어 추가 및 예시 tfvars/README 작성
+- `modules/naming`에 `redis_instance_name` 출력 추가로 캐시 네이밍 일관성 확보
+- ARCHITECTURE / QUICK_REFERENCE / CHANGELOG 문서를 Redis 캐시 레이어 포함하도록 갱신
+
 ### 세션 1: 초기 베스트 프랙티스 적용 (11개 수정, 9개 신규)
 - 모듈 7개: provider 블록 제거
 - 15-storage 3개: gcs-root 사용으로 리팩토링
@@ -178,6 +184,8 @@ terragrunt state mv 'module.game_backups_bucket' 'module.game_storage.module.gcs
 20. ✅ 모든 레이어에 terraform.tfvars 생성 (60-database, 70-loadbalancer 포함)
 21. ✅ 중앙 집중식 Naming 문서화 (modules/naming 사용법)
 22. ✅ Terragrunt 기반 실행으로 전환 (공통 입력/원격 상태 자동화)
+23. ✅ Memorystore Redis 모듈 추가 (modules/memorystore-redis)
+24. ✅ Redis 캐시 Terragrunt 레이어 추가 (65-cache)
 
 ## 📂 중요 파일
 
@@ -214,6 +222,13 @@ terragrunt init --non-interactive
 terragrunt plan
 terragrunt apply
 
+# 캐시 배포 (65-cache)
+cd ../65-cache
+cp terraform.tfvars.example terraform.tfvars  # 최초 1회
+terragrunt init --non-interactive
+terragrunt plan
+terragrunt apply
+
 # 로드 밸런서 배포 (70-loadbalancer)
 cd ../70-loadbalancer
 cp terraform.tfvars.example terraform.tfvars  # 최초 1회
@@ -240,24 +255,27 @@ terraform init && terraform apply
    - terraform.tfvars 작성 (프로젝트 ID, 네트워크 설정)
    - Private IP 설정 확인
    - 백업 정책 설정
-2. [ ] 70-loadbalancer 레이어 배포 (Load Balancer)
+2. [ ] 65-cache 레이어 배포 (Memorystore Redis)
+   - alternative_location_id 등 존 설정 확인
+   - 메모리 용량과 Redis 버전 검토
+   - Authorized network가 템플릿 VPC인지 확인
+3. [ ] 70-loadbalancer 레이어 배포 (Load Balancer)
    - LB 타입 선택 (HTTP(S), Internal, Internal Classic)
    - 백엔드 인스턴스 그룹 설정
    - Health Check 설정
-3. [ ] tfsec 보안 스캔 (새 모듈 포함)
-4. [ ] 실제 프로젝트에 배포 (terragrunt plan/apply)
-5. [ ] State 마이그레이션 (기존 인프라가 있다면)
+4. [ ] tfsec 보안 스캔 (새 모듈 포함)
+5. [ ] 실제 프로젝트에 배포 (terragrunt plan/apply)
+6. [ ] State 마이그레이션 (기존 인프라가 있다면)
 
 ### 향후 개선 사항
 6. [ ] PostgreSQL 모듈 추가 (cloudsql-postgresql)
-7. [ ] Redis/Memorystore 모듈 추가
-8. [ ] GKE (Kubernetes) 모듈 추가
-9. [ ] Dev/Staging 환경 추가
-10. [ ] CI/CD 파이프라인 구축 (GitHub Actions)
-11. [ ] Pre-commit hooks 설정
-12. [ ] Cost estimation (infracost)
-13. [ ] Monitoring 대시보드 자동 생성
-14. [ ] Terragrunt stack 실행 자동화(스크립트/CI) 및 WSL 대안 환경 마련
+7. [ ] GKE (Kubernetes) 모듈 추가
+8. [ ] Dev/Staging 환경 추가
+9. [ ] CI/CD 파이프라인 구축 (GitHub Actions)
+10. [ ] Pre-commit hooks 설정
+11. [ ] Cost estimation (infracost)
+12. [ ] Monitoring 대시보드 자동 생성
+13. [ ] Terragrunt stack 실행 자동화(스크립트/CI) 및 WSL 대안 환경 마련
 
 ---
 
