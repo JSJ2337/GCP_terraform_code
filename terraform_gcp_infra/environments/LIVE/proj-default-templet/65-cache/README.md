@@ -15,7 +15,7 @@ Google Cloud Memorystore for Redis(Standard HA) 인스턴스를 배포합니다.
    ```
 2. 필수 수정 항목:
    - `project_id`, `region`
-   - `alternative_location_id` (같은 리전 내 다른 존)
+   - `alternative_location_id` 또는 `alternative_location_suffix` (같은 리전 내 다른 존)
    - `memory_size_gb` (1~300GB 범위)
    - 필요 시 `authorized_network` (비워두면 템플릿 VPC 자동 사용)
 
@@ -32,4 +32,5 @@ terragrunt apply  --non-interactive
 ## 참고
 - Redis 엔드포인트는 Private IP만 제공되므로 GCE/GKE 등 동일 VPC 내 리소스에서만 접근 가능합니다.
 - Memorystore는 기본적으로 백업 기능이 없으니, 데이터 보존이 필요한 경우 애플리케이션 레벨 스냅샷/복제 전략을 함께 마련하세요.
+- `alternative_location_suffix`(기본값 `b`)를 사용하면 리전 값만으로 이중화 존을 자동 산출할 수 있습니다. 직접 존을 지정하고 싶다면 `alternative_location_id`를 입력하세요.
 - Enterprise 티어 기능(암호화, 자동 백업 등)이 필요하면 모듈 입력값(`tier`, `transit_encryption_mode`)을 조정하세요.

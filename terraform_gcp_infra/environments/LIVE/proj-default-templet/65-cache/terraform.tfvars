@@ -8,10 +8,11 @@ region_backup  = "us-east1"
 region         = "us-central1"
 
 # Memorystore configuration
-alternative_location_id = "us-central1-b"
-memory_size_gb          = 1
-redis_version           = "REDIS_6_X"
-tier                    = "STANDARD_HA"
+alternative_location_id     = ""
+alternative_location_suffix = "b"
+memory_size_gb              = 1
+redis_version               = "REDIS_6_X"
+tier                        = "STANDARD_HA"
 
 # Networking (비워두면 naming 모듈 VPC 사용)
 authorized_network = ""

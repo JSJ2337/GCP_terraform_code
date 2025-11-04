@@ -50,6 +50,12 @@ variable "alternative_location_id" {
   default     = ""
 }
 
+variable "alternative_location_suffix" {
+  type        = string
+  description = "대체 존을 region에 접미사 형태로 지정하고 싶을 때 사용 (예: b => us-central1-b)"
+  default     = "b"
+}
+
 variable "authorized_network" {
   type        = string
   description = "Memorystore에 접근 가능한 VPC self link (비우면 naming 모듈 기준 VPC 자동 사용)"
