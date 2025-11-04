@@ -5,6 +5,25 @@
 형식: [Keep a Changelog](https://keepachangelog.com/ko/1.0.0/) 기반
 버저닝: [Semantic Versioning](https://semver.org/lang/ko/) 준수
 
+## [미배포] - 2025-11-04
+
+### 추가 (Added)
+- `environments/prod/proj-default-templet` 전 레이어에 한글 `terraform.tfvars.example` 제공
+  - 10-network/30-security/40-observability/50-workloads 레이어 예제 파일 신규 생성
+  - 00-project/20-storage/60-database/70-loadbalancer 예제 파일을 한국어 설명으로 갱신
+  - Private Service Connect, 서비스 계정, 로그 싱크 등 핵심 입력값에 대한 가이드 주석 강화
+
+### 변경 (Changed)
+- 10-network 레이어가 Cloud SQL Private IP를 위한 Service Networking 연결을 기본으로 예약하도록 템플릿 코드(및 예제 변수) 업데이트
+  - `enable_private_service_connection`, `private_service_connection_prefix_length` 등 토글형 변수 추가
+  - Terragrunt 템플릿에서도 동일한 네트워킹 구성이 기본 제공되도록 동기화
+- 30-security 템플릿이 `modules/naming`을 참조하여 서비스 계정 접두어와 라벨을 공통 규칙으로 생성하도록 개선
+- `modules/network-dedicated-vpc`에 Private Service Connect 예약/연결 리소스를 통합하고, 기존 예약 범위 재사용 및 서비스 이름 커스터마이즈 옵션을 추가
+- README / ARCHITECTURE / QUICK_REFERENCE 문서에 Private Service Connect 흐름과 신규 tfvars 예제 복사 절차를 반영
+
+### 운영 (Operations)
+- `environments/prod/jsj-game-e` 네트워크 레이어 destroy 재시도 후 Service Networking 연결이 정상 해제되어 환경 전체 삭제 완료
+- WSL 네트워크 제한으로 gcloud/gsutil 명령이 실패할 수 있음을 문서화하고, 콘솔을 통한 리소스 확인을 안내
 ## [미배포] - 2025-11-03
 
 ### 변경 (Changed)

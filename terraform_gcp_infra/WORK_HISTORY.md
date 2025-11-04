@@ -2,6 +2,57 @@
 
 ---
 
+## 📅 세션 10 작업 내역 (2025-11-04)
+
+**작업자**: Codex  
+**목적**: Private Service Connect 기본화 및 템플릿 변수/문서 정비
+
+### 🎯 작업 요약
+- 프로덕션 템플릿(`proj-default-templet`)이 Cloud SQL Private IP를 바로 사용할 수 있도록 네트워크/보안 레이어를 개선하고, 모든 레이어에 한글 `terraform.tfvars.example` 템플릿을 제공했습니다.
+- 문서 전반을 최신 흐름(PSC, Terragrunt, tfvars 예시)에 맞게 갱신했습니다.
+- jsj-game-e 환경 destroy를 재시도해 Service Networking 연결을 안전하게 제거했습니다.
+
+### 완료된 작업 ✅
+
+1. **네트워크 레이어 개선**
+   - `10-network/main.tf`에 Private Service Connect 예약용 `google_compute_global_address` 및 `google_service_networking_connection` 추가
+   - `enable_private_service_connection`, `private_service_connection_prefix_length`, `private_service_connection_name` 변수를 도입하고 예제 파일에 설명
+   - 템플릿 환경(`proj-default-templet`)에도 동일한 구성을 반영해 신규 프로젝트가 즉시 Private IP Cloud SQL을 배포 가능하도록 정비
+
+2. **보안 레이어 naming 연동**
+   - `30-security/main.tf`에서 `modules/naming`을 호출해 `sa_name_prefix`, `project_name`을 로컬 변수로 사용
+   - 서비스 계정 자동 생성 시 공통 라벨과 일관된 접두어가 적용되도록 보완
+
+3. **terraform.tfvars.example 전면 갱신**
+   - 신규 작성: `10-network`, `30-security`, `40-observability`, `50-workloads`
+   - 한글화 및 상세 주석 추가: `00-project`, `20-storage`, `60-database`, `70-loadbalancer`
+   - Private Service Connect, 중앙 로그 싱크, IAP, Query Insights 등 핵심 옵션에 대한 사용 가이드 포함
+
+4. **문서 업데이트**
+   - README: Private Service Connect 소개, 레이어별 tfvars 예시 템플릿 섹션, 복사 절차 주석 추가
+   - ARCHITECTURE: 네트워크 아키텍처에 Service Networking 연결 흐름 명시
+   - QUICK_REFERENCE: 세션 10 작업 요약을 추가해 최근 변경 사항 한눈에 파악 가능
+   - CHANGELOG / WORK_HISTORY: 금일 작업 내역 기록 및 마이그레이션 노트 정리
+
+5. **운영 작업**
+   - `modules/network-dedicated-vpc`에 Private Service Connect 예약/연결 로직을 통합해 템플릿 외부에서도 동일 옵션을 활용 가능하도록 개선
+   - `environments/prod/jsj-game-e`에서 `terragrunt stack run destroy`를 재시도하여 Private Service Connect 연결이 풀릴 때까지 대기, 최종적으로 VPC까지 완전 삭제
+   - WSL 네트워크 제한으로 gcloud/gsutil이 실패할 수 있음을 ChangeLog에 문서화하고 콘솔 확인을 권장
+
+### 산출물 🗂️
+- `environments/prod/proj-default-templet/10-network/main.tf`
+- `environments/prod/proj-default-templet/30-security/main.tf`
+- `environments/prod/proj-default-templet/*/terraform.tfvars.example` (8개)
+- modules/network-dedicated-vpc/{main.tf, variables.tf, README.md}
+- README.md, ARCHITECTURE.md, CHANGELOG.md, QUICK_REFERENCE.md, WORK_HISTORY.md
+
+### 검증 ✅
+- `terragrunt --non-interactive stack run --queue-strict-include --queue-include-dir './10-network' destroy` 3회차 재시도 → Service Networking 연결 삭제 및 VPC 제거 확인
+- `terraform validate`는 코드 구조 변경 없음 (tfvars 예시와 문서만 변경)  
+- 문서/예제 파일 한글 표기 및 맞춤법 검토 완료
+
+---
+
 ## 📅 세션 9 작업 내역 (2025-11-03)
 
 **작업자**: Codex

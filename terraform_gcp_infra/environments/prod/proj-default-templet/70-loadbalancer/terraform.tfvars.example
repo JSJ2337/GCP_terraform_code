@@ -1,42 +1,41 @@
-# Load Balancer 설정 예제
-# 이 파일을 terraform.tfvars로 복사하고 실제 값을 입력하세요
-# 중요: terraform.tfvars 파일은 버전 관리에 커밋하지 마세요
+# 로드 밸런서 모듈 설정 예시
+# (terraform.tfvars로 복사 후 값 입력, 원본은 커밋하지 마세요)
 
-# 로드 밸런서 타입
-# - http: HTTP(S) Load Balancer (글로벌, 외부)
-# - internal: Internal HTTP(S) Load Balancer (리전별, 내부)
-# - internal_classic: Internal TCP/UDP Load Balancer (리전별, 내부)
+# 지원 타입
+# - http            : 외부 HTTP(S) LB (글로벌)
+# - internal        : 내부 HTTP(S) LB (리전)
+# - internal_classic: 내부 TCP/UDP LB (리전)
 lb_type = "http"
 
-# 리전 및 네트워크 (Internal LB용)
-region = "us-central1"
-# network, subnetwork 값을 비워두면 modules/naming에서 정의한 VPC/서브넷을 사용합니다.
+# 내부 LB 구성 시 지정 (외부 LB는 기본값 사용 가능)
+region   = "us-central1"
+network  = ""  # 비워두면 naming 모듈의 VPC 사용
+subnetwork = ""
 
-# 백엔드 서비스 설정
+# 백엔드 서비스
 backend_protocol  = "HTTP"
 backend_port_name = "http"
 backend_timeout   = 30
 
-# 백엔드 그룹
-# 주의: 인스턴스 그룹에 named port가 설정되어 있어야 합니다
+# 백엔드 그룹 (Instance Group Self Link 필요, named port 설정 필수)
 backends = [
   {
     group           = "projects/your-project/zones/us-central1-a/instanceGroups/web-ig"
     balancing_mode  = "UTILIZATION"
     capacity_scaler = 1.0
-    description     = "Web servers"
+    description     = "웹 서비스"
     max_utilization = 0.8
   }
 ]
 
-# 세션 친화성
-session_affinity            = "NONE" # NONE, CLIENT_IP, GENERATED_COOKIE 등
+# 세션 유지 정책
+session_affinity            = "NONE"  # NONE, CLIENT_IP, GENERATED_COOKIE 등
 affinity_cookie_ttl         = 0
 connection_draining_timeout = 300
 
 # 헬스 체크
 create_health_check              = true
-health_check_type                = "http" # http, https, tcp
+health_check_type                = "http"  # http, https, tcp
 health_check_port                = 80
 health_check_request_path        = "/"
 health_check_response            = ""
@@ -47,7 +46,7 @@ health_check_healthy_threshold   = 2
 health_check_unhealthy_threshold = 2
 health_check_logging             = false
 
-# Cloud CDN (HTTP(S) LB만 해당)
+# Cloud CDN (HTTP(S) LB)
 enable_cdn            = false
 cdn_cache_mode        = "CACHE_ALL_STATIC"
 cdn_default_ttl       = 3600
@@ -56,9 +55,9 @@ cdn_client_ttl        = 3600
 cdn_negative_caching  = false
 cdn_serve_while_stale = 0
 
-# Identity-Aware Proxy (HTTP(S) LB만 해당)
+# Identity-Aware Proxy
 enable_iap = false
-# IAP 활성화 시 OAuth2 클라이언트 설정
+# enable_iap = true 일 때는 OAuth2 자격 증명을 함께 입력하세요.
 # iap_oauth2_client_id     = "your-client-id"
 # iap_oauth2_client_secret = "your-client-secret"
 
@@ -66,73 +65,45 @@ enable_iap = false
 enable_logging      = true
 logging_sample_rate = 1.0
 
-# URL Map (HTTP(S) LB만 해당)
+# URL 맵 (HTTP(S) LB)
 host_rules    = []
 path_matchers = []
 
-# SSL (HTTP(S) LB만 해당)
+# SSL (HTTP(S) LB)
 use_ssl = false
-# SSL 활성화 시 인증서 설정
+# use_ssl = true 인 경우 인증서/정책 입력
 # ssl_certificates = [
 #   "projects/your-project/global/sslCertificates/your-cert"
 # ]
 # ssl_policy = ""
 
-# Target Proxies (HTTP(S) LB만 해당)
-
-# Internal LB용 포트 설정
+# Internal LB 포트 설정 예시
 # forwarding_rule_ports     = ["80", "443"]
 # forwarding_rule_all_ports = false
 
-# 고정 IP
+# 고정 IP 사용 여부
 create_static_ip = false
-# static_ip_address = "" # 기존 IP 주소 사용 시
+# static_ip_address = "projects/your-project/regions/us-central1/addresses/existing-ip"
 
-
-# ========================================
-# 예제 구성
-# ========================================
-
-# 예제 1: HTTP Load Balancer (기본)
+# ------------------------------
+# 참고 시나리오
+# ------------------------------
+# 1) 외부 HTTP LB (기본)
 # lb_type = "http"
-# backends = [
-#   {
-#     group = "projects/my-project/zones/us-central1-a/instanceGroups/web-ig"
-#   }
-# ]
+# backends = [{ group = "projects/my-project/zones/us-central1-a/instanceGroups/web-ig" }]
 # health_check_port = 80
-# health_check_request_path = "/health"
 
-# 예제 2: HTTPS Load Balancer with SSL
+# 2) 외부 HTTPS LB
 # lb_type = "http"
 # use_ssl = true
 # ssl_certificates = ["projects/my-project/global/sslCertificates/my-cert"]
-# backends = [
-#   {
-#     group = "projects/my-project/zones/us-central1-a/instanceGroups/web-ig"
-#   }
-# ]
 
-# 예제 3: Internal HTTP(S) Load Balancer
+# 3) 내부 HTTP(S) LB
 # lb_type = "internal"
-# region = "us-central1"
-# network = "projects/my-project/global/networks/my-vpc"
+# network  = "projects/my-project/global/networks/my-vpc"
 # subnetwork = "projects/my-project/regions/us-central1/subnetworks/my-subnet"
-# backends = [
-#   {
-#     group = "projects/my-project/zones/us-central1-a/instanceGroups/internal-ig"
-#   }
-# ]
 
-# 예제 4: Internal TCP Load Balancer
+# 4) 내부 TCP LB
 # lb_type = "internal_classic"
-# region = "us-central1"
-# network = "projects/my-project/global/networks/my-vpc"
-# subnetwork = "projects/my-project/regions/us-central1/subnetworks/my-subnet"
 # forwarding_rule_ports = ["80", "443"]
-# backends = [
-#   {
-#     group = "projects/my-project/zones/us-central1-a/instanceGroups/app-ig"
-#   }
-# ]
-# health_check_type = "tcp"
+# health_check_type     = "tcp"

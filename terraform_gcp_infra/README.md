@@ -53,12 +53,12 @@ terraform_gcp_infra/
 ### 인프라 레이어
 - **bootstrap**: 중앙 집중식 Terraform State 관리 프로젝트
 - **00-project**: GCP 프로젝트 생성, API 활성화, 예산 알림
-- **10-network**: VPC, 서브넷, Cloud NAT, 방화벽 규칙
+- **10-network**: VPC, 서브넷, Cloud NAT, Private Service Connect, 방화벽 규칙
 - **20-storage**: 에셋, 로그 및 백업용 GCS 버킷
 - **30-security**: IAM 바인딩 및 서비스 계정
 - **40-observability**: Cloud Logging 싱크 및 모니터링 대시보드
 - **50-workloads**: Compute Engine 인스턴스
-- **60-database**: Cloud SQL MySQL 데이터베이스
+- **60-database**: Cloud SQL MySQL (Private IP, PSC 연동)
 - **70-loadbalancer**: HTTP(S) 및 Internal Load Balancer
 
 ### modules/naming을 통한 중앙 집중식 Naming
@@ -82,6 +82,19 @@ region_backup  = "us-east1"
 - Terragrunt 0.92 이상을 사용하면 `terragrunt init/plan/apply`로 Terraform 명령을 그대로 호출할 수 있습니다.
 - 루트(`environments/prod/proj-default-templet/terragrunt.hcl`)에서 원격 상태 버킷과 prefix를 정의하고, 각 레이어는 의존 관계(`dependencies` 블록)로 실행 순서를 보장합니다.
 - `common.naming.tfvars`를 직접 `-var-file`로 넘길 필요가 없으며, Terragrunt가 자동으로 주입합니다.
+
+### 레이어별 변수 예시 템플릿
+- 모든 레이어에는 한글 주석이 포함된 `terraform.tfvars.example` 파일이 제공됩니다.
+- 필요한 레이어 디렉터리에서 `cp terraform.tfvars.example terraform.tfvars`로 복사 후 값을 수정하세요.
+- 주요 예시:
+  - `00-project/terraform.tfvars.example`: 프로젝트/청구/예산 설정
+  - `10-network/terraform.tfvars.example`: 서브넷 CIDR, 방화벽, Private Service Connect 예약
+  - `30-security/terraform.tfvars.example`: IAM 바인딩, 서비스 계정 자동 생성 토글
+  - `40-observability/terraform.tfvars.example`: 중앙 로그 싱크 및 대시보드 정의
+  - `50-workloads/terraform.tfvars.example`: VM 수량, 머신 타입, 스타트업 스크립트
+  - `60-database/terraform.tfvars.example`: Cloud SQL Private IP, 백업/로깅 세부 설정
+  - `70-loadbalancer/terraform.tfvars.example`: LB 타입, CDN, IAP, 헬스 체크
+- 템플릿에는 Private Service Connect, 라벨, 로그 정책 등 자주 묻는 항목에 대한 주석이 포함되어 있어 표준 구성을 빠르게 적용할 수 있습니다.
 
 ## 시작하기
 
@@ -164,6 +177,10 @@ cd ../environments/prod/proj-default-templet/00-project
 cp terraform.tfvars.example terraform.tfvars
 vim terraform.tfvars
 # 프로젝트 ID, Billing Account, 라벨 등 설정
+# 다른 레이어도 배포 전 동일한 방법으로
+# terraform.tfvars.example → terraform.tfvars 로 복사 후 수정
+# (예: 10-network는 `enable_private_service_connection`을 유지하면 Cloud SQL Private IP용
+#     Service Networking(Private Service Connect) 연결이 자동 예약됩니다.)
 
 # 3. Terragrunt 실행 (Terraform 명령과 동일하게 사용 가능)
 terragrunt init   --non-interactive  # 원격 상태 및 provider 다운로드

@@ -23,6 +23,9 @@ locals {
       description    = lookup(rule, "description", null)
     }
   }
+
+  use_existing_psc_ranges         = length(var.private_service_connection_existing_ranges) > 0
+  private_service_connection_name = length(trimspace(var.private_service_connection_name)) > 0 ? var.private_service_connection_name : "${var.vpc_name}-psc"
 }
 
 resource "google_compute_network" "vpc" {
@@ -99,10 +102,49 @@ resource "google_compute_firewall" "rules" {
   description = each.value.description
 }
 
+resource "google_compute_global_address" "private_service_connect" {
+  count        = var.enable_private_service_connection && !local.use_existing_psc_ranges ? 1 : 0
+  name         = local.private_service_connection_name
+  project      = var.project_id
+  purpose      = "VPC_PEERING"
+  address_type = "INTERNAL"
+
+  prefix_length = var.private_service_connection_prefix_length
+  network       = google_compute_network.vpc.id
+}
+
+locals {
+  private_service_connection_reserved_ranges = var.enable_private_service_connection ? (
+    local.use_existing_psc_ranges ?
+    var.private_service_connection_existing_ranges :
+    [google_compute_global_address.private_service_connect[0].name]
+  ) : []
+}
+
+resource "google_service_networking_connection" "private_vpc_connection" {
+  count   = var.enable_private_service_connection ? 1 : 0
+  network = google_compute_network.vpc.self_link
+  service = var.private_service_connection_service
+
+  reserved_peering_ranges = local.private_service_connection_reserved_ranges
+
+  depends_on = local.use_existing_psc_ranges ? [] : [google_compute_global_address.private_service_connect]
+}
+
 output "vpc_self_link" {
   value = google_compute_network.vpc.self_link
 }
 
 output "subnet_ids" {
   value = { for k, v in google_compute_subnetwork.subnets : k => v.self_link }
+}
+
+output "private_service_connection_reserved_ranges" {
+  value       = local.private_service_connection_reserved_ranges
+  description = "Service Networking(Private Service Connect)에서 사용하는 예약 IP 범위 이름 목록"
+}
+
+output "private_service_connection_self_link" {
+  value       = var.enable_private_service_connection ? google_service_networking_connection.private_vpc_connection[0].self_link : null
+  description = "생성된 Service Networking 연결 self link (비활성화 시 null)"
 }

@@ -1,0 +1,26 @@
+# 모니터링/로그 관제 레이어 설정 예시
+
+project_id     = "your-project-id"
+project_name   = "default-templet"
+environment    = "prod"
+organization   = "myorg"
+region_primary = "us-central1"
+region_backup  = "us-east1"
+
+# 기본 리전 (대시보드 리소스 등에 활용)
+region = "us-central1"
+
+# 조직 차원의 중앙 로그 버킷으로 전송하려면 true
+enable_central_log_sink = false
+# enable_central_log_sink = true 인 경우
+# central_logging_project = "central-logging-project-id"
+# central_logging_bucket  = "my-org-log-bucket"
+
+# 특정 로그만 필터링하고 싶을 때 사용 (예: Compute Engine 에러 로그만)
+log_filter = ""
+
+# Grafana/Cloud Monitoring JSON 대시보드 정의 파일 경로 리스트
+# terraform apply 실행 위치 기준 상대 경로를 사용하세요.
+dashboard_json_files = [
+  # "dashboards/gke-overview.json"
+]

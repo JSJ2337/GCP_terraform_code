@@ -16,7 +16,19 @@ provider "google" {
   region  = var.region
 }
 
+module "naming" {
+  source         = "../../../../modules/naming"
+  project_name   = var.project_name
+  environment    = var.environment
+  organization   = var.organization
+  region_primary = var.region_primary
+  region_backup  = var.region_backup
+}
+
 locals {
+  sa_name_prefix = module.naming.sa_name_prefix
+  project_name   = module.naming.project_name
+
   default_service_account_suffixes = ["compute", "monitoring", "deployment"]
 
   default_service_accounts = [

@@ -212,7 +212,7 @@ graph LR
 | 모듈 | 주요 기능 | 카테고리 |
 |------|----------|---------|
 | **project-base** | 프로젝트 생성, API 활성화, 예산 알림, 삭제 정책 | 프로젝트 관리 |
-| **network-dedicated-vpc** | VPC, 서브넷, 방화벽, Cloud NAT, Cloud Router | 네트워킹 |
+| **network-dedicated-vpc** | VPC, 서브넷, 방화벽, Cloud NAT, Cloud Router, Service Networking | 네트워킹 |
 | **gcs-root** | 다중 버킷 관리, 공통 설정 중앙화 | 스토리지 |
 | **gcs-bucket** | 단일 버킷 상세 설정, 수명주기, 암호화, IAM | 스토리지 |
 | **iam** | IAM 바인딩, 서비스 계정 관리 | 보안 & IAM |
@@ -398,6 +398,8 @@ graph LR
 **보안**:
 - ✅ DB는 Private IP만 사용 (외부 노출 없음)
 - ✅ 방화벽 규칙으로 트래픽 제어
+- ✅ VPC에는 Cloud SQL Private IP를 위한 Service Networking(Private Service Connect) 피어링이 예약되어
+      데이터베이스 레이어가 별도 수동 작업 없이 바로 연결됩니다.
 - ✅ Cloud NAT로 안전한 외부 통신
 
 ---

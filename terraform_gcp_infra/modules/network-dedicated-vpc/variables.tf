@@ -46,3 +46,28 @@ variable "firewall_rules" {
   }))
   default = []
 }
+
+variable "enable_private_service_connection" {
+  type    = bool
+  default = true
+}
+
+variable "private_service_connection_prefix_length" {
+  type    = number
+  default = 24
+}
+
+variable "private_service_connection_name" {
+  type    = string
+  default = ""
+}
+
+variable "private_service_connection_existing_ranges" {
+  type    = list(string)
+  default = []
+}
+
+variable "private_service_connection_service" {
+  type    = string
+  default = "services/servicenetworking.googleapis.com"
+}

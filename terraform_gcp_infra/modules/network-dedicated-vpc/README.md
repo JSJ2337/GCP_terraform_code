@@ -10,6 +10,7 @@
 - **Cloud NAT**: 프라이빗 인스턴스가 인터넷에 액세스하기 위한 관리형 NAT 게이트웨이
 - **Cloud Router**: Cloud NAT 및 BGP 라우팅에 필요
 - **방화벽 규칙**: 프로토콜 및 포트 제어가 가능한 유연한 방화벽 구성
+- **Service Networking (PSC)**: Cloud SQL 등 Private Service Connect 연동을 위한 IP 범위 예약 및 피어링
 
 ## 사용법
 
@@ -194,6 +195,30 @@ module "prod_network" {
 }
 ```
 
+### Cloud SQL Private IP(PSC) 비활성화 예시
+
+```hcl
+module "vpc_no_psc" {
+  source = "../../modules/network-dedicated-vpc"
+
+  project_id   = "my-project-id"
+  vpc_name     = "dev-vpc"
+  routing_mode = "REGIONAL"
+
+  subnets = {
+    dev-us-central = {
+      region = "us-central1"
+      cidr   = "10.50.0.0/24"
+    }
+  }
+
+  nat_region = "us-central1"
+
+  enable_private_service_connection        = false
+  private_service_connection_prefix_length = 24  # 기본값 (필요 시 유지)
+}
+```
+
 ## 입력 변수
 
 | 이름 | 설명 | 타입 | 기본값 | 필수 |
@@ -205,6 +230,20 @@ module "prod_network" {
 | nat_region | Cloud NAT를 생성할 지역 | string | - | yes |
 | nat_min_ports_per_vm | NAT의 VM당 최소 포트 수 | number | 1024 | no |
 | firewall_rules | 방화벽 규칙 목록 | list(object) | [] | no |
+| enable_private_service_connection | Service Networking(Private Service Connect) 연결 생성 여부 | bool | true | no |
+| private_service_connection_prefix_length | PSC 예약 IP CIDR prefix 길이 | number | 24 | no |
+| private_service_connection_name | PSC용 Global Address 이름 (비워두면 자동) | string | "" | no |
+| private_service_connection_existing_ranges | 이미 예약된 PSC IP 범위 이름 목록 (존재 시 새로 만들지 않음) | list(string) | [] | no |
+| private_service_connection_service | 연결할 서비스 네트워킹 엔드포인트 | string | `services/servicenetworking.googleapis.com` | no |
+
+### Private Service Connect 옵션
+- 기본적으로 `enable_private_service_connection = true`이며, 모듈이 `${var.vpc_name}-psc` 이름으로 `/24` 주소 블록을 예약합니다.
+- 이미 예약된 범위를 재사용하려면:
+  ```hcl
+  private_service_connection_existing_ranges = ["my-existing-psc-range"]
+  enable_private_service_connection         = true
+  ```
+- PSC 연결이 필요 없다면 `enable_private_service_connection = false`로 비활성화하세요.
 
 ### 서브넷 객체 구조
 
@@ -245,6 +284,8 @@ module "prod_network" {
 |------|------|
 | vpc_self_link | VPC 네트워크의 셀프 링크 |
 | subnet_ids | 서브넷 이름에서 셀프 링크로의 맵 |
+| private_service_connection_reserved_ranges | 생성/사용 중인 PSC 예약 IP 범위 이름 |
+| private_service_connection_self_link | Service Networking 연결 self link (비활성화 시 null) |
 
 ## 모범 사례
 

@@ -17,6 +17,13 @@ terragrunt plan
 
 ## 📝 변경된 파일 요약
 
+### 세션 10: Private Service Connect 및 템플릿 변수 예시 (2025-11-04)
+- 10-network 템플릿에 Private Service Connect 예약 리소스(`google_service_networking_connection`) 추가 및 tfvars 토글 제공
+- 30-security 템플릿이 naming 모듈 출력으로 기본 서비스 계정을 자동 생성하도록 개선
+- 모든 레이어에 한글 `terraform.tfvars.example` 배포 (신규 4개, 갱신 4개) → 복사 후 값만 수정하면 바로 실행 가능
+- README / ARCHITECTURE / CHANGELOG / WORK_HISTORY / QUICK_REFERENCE 문서에 새 흐름과 주의사항 반영
+- jsj-game-e 환경 destroy 재시도 → Service Networking 연결 해제 후 완전 삭제 완료
+
 ### 세션 1: 초기 베스트 프랙티스 적용 (11개 수정, 9개 신규)
 - 모듈 7개: provider 블록 제거
 - 15-storage 3개: gcs-root 사용으로 리팩토링

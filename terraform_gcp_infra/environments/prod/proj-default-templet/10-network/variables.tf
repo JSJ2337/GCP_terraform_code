@@ -89,3 +89,21 @@ variable "firewall_rules" {
   }))
   default = []
 }
+
+variable "enable_private_service_connection" {
+  type        = bool
+  description = "Private Service Connect(VPC Peering) 연결 생성 여부"
+  default     = true
+}
+
+variable "private_service_connection_prefix_length" {
+  type        = number
+  description = "사설 서비스 연결용 예약 IP 범위 prefix 길이"
+  default     = 24
+}
+
+variable "private_service_connection_name" {
+  type        = string
+  description = "사설 서비스 연결용 Global Address 이름 (비워두면 자동 생성)"
+  default     = ""
+}
