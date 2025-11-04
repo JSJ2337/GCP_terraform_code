@@ -10,12 +10,8 @@ terraform {
 }
 
 locals {
-  alternative_location_id = (
-    length(trimspace(var.alternative_location_id)) > 0 ? trimspace(var.alternative_location_id) :
-    length(trimspace(var.alternative_location_suffix)) > 0 ? "${var.region}-${trimspace(var.alternative_location_suffix)}" :
-    ""
-  )
-  maintenance_enabled = var.maintenance_window_day != "" && var.maintenance_window_start_hour != null && var.maintenance_window_start_minute != null
+  alternative_location_id = length(trimspace(var.alternative_location_id)) > 0 ? trimspace(var.alternative_location_id) : ""
+  maintenance_enabled     = var.maintenance_window_day != "" && var.maintenance_window_start_hour != null && var.maintenance_window_start_minute != null
 }
 
 resource "google_redis_instance" "this" {
@@ -51,7 +47,7 @@ resource "google_redis_instance" "this" {
   lifecycle {
     precondition {
       condition     = var.tier != "STANDARD_HA" || length(local.alternative_location_id) > 0
-      error_message = "STANDARD_HA tier requires alternative_location_id (e.g., us-central1-b) or alternative_location_suffix."
+      error_message = "STANDARD_HA tier requires alternative_location_id (e.g., us-central1-b)."
     }
   }
 }

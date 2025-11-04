@@ -34,9 +34,8 @@ module "cache" {
 |------|------|------|--------|:----:|
 | `project_id` | 프로젝트 ID | `string` | n/a | ✅ |
 | `instance_name` | Memorystore 인스턴스 이름 | `string` | n/a | ✅ |
-| `region` | 기본 리전(예: `us-central1`) | `string` | `""` | ➖ (Terragrunt 기본값 사용 권장) |
+| `region` | 기본 리전(예: `us-central1`) | `string` | n/a | ✅ |
 | `alternative_location_id` | Standard HA용 대체 존 (예: `us-central1-b`) | `string` | `""` | ➖ |
-| `alternative_location_suffix` | `alternative_location_id`가 비어 있을 때 사용할 존 접미사 (예: `b`) | `string` | `""` | ➖ |
 | `tier` | Memorystore 티어 (`STANDARD_HA`, `BASIC`, `ENTERPRISE`, `ENTERPRISE_PLUS`) | `string` | `"STANDARD_HA"` | ➖ |
 | `memory_size_gb` | 메모리 크기(GB) | `number` | `1` | ➖ |
 | `redis_version` | Redis 버전 (`REDIS_6_X`, 등) | `string` | `"REDIS_6_X"` | ➖ |
@@ -49,9 +48,7 @@ module "cache" {
 | `maintenance_window_start_hour` | 유지보수 시작 시각(시간) | `number` | `null` | ➖ |
 | `maintenance_window_start_minute` | 유지보수 시작 시각(분) | `number` | `null` | ➖ |
 
-> 🔔 **Standard HA 주의**: `alternative_location_id`를 직접 지정하거나, `alternative_location_suffix`를 이용해 `region` 기반으로 자동 결정해야 합니다. 둘 다 비워두면 배포가 실패합니다.
-
-> 💡 **Terragrunt 기본값**: 예시 환경에서는 Terragrunt가 `region_primary`를 주입하므로 `region` 값을 비워둬도 됩니다. 필요하면 tfvars에서 Override 하세요.
+> 🔔 **Standard HA 주의**: `alternative_location_id`와 `authorized_network`는 필수입니다. 입력하지 않으면 배포가 실패합니다.
 
 ## 출력 값
 

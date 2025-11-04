@@ -24,12 +24,6 @@ variable "alternative_location_id" {
   default     = ""
 }
 
-variable "alternative_location_suffix" {
-  type        = string
-  description = "Suffix appended to region to build alternative location when alternative_location_id is not provided (e.g., b => us-central1-b)"
-  default     = ""
-}
-
 variable "tier" {
   type        = string
   description = "Redis tier (STANDARD_HA, BASIC, ENTERPRISE, ENTERPRISE_PLUS)"
