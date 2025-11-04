@@ -216,6 +216,12 @@ terragrunt apply
 terragrunt state list
 terragrunt output -json | jq
 
+# 전체 레이어 일괄 실행
+./run_terragrunt_stack.sh plan --terragrunt-non-interactive
+# 예: apply/destroy 시 추가 플래그 전달 가능
+./run_terragrunt_stack.sh destroy --terragrunt-non-interactive -auto-approve
+
+
 # 데이터베이스 배포 (60-database)
 cd ../60-database
 cp terraform.tfvars.example terraform.tfvars  # 최초 1회

@@ -80,6 +80,7 @@ region_backup  = "us-east1"
 `modules/naming`은 위 값을 이용해 `vpc_name`, `bucket_name_prefix`, `db_instance_name`, `sa_name_prefix`, `forwarding_rule_name` 등을 자동으로 만들어 주며, 공통 라벨(`common_labels`)과 태그(`common_tags`)도 함께 제공합니다. 리소스 이름을 변경하고 싶다면 `common.naming.tfvars`만 수정하면 모든 레이어가 동일하게 업데이트됩니다.
 
 ### Terragrunt 기반 실행
+- 전체 레이어를 순서대로 실행하려면 `./run_terragrunt_stack.sh <plan|apply|destroy>` 스크립트를 사용하세요. 추가 인자는 그대로 전달됩니다.
 - 각 레이어에는 `terragrunt.hcl`이 존재하며, 공통 입력(`common.naming.tfvars`)과 레이어 전용 `terraform.tfvars`를 자동 병합합니다.
 - 원격 상태(GCS)는 Terragrunt가 관리하며, Terraform 코드에는 빈 `backend "gcs" {}` 블록만 있으면 됩니다.
 - Terragrunt 0.92 이상을 사용하면 `terragrunt init/plan/apply`로 Terraform 명령을 그대로 호출할 수 있습니다.
