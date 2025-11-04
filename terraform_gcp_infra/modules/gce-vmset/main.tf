@@ -49,8 +49,8 @@ resource "google_compute_instance" "vm" {
   metadata_startup_script = var.startup_script
 
   scheduling {
-    automatic_restart   = true
-    on_host_maintenance = "MIGRATE"
+    automatic_restart   = var.preemptible ? false : true
+    on_host_maintenance = var.preemptible ? "TERMINATE" : "MIGRATE"
     provisioning_model  = var.preemptible ? "SPOT" : "STANDARD"
     preemptible         = var.preemptible
   }

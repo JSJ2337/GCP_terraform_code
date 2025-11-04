@@ -9,7 +9,7 @@ instance_name     = ""                # 비워두면 naming 모듈 기준으로 
 region            = "us-central1"
 database_version  = "MYSQL_8_0"
 tier              = "db-n1-standard-1"
-availability_type = "ZONAL"           # 고가용성(HA)이 필요하면 REGIONAL 선택
+availability_type = "REGIONAL"        # 운영 기본값, 개발/테스트 시 ZONAL로 조정
 
 # 디스크
 disk_size       = 20
@@ -17,7 +17,7 @@ disk_type       = "PD_SSD"
 disk_autoresize = true
 
 # 삭제 보호 (프로덕션 권장)
-deletion_protection = true
+deletion_protection = true            # 운영 기본값, 삭제 테스트 시에만 false 고려
 
 # 백업
 backup_enabled                 = true

@@ -14,6 +14,8 @@
   - Private Service Connect, 서비스 계정, 로그 싱크 등 핵심 입력값에 대한 가이드 주석 강화
 
 ### 변경 (Changed)
+- `modules/gce-vmset` 선점형 VM 스케줄링을 Spot 제약에 맞게 자동 재시작 비활성화 및 유지보수 시 종료로 조정하여 배포 실패를 방지
+- `environments/LIVE/proj-default-templet/60-database` 기본 설정을 Cloud SQL 고가용성(REGIONAL)과 삭제 보호 활성 상태로 상향 조정하고 문서를 업데이트
 - 10-network 레이어가 Cloud SQL Private IP를 위한 Service Networking 연결을 기본으로 예약하도록 템플릿 코드(및 예제 변수) 업데이트
   - `enable_private_service_connection`, `private_service_connection_prefix_length` 등 토글형 변수 추가
   - Terragrunt 템플릿에서도 동일한 네트워킹 구성이 기본 제공되도록 동기화

@@ -5,7 +5,7 @@
 region            = "us-central1"
 database_version  = "MYSQL_8_0"
 tier              = "db-n1-standard-1"
-availability_type = "ZONAL" # Production: REGIONAL, Development: ZONAL
+availability_type = "REGIONAL" # Production 기본값 (개발 환경 시 ZONAL로 조정)
 
 # Disk configuration
 disk_size       = 20
@@ -13,7 +13,7 @@ disk_type       = "PD_SSD"
 disk_autoresize = true
 
 # Deletion protection (Production: true, Development: false)
-deletion_protection = false # Set to true for production
+deletion_protection = true # 운영 기본값 (임시 테스트 시 false로 내릴 것)
 
 # Backup configuration
 backup_enabled                 = true
