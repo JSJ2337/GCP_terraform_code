@@ -15,16 +15,6 @@ terraform {
   backend "gcs" {}
 }
 
-provider "google" {
-  project = var.project_id
-  region  = var.region
-}
-
-provider "google-beta" {
-  project = var.project_id
-  region  = var.region
-}
-
 module "naming" {
   source         = "../../../../modules/naming"
   project_name   = var.project_name
@@ -35,8 +25,19 @@ module "naming" {
 }
 
 locals {
-  private_network = length(trimspace(var.private_network)) > 0 ? var.private_network : "projects/${var.project_id}/global/networks/${module.naming.vpc_name}"
-  labels          = merge(module.naming.common_labels, var.labels)
+  region_effective = length(trimspace(var.region)) > 0 ? trimspace(var.region) : module.naming.region_primary
+  private_network  = length(trimspace(var.private_network)) > 0 ? var.private_network : "projects/${var.project_id}/global/networks/${module.naming.vpc_name}"
+  labels           = merge(module.naming.common_labels, var.labels)
+}
+
+provider "google" {
+  project = var.project_id
+  region  = local.region_effective
+}
+
+provider "google-beta" {
+  project = var.project_id
+  region  = local.region_effective
 }
 
 module "mysql" {
@@ -44,7 +45,7 @@ module "mysql" {
 
   project_id    = var.project_id
   instance_name = module.naming.db_instance_name
-  region        = var.region
+  region        = local.region_effective
 
   database_version  = var.database_version
   tier              = var.tier

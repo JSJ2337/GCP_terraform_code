@@ -5,9 +5,9 @@
 
 project_id = "your-project-id"
 
-# 인스턴스 기본 설정
+# 인스턴스 기본 설정 (region은 비워두면 Terragrunt가 region_primary 사용)
 instance_name     = ""                # 비워두면 naming 모듈 기준으로 자동 생성
-region            = "us-central1"
+region            = ""
 database_version  = "MYSQL_8_0"
 tier              = "db-n1-standard-1"
 availability_type = "REGIONAL"        # 운영 기본값, 개발/테스트 시 ZONAL로 조정

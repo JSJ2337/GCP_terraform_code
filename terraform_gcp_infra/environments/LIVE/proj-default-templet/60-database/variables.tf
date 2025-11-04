@@ -34,8 +34,8 @@ variable "region_backup" {
 
 variable "region" {
   type        = string
-  description = "인스턴스를 생성할 리전"
-  default     = "us-central1"
+  description = "인스턴스를 생성할 리전 (비워두면 Terragrunt region_primary 사용)"
+  default     = ""
 }
 
 variable "database_version" {

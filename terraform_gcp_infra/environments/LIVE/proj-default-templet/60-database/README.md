@@ -16,7 +16,7 @@ Cloud SQL(MySQL) 인스턴스를 Private IP로 배포하고, 백업/로깅/Query
    cp terraform.tfvars.example terraform.tfvars
    ```
 2. 필수 수정 항목:
-- `project_id`, `region`
+- `region` (비워두면 Terragrunt가 `region_primary`를 주입)
 - `tier`, `availability_type` (운영 기본은 `REGIONAL`)
    - `private_network` (비워두면 naming 모듈의 VPC를 자동 사용)
    - DB/사용자 목록(`databases`, `users`)
