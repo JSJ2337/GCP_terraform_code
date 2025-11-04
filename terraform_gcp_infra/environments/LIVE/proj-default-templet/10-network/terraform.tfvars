@@ -1,5 +1,5 @@
 # Network Configuration
-region       = "us-central1"
+region = ""
 routing_mode = "GLOBAL"
 
 # Subnet CIDR blocks (names come from modules/naming)
