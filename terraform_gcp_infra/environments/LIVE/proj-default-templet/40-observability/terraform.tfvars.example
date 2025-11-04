@@ -24,3 +24,32 @@ log_filter = ""
 dashboard_json_files = [
   # "dashboards/gke-overview.json"
 ]
+
+# Alert 정책에 사용할 Notification Channel (이메일/Slack/PagerDuty 등)
+# 예: ["projects/my-project/notificationChannels/123"]
+notification_channels = []
+
+# Alert 고급 설정 (기본값은 naming 모듈 기반 자동 계산)
+# VM CPU 경고 (0.8 이상 5분 지속)
+enable_vm_cpu_alert = true
+vm_cpu_threshold    = 0.8
+vm_cpu_duration     = "300s"
+# vm_instance_regex = "^default-templet-prod-vm-\\d+$"
+
+# Cloud SQL CPU 경고 (0.75 이상 10분 지속)
+enable_cloudsql_cpu_alert = true
+cloudsql_cpu_threshold    = 0.75
+cloudsql_cpu_duration     = "600s"
+# cloudsql_instance_regex = "^my-project:us-central1:default-templet-prod-mysql$"
+
+# Redis 메모리 경고 (70% 이상 5분 지속)
+enable_memorystore_memory_alert = true
+memorystore_memory_threshold    = 0.7
+memorystore_memory_duration     = "300s"
+# memorystore_instance_regex = "^projects/my-project/locations/us-central1/instances/default-templet-prod-redis$"
+
+# HTTPS LB 5xx 경고 (5분 동안 분당 5건 초과 시)
+enable_lb_5xx_alert = true
+lb_5xx_threshold    = 5
+lb_5xx_duration     = "300s"
+# lb_target_proxy_regex = "^default-templet-prod-lb-(http|https)-proxy$"

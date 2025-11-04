@@ -1,6 +1,6 @@
 # 관찰성 모듈
 
-이 모듈은 중앙 집중식 로그 수집 및 사용자 정의 대시보드를 위한 Google Cloud Logging 및 Monitoring을 구성합니다.
+이 모듈은 중앙 집중식 로그 수집, 사용자 정의 대시보드, 기본 Alert 정책을 위한 Google Cloud Logging 및 Monitoring 구성을 제공합니다.
 
 ## 기능
 
@@ -9,6 +9,7 @@
 - **고유 작성자 ID**: 로그 싱크용 서비스 계정 자동 생성
 - **모니터링 대시보드**: JSON 파일에서 사용자 정의 Cloud Monitoring 대시보드 가져오기
 - **다중 대시보드 지원**: 파일 참조에서 여러 대시보드 배포
+- **경보 정책 템플릿**: GCE VM, Cloud SQL, Memorystore, HTTPS Load Balancer에 대한 기본 Alert 정책 생성
 
 ## 사용법
 
@@ -62,6 +63,31 @@ module "observability_dashboards" {
 }
 ```
 
+### Alert 정책 활성화
+
+```hcl
+module "observability_alerts" {
+  source     = "../../modules/observability"
+  project_id = "app-project-123"
+
+  notification_channels = [
+    "projects/app-project-123/notificationChannels/456"
+  ]
+
+  enable_vm_cpu_alert        = true
+  vm_instance_filter_regex   = "^myapp-prod-vm-\\d+$"
+
+  enable_cloudsql_cpu_alert  = true
+  cloudsql_instance_regex    = "^app-project-123:us-central1:myapp-prod-mysql$"
+
+  enable_memorystore_memory_alert = true
+  memorystore_instance_regex      = "^projects/app-project-123/locations/us-central1/instances/myapp-prod-redis$"
+
+  enable_lb_5xx_alert = true
+  lb_target_proxy_regex = "^myapp-prod-lb-(http|https)-proxy$"
+}
+```
+
 ## 입력 변수
 
 | 이름 | 설명 | 타입 | 기본값 | 필수 |
@@ -72,14 +98,29 @@ module "observability_dashboards" {
 | central_logging_bucket | 중앙 로깅 버킷 이름 | `string` | `""` | no |
 | log_filter | 로그 필터 표현식 | `string` | `""` | no |
 | dashboard_json_files | 대시보드 JSON 파일 경로 목록 | `list(string)` | `[]` | no |
+| notification_channels | Alert 정책에 사용할 Notification Channel 목록 | `list(string)` | `[]` | no |
+| enable_vm_cpu_alert | GCE VM CPU Alert 활성화 | `bool` | `false` | no |
+| vm_cpu_threshold | VM CPU 임계값 (0~1) | `number` | `0.8` | no |
+| vm_cpu_duration | VM CPU Alert 지속 시간 | `string` | `"300s"` | no |
+| vm_instance_filter_regex | VM 인스턴스 이름 정규식 | `string` | `""` | no |
+| enable_cloudsql_cpu_alert | Cloud SQL CPU Alert 활성화 | `bool` | `false` | no |
+| cloudsql_cpu_threshold | Cloud SQL CPU 임계값 (0~1) | `number` | `0.75` | no |
+| cloudsql_cpu_duration | Cloud SQL Alert 지속 시간 | `string` | `"600s"` | no |
+| cloudsql_instance_regex | Cloud SQL database_id 정규식 | `string` | `""` | no |
+| enable_memorystore_memory_alert | Memorystore 메모리 Alert 활성화 | `bool` | `false` | no |
+| memorystore_memory_threshold | Redis 메모리 임계값 (0~1) | `number` | `0.7` | no |
+| memorystore_memory_duration | Redis Alert 지속 시간 | `string` | `"300s"` | no |
+| memorystore_instance_regex | Redis instance_id 정규식 | `string` | `""` | no |
+| enable_lb_5xx_alert | HTTPS LB 5xx Alert 활성화 | `bool` | `false` | no |
+| lb_5xx_threshold | 분당 허용 5xx 요청 수 | `number` | `5` | no |
+| lb_5xx_duration | 5xx Alert 지속 시간 | `string` | `"300s"` | no |
+| lb_target_proxy_regex | LB target proxy 이름 정규식 | `string` | `""` | no |
 
 ## 출력 값
 
 | 이름 | 설명 |
 |------|------|
 | log_sink_writer_identity | 로그 싱크 작성자 서비스 계정 |
-| log_sink_id | 로그 싱크 ID |
-| dashboard_ids | 생성된 대시보드 ID 목록 |
 
 ## 로그 필터 예제
 
@@ -115,6 +156,7 @@ logName:"compute.googleapis.com"     # Compute Engine 로그
 2. **작성자 권한**: 로그 싱크 작성자 ID에 대상 버킷에 대한 권한 부여
 3. **민감한 데이터**: 로그에서 민감한 정보 제거 또는 마스킹
 4. **감사**: 로깅 구성 변경사항 추적
+5. **Notification Channel 암호화**: Slack/PagerDuty 등의 토큰은 Secret Manager로 관리
 
 ## 요구사항
 

@@ -28,7 +28,8 @@ terragrunt plan
 - `modules/memorystore-redis` 모듈 신설 (STANDARD_HA 구성을 기본값으로 제공)
 - `environments/LIVE/proj-default-templet/65-cache` Terragrunt 레이어 추가 및 예시 tfvars/README 작성
 - `modules/naming`에 `redis_instance_name` 출력 추가로 캐시 네이밍 일관성 확보
-- ARCHITECTURE / QUICK_REFERENCE / CHANGELOG 문서를 Redis 캐시 레이어 포함하도록 갱신
+- `modules/observability` 기본 Alert 템플릿을 확장하고 40-observability 레이어가 GCE/Cloud SQL/Memorystore/HTTPS LB 경보를 자동 배포하도록 갱신
+- ARCHITECTURE / QUICK_REFERENCE / CHANGELOG 문서를 Redis/Monitoring 흐름을 포함하도록 갱신
 
 ### 세션 1: 초기 베스트 프랙티스 적용 (11개 수정, 9개 신규)
 - 모듈 7개: provider 블록 제거
