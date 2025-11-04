@@ -22,6 +22,10 @@ output "default_zone" {
   value = local.default_zone
 }
 
+output "zone_primary" {
+  value = local.default_zone
+}
+
 output "project_prefix" {
   value = local.project_prefix
 }

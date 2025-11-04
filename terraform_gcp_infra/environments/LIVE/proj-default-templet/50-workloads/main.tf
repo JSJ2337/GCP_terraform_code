@@ -26,9 +26,7 @@ module "naming" {
 }
 
 locals {
-  default_zone = module.naming.default_zone
-
-  zone = length(trimspace(var.zone)) > 0 ? var.zone : local.default_zone
+  zone = length(trimspace(var.zone)) > 0 ? var.zone : module.naming.default_zone
 
   subnetwork_self_link = length(trimspace(var.subnetwork_self_link)) > 0 ? var.subnetwork_self_link : "projects/${var.project_id}/regions/${module.naming.region_primary}/subnetworks/${module.naming.subnet_name_primary}"
 
@@ -46,7 +44,7 @@ module "gce_vmset" {
   source = "../../../../modules/gce-vmset"
 
   project_id           = var.project_id
-  zone                 = local.zone
+  zone                 = length(trimspace(var.zone)) > 0 ? var.zone : module.naming.default_zone
   subnetwork_self_link = local.subnetwork_self_link
 
   instance_count = var.instance_count

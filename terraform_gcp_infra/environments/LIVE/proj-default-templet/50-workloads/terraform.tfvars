@@ -2,7 +2,6 @@
 
 # Workloads Configuration
 # Resource names are generated via modules/naming
-zone           = "us-central1-a"
 
 # VM configuration
 instance_count   = 2
