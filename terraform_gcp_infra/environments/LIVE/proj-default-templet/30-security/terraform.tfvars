@@ -1,5 +1,5 @@
 # Security Configuration
-region = "us-central1"
+region = ""
 
 # IAM bindings (empty for now - add real users/groups later)
 bindings = []
