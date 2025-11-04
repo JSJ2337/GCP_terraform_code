@@ -1,4 +1,6 @@
 # 10-network 레이어
+> Terragrunt: environments/LIVE/proj-default-templet/10-network/terragrunt.hcl
+
 
 VPC 네트워크, 서브넷, 방화벽, Cloud NAT, Private Service Connect(PSC)를 구성합니다. Cloud SQL과 같은 서비스가 Private IP로 동작하려면 이 레이어의 설정이 필수입니다.
 

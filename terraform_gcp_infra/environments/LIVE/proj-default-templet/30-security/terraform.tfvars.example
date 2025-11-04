@@ -1,3 +1,4 @@
+# Terragrunt entrypoint: environments/LIVE/proj-default-templet/30-security/terragrunt.hcl
 # 보안(IAM) 레이어 설정 예시
 # modules/naming 결과를 활용하여 기본 서비스 계정을 생성하거나
 # 추가 IAM 바인딩을 정의할 수 있습니다.

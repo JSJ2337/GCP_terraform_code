@@ -12,7 +12,8 @@
       "Bash(curl:*)",
       "Bash(bash)",
       "Bash(tfsec:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(terraform destroy:*)"
     ],
     "deny": [],
     "ask": []

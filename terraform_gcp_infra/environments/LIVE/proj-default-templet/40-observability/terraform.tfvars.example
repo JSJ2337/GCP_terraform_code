@@ -1,3 +1,4 @@
+# Terragrunt entrypoint: environments/LIVE/proj-default-templet/40-observability/terragrunt.hcl
 # 모니터링/로그 관제 레이어 설정 예시
 
 project_id     = "your-project-id"

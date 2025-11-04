@@ -1,3 +1,4 @@
+# Terragrunt entrypoint: environments/LIVE/proj-default-templet/00-project/terragrunt.hcl
 # 프로젝트 기본 설정 예시
 # 1) 이 파일을 terraform.tfvars로 복사
 # 2) 값 수정 후 terraform 명령 실행

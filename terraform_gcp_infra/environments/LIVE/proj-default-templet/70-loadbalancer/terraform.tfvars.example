@@ -1,3 +1,4 @@
+# Terragrunt entrypoint: environments/LIVE/proj-default-templet/70-loadbalancer/terragrunt.hcl
 # 로드 밸런서 모듈 설정 예시
 # (terraform.tfvars로 복사 후 값 입력, 원본은 커밋하지 마세요)
 

@@ -1,4 +1,6 @@
 # 00-project 레이어
+> Terragrunt: environments/LIVE/proj-default-templet/00-project/terragrunt.hcl
+
 
 Terraform/Terragrunt 구성을 통해 GCP 프로젝트 생성과 기본 설정(API 활성화, 라벨, 예산 경보 등)을 담당합니다. 이후 모든 레이어는 이 프로젝트를 기반으로 리소스를 생성합니다.
 

@@ -1,3 +1,4 @@
+# Terragrunt entrypoint: environments/LIVE/proj-default-templet/50-workloads/terragrunt.hcl
 # 워크로드(GCE VM 세트) 설정 예시
 
 project_id     = "your-project-id"

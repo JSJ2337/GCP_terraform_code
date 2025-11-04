@@ -1,3 +1,4 @@
+# Terragrunt entrypoint: environments/LIVE/proj-default-templet/10-network/terragrunt.hcl
 # 네트워크 레이어 설정 예시
 # 1) 이 파일을 terraform.tfvars로 복사
 # 2) VPC/Subnet/방화벽 등 필요한 값을 채운 뒤 적용

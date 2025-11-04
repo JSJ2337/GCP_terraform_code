@@ -1,3 +1,4 @@
+# Terragrunt entrypoint: environments/LIVE/proj-default-templet/20-storage/terragrunt.hcl
 # 스토리지 모듈 설정 예시
 # 이 파일을 terraform.tfvars로 복사한 뒤 실제 값을 입력하세요.
 # 버킷 이름/라벨 기본값은 modules/naming 결과와 병합됩니다.

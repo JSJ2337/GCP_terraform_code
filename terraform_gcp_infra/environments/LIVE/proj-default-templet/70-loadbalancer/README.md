@@ -1,4 +1,6 @@
 # 70-loadbalancer 레이어
+> Terragrunt: environments/LIVE/proj-default-templet/70-loadbalancer/terragrunt.hcl
+
 
 HTTP(S) 및 내부 로드밸런서를 비롯해 다양한 GCP Load Balancer 구성을 담당합니다. 백엔드 인스턴스 그룹을 연결하고 헬스 체크, CDN, IAP, SSL 등을 설정할 수 있습니다.
 

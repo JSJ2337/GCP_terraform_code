@@ -1,4 +1,6 @@
 # 50-workloads 레이어
+> Terragrunt: environments/LIVE/proj-default-templet/50-workloads/terragrunt.hcl
+
 
 Compute Engine VM 세트(Instance Template + Managed Instance Group)를 배포하는 레이어입니다. naming 모듈을 활용해 인스턴스 이름, 태그, 라벨을 일관적으로 관리합니다.
 

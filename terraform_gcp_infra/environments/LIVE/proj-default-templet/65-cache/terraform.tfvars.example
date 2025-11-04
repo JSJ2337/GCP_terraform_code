@@ -1,3 +1,4 @@
+# Terragrunt entrypoint: environments/LIVE/proj-default-templet/65-cache/terragrunt.hcl
 # Memorystore Redis 배포 예시
 # 1) terraform.tfvars로 복사 후 값 수정
 # 2) alternative_location_id 또는 alternative_location_suffix로 대체 존을 지정하세요.

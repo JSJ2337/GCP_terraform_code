@@ -1,4 +1,6 @@
 # 40-observability 레이어
+> Terragrunt: environments/LIVE/proj-default-templet/40-observability/terragrunt.hcl
+
 
 Cloud Logging 싱크 및 Cloud Monitoring 대시보드/알림 구성을 담당하는 레이어입니다. 조직의 중앙 로그 프로젝트와 연동하거나, 환경별 관찰성 정책을 적용할 때 사용합니다.
 
