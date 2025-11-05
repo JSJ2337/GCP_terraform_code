@@ -1,6 +1,6 @@
-# Jenkins & GitLab Docker 설정
+# Jenkins Docker 설정
 
-Docker Compose를 사용한 Jenkins와 GitLab 컨테이너 설정 및 관리 프로젝트입니다.
+Docker Compose를 사용한 Jenkins 컨테이너 설정 및 관리 프로젝트입니다.
 
 ## 목차
 
@@ -21,9 +21,6 @@ Docker Compose를 사용한 Jenkins와 GitLab 컨테이너 설정 및 관리 프
 jenkins_docker/
 ├── jsj_jenkins.yaml              # 기본 Jenkins 설정
 ├── jsj_jenkins_ngrok.yaml        # Jenkins + ngrok 통합 설정
-├── jsj_gitlab.yaml               # GitLab CE (공식 이미지, x86)
-├── jsj_gitlab2.yaml              # GitLab (비공식 ARM 이미지 - zengxs)
-├── jsj_gitlab3.yaml              # GitLab (비공식 ARM 이미지 - ravermeister)
 ├── .env.example                  # 환경 변수 예시 파일
 ├── .gitignore                    # Git 제외 파일 목록
 └── README.md                     # 이 문서
@@ -33,19 +30,15 @@ jenkins_docker/
 
 ```
 jenkins_docker/
-├── jenkins-data/
-│   └── jenkins_home/            # Jenkins 모든 데이터 (설정, 빌드, 플러그인 등)
-└── gitlab-data/
-    ├── config/                  # GitLab 설정
-    ├── logs/                    # GitLab 로그
-    └── gitlab_home/             # GitLab 데이터
+└── jenkins-data/
+    └── jenkins_home/            # Jenkins 모든 데이터 (설정, 빌드, 플러그인 등)
 ```
 
 ## 필수 요구사항
 
 - Docker Engine 20.10 이상
 - Docker Compose 1.29 이상 (또는 Docker Compose V2)
-- 최소 4GB RAM (Jenkins), 8GB 권장 (GitLab 포함 시)
+- 최소 4GB RAM 권장
 - 최소 10GB 디스크 여유 공간
 
 ## 빠른 시작
@@ -136,41 +129,6 @@ http://localhost:4040
 docker logs jsj-jenkins-ngrok
 ```
 
----
-
-### jsj_gitlab.yaml
-
-**용도**: GitLab Community Edition 공식 이미지 (x86/amd64)
-
-**특징**:
-- 공식 GitLab CE 이미지 사용
-- ARM Mac에서는 에뮬레이션으로 실행 (platform: linux/amd64)
-- 포트: 8088 (HTTP), 8443 (HTTPS), 2222 (SSH)
-
-**실행**:
-```bash
-docker-compose -f jsj_gitlab.yaml up -d
-```
-
-**접속**: http://localhost:8088
-
-**초기 root 비밀번호 확인**:
-```bash
-docker exec -it gitlab grep 'Password:' /etc/gitlab/initial_root_password
-```
-
----
-
-### jsj_gitlab2.yaml / jsj_gitlab3.yaml
-
-**용도**: ARM 아키텍처용 GitLab (비공식 이미지)
-
-**주의**: 비공식 이미지이므로 프로덕션 환경에서는 권장하지 않음
-
-**차이점**:
-- `jsj_gitlab2.yaml`: zengxs/gitlab 이미지, 포트 8088
-- `jsj_gitlab3.yaml`: ravermeister/gitlab 이미지, 포트 9090
-
 ## 환경 변수 설정
 
 `.env` 파일에 다음 값을 설정하세요:
@@ -182,9 +140,6 @@ GID=1000              # 'id -g' 명령으로 확인
 
 # ngrok 설정 (jsj_jenkins_ngrok.yaml 사용 시 필수)
 NGROK_AUTHTOKEN=your_ngrok_authtoken_here
-
-# GitLab 설정 (선택사항)
-GITLAB_ROOT_PASSWORD=changeme_gitlab_password
 ```
 
 ## 사용 방법
@@ -205,30 +160,11 @@ docker-compose -f jsj_jenkins.yaml logs -f
 docker-compose -f jsj_jenkins.yaml restart
 ```
 
-### GitLab 관리
-
-```bash
-# 시작 (원하는 버전 선택)
-docker-compose -f jsj_gitlab.yaml up -d
-
-# 중지
-docker-compose -f jsj_gitlab.yaml down
-
-# 로그 확인
-docker-compose -f jsj_gitlab.yaml logs -f gitlab
-```
-
 ### 데이터 백업
 
 ```bash
 # Jenkins 데이터 백업
 tar -czf jenkins-backup-$(date +%Y%m%d).tar.gz jenkins-data/
-
-# GitLab 데이터 백업
-docker exec -t gitlab gitlab-backup create
-
-# 또는 전체 디렉터리 백업
-tar -czf gitlab-backup-$(date +%Y%m%d).tar.gz gitlab-data/
 ```
 
 ### 전체 삭제 (데이터 포함)
@@ -239,7 +175,6 @@ docker-compose -f jsj_jenkins.yaml down -v
 
 # 데이터 디렉터리 삭제 (주의!)
 rm -rf jenkins-data/
-rm -rf gitlab-data/
 ```
 
 ## 포트 정보
@@ -252,14 +187,6 @@ rm -rf gitlab-data/
 | 50000 | Jenkins 에이전트 연결 (JNLP) |
 | 4040 | ngrok 웹 UI (jsj_jenkins_ngrok.yaml 사용 시) |
 
-### GitLab
-
-| 파일 | HTTP | HTTPS | SSH |
-|------|------|-------|-----|
-| jsj_gitlab.yaml | 8088 | 8443 | 2222 |
-| jsj_gitlab2.yaml | 8088 | 8443 | 2222 |
-| jsj_gitlab3.yaml | 9090 | - | 2224 |
-
 ## 데이터 관리
 
 ### 볼륨 위치
@@ -269,9 +196,6 @@ rm -rf gitlab-data/
 - **Jenkins**: `./jenkins-data/jenkins_home/`
   - 플러그인, 작업(job) 설정, 빌드 히스토리 등
 
-- **GitLab**: `./gitlab-data/`
-  - 저장소, 사용자 데이터, CI/CD 설정 등
-
 ### 권한 문제 해결
 
 UID/GID 설정으로 권한 문제를 방지하지만, 문제 발생 시:
@@ -279,7 +203,6 @@ UID/GID 설정으로 권한 문제를 방지하지만, 문제 발생 시:
 ```bash
 # 현재 사용자 소유로 변경
 sudo chown -R $(id -u):$(id -g) jenkins-data/
-sudo chown -R $(id -u):$(id -g) gitlab-data/
 ```
 
 ## 문제 해결
@@ -295,18 +218,6 @@ ls -la jenkins-data/
 
 # 컨테이너 재시작
 docker restart jsj-jenkins-server
-```
-
-### GitLab이 느리게 시작될 때
-
-GitLab은 초기 시작에 5-10분 정도 소요됩니다.
-
-```bash
-# 상태 확인
-docker exec -it gitlab gitlab-ctl status
-
-# 준비 상태 확인
-docker logs gitlab
 ```
 
 ### ngrok이 연결되지 않을 때
@@ -345,7 +256,6 @@ sudo netstat -tulpn | grep 8080
 
 2. **초기 비밀번호 즉시 변경**
    - Jenkins: 초기 설정 시 관리자 계정 생성
-   - GitLab: root 비밀번호 변경
 
 3. **프로덕션 환경에서는**
    - HTTPS 설정 필수
@@ -364,11 +274,6 @@ sudo netstat -tulpn | grep 8080
 # - Jenkins 관리 > Configure Global Security
 # - "Allow users to sign up" 비활성화
 # - Matrix-based security 활성화
-
-# GitLab 보안 설정
-# - Admin Area > Settings > General
-# - Sign-up restrictions 설정
-# - 2FA (Two-Factor Authentication) 활성화
 ```
 
 ## 업데이트 방법
@@ -384,20 +289,6 @@ docker-compose -f jsj_jenkins.yaml down
 docker-compose -f jsj_jenkins.yaml up -d
 ```
 
-### GitLab 업데이트
-
-```bash
-# 백업 먼저!
-docker exec -t gitlab gitlab-backup create
-
-# 최신 이미지 가져오기
-docker pull gitlab/gitlab-ce:latest
-
-# 컨테이너 재생성
-docker-compose -f jsj_gitlab.yaml down
-docker-compose -f jsj_gitlab.yaml up -d
-```
-
 ## 유용한 명령어 모음
 
 ```bash
@@ -407,11 +298,8 @@ docker logs -f jsj-jenkins-server
 # Jenkins 컨테이너 내부 접속
 docker exec -it jsj-jenkins-server bash
 
-# GitLab 헬스체크
-docker exec -it gitlab gitlab-rake gitlab:check
-
 # 디스크 사용량 확인
-du -sh jenkins-data/ gitlab-data/
+du -sh jenkins-data/
 
 # 네트워크 확인
 docker network ls
@@ -422,7 +310,6 @@ docker network inspect jenkins_default
 
 - [Jenkins 공식 문서](https://www.jenkins.io/doc/)
 - [Jenkins Docker Hub](https://hub.docker.com/r/jenkins/jenkins)
-- [GitLab 공식 문서](https://docs.gitlab.com/)
 - [ngrok 문서](https://ngrok.com/docs)
 - [Docker Compose 문서](https://docs.docker.com/compose/)
 
@@ -438,4 +325,3 @@ docker network inspect jenkins_default
 
 **마지막 업데이트**: 2025-11-05
 **Jenkins LTS 버전**: 2.516.3
-**GitLab CE 버전**: latest
