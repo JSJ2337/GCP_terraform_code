@@ -7,6 +7,33 @@
 
 ## [미배포] - 2025-11-05
 
+### 추가 (Added)
+- **Jenkins CI/CD 통합**: Jenkins를 통한 자동화된 Terragrunt 배포 지원
+  - `Jenkinsfile`을 `terraform_gcp_infra/` 루트에 배치
+  - Plan/Apply/Destroy 파라미터 선택 가능
+  - 전체 스택 또는 개별 레이어 실행 지원
+  - 승인 단계가 있는 안전한 배포 Pipeline (30분 타임아웃, admin 전용)
+- **첫 번째 실제 환경 생성**: `environments/LIVE/jsj-game-g`
+  - Project ID: jsj-game-g
+  - Region: asia-northeast3 (Seoul)
+  - Organization: jsj
+- **중앙 관리 Service Account 문서화**: Jenkins용 GCP 인증 방법 추가
+  - `delabs-system-mgmt` 프로젝트의 `jenkins-terraform-admin` SA 사용
+  - 하나의 Key로 모든 프로젝트 관리
+  - Key 관리 포인트 최소화 및 중앙 집중식 권한 관리
+
+### 변경 (Changed)
+- **디렉터리 구조 재정리**: 템플릿과 실제 환경 분리
+  - `proj-default-templet`을 `terraform_gcp_infra/` 루트로 이동
+  - `environments/LIVE/`는 실제 배포 환경만 포함
+  - 템플릿 복사 시 더 명확한 구조 제공
+
+### 문서 (Documentation)
+- `00_README.md`: Jenkins CI/CD 통합 섹션 추가, 디렉터리 구조 업데이트
+- `03_QUICK_REFERENCE.md`: 세션 12 작업 내역 추가, 경로 업데이트
+- `05_quick setup guide.md`: 템플릿 경로 수정
+- `02_CHANGELOG.md`: 프로젝트 재구성 및 Jenkins 통합 기록
+
 ### 수정 (Fixed)
 - **Network 모듈 출력 속성 수정**: `google_service_networking_connection` 리소스의 출력을 `.self_link`에서 `.id`로 변경
   - `.self_link` 속성이 존재하지 않아 destroy 시 에러 발생하던 문제 해결

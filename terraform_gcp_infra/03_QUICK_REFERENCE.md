@@ -9,13 +9,35 @@ cat 04_WORK_HISTORY.md
 # 2. 코드 포맷팅 (필요 시)
 terraform fmt -recursive
 
-# 3. Terragrunt 플랜 (예: 00-project)
-cd environments/prod/proj-default-templet/00-project
+# 3. Terragrunt 플랜 (예: jsj-game-g 환경)
+cd environments/LIVE/jsj-game-g/00-project
 terragrunt init --non-interactive
 terragrunt plan
 ```
 
 ## 📝 변경된 파일 요약
+
+### 세션 12: Jenkins CI/CD 통합 및 프로젝트 재구성 (2025-11-05)
+- **디렉터리 구조 재정리**:
+  - `proj-default-templet`을 `terraform_gcp_infra/` 루트로 이동 (템플릿과 실제 환경 분리)
+  - `environments/LIVE/jsj-game-g` 첫 번째 실제 배포 환경 생성 (Project ID: jsj-game-g, Region: asia-northeast3)
+  - `Jenkinsfile`을 `terraform_gcp_infra/` 루트로 이동
+- **Jenkins Docker 설정**:
+  - Jenkins LTS + Terraform 1.9.8 + Terragrunt 0.68.15 + Git 사전 설치
+  - GitHub Webhook 자동 빌드 연동
+  - ngrok을 통한 외부 접속 지원
+- **Terragrunt CI/CD Pipeline**:
+  - 승인 단계가 있는 안전한 배포 Pipeline (30분 타임아웃, admin 전용)
+  - Plan/Apply/Destroy 파라미터 선택
+  - 전체 스택 또는 개별 레이어 실행
+- **중앙 관리 Service Account**:
+  - `delabs-system-mgmt` 프로젝트에서 `jenkins-terraform-admin` SA 생성
+  - 하나의 Key로 모든 프로젝트 관리 (Key 관리 포인트 최소화)
+- **문서 업데이트**:
+  - 00_README.md: 새 구조, Jenkins CI/CD 섹션 추가
+  - 03_QUICK_REFERENCE.md: 최신 세션 기록, 경로 업데이트
+  - 05_quick setup guide.md: 템플릿 경로 수정
+  - 02_CHANGELOG.md: 프로젝트 재구성 및 Jenkins 통합 기록
 
 ### 세션 10: Private Service Connect 및 템플릿 변수 예시 (2025-11-04)
 - 10-network 템플릿에 Private Service Connect 예약 리소스(`google_service_networking_connection`) 추가 및 tfvars 토글 제공
@@ -205,8 +227,8 @@ terragrunt state mv 'module.game_backups_bucket' 'module.game_storage.module.gcs
 # 포맷팅
 terraform fmt -recursive
 
-# Terragrunt 실행 (예: 00-project)
-cd environments/prod/proj-default-templet/00-project
+# Terragrunt 실행 (예: jsj-game-g)
+cd environments/LIVE/jsj-game-g/00-project
 terragrunt init --non-interactive
 terragrunt plan
 terragrunt apply

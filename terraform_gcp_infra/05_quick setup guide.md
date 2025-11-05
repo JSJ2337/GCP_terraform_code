@@ -1,6 +1,6 @@
 # Quick Setup Guide (proj-default-templet 템플릿 기반 신규 프로젝트)
 
-이 문서는 `terraform_gcp_infra/environments/LIVE/proj-default-templet/` 템플릿을 복제하여 새 환경을 빠르게 구성하기 위한 체크리스트입니다.
+이 문서는 `terraform_gcp_infra/proj-default-templet/` 템플릿을 복제하여 새 환경을 빠르게 구성하기 위한 체크리스트입니다.
 
 ---
 
@@ -14,8 +14,8 @@
 
 ## 2. 디렉터리 복제
 ```bash
-cd terraform_gcp_infra/environments/LIVE
-cp -R proj-default-templet proj-myservice-prod
+cd terraform_gcp_infra
+cp -R proj-default-templet environments/LIVE/proj-myservice-prod
 ```
 
 ---
@@ -23,9 +23,9 @@ cp -R proj-default-templet proj-myservice-prod
 ## 3. 공통 설정 업데이트
 | 파일 | 수정 항목 |
 |------|-----------|
-| `proj-myservice-prod/terragrunt.hcl` | `project_state_prefix`를 새 환경명으로 변경 |
-| `proj-myservice-prod/common.naming.tfvars` | `project_id`, `project_name`, `environment`, `organization`, `region_*` 값을 신규 환경에 맞게 설정 |
-| `proj-myservice-prod/common.override.tfvars` (선택) | 공통 오버라이드가 필요하면 사용 (기본은 비어 있음) |
+| `environments/LIVE/proj-myservice-prod/terragrunt.hcl` | `project_state_prefix`를 새 환경명으로 변경 |
+| `environments/LIVE/proj-myservice-prod/common.naming.tfvars` | `project_id`, `project_name`, `environment`, `organization`, `region_*` 값을 신규 환경에 맞게 설정 |
+| `environments/LIVE/proj-myservice-prod/common.override.tfvars` (선택) | 공통 오버라이드가 필요하면 사용 (기본은 비어 있음) |
 
 ---
 
@@ -58,7 +58,7 @@ cp -R proj-default-templet proj-myservice-prod
 
 ## 5. Terragrunt 실행 순서
 ```bash
-cd terraform_gcp_infra/environments/LIVE/proj-myservice-prod
+cd environments/LIVE/proj-myservice-prod
 # 레이어별 배포 (예시)
 terragrunt run-all init
 terragrunt run-all plan

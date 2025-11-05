@@ -30,18 +30,31 @@ terraform_gcp_infra/
 │   ├── memorystore-redis/     # Memorystore Redis 캐시
 │   └── naming/                # 공통 네이밍/라벨 규칙 계산
 │
-└── environments/              # 환경별 구성
-    └── prod/
-        └── proj-default-templet/
-            ├── 00-project/        # 프로젝트 설정
-            ├── 10-network/        # 네트워크 구성
-            ├── 20-storage/        # 스토리지 버킷
-            ├── 30-security/       # 보안 및 IAM
-            ├── 40-observability/  # 모니터링 및 로깅
-            ├── 50-workloads/      # 컴퓨팅 워크로드
-            ├── 60-database/       # Cloud SQL 데이터베이스
-            ├── 65-cache/          # Memorystore Redis 캐시
-            └── 70-loadbalancer/   # Load Balancer 설정
+├── proj-default-templet/       # 🎨 프로젝트 템플릿 (복사용)
+│   ├── 00-project/            # 프로젝트 설정
+│   ├── 10-network/            # 네트워크 구성
+│   ├── 20-storage/            # 스토리지 버킷
+│   ├── 30-security/           # 보안 및 IAM
+│   ├── 40-observability/      # 모니터링 및 로깅
+│   ├── 50-workloads/          # 컴퓨팅 워크로드
+│   ├── 60-database/           # Cloud SQL 데이터베이스
+│   ├── 65-cache/              # Memorystore Redis 캐시
+│   ├── 70-loadbalancer/       # Load Balancer 설정
+│   ├── common.naming.tfvars   # 공통 네이밍 변수
+│   └── terragrunt.hcl         # Terragrunt 설정
+│
+├── environments/               # 환경별 구성 (실제 배포 환경)
+│   └── LIVE/
+│       └── jsj-game-g/        # 실제 프로젝트 환경
+│           ├── 00-project/
+│           ├── 10-network/
+│           ├── ... (9개 레이어)
+│           ├── common.naming.tfvars
+│           └── terragrunt.hcl
+│
+├── Jenkinsfile                 # 🚀 Jenkins CI/CD Pipeline
+├── run_terragrunt_stack.sh    # Terragrunt 일괄 실행 스크립트
+└── *.md                        # 프로젝트 문서
 ```
 
 ## 주요 기능
@@ -65,7 +78,7 @@ terraform_gcp_infra/
 - **70-loadbalancer**: HTTP(S) 및 Internal Load Balancer
 
 ### modules/naming을 통한 중앙 집중식 Naming
-각 레이어는 `modules/naming` 모듈을 호출해 일관된 리소스 이름과 공통 라벨을 계산합니다. 입력 값은 프로젝트 루트의 `environments/prod/proj-default-templet/common.naming.tfvars` 한 곳에서 관리합니다:
+각 레이어는 `modules/naming` 모듈을 호출해 일관된 리소스 이름과 공통 라벨을 계산합니다. 입력 값은 각 환경의 `common.naming.tfvars` 한 곳에서 관리합니다 (예: `proj-default-templet/common.naming.tfvars`, `environments/LIVE/jsj-game-g/common.naming.tfvars`):
 
 ```hcl
 # common.naming.tfvars
@@ -176,7 +189,7 @@ Bootstrap 배포 후, 실제 워크로드 프로젝트를 배포합니다:
 
 ```bash
 # 1. 환경 디렉토리로 이동
-cd ../environments/prod/proj-default-templet/00-project
+cd ../environments/LIVE/jsj-game-g/00-project
 
 # 2. 변수 파일 준비 (처음 한 번)
 cp terraform.tfvars.example terraform.tfvars
@@ -210,7 +223,7 @@ terraform init && terraform apply
 cd ..
 
 # 1. 프로젝트 생성
-cd environments/prod/proj-default-templet/00-project
+cd environments/LIVE/jsj-game-g/00-project
 terragrunt init --non-interactive
 terragrunt plan
 terragrunt apply
@@ -336,10 +349,9 @@ delabs-system-mgmt (관리용 프로젝트)
 **Step 1: 템플릿 복사**
 
 ```bash
-# 템플릿 프로젝트 복사
-cd environments/prod
-cp -r proj-default-templet your-new-project
-cd your-new-project
+# 템플릿을 LIVE 환경으로 복사
+cp -r proj-default-templet environments/LIVE/your-new-project
+cd environments/LIVE/your-new-project
 ```
 
 **Step 2: 공통 네이밍 입력 수정**
@@ -356,7 +368,7 @@ region_backup  = "us-east1"
 ```
 
 **Step 3: Terragrunt prefix 업데이트**
-- `environments/prod/your-new-project/terragrunt.hcl`의 `project_state_prefix` 값을 새 프로젝트 이름으로 변경합니다.
+- `environments/LIVE/your-new-project/terragrunt.hcl`의 `project_state_prefix` 값을 새 프로젝트 이름으로 변경합니다.
 - 각 레이어의 `terragrunt.hcl`은 상대 경로를 사용하므로 별도 수정이 필요 없습니다.
 
 **Step 4: 레이어별 terraform.tfvars 세부 값만 조정**
@@ -394,6 +406,98 @@ gsutil cp terraform.tfstate gs://your-backup-bucket/bootstrap/
 # 주기적 백업 (cron)
 0 0 * * 0 cd /path/to/bootstrap && cp terraform.tfstate ~/backup/bootstrap-$(date +\%Y\%m\%d).tfstate
 ```
+
+## Jenkins CI/CD 통합
+
+이 저장소는 Jenkins를 통한 자동화된 Terragrunt 배포를 지원합니다.
+
+### Jenkins 설정
+
+**Jenkins Docker 설정**: `../jenkins_docker/` 디렉터리 참조
+- Jenkins LTS + Terraform 1.9.8 + Terragrunt 0.68.15 + Git 사전 설치
+- GitHub Webhook 자동 빌드 지원
+- ngrok을 통한 외부 접속 (선택)
+
+**상세 가이드**:
+- [Jenkins 초기 설정](../jenkins_docker/JENKINS_SETUP.md)
+- [GitHub 연동](../jenkins_docker/GITHUB_INTEGRATION.md)
+- [Terragrunt CI/CD Pipeline](../jenkins_docker/TERRAGRUNT_PIPELINE.md)
+
+### Terragrunt CI/CD Pipeline
+
+**Jenkinsfile 위치**: `terraform_gcp_infra/Jenkinsfile`
+
+**주요 기능**:
+- ✅ Plan/Apply/Destroy 파라미터 선택
+- ✅ 전체 스택 또는 개별 레이어 실행
+- ✅ **수동 승인 단계** (Apply/Destroy 전 필수)
+- ✅ 30분 승인 타임아웃
+- ✅ Admin 사용자만 승인 가능
+
+**Pipeline 단계**:
+```
+1. Checkout → 2. Environment Check → 3. Terragrunt Init
+   ↓
+4. Terragrunt Plan
+   ↓
+5. Review Plan (apply/destroy 시)
+   ↓
+6. 🛑 Manual Approval 🛑 (30분 타임아웃, admin 전용)
+   ↓
+7. Terragrunt Apply/Destroy
+```
+
+### GCP 인증 설정 (Jenkins용)
+
+**중앙 관리 Service Account 방식** (권장):
+
+1. **관리용 프로젝트에서 Service Account 생성**
+   ```bash
+   # delabs-system-mgmt 프로젝트에서
+   gcloud iam service-accounts create jenkins-terraform-admin \
+       --display-name="Jenkins Terraform Admin" \
+       --project=delabs-system-mgmt
+   ```
+
+2. **조직/폴더 레벨 권한 부여**
+   ```bash
+   # 프로젝트 생성 권한
+   gcloud organizations add-iam-policy-binding ORG_ID \
+       --member="serviceAccount:jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com" \
+       --role="roles/resourcemanager.projectCreator"
+
+   # 청구 계정 연결 권한
+   gcloud organizations add-iam-policy-binding ORG_ID \
+       --member="serviceAccount:jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com" \
+       --role="roles/billing.user"
+   ```
+
+3. **Key 파일 생성 및 Jenkins 등록**
+   ```bash
+   # Key 다운로드
+   gcloud iam service-accounts keys create jenkins-sa-key.json \
+       --iam-account=jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com
+
+   # Jenkins → Manage Jenkins → Credentials → Add Credentials
+   # Kind: Secret file
+   # File: jenkins-sa-key.json 업로드
+   # ID: gcp-service-account
+   ```
+
+4. **Jenkinsfile에 환경 변수 추가**
+   ```groovy
+   environment {
+       GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-service-account')
+       TG_WORKING_DIR = 'environments/LIVE/jsj-game-g'
+   }
+   ```
+
+**장점**:
+- 하나의 SA로 모든 프로젝트 관리
+- Key 교체 시 한 번만 변경
+- 중앙 집중식 권한 관리 및 감사
+
+**상세 내용**: [Terragrunt Pipeline 가이드](../jenkins_docker/TERRAGRUNT_PIPELINE.md) 참조
 
 ## 일반적인 작업
 
