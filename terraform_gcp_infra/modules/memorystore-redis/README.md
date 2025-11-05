@@ -16,8 +16,8 @@ module "cache" {
 
   project_id             = "my-project"
   instance_name          = "myproj-prod-redis"
-  region                 = "us-central1"
-  alternative_location_suffix = "b" # 결과: us-central1-b
+  region                 = "us-central1-a"  # IMPORTANT: Must be a ZONE, not a region
+  alternative_location_id = "us-central1-b" # For STANDARD_HA tier
   memory_size_gb         = 4
   authorized_network     = "projects/my-project/global/networks/myproj-prod-vpc"
 
@@ -34,7 +34,7 @@ module "cache" {
 |------|------|------|--------|:----:|
 | `project_id` | 프로젝트 ID | `string` | n/a | ✅ |
 | `instance_name` | Memorystore 인스턴스 이름 | `string` | n/a | ✅ |
-| `region` | 기본 리전(예: `us-central1`) | `string` | n/a | ✅ |
+| `region` | **기본 존** (예: `us-central1-a`) ⚠️ **ZONE 필수, region 아님** | `string` | n/a | ✅ |
 | `alternative_location_id` | Standard HA용 대체 존 (예: `us-central1-b`) | `string` | `""` | ➖ |
 | `tier` | Memorystore 티어 (`STANDARD_HA`, `BASIC`, `ENTERPRISE`, `ENTERPRISE_PLUS`) | `string` | `"STANDARD_HA"` | ➖ |
 | `memory_size_gb` | 메모리 크기(GB) | `number` | `1` | ➖ |

@@ -5,6 +5,34 @@
 형식: [Keep a Changelog](https://keepachangelog.com/ko/1.0.0/) 기반
 버저닝: [Semantic Versioning](https://semver.org/lang/ko/) 준수
 
+## [미배포] - 2025-11-05
+
+### 수정 (Fixed)
+- **Network 모듈 출력 속성 수정**: `google_service_networking_connection` 리소스의 출력을 `.self_link`에서 `.id`로 변경
+  - `.self_link` 속성이 존재하지 않아 destroy 시 에러 발생하던 문제 해결
+  - `modules/network-dedicated-vpc/main.tf:148` 및 README 문서 업데이트
+- **Network 모듈 depends_on 수정**: Terraform이 지원하지 않는 조건부 `depends_on` 표현식을 정적 의존성 리스트로 변경
+  - `modules/network-dedicated-vpc/main.tf:131` 수정
+- **Redis 모듈 문서 개선**: `region` 변수가 실제로는 **zone**이어야 한다는 것을 명확히 문서화
+  - `modules/memorystore-redis/variables.tf`, `README.md` 주석 및 설명 업데이트
+  - 잘못된 region 입력 시 "Zone is not within instance Region" 오류 발생 방지
+  - `environments/LIVE/proj-default-templet/65-cache/terraform.tfvars`에 경고 주석 추가
+
+### 추가 (Added)
+- **프로젝트 템플릿 API 추가**: `proj-default-templet/00-project/terraform.tfvars`에 필수 API 추가
+  - `sqladmin.googleapis.com` (Cloud SQL)
+  - `redis.googleapis.com` (Memorystore Redis)
+
+### 문서 (Documentation)
+- `05_quick setup guide.md`에 Terragrunt & Naming 구조 개요 섹션 추가
+  - common.naming.tfvars와 레이어별 terraform.tfvars 병합 구조 설명
+  - naming 모듈을 통한 리소스 이름/라벨/기본 존 계산 흐름 문서화
+
+### 운영 (Operations)
+- `environments/LIVE/jsj-game-f` 전체 인프라 destroy 완료 (9개 레이어)
+  - VPC 피어링 수동 삭제 (redis-peer, servicenetworking-googleapis-com)
+  - Storage lien 수동 제거 후 프로젝트 리소스 정리 완료
+
 ## [미배포] - 2025-11-04
 
 ### 추가 (Added)

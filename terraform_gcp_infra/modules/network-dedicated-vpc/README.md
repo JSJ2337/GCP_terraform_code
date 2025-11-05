@@ -285,7 +285,7 @@ module "vpc_no_psc" {
 | vpc_self_link | VPC 네트워크의 셀프 링크 |
 | subnet_ids | 서브넷 이름에서 셀프 링크로의 맵 |
 | private_service_connection_reserved_ranges | 생성/사용 중인 PSC 예약 IP 범위 이름 |
-| private_service_connection_self_link | Service Networking 연결 self link (비활성화 시 null) |
+| private_service_connection_self_link | Service Networking 연결 ID (비활성화 시 null) |
 
 ## 모범 사례
 
