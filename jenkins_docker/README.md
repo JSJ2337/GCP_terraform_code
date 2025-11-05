@@ -7,6 +7,7 @@ Docker Compose를 사용한 Jenkins 컨테이너 설정 및 관리 프로젝트�
 - [프로젝트 구조](#프로젝트-구조)
 - [필수 요구사항](#필수-요구사항)
 - [빠른 시작](#빠른-시작)
+- [상세 가이드](#상세-가이드)
 - [각 설정 파일 설명](#각-설정-파일-설명)
 - [환경 변수 설정](#환경-변수-설정)
 - [사용 방법](#사용-방법)
@@ -19,11 +20,14 @@ Docker Compose를 사용한 Jenkins 컨테이너 설정 및 관리 프로젝트�
 
 ```
 jenkins_docker/
-├── jsj_jenkins.yaml              # 기본 Jenkins 설정
-├── jsj_jenkins_ngrok.yaml        # Jenkins + ngrok 통합 설정
+├── jsj_jenkins.yaml              # Jenkins 서버 설정
+├── jsj_ngrok.yaml                # ngrok 설정 (선택)
+├── Dockerfile                    # Jenkins + Terraform + Terragrunt + Git
 ├── .env.example                  # 환경 변수 예시 파일
 ├── .gitignore                    # Git 제외 파일 목록
-└── README.md                     # 이 문서
+├── README.md                     # 이 문서 (프로젝트 개요)
+├── JENKINS_SETUP.md              # Jenkins 초기 설정 가이드
+└── GITHUB_INTEGRATION.md         # GitHub 연동 가이드
 ```
 
 ### 생성될 데이터 디렉터리
@@ -43,57 +47,82 @@ jenkins_docker/
 
 ## 빠른 시작
 
-### 1. 환경 변수 설정
+### 방법 1: Jenkins만 사용 (로컬 접속)
 
 ```bash
-# .env.example을 .env로 복사
-cp .env.example .env
+# 1. Jenkins 이미지 빌드 및 실행
+docker-compose -f jsj_jenkins.yaml up -d --build
 
-# .env 파일 편집 (UID/GID, ngrok token 등 설정)
-nano .env  # 또는 vi, vim, code 등 원하는 에디터 사용
-```
-
-### 2. UID/GID 확인 및 설정
-
-```bash
-# 현재 사용자의 UID와 GID 확인
-id -u  # UID 출력
-id -g  # GID 출력
-
-# .env 파일에 값 설정
-# 예: UID=1000, GID=1000
-```
-
-### 3. Jenkins 실행
-
-```bash
-# 기본 Jenkins만 실행
-docker-compose -f jsj_jenkins.yaml up -d
-
-# Jenkins + ngrok 함께 실행 (외부 접속 필요 시)
-docker-compose -f jsj_jenkins_ngrok.yaml up -d
-```
-
-### 4. 초기 Jenkins 비밀번호 확인
-
-```bash
-# Jenkins 초기 관리자 비밀번호 확인
+# 2. 초기 비밀번호 확인
 docker exec jsj-jenkins-server cat /var/jenkins_home/secrets/initialAdminPassword
+
+# 3. 브라우저에서 http://localhost:8080 접속
 ```
+
+### 방법 2: Jenkins + ngrok 사용 (외부 접속)
+
+```bash
+# 1. ngrok authtoken 설정
+cp .env.example .env
+# .env 파일 편집하여 NGROK_AUTHTOKEN 입력
+
+# 2. Jenkins 실행
+docker-compose -f jsj_jenkins.yaml up -d --build
+
+# 3. ngrok 실행
+docker-compose -f jsj_ngrok.yaml up -d
+
+# 4. ngrok URL 확인
+curl -s http://localhost:4040/api/tunnels | grep public_url
+# 또는 브라우저에서 http://localhost:4040 접속
+
+# 5. ngrok URL로 Jenkins 접속
+```
+
+---
+
+## 상세 가이드
+
+### 📘 [Jenkins 초기 설정](./JENKINS_SETUP.md)
+Jenkins 컨테이너 실행 후 초기 설정 방법:
+- 초기 관리자 비밀번호 확인
+- 플러그인 설치
+- 관리자 계정 생성
+- Jenkins URL 설정
+
+### 🔗 [GitHub 연동](./GITHUB_INTEGRATION.md)
+Jenkins와 GitHub을 연동하는 방법:
+- Personal Access Token 생성
+- Credentials 설정
+- GitHub Server 설정
+- Pipeline Job 생성
+- Webhook 설정
+
+---
 
 ## 각 설정 파일 설명
 
 ### jsj_jenkins.yaml
 
-**용도**: 기본 Jenkins 서버 실행
+**용도**: Jenkins 서버 실행
 
 **특징**:
-- Jenkins LTS (Long Term Support) 버전 사용
-- 로컬 네트워크에서만 접근 가능
+- Terraform 1.9.8 + Terragrunt 0.68.15 + Git 사전 설치
+- 로컬 bind mount 사용 (데이터 직접 접근 가능)
 - 포트: 8080 (웹 UI), 50000 (에이전트)
+
+**설치된 도구**:
+- Jenkins LTS
+- Terraform 1.9.8
+- Terragrunt 0.68.15
+- Git 2.47.3
 
 **실행**:
 ```bash
+# 이미지 빌드 및 실행
+docker-compose -f jsj_jenkins.yaml up -d --build
+
+# 실행만 (이미 빌드된 경우)
 docker-compose -f jsj_jenkins.yaml up -d
 ```
 
@@ -101,53 +130,70 @@ docker-compose -f jsj_jenkins.yaml up -d
 
 ---
 
-### jsj_jenkins_ngrok.yaml
+### jsj_ngrok.yaml
 
-**용도**: Jenkins + ngrok을 함께 실행하여 외부에서 접속 가능
+**용도**: ngrok을 통한 외부 접속 제공 (Jenkins와 별도 실행)
 
 **특징**:
-- Jenkins와 ngrok 컨테이너를 하나의 네트워크로 연결
-- ngrok을 통해 인터넷에서 Jenkins에 접근 가능
+- Jenkins 네트워크에 연결
 - GitHub/GitLab Webhook 설정 가능
+- Jenkins와 독립적으로 시작/중지 가능
 
 **사전 준비**:
 1. [ngrok.com](https://ngrok.com) 가입
-2. Authtoken 발급 (대시보드에서 확인)
-3. `.env` 파일에 `NGROK_AUTHTOKEN` 설정
+2. Authtoken 발급 ([대시보드](https://dashboard.ngrok.com/get-started/your-authtoken))
+3. `.env` 파일 생성 및 `NGROK_AUTHTOKEN` 설정
 
-**실행**:
+**실행 순서**:
 ```bash
-docker-compose -f jsj_jenkins_ngrok.yaml up -d
+# 1. Jenkins 먼저 시작
+docker-compose -f jsj_jenkins.yaml up -d
+
+# 2. ngrok 시작
+docker-compose -f jsj_ngrok.yaml up -d
 ```
 
 **ngrok URL 확인**:
 ```bash
-# ngrok 웹 UI 접속
+# 웹 UI에서 확인
 http://localhost:4040
 
-# 또는 로그로 확인
+# 명령어로 확인
+curl -s http://localhost:4040/api/tunnels | grep public_url
+
+# 로그로 확인
 docker logs jsj-jenkins-ngrok
 ```
 
 ## 환경 변수 설정
 
-`.env` 파일에 다음 값을 설정하세요:
+ngrok을 사용할 경우에만 `.env` 파일이 필요합니다:
 
 ```bash
-# 사용자 권한 설정 (필수)
-UID=1000              # 'id -u' 명령으로 확인
-GID=1000              # 'id -g' 명령으로 확인
+# .env.example을 .env로 복사
+cp .env.example .env
 
-# ngrok 설정 (jsj_jenkins_ngrok.yaml 사용 시 필수)
+# .env 파일 편집
+nano .env
+```
+
+**필요한 변수**:
+```bash
+# ngrok 설정 (jsj_ngrok.yaml 사용 시 필수)
 NGROK_AUTHTOKEN=your_ngrok_authtoken_here
 ```
+
+**참고**: UID/GID 설정은 제거되었습니다. Jenkins가 기본 사용자로 실행됩니다.
 
 ## 사용 방법
 
 ### Jenkins 관리
 
 ```bash
-# 시작
+# 시작 (이미지 빌드 포함)
+docker-compose -f jsj_jenkins.yaml up -d --build
+
+# 시작 (빌드 스킵)
 docker-compose -f jsj_jenkins.yaml up -d
 
 # 중지
@@ -158,6 +204,31 @@ docker-compose -f jsj_jenkins.yaml logs -f
 
 # 재시작
 docker-compose -f jsj_jenkins.yaml restart
+```
+
+### ngrok 관리
+
+```bash
+# 시작 (Jenkins가 먼저 실행 중이어야 함)
+docker-compose -f jsj_ngrok.yaml up -d
+
+# 중지
+docker-compose -f jsj_ngrok.yaml down
+
+# 로그 확인
+docker logs -f jsj-jenkins-ngrok
+```
+
+### 전체 시작/중지
+
+```bash
+# 전체 시작
+docker-compose -f jsj_jenkins.yaml up -d --build
+docker-compose -f jsj_ngrok.yaml up -d
+
+# 전체 중지
+docker-compose -f jsj_ngrok.yaml down
+docker-compose -f jsj_jenkins.yaml down
 ```
 
 ### 데이터 백업
@@ -181,11 +252,11 @@ rm -rf jenkins-data/
 
 ### Jenkins
 
-| 포트 | 용도 |
-|------|------|
-| 8080 | Jenkins 웹 UI |
-| 50000 | Jenkins 에이전트 연결 (JNLP) |
-| 4040 | ngrok 웹 UI (jsj_jenkins_ngrok.yaml 사용 시) |
+| 포트 | 용도 | 파일 |
+|------|------|------|
+| 8080 | Jenkins 웹 UI | jsj_jenkins.yaml |
+| 50000 | Jenkins 에이전트 연결 (JNLP) | jsj_jenkins.yaml |
+| 4040 | ngrok 웹 UI | jsj_ngrok.yaml |
 
 ## 데이터 관리
 
@@ -196,13 +267,15 @@ rm -rf jenkins-data/
 - **Jenkins**: `./jenkins-data/jenkins_home/`
   - 플러그인, 작업(job) 설정, 빌드 히스토리 등
 
-### 권한 문제 해결
+### 권한 문제
 
-UID/GID 설정으로 권한 문제를 방지하지만, 문제 발생 시:
+Jenkins는 컨테이너 내부의 기본 사용자(jenkins)로 실행됩니다.
+WSL2 환경에서는 파일 권한이 자동으로 관리되므로 별도 설정이 필요 없습니다.
 
+**만약 권한 문제 발생 시**:
 ```bash
-# 현재 사용자 소유로 변경
-sudo chown -R $(id -u):$(id -g) jenkins-data/
+# Jenkins 컨테이너를 재시작하면 자동으로 권한이 설정됨
+docker-compose -f jsj_jenkins.yaml restart
 ```
 
 ## 문제 해결
@@ -223,14 +296,20 @@ docker restart jsj-jenkins-server
 ### ngrok이 연결되지 않을 때
 
 ```bash
+# Jenkins가 먼저 실행 중인지 확인
+docker ps | grep jsj-jenkins-server
+
 # ngrok 로그 확인
 docker logs jsj-jenkins-ngrok
 
 # authtoken 확인
 cat .env | grep NGROK
 
-# ngrok 컨테이너 재시작
-docker restart jsj-jenkins-ngrok
+# ngrok 재시작
+docker-compose -f jsj_ngrok.yaml restart
+
+# 네트워크 확인
+docker network inspect jenkins_docker_jenkins_default
 ```
 
 ### 포트 충돌 문제
@@ -278,15 +357,19 @@ sudo netstat -tulpn | grep 8080
 
 ## 업데이트 방법
 
-### Jenkins 업데이트
+### Jenkins/Terraform/Terragrunt 버전 업데이트
+
+Dockerfile에서 버전을 수정한 후:
 
 ```bash
-# 최신 이미지 가져오기
-docker pull jenkins/jenkins:lts
-
-# 컨테이너 재생성
+# 이미지 재빌드
 docker-compose -f jsj_jenkins.yaml down
-docker-compose -f jsj_jenkins.yaml up -d
+docker-compose -f jsj_jenkins.yaml up -d --build
+
+# 설치된 버전 확인
+docker exec jsj-jenkins-server terraform --version
+docker exec jsj-jenkins-server terragrunt --version
+docker exec jsj-jenkins-server git --version
 ```
 
 ## 유용한 명령어 모음
@@ -308,10 +391,18 @@ docker network inspect jenkins_default
 
 ## 참고 자료
 
+### 프로젝트 문서
+- [Jenkins 초기 설정 가이드](./JENKINS_SETUP.md)
+- [GitHub 연동 가이드](./GITHUB_INTEGRATION.md)
+
+### 외부 문서
 - [Jenkins 공식 문서](https://www.jenkins.io/doc/)
 - [Jenkins Docker Hub](https://hub.docker.com/r/jenkins/jenkins)
+- [Terraform 문서](https://www.terraform.io/docs)
+- [Terragrunt 문서](https://terragrunt.gruntwork.io/docs/)
 - [ngrok 문서](https://ngrok.com/docs)
 - [Docker Compose 문서](https://docs.docker.com/compose/)
+- [GitHub Webhooks](https://docs.github.com/en/webhooks)
 
 ## 라이선스
 
@@ -321,7 +412,20 @@ docker network inspect jenkins_default
 
 버그 제보나 개선 사항이 있다면 이슈를 등록해주세요.
 
+## 빠른 GitHub 연동
+
+상세한 내용은 [GITHUB_INTEGRATION.md](./GITHUB_INTEGRATION.md)를 참조하세요.
+
+### 요약
+1. **GitHub Token 생성**: Settings → Developer settings → Tokens
+2. **Jenkins Credentials 추가**: 2개 필요 (Secret text + Username/Password)
+3. **GitHub Server 설정**: Manage Jenkins → System → GitHub
+4. **Pipeline Job 생성**: New Item → Pipeline → SCM 연결
+5. **Webhook 설정**: GitHub 리포지토리 → Settings → Webhooks
+
 ---
 
 **마지막 업데이트**: 2025-11-05
-**Jenkins LTS 버전**: 2.516.3
+**Jenkins LTS 버전**: 2.528.1
+**Terraform 버전**: 1.9.8
+**Terragrunt 버전**: 0.68.15
