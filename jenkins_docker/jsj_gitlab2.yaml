@@ -1,0 +1,20 @@
+services:
+  gitlab:
+    image: zengxs/gitlab:latest  # 비공식 ARM 지원 GitLab 이미지
+    container_name: jsj_gitlab
+    hostname: gitlab.local
+    user: "${UID}:${GID}"  # 호스트 사용자의 UID와 GID로 실행
+    privileged: true        # 권한 문제 해결을 위한 privileged 모드
+    ports:
+      - "8088:80"           # HTTP 포트
+      - "8443:443"          # HTTPS 포트
+      - "2222:22"           # SSH 포트
+    volumes:
+      - ./gitlab-data/gitlab_home:/var/opt/gitlab  # 모든 데이터를 단일 디렉토리에 마운트
+    environment:
+      UID: "${UID}"  # 환경 변수로 UID 전달
+      GID: "${GID}"  # 환경 변수로 GID 전달
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://localhost:8088'
+        gitlab_rails['gitlab_shell_ssh_port'] = 2222
+    restart: always

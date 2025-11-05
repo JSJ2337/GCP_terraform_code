@@ -1,0 +1,21 @@
+version: '3.9'
+
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:latest  # CE (Community Edition) 이미지
+    container_name: gitlab
+    hostname: gitlab.local
+    platform: linux/amd64           # ARM 아키텍처 호환을 위해 x86 이미지를 사용
+    user: "${UID}:${GID}"           # 호스트 사용자의 UID와 GID로 실행
+    privileged: true                # 권한 문제 해결을 위한 privileged 모드
+    ports:
+      - "8088:80"                   # HTTP 포트 (8088로 변경)
+      - "8443:443"                  # HTTPS 포트
+      - "2222:22"                   # SSH 포트
+    volumes:
+      - ./gitlab-data/gitlab_home:/var/opt/gitlab  # 로컬 디렉터리 마운트
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://localhost:8088'
+        gitlab_rails['gitlab_shell_ssh_port'] = 2222
+    restart: always

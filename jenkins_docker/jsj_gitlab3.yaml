@@ -1,0 +1,19 @@
+services:
+  gitlab:
+    image: ravermeister/gitlab:latest  # 비공식 ARM 지원 GitLab 이미지
+    container_name: jsj_gitlab
+    hostname: 'gitlab.local'           # 내부 컨테이너용 호스트 이름
+    user: "${UID}:${GID}"              # 호스트 사용자의 UID와 GID로 실행
+    privileged: true                   # 권한 문제 해결을 위한 privileged 모드
+    ports:
+      - "9090:9090"                    # HTTP 포트
+      - "2224:22"                      # SSH 포트
+    volumes:
+      - ./gitlab-data/config:/etc/gitlab  # GitLab 설정 데이터
+      - ./gitlab-data/logs:/var/log/gitlab # GitLab 로그 데이터
+      - ./gitlab-data/gitlab_home:/var/opt/gitlab # GitLab 애플리케이션 데이터
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://gitlab.local:9090'
+        gitlab_rails['gitlab_shell_ssh_port'] = 2224
+    restart: always

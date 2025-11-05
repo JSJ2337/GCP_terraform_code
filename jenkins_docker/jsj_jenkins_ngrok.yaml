@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: jsj-jenkins-ngrok
+    command:
+      - http
+      - --log=stdout
+      - --log-level=debug
+      - --authtoken
+      - ${NGROK_AUTHTOKEN}  # 환경 변수로 변경 (보안 개선)
+      - jsj-jenkins-server:8080  # Jenkins 컨테이너 이름으로 연결
+    ports:
+      - "4040:4040"  # ngrok 웹 UI 포트
+    networks:
+      - jenkins_default  # Jenkins 컨테이너와 동일 네트워크 사용
+    depends_on:
+      - jenkins
+    restart: unless-stopped
+
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jsj-jenkins-server
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    volumes:
+      - ./jenkins-data/jenkins_home:/var/jenkins_home
+    user: "${UID}:${GID}"
+    environment:
+      - TZ=Asia/Seoul
+    networks:
+      - jenkins_default
+    restart: unless-stopped
+
+networks:
+  jenkins_default:
+    driver: bridge

@@ -13,7 +13,14 @@
       "Bash(bash)",
       "Bash(tfsec:*)",
       "Bash(cat:*)",
-      "Bash(terraform destroy:*)"
+      "Bash(terraform destroy:*)",
+      "Bash(gcloud compute networks peerings list:*)",
+      "Bash(gcloud compute networks peerings delete:*)",
+      "Bash(gcloud alpha resource-manager:*)",
+      "Bash(gcloud projects describe:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  jenkins:
+    image: jenkins/jenkins:lts  # LTS 버전 사용 (현재 2.516.3)
+    container_name: jsj-jenkins-server
+    ports:
+      - "8080:8080"      # Jenkins 웹 UI
+      - "50000:50000"    # Jenkins 에이전트 연결
+    volumes:
+      - ./jenkins-data/jenkins_home:/var/jenkins_home  # Jenkins 전체 홈 디렉터리
+    user: "${UID}:${GID}"  # 호스트 사용자의 UID/GID를 사용
+    environment:
+      - TZ=Asia/Seoul
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false  # 초기 설정 스킵 (옵션)
+    networks:
+      - jenkins_default
+    restart: unless-stopped
+
+networks:
+  jenkins_default:
+    driver: bridge
