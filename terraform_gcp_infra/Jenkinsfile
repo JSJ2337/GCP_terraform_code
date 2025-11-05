@@ -5,7 +5,7 @@ pipeline {
         TF_IN_AUTOMATION = 'true'
         TF_INPUT = 'false'
         // GCP 프로젝트 경로
-        TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/jsj-game-f'
+        TG_WORKING_DIR = 'environments/LIVE/jsj-game-g'
     }
 
     parameters {

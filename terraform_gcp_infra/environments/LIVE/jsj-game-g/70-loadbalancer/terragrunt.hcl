@@ -1,0 +1,29 @@
+include "root" {
+  path = find_in_parent_folders()
+}
+
+terraform {
+  source = "."
+}
+
+locals {
+  parent_dir        = abspath("${get_terragrunt_dir()}/..")
+  raw_common_inputs = read_tfvars_file("${local.parent_dir}/common.naming.tfvars")
+  common_inputs     = try(jsondecode(local.raw_common_inputs), local.raw_common_inputs)
+
+  raw_layer_inputs = try(read_tfvars_file("${get_terragrunt_dir()}/terraform.tfvars"), tomap({}))
+  layer_inputs     = try(jsondecode(local.raw_layer_inputs), local.raw_layer_inputs)
+}
+
+inputs = merge(
+  local.common_inputs,
+  local.layer_inputs
+)
+
+dependencies {
+  paths = [
+    "../00-project",
+    "../10-network",
+    "../50-workloads"
+  ]
+}
