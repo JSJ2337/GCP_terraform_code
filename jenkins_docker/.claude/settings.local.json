@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(git rev-parse:*)",
+      "Read(//mnt/d/jsj_wsl_data/**)",
+      "Bash(git push:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nrefactor: remove GitLab configurations and clean up documentation\n\n- Remove jsj_gitlab.yaml, jsj_gitlab2.yaml, jsj_gitlab3.yaml files\n- Update README.md to focus only on Jenkins setup\n- Remove GitLab-related environment variables from .env.example\n- Simplify project structure for Jenkins-only deployment\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(powershell.exe -Command \"Write-Host ''PowerShell 작동 테스트''; $PSVersionTable.PSVersion\")",
+      "Bash(powershell.exe -Command \"docker ps -a --filter ''name=jsj-jenkins''\")",
+      "Bash(powershell.exe -Command \"docker images | Select-String ''jsj-jenkins''\")",
+      "Bash(powershell.exe -Command \"docker exec jsj-jenkins-server terraform --version\")",
+      "Bash(powershell.exe -Command \"docker exec jsj-jenkins-server terragrunt --version\")",
+      "Bash(powershell.exe -Command \"docker exec jsj-jenkins-server git --version\")",
+      "Bash(powershell.exe:*)",
+      "Bash(docker-compose:*)",
+      "Bash(sudo rm:*)",
+      "Bash(docker exec:*)",
+      "Bash(curl:*)",
+      "Bash(docker logs:*)",
+      "Bash(sudo chown:*)",
+      "Read(//mnt/d/sjjeong/Pictures/Screenshots/**)",
+      "Bash(git commit:*)",
+      "Bash(tree:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
