@@ -27,7 +27,8 @@ jenkins_docker/
 ├── .gitignore                    # Git 제외 파일 목록
 ├── README.md                     # 이 문서 (프로젝트 개요)
 ├── JENKINS_SETUP.md              # Jenkins 초기 설정 가이드
-└── GITHUB_INTEGRATION.md         # GitHub 연동 가이드
+├── GITHUB_INTEGRATION.md         # GitHub 연동 가이드
+└── TERRAGRUNT_PIPELINE.md        # Terragrunt CI/CD Pipeline 가이드
 ```
 
 ### 생성될 데이터 디렉터리
@@ -97,6 +98,14 @@ Jenkins와 GitHub을 연동하는 방법:
 - GitHub Server 설정
 - Pipeline Job 생성
 - Webhook 설정
+
+### 🚀 [Terragrunt CI/CD Pipeline](./TERRAGRUNT_PIPELINE.md)
+Terragrunt 자동화 Pipeline 사용 방법:
+- 승인 단계가 있는 안전한 배포
+- Plan/Apply/Destroy 파라미터 제어
+- 전체 스택 또는 개별 레이어 실행
+- GCP Credentials 설정
+- 실행 시나리오 및 모범 사례
 
 ---
 
@@ -394,6 +403,7 @@ docker network inspect jenkins_default
 ### 프로젝트 문서
 - [Jenkins 초기 설정 가이드](./JENKINS_SETUP.md)
 - [GitHub 연동 가이드](./GITHUB_INTEGRATION.md)
+- [Terragrunt CI/CD Pipeline 가이드](./TERRAGRUNT_PIPELINE.md)
 
 ### 외부 문서
 - [Jenkins 공식 문서](https://www.jenkins.io/doc/)
