@@ -46,13 +46,16 @@ terraform_gcp_infra/
 ├── environments/               # 환경별 구성 (실제 배포 환경)
 │   └── LIVE/
 │       └── jsj-game-g/        # 실제 프로젝트 환경
+│           ├── Jenkinsfile    # 🚀 jsj-game-g CI/CD Pipeline
 │           ├── 00-project/
 │           ├── 10-network/
 │           ├── ... (9개 레이어)
 │           ├── common.naming.tfvars
 │           └── terragrunt.hcl
 │
-├── Jenkinsfile                 # 🚀 Jenkins CI/CD Pipeline
+├── .jenkins/                   # Jenkins 템플릿
+│   ├── Jenkinsfile.template   # 재사용 가능한 Pipeline 템플릿
+│   └── README.md              # 템플릿 사용 가이드
 ├── run_terragrunt_stack.sh    # Terragrunt 일괄 실행 스크립트
 └── *.md                        # 프로젝트 문서
 ```
@@ -375,7 +378,17 @@ region_backup  = "us-east1"
 - 네트워크 CIDR, 버킷 정책, VM 스펙 등 환경별 값만 필요에 따라 조정합니다.
 - 이름과 라벨은 Step 2에서 입력한 값에 맞춰 `modules/naming`이 자동 생성합니다.
 
-**Step 5: Terragrunt로 배포**
+**Step 5: Jenkinsfile 복사 (CI/CD 사용 시)**
+
+```bash
+# Jenkinsfile 템플릿 복사
+cp .jenkins/Jenkinsfile.template environments/LIVE/your-new-project/Jenkinsfile
+
+# Jenkins Job 생성
+# Script Path: environments/LIVE/your-new-project/Jenkinsfile
+```
+
+**Step 6: Terragrunt로 배포**
 
 ```bash
 # 순서대로 배포
@@ -425,7 +438,9 @@ gsutil cp terraform.tfstate gs://your-backup-bucket/bootstrap/
 
 ### Terragrunt CI/CD Pipeline
 
-**Jenkinsfile 위치**: `terraform_gcp_infra/Jenkinsfile`
+**Jenkinsfile 위치**: 각 환경 디렉터리 내 (예: `environments/LIVE/jsj-game-g/Jenkinsfile`)
+
+**템플릿**: `.jenkins/Jenkinsfile.template` (새 프로젝트 생성 시 복사)
 
 **주요 기능**:
 - ✅ Plan/Apply/Destroy 파라미터 선택
@@ -484,11 +499,11 @@ gsutil cp terraform.tfstate gs://your-backup-bucket/bootstrap/
    # ID: gcp-service-account
    ```
 
-4. **Jenkinsfile에 환경 변수 추가**
+4. **Jenkinsfile에 환경 변수 추가** (이미 템플릿에 포함됨)
    ```groovy
    environment {
        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-service-account')
-       TG_WORKING_DIR = 'environments/LIVE/jsj-game-g'
+       TG_WORKING_DIR = '.'  // 환경 디렉터리 루트
    }
    ```
 

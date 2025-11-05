@@ -1,11 +1,27 @@
+// Terragrunt CI/CD Pipeline Template
+//
+// 사용 방법:
+// 1. 이 파일을 새 환경 디렉터리로 복사
+//    cp .jenkins/Jenkinsfile.template environments/LIVE/your-project/Jenkinsfile
+//
+// 2. 필요한 경우 파라미터나 스테이지 커스터마이징
+//    - TARGET_LAYER choices (레이어 추가/제거)
+//    - 승인자 제한 (submitter 변경)
+//    - 타임아웃 시간 조정
+//
+// 3. Jenkins Job 생성
+//    Script Path: environments/LIVE/your-project/Jenkinsfile
+//
+
 pipeline {
     agent any
 
     environment {
         TF_IN_AUTOMATION = 'true'
         TF_INPUT = 'false'
-        // GCP 프로젝트 경로
-        TG_WORKING_DIR = 'environments/LIVE/jsj-game-g'
+        // Terragrunt 작업 디렉터리 (현재 환경 루트)
+        // 수정 불필요: Jenkinsfile이 환경 디렉터리에 있으므로 '.'로 고정
+        TG_WORKING_DIR = '.'
     }
 
     parameters {
@@ -137,7 +153,7 @@ pipeline {
                         input(
                             message: approvalMessage,
                             ok: '✅ 승인 (Apply 실행)',
-                            submitter: 'admin'  // 승인 가능한 사용자 제한
+                            submitter: 'admin'  // 승인 가능한 사용자 제한 (필요 시 수정)
                         )
                     }
                 }
@@ -192,8 +208,8 @@ pipeline {
         always {
             echo '🧹 Cleaning up plan files...'
             sh '''
-                find terraform_gcp_infra -name "tfplan" -type f -delete || true
-                find terraform_gcp_infra -name ".terraform.lock.hcl" -type f || true
+                find . -name "tfplan" -type f -delete || true
+                find . -name ".terraform.lock.hcl" -type f || true
             '''
             echo '🏁 Pipeline finished'
         }

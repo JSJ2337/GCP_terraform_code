@@ -27,6 +27,11 @@
   - `proj-default-templet`을 `terraform_gcp_infra/` 루트로 이동
   - `environments/LIVE/`는 실제 배포 환경만 포함
   - 템플릿 복사 시 더 명확한 구조 제공
+- **환경별 Jenkinsfile 구조**: 각 환경이 독립적인 Jenkinsfile 보유
+  - `Jenkinsfile`을 `environments/LIVE/jsj-game-g/` 로 이동
+  - `.jenkins/Jenkinsfile.template` 생성 (재사용 가능한 템플릿)
+  - `TG_WORKING_DIR`을 상대 경로 '.'로 변경
+  - Jenkins Job Script Path: `environments/LIVE/{project}/Jenkinsfile`
 
 ### 문서 (Documentation)
 - `00_README.md`: Jenkins CI/CD 통합 섹션 추가, 디렉터리 구조 업데이트

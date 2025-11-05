@@ -56,7 +56,20 @@ cp -R proj-default-templet environments/LIVE/proj-myservice-prod
 
 ---
 
-## 5. Terragrunt 실행 순서
+## 5. Jenkinsfile 복사 (CI/CD 사용 시)
+```bash
+# Jenkinsfile 템플릿 복사
+cp .jenkins/Jenkinsfile.template environments/LIVE/proj-myservice-prod/Jenkinsfile
+
+# Jenkins Job 생성 시 Script Path 설정:
+# environments/LIVE/proj-myservice-prod/Jenkinsfile
+```
+
+> 템플릿은 수정 없이 바로 사용 가능. TG_WORKING_DIR='.'로 자동 설정됨
+
+---
+
+## 6. Terragrunt 실행 순서
 ```bash
 cd environments/LIVE/proj-myservice-prod
 # 레이어별 배포 (예시)
@@ -71,7 +84,7 @@ terragrunt run-all apply --terragrunt-include-dir 10-network
 
 ---
 
-## 6. 마무리 체크
+## 7. 마무리 체크
 - [ ] Cloud Monitoring Alert 정책이 새 프로젝트에서 정상 생성되었는지 확인
 - [ ] 중앙 로그 싱크 사용 시 대상 버킷에 `log_sink_writer_identity` 서비스 계정 권한 부여
 - [ ] Terraform/Terragrunt 상태 버킷에 새로운 Prefix가 생성되었는지 확인

@@ -21,7 +21,11 @@ terragrunt plan
 - **디렉터리 구조 재정리**:
   - `proj-default-templet`을 `terraform_gcp_infra/` 루트로 이동 (템플릿과 실제 환경 분리)
   - `environments/LIVE/jsj-game-g` 첫 번째 실제 배포 환경 생성 (Project ID: jsj-game-g, Region: asia-northeast3)
-  - `Jenkinsfile`을 `terraform_gcp_infra/` 루트로 이동
+- **환경별 Jenkinsfile 구조**:
+  - `Jenkinsfile`을 `environments/LIVE/jsj-game-g/`로 이동 (각 환경이 독립적인 Pipeline 보유)
+  - `.jenkins/Jenkinsfile.template` 생성 (재사용 가능한 템플릿)
+  - `TG_WORKING_DIR`을 상대 경로 '.'로 변경
+  - Script Path: `environments/LIVE/{project}/Jenkinsfile`
 - **Jenkins Docker 설정**:
   - Jenkins LTS + Terraform 1.9.8 + Terragrunt 0.68.15 + Git 사전 설치
   - GitHub Webhook 자동 빌드 연동
