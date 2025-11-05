@@ -3,50 +3,198 @@ pipeline {
 
     environment {
         TF_IN_AUTOMATION = 'true'
+        TF_INPUT = 'false'
+        // GCP 프로젝트 경로
+        TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/jsj-game-f'
+    }
+
+    parameters {
+        choice(
+            name: 'ACTION',
+            choices: ['plan', 'apply', 'destroy'],
+            description: 'Terragrunt 실행할 작업 선택'
+        )
+        choice(
+            name: 'TARGET_LAYER',
+            choices: [
+                'all',
+                '00-project',
+                '10-network',
+                '20-storage',
+                '30-security',
+                '40-observability',
+                '50-workloads',
+                '60-database',
+                '65-cache',
+                '70-loadbalancer'
+            ],
+            description: '실행할 레이어 (all = 전체 스택)'
+        )
     }
 
     stages {
         stage('Checkout') {
             steps {
-                echo "✅ Repository checked out successfully"
+                echo "✅ Repository checked out"
                 echo "Branch: ${env.GIT_BRANCH}"
                 echo "Commit: ${env.GIT_COMMIT}"
+                echo "Action: ${params.ACTION}"
+                echo "Target: ${params.TARGET_LAYER}"
             }
         }
 
         stage('Environment Check') {
             steps {
-                echo '🔍 Checking installed tools...'
-                sh 'terraform --version'
-                sh 'terragrunt --version'
-                sh 'git --version'
+                echo '🔍 Checking tools...'
+                sh '''
+                    terraform --version
+                    terragrunt --version
+                    git --version
+                '''
             }
         }
 
-        stage('List Files') {
+        stage('Terragrunt Init') {
             steps {
-                echo '📁 Repository structure:'
-                sh 'ls -la'
-                sh 'pwd'
+                script {
+                    echo '🔧 Initializing Terragrunt...'
+                    if (params.TARGET_LAYER == 'all') {
+                        dir("${TG_WORKING_DIR}") {
+                            sh 'terragrunt run-all init --terragrunt-non-interactive'
+                        }
+                    } else {
+                        dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
+                            sh 'terragrunt init --terragrunt-non-interactive'
+                        }
+                    }
+                }
             }
         }
 
-        stage('Test Success') {
+        stage('Terragrunt Plan') {
             steps {
-                echo '🎉 Pipeline test completed successfully!'
-                echo "Triggered by: ${env.BUILD_USER_ID ?: 'GitHub Webhook'}"
+                script {
+                    echo '📋 Running Terragrunt Plan...'
+                    if (params.TARGET_LAYER == 'all') {
+                        dir("${TG_WORKING_DIR}") {
+                            sh '''
+                                terragrunt run-all plan \\
+                                    --terragrunt-non-interactive \\
+                                    -out=tfplan
+                            '''
+                        }
+                    } else {
+                        dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
+                            sh '''
+                                terragrunt plan \\
+                                    --terragrunt-non-interactive \\
+                                    -out=tfplan
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Review Plan') {
+            when {
+                expression { params.ACTION == 'apply' || params.ACTION == 'destroy' }
+            }
+            steps {
+                script {
+                    echo '👀 Plan 결과를 확인하세요!'
+                    echo "Action: ${params.ACTION}"
+                    echo "Target: ${params.TARGET_LAYER}"
+
+                    // Plan 출력 내용 표시
+                    if (params.TARGET_LAYER == 'all') {
+                        echo '⚠️  전체 스택에 대한 변경사항입니다!'
+                    } else {
+                        echo "⚠️  ${params.TARGET_LAYER} 레이어에 대한 변경사항입니다!"
+                    }
+                }
+            }
+        }
+
+        stage('🛑 Manual Approval 🛑') {
+            when {
+                expression { params.ACTION == 'apply' || params.ACTION == 'destroy' }
+            }
+            steps {
+                script {
+                    def approvalMessage = """
+                    ⚠️  인프라 변경 승인 필요 ⚠️
+
+                    Action: ${params.ACTION.toUpperCase()}
+                    Target: ${params.TARGET_LAYER}
+                    Branch: ${env.GIT_BRANCH}
+                    Commit: ${env.GIT_COMMIT}
+
+                    위 Plan을 검토한 후 승인하시겠습니까?
+                    """
+
+                    timeout(time: 30, unit: 'MINUTES') {
+                        input(
+                            message: approvalMessage,
+                            ok: '✅ 승인 (Apply 실행)',
+                            submitter: 'admin'  // 승인 가능한 사용자 제한
+                        )
+                    }
+                }
+            }
+        }
+
+        stage('Terragrunt Apply/Destroy') {
+            when {
+                expression { params.ACTION == 'apply' || params.ACTION == 'destroy' }
+            }
+            steps {
+                script {
+                    if (params.ACTION == 'apply') {
+                        echo '🚀 Applying Terragrunt changes...'
+                        if (params.TARGET_LAYER == 'all') {
+                            dir("${TG_WORKING_DIR}") {
+                                sh 'terragrunt run-all apply --terragrunt-non-interactive tfplan'
+                            }
+                        } else {
+                            dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
+                                sh 'terragrunt apply --terragrunt-non-interactive tfplan'
+                            }
+                        }
+                    } else if (params.ACTION == 'destroy') {
+                        echo '🗑️  Destroying Terragrunt resources...'
+                        if (params.TARGET_LAYER == 'all') {
+                            dir("${TG_WORKING_DIR}") {
+                                sh 'terragrunt run-all destroy --terragrunt-non-interactive -auto-approve'
+                            }
+                        } else {
+                            dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
+                                sh 'terragrunt destroy --terragrunt-non-interactive -auto-approve'
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 
     post {
         success {
-            echo '✅ Build completed successfully!'
+            echo '✅ Pipeline completed successfully!'
+            echo "Action: ${params.ACTION}"
+            echo "Target: ${params.TARGET_LAYER}"
         }
         failure {
-            echo '❌ Build failed!'
+            echo '❌ Pipeline failed!'
+            echo "Failed at action: ${params.ACTION}"
+            echo "Target: ${params.TARGET_LAYER}"
         }
         always {
+            echo '🧹 Cleaning up plan files...'
+            sh '''
+                find terraform_gcp_infra -name "tfplan" -type f -delete || true
+                find terraform_gcp_infra -name ".terraform.lock.hcl" -type f || true
+            '''
             echo '🏁 Pipeline finished'
         }
     }
