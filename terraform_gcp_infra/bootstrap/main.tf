@@ -145,7 +145,7 @@ resource "google_organization_iam_member" "jenkins_editor" {
 
 # 폴더 레벨 권한 (조직 ID가 없고 폴더 ID가 있을 경우)
 resource "google_folder_iam_member" "jenkins_project_creator_folder" {
-  count = var.organization_id == "" && var.folder_id != "" ? 1 : 0
+  count = var.organization_id == "" && var.folder_id != null && var.folder_id != "" ? 1 : 0
 
   folder = var.folder_id
   role   = "roles/resourcemanager.projectCreator"
@@ -153,7 +153,7 @@ resource "google_folder_iam_member" "jenkins_project_creator_folder" {
 }
 
 resource "google_folder_iam_member" "jenkins_billing_user_folder" {
-  count = var.organization_id == "" && var.folder_id != "" ? 1 : 0
+  count = var.organization_id == "" && var.folder_id != null && var.folder_id != "" ? 1 : 0
 
   folder = var.folder_id
   role   = "roles/billing.user"
@@ -161,7 +161,7 @@ resource "google_folder_iam_member" "jenkins_billing_user_folder" {
 }
 
 resource "google_folder_iam_member" "jenkins_editor_folder" {
-  count = var.organization_id == "" && var.folder_id != "" ? 1 : 0
+  count = var.organization_id == "" && var.folder_id != null && var.folder_id != "" ? 1 : 0
 
   folder = var.folder_id
   role   = "roles/editor"
