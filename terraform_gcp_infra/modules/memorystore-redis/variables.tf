@@ -15,7 +15,7 @@ variable "instance_name" {
 
 variable "region" {
   type        = string
-  description = "Primary region (location_id) for the Redis instance (e.g., us-central1)"
+  description = "Primary zone (location_id) for the Redis instance. Must be a ZONE, not a region (e.g., us-central1-a, not us-central1)"
 }
 
 variable "alternative_location_id" {

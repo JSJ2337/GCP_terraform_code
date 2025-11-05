@@ -29,6 +29,16 @@ cp -R proj-default-templet proj-myservice-prod
 
 ---
 
+## Terragrunt & Naming 구조 개요
+- 각 레이어의 `terragrunt.hcl`은 `common.naming.tfvars`와 레이어 전용 `terraform.tfvars`를 자동 병합해 Terraform에 전달합니다.
+- `common.naming.tfvars`에 적은 값(예: `project_id`, `region_primary`)은 naming 모듈을 통해 공통 리소스 이름·라벨·기본 존(`region_primary` + suffix)을 계산합니다.
+- 레이어의 `terraform.tfvars`에 값이 비어 있으면 Terragrunt가 위 공통 값을 주입하고, 필요한 경우에만 해당 파일에서 override 하면 됩니다.
+- 프로젝트마다 리전을 바꾸고 싶다면 해당 환경의 `common.naming.tfvars`에서 `region_primary`/`region_backup`만 수정하면 되고, naming 모듈이 자동으로 존까지 계산합니다.
+- 특정 레이어에서 다른 리전·존을 써야 한다면 그 레이어 `terraform.tfvars`에 직접 값을 넣어 Terragrunt 입력을 덮어쓰면 됩니다.
+
+
+---
+
 ## 4. 레이어별 필수 값
 | 레이어 | 필수 수정 항목 | 파일 |
 |--------|----------------|------|

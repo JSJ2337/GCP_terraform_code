@@ -17,7 +17,9 @@ apis = [
   "monitoring.googleapis.com",
   "cloudkms.googleapis.com",
   "cloudbuild.googleapis.com",
-  "container.googleapis.com"
+  "container.googleapis.com",
+  "sqladmin.googleapis.com",        # Cloud SQL
+  "redis.googleapis.com"             # Memorystore Redis
 ]
 
 # Budget settings

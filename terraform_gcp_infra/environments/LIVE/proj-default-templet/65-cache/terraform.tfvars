@@ -1,4 +1,6 @@
-# Region & Project (region은 비워두면 Terragrunt가 region_primary를 사용)
+# Region & Project
+# IMPORTANT: Redis location_id requires a ZONE (e.g., us-central1-a), not a region
+# Leave blank to use region_primary + "-a" suffix, or specify a specific zone
 region         = ""
 
 # Memorystore configuration
