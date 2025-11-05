@@ -48,3 +48,9 @@ variable "create_dev_bucket" {
   type        = bool
   default     = false
 }
+
+variable "organization_id" {
+  description = "GCP 조직 ID (Service Account에 조직 레벨 권한 부여 시 필요)"
+  type        = string
+  default     = ""
+}

@@ -36,3 +36,31 @@ output "backend_config" {
   }
   EOT
 }
+
+output "jenkins_service_account_email" {
+  description = "Jenkins Terraform Admin Service Account 이메일"
+  value       = google_service_account.jenkins_terraform.email
+}
+
+output "jenkins_service_account_name" {
+  description = "Jenkins Terraform Admin Service Account 이름"
+  value       = google_service_account.jenkins_terraform.name
+}
+
+output "jenkins_key_creation_command" {
+  description = "Service Account Key 생성 명령어"
+  value = <<-EOT
+
+  # Service Account Key 파일 생성:
+  gcloud iam service-accounts keys create jenkins-sa-key.json \
+      --iam-account=${google_service_account.jenkins_terraform.email} \
+      --project=${google_project.mgmt.project_id}
+
+  # Jenkins Credentials 추가:
+  # 1. Jenkins → Manage Jenkins → Credentials
+  # 2. (global) → Add Credentials
+  # 3. Kind: Secret file
+  # 4. File: jenkins-sa-key.json 업로드
+  # 5. ID: gcp-service-account
+  EOT
+}

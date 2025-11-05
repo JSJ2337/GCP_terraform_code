@@ -19,3 +19,7 @@ bucket_location  = "US"
 
 # Dev 버킷 생성 여부 (필요하면 true로 변경)
 create_dev_bucket = false
+
+# GCP 조직 ID (Service Account 권한 부여 시 필요)
+# 조직 ID 확인: gcloud organizations list
+organization_id = ""  # 예: "123456789012"

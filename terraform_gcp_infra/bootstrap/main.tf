@@ -105,3 +105,65 @@ resource "google_storage_bucket" "tfstate_dev" {
 
   depends_on = [google_project_service.apis]
 }
+
+# 5) Jenkins Terraform 자동화용 Service Account 생성
+resource "google_service_account" "jenkins_terraform" {
+  project      = google_project.mgmt.project_id
+  account_id   = "jenkins-terraform-admin"
+  display_name = "Jenkins Terraform Admin"
+  description  = "Service Account for Jenkins to create and manage GCP projects via Terraform/Terragrunt"
+
+  depends_on = [google_project_service.apis]
+}
+
+# 6) 조직 레벨 권한 부여 (프로젝트 생성 권한)
+resource "google_organization_iam_member" "jenkins_project_creator" {
+  count = var.organization_id != "" ? 1 : 0
+
+  org_id = var.organization_id
+  role   = "roles/resourcemanager.projectCreator"
+  member = "serviceAccount:${google_service_account.jenkins_terraform.email}"
+}
+
+# 7) 조직 레벨 권한 부여 (청구 계정 연결 권한)
+resource "google_organization_iam_member" "jenkins_billing_user" {
+  count = var.organization_id != "" ? 1 : 0
+
+  org_id = var.organization_id
+  role   = "roles/billing.user"
+  member = "serviceAccount:${google_service_account.jenkins_terraform.email}"
+}
+
+# 8) 조직 레벨 권한 부여 (리소스 관리 권한)
+resource "google_organization_iam_member" "jenkins_editor" {
+  count = var.organization_id != "" ? 1 : 0
+
+  org_id = var.organization_id
+  role   = "roles/editor"
+  member = "serviceAccount:${google_service_account.jenkins_terraform.email}"
+}
+
+# 폴더 레벨 권한 (조직 ID가 없고 폴더 ID가 있을 경우)
+resource "google_folder_iam_member" "jenkins_project_creator_folder" {
+  count = var.organization_id == "" && var.folder_id != "" ? 1 : 0
+
+  folder = var.folder_id
+  role   = "roles/resourcemanager.projectCreator"
+  member = "serviceAccount:${google_service_account.jenkins_terraform.email}"
+}
+
+resource "google_folder_iam_member" "jenkins_billing_user_folder" {
+  count = var.organization_id == "" && var.folder_id != "" ? 1 : 0
+
+  folder = var.folder_id
+  role   = "roles/billing.user"
+  member = "serviceAccount:${google_service_account.jenkins_terraform.email}"
+}
+
+resource "google_folder_iam_member" "jenkins_editor_folder" {
+  count = var.organization_id == "" && var.folder_id != "" ? 1 : 0
+
+  folder = var.folder_id
+  role   = "roles/editor"
+  member = "serviceAccount:${google_service_account.jenkins_terraform.email}"
+}

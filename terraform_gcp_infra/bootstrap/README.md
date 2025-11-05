@@ -6,7 +6,9 @@
 
 - **관리용 GCP 프로젝트**: `delabs-system-mgmt`
 - **상태 저장 버킷**: `delabs-terraform-state-prod`
+- **Jenkins CI/CD용 Service Account**: `jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com`
 - 모든 다른 프로젝트의 Terraform 상태를 여기에 중앙 관리
+- Jenkins가 모든 프로젝트를 생성하고 관리할 수 있는 중앙 인증
 
 ## 중요 사항
 
@@ -17,7 +19,19 @@
 
 ## 사용 방법
 
-### 1. 초기 배포
+### 1. terraform.tfvars 설정
+
+**조직 ID 확인** (Service Account 권한 부여에 필요):
+```bash
+gcloud organizations list
+```
+
+**terraform.tfvars 수정**:
+```hcl
+organization_id = "123456789012"  # 위에서 확인한 조직 ID
+```
+
+### 2. 초기 배포
 
 ```bash
 cd bootstrap
@@ -26,7 +40,7 @@ terraform plan
 terraform apply
 ```
 
-### 2. 배포 후 확인
+### 3. 배포 후 확인
 
 ```bash
 # 프로젝트 확인
@@ -34,9 +48,45 @@ gcloud projects describe delabs-system-mgmt
 
 # 버킷 확인
 gsutil ls -L gs://delabs-terraform-state-prod
+
+# Service Account 확인
+gcloud iam service-accounts describe jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com \
+    --project=delabs-system-mgmt
 ```
 
-### 3. 다른 프로젝트에서 사용
+### 4. Jenkins용 Service Account Key 생성
+
+**Key 파일 생성**:
+```bash
+# terraform output에서 명령어 확인
+terraform output jenkins_key_creation_command
+
+# 또는 직접 실행
+gcloud iam service-accounts keys create jenkins-sa-key.json \
+    --iam-account=jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com \
+    --project=delabs-system-mgmt
+```
+
+**Jenkins에 Credential 추가**:
+1. Jenkins → Manage Jenkins → Credentials
+2. (global) → Add Credentials
+3. Kind: **Secret file** 선택
+4. File: `jenkins-sa-key.json` 업로드
+5. ID: `gcp-service-account`
+6. Save
+
+**생성된 리소스 확인**:
+```bash
+# Service Account 이메일 확인
+terraform output jenkins_service_account_email
+
+# 권한 확인
+gcloud organizations get-iam-policy YOUR_ORG_ID \
+    --flatten="bindings[].members" \
+    --filter="bindings.members:jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com"
+```
+
+### 5. 다른 프로젝트에서 사용
 
 다른 프로젝트의 `backend.tf`:
 
@@ -48,6 +98,30 @@ terraform {
   }
 }
 ```
+
+## 생성되는 리소스
+
+### 1. GCP 프로젝트
+- **Project ID**: `delabs-system-mgmt`
+- **Deletion Policy**: PREVENT (실수 삭제 방지)
+
+### 2. GCS 버킷
+- **Production**: `delabs-terraform-state-prod`
+  - Versioning: 활성화 (최근 10개 버전 유지)
+  - Lifecycle: 30일 지난 버전 자동 삭제
+  - Force Destroy: false (삭제 보호)
+
+### 3. Service Account
+- **이름**: `jenkins-terraform-admin`
+- **Email**: `jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com`
+- **용도**: Jenkins CI/CD를 통한 Terraform/Terragrunt 자동화
+
+### 4. IAM 권한 (조직/폴더 레벨)
+- **Project Creator**: 새 GCP 프로젝트 생성 권한
+- **Billing User**: 프로젝트에 청구 계정 연결 권한
+- **Editor**: 생성된 프로젝트의 모든 리소스 관리 권한
+
+---
 
 ## 상태 파일 백업
 
