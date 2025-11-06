@@ -10,7 +10,7 @@ project_name    = "Default Template Production"
 # 조직/과금 정보
 folder_id       = "folders/123456789012"   # 폴더가 없다면 null로 두고 common.override.tfvars에 org_id 설정
 org_id          = "71994629047"
-billing_account = "ABCDEF-123456-GHIJKL"
+billing_account = "ABCDEF-123456-GHIJKL"   # 공통으로 사용한다면 common.override.tfvars에 설정 가능
 
 # 공통 라벨 (modules/naming에서 제공하는 라벨과 병합됨)
 labels = {

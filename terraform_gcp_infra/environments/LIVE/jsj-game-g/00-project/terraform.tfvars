@@ -1,7 +1,6 @@
 # Project Configuration
 # Provide either folder_id (preferred) or org_id for project parent.
-folder_id       = null # Set to "folders/<FOLDER_ID>" if applicable
-billing_account = "01076D-327AD5-FC8922"
+folder_id = null # Set to "folders/<FOLDER_ID>" if applicable
 
 # Labels (only add extra labels here; modules/naming.common_labels will be merged)
 labels = {

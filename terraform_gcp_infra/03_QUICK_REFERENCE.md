@@ -58,7 +58,7 @@ terragrunt plan
   - `modules/gcs-bucket`이 `public_access_prevention`·`retention_policy_days`가 `null`일 때도 안전하게 동작하도록 validation/동적 블록 보완
   - Bootstrap이 `cloudbilling.googleapis.com`, `serviceusage.googleapis.com`을 자동 활성화하여 신규 프로젝트 생성 시 Billing/API 오류 예방
   - Jenkins 서비스 계정 필수 권한/Billing API 체크리스트를 README·Jenkins 문서에 명시 (billing.user 미설정으로 인한 apply 실패 방지)
-  - Project 베이스 모듈이 `org_id` 입력을 지원해 폴더 없이도 조직 하위 프로젝트 생성 가능
+  - Project 베이스 모듈이 `org_id` 입력을 지원하고 Terragrunt `common.override.tfvars`에 `org_id`·`billing_account` 등 공통 값을 두어 중복 없이 재사용
 
 ### 세션 12: Jenkins CI/CD 통합 및 프로젝트 재구성 (2025-11-05)
 - **디렉터리 구조 재정리**:

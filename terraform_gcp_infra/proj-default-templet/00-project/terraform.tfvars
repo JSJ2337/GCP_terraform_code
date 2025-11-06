@@ -2,7 +2,7 @@
 # Uncomment and set region to override the default from common.naming.tfvars.
 # region = "asia-northeast3"
 # Parent settings
-folder_id       = null
+folder_id = null
 billing_account = "01076D-327AD5-FC8922"
 
 # Labels (only add extra labels here; modules/naming.common_labels will be merged)
