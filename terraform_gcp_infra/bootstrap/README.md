@@ -72,7 +72,7 @@ gcloud iam service-accounts keys create jenkins-sa-key.json \
 2. (global) → Add Credentials
 3. Kind: **Secret file** 선택
 4. File: `jenkins-sa-key.json` 업로드
-5. ID: `gcp-service-account`
+5. ID: `gcp-jenkins-service-account`
 6. Save
 
 **생성된 리소스 확인**:
@@ -86,15 +86,57 @@ gcloud organizations get-iam-policy YOUR_ORG_ID \
     --filter="bindings.members:jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com"
 ```
 
-### 5. 다른 프로젝트에서 사용
+### 5. Service Account 추가 권한 설정
 
-다른 프로젝트의 `backend.tf`:
+**State 버킷 접근 권한** (필수):
+```bash
+# delabs-system-mgmt 프로젝트에 Storage Admin 권한 부여
+gcloud projects add-iam-policy-binding delabs-system-mgmt \
+    --member="serviceAccount:jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com" \
+    --role="roles/storage.admin"
+```
+
+**워크로드 프로젝트 관리 권한** (프로젝트별로 부여):
+```bash
+# 각 워크로드 프로젝트에 Editor 권한 부여
+gcloud projects add-iam-policy-binding <PROJECT_ID> \
+    --member="serviceAccount:jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com" \
+    --role="roles/editor"
+```
+
+**권한 확인**:
+```bash
+# 특정 프로젝트의 Service Account 권한 확인
+gcloud projects get-iam-policy delabs-system-mgmt \
+    --flatten="bindings[].members" \
+    --filter="bindings.members:jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com"
+```
+
+### 6. 다른 프로젝트에서 사용
+
+다른 프로젝트의 `terragrunt.hcl`:
+
+```hcl
+remote_state {
+  backend = "gcs"
+  config = {
+    bucket   = "delabs-terraform-state-prod"
+    prefix   = "proj-game-a/00-project"
+    project  = "delabs-system-mgmt"  # 필수
+    location = "US"                  # 필수
+  }
+}
+```
+
+또는 `backend.tf` (Terraform 직접 사용 시):
 
 ```hcl
 terraform {
   backend "gcs" {
-    bucket = "delabs-terraform-state-prod"
-    prefix = "proj-game-a/00-project"
+    bucket   = "delabs-terraform-state-prod"
+    prefix   = "proj-game-a/00-project"
+    project  = "delabs-system-mgmt"
+    location = "US"
   }
 }
 ```

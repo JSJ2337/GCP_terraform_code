@@ -22,10 +22,14 @@ terragrunt plan
   - `jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com` Terraform으로 생성
   - Infrastructure as Code로 관리 (bootstrap/main.tf)
   - 조직 레벨 권한 부여 로직 추가 (조직 있는 경우)
+- **Service Account 필수 권한 설정**:
+  - `delabs-system-mgmt`: `roles/storage.admin` (State 버킷 접근)
+  - `jsj-game-g`: `roles/editor` (리소스 관리)
+  - 조직 없는 환경에서 프로젝트별 권한 수동 부여 방식
 - **조직 없는 환경 대응**:
-  - 프로젝트 수동 생성 방식 문서화
-  - 프로젝트별 Editor 권한 부여 방식
+  - 프로젝트 수동 생성 방식 문서화 및 실행
   - jsj-game-g 프로젝트 생성 (Project Number: 865467708587)
+  - Billing account 수동 연결
 - **Jenkins GCP 인증 통합**:
   - Jenkinsfile에 `GOOGLE_APPLICATION_CREDENTIALS` 환경변수 추가
   - Credential ID: `gcp-jenkins-service-account`
@@ -34,14 +38,20 @@ terragrunt plan
   - `TG_WORKING_DIR`을 workspace root 기준 절대 경로로 변경
   - 예: `terraform_gcp_infra/environments/LIVE/jsj-game-g`
   - 템플릿 디렉터리와의 충돌 방지
-- **terragrunt.hcl 필수 설정 추가**:
-  - GCS remote_state에 `project` 파라미터 필수 (delabs-system-mgmt)
-  - GCS remote_state에 `location` 파라미터 필수 (US)
-  - jsj-game-g 및 proj-default-templet 모두 적용
+- **terragrunt.hcl 설정 개선**:
+  - GCS remote_state에 `project`, `location` 파라미터 필수 추가
+  - `terraform.source` 블록 제거하여 in-place 실행
+  - `.terragrunt-cache` 사용 안 함으로 모듈 경로 문제 해결
+  - 18개 레이어 파일 업데이트 (jsj-game-g 9개 + proj-default-templet 9개)
+- **에러 해결**:
+  - "storage.buckets.create access denied" → Storage Admin 권한 부여로 해결
+  - "Missing required GCS remote state configuration" → project/location 추가로 해결
+  - "Unreadable module directory" → terraform.source 제거로 해결
 - **문서 업데이트**:
   - 00_README.md: GCP 인증 설정 섹션 대폭 수정 (Bootstrap 통합, 조직 없는 환경 대응)
   - 02_CHANGELOG.md: 2025-11-06 변경사항 추가
   - 05_quick setup guide.md: terragrunt.hcl 필수 설정, Jenkinsfile 설정 가이드 추가
+  - bootstrap/README.md: Service Account 권한 설정 추가
   - 03_QUICK_REFERENCE.md: 세션 13 기록
 
 ### 세션 12: Jenkins CI/CD 통합 및 프로젝트 재구성 (2025-11-05)

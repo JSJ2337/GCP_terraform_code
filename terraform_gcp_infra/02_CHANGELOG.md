@@ -20,6 +20,9 @@
   - `GOOGLE_APPLICATION_CREDENTIALS` 환경변수 추가
   - Jenkins Credential ID: `gcp-jenkins-service-account`
   - Secret file 타입으로 Service Account Key 관리
+- **Service Account 필수 권한 설정**:
+  - `delabs-system-mgmt` 프로젝트: `roles/storage.admin` (State 버킷 접근)
+  - 각 워크로드 프로젝트: `roles/editor` (리소스 관리)
 
 ### 변경 (Changed)
 - **Jenkinsfile Working Directory 수정**: 절대 경로 사용
@@ -30,6 +33,11 @@
   - `project`: GCS 버킷이 위치한 프로젝트 (delabs-system-mgmt)
   - `location`: 버킷 위치 (US)
   - `jsj-game-g` 및 `proj-default-templet` 모두 적용
+- **Terragrunt in-place 실행**: `.terragrunt-cache` 사용 안 함
+  - 모든 레이어 `terragrunt.hcl`에서 `terraform.source` 블록 제거
+  - 현재 디렉토리에서 직접 실행 (상대 경로 모듈 참조 유지)
+  - `.terragrunt-cache`로 복사하지 않아 더 빠른 실행
+  - 18개 레이어 파일 업데이트 (jsj-game-g 9개 + proj-default-templet 9개)
 
 ### 수정 (Fixed)
 - **Jenkinsfile 경로 이슈 해결**: workspace root vs Jenkinsfile 위치
@@ -38,6 +46,10 @@
 - **GCS Remote State 파라미터 누락 오류 해결**:
   - "Missing required GCS remote state configuration project" 오류 수정
   - "Missing required GCS remote state configuration location" 오류 수정
+- **Terragrunt 모듈 경로 문제 해결**:
+  - "Unreadable module directory" 오류 수정
+  - `.terragrunt-cache`에서 상대 경로(`../../../../modules`) 찾지 못하는 문제 해결
+  - `terraform.source` 제거로 in-place 실행하여 해결
 
 ## [미배포] - 2025-11-05
 
