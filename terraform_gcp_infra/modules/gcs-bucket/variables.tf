@@ -126,7 +126,7 @@ variable "public_access_prevention" {
   description = "Prevents public access to a bucket"
   default     = "enforced"
   validation {
-    condition = var.public_access_prevention == null || contains([
+    condition = var.public_access_prevention == null ? true : contains([
       "enforced", "inherited"
     ], var.public_access_prevention)
     error_message = "Public access prevention must be 'enforced' or 'inherited'."
