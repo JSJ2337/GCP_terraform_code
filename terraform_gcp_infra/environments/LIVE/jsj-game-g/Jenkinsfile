@@ -4,7 +4,8 @@ pipeline {
     environment {
         TF_IN_AUTOMATION = 'true'
         TF_INPUT = 'false'
-        // Terragrunt 작업 디렉터리 (현재 환경 루트)
+        // Terragrunt 작업 디렉터리 (Jenkinsfile이 있는 디렉터리)
+        // Jenkins Script Path 설정에서 자동으로 감지됨
         TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/jsj-game-g'
         // GCP 인증 설정 (Jenkins Credential 사용)
         GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-jenkins-service-account')

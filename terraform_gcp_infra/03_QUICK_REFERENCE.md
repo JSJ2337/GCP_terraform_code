@@ -17,6 +17,33 @@ terragrunt plan
 
 ## 📝 변경된 파일 요약
 
+### 세션 13: Bootstrap Service Account 및 GCP 인증 설정 (2025-11-06)
+- **Bootstrap Service Account 자동 생성**:
+  - `jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com` Terraform으로 생성
+  - Infrastructure as Code로 관리 (bootstrap/main.tf)
+  - 조직 레벨 권한 부여 로직 추가 (조직 있는 경우)
+- **조직 없는 환경 대응**:
+  - 프로젝트 수동 생성 방식 문서화
+  - 프로젝트별 Editor 권한 부여 방식
+  - jsj-game-g 프로젝트 생성 (Project Number: 865467708587)
+- **Jenkins GCP 인증 통합**:
+  - Jenkinsfile에 `GOOGLE_APPLICATION_CREDENTIALS` 환경변수 추가
+  - Credential ID: `gcp-jenkins-service-account`
+  - Secret file 타입으로 Service Account Key 관리
+- **Jenkinsfile Working Directory 수정**:
+  - `TG_WORKING_DIR`을 workspace root 기준 절대 경로로 변경
+  - 예: `terraform_gcp_infra/environments/LIVE/jsj-game-g`
+  - 템플릿 디렉터리와의 충돌 방지
+- **terragrunt.hcl 필수 설정 추가**:
+  - GCS remote_state에 `project` 파라미터 필수 (delabs-system-mgmt)
+  - GCS remote_state에 `location` 파라미터 필수 (US)
+  - jsj-game-g 및 proj-default-templet 모두 적용
+- **문서 업데이트**:
+  - 00_README.md: GCP 인증 설정 섹션 대폭 수정 (Bootstrap 통합, 조직 없는 환경 대응)
+  - 02_CHANGELOG.md: 2025-11-06 변경사항 추가
+  - 05_quick setup guide.md: terragrunt.hcl 필수 설정, Jenkinsfile 설정 가이드 추가
+  - 03_QUICK_REFERENCE.md: 세션 13 기록
+
 ### 세션 12: Jenkins CI/CD 통합 및 프로젝트 재구성 (2025-11-05)
 - **디렉터리 구조 재정리**:
   - `proj-default-templet`을 `terraform_gcp_infra/` 루트로 이동 (템플릿과 실제 환경 분리)
@@ -24,7 +51,7 @@ terragrunt plan
 - **환경별 Jenkinsfile 구조**:
   - `Jenkinsfile`을 `environments/LIVE/jsj-game-g/`로 이동 (각 환경이 독립적인 Pipeline 보유)
   - `.jenkins/Jenkinsfile.template` 생성 (재사용 가능한 템플릿)
-  - `TG_WORKING_DIR`을 상대 경로 '.'로 변경
+  - `TG_WORKING_DIR`을 절대 경로로 설정 (workspace root 기준)
   - Script Path: `environments/LIVE/{project}/Jenkinsfile`
 - **Jenkins Docker 설정**:
   - Jenkins LTS + Terraform 1.9.8 + Terragrunt 0.68.15 + Git 사전 설치

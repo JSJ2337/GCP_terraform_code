@@ -5,6 +5,40 @@
 형식: [Keep a Changelog](https://keepachangelog.com/ko/1.0.0/) 기반
 버저닝: [Semantic Versioning](https://semver.org/lang/ko/) 준수
 
+## [미배포] - 2025-11-06
+
+### 추가 (Added)
+- **Bootstrap Service Account 생성**: Jenkins CI/CD 자동화를 위한 Service Account
+  - `jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com` 생성
+  - Bootstrap Terraform 코드로 관리 (Infrastructure as Code)
+  - 조직 권한 없는 환경에서 프로젝트별 권한 부여 방식 지원
+- **GCP 프로젝트 수동 생성 프로세스**: 조직 없는 환경 대응
+  - `jsj-game-g` 프로젝트 생성 (Project Number: 865467708587)
+  - Service Account에 프로젝트별 Editor 권한 부여
+  - Billing account 수동 연결 방식
+- **Jenkins GCP 인증 설정**: Jenkinsfile에 GCP 인증 통합
+  - `GOOGLE_APPLICATION_CREDENTIALS` 환경변수 추가
+  - Jenkins Credential ID: `gcp-jenkins-service-account`
+  - Secret file 타입으로 Service Account Key 관리
+
+### 변경 (Changed)
+- **Jenkinsfile Working Directory 수정**: 절대 경로 사용
+  - `TG_WORKING_DIR`을 상대 경로 '.'에서 절대 경로로 변경
+  - 예: `terraform_gcp_infra/environments/LIVE/jsj-game-g`
+  - 템플릿 디렉터리와의 충돌 방지
+- **terragrunt.hcl GCS Remote State 설정 강화**: 필수 파라미터 추가
+  - `project`: GCS 버킷이 위치한 프로젝트 (delabs-system-mgmt)
+  - `location`: 버킷 위치 (US)
+  - `jsj-game-g` 및 `proj-default-templet` 모두 적용
+
+### 수정 (Fixed)
+- **Jenkinsfile 경로 이슈 해결**: workspace root vs Jenkinsfile 위치
+  - Jenkins Pipeline은 항상 workspace root에서 시작
+  - Jenkinsfile 위치와 무관하게 절대 경로 필요
+- **GCS Remote State 파라미터 누락 오류 해결**:
+  - "Missing required GCS remote state configuration project" 오류 수정
+  - "Missing required GCS remote state configuration location" 오류 수정
+
 ## [미배포] - 2025-11-05
 
 ### 추가 (Added)
@@ -30,7 +64,7 @@
 - **환경별 Jenkinsfile 구조**: 각 환경이 독립적인 Jenkinsfile 보유
   - `Jenkinsfile`을 `environments/LIVE/jsj-game-g/` 로 이동
   - `.jenkins/Jenkinsfile.template` 생성 (재사용 가능한 템플릿)
-  - `TG_WORKING_DIR`을 상대 경로 '.'로 변경
+  - `TG_WORKING_DIR`을 절대 경로로 변경 (workspace root 기준)
   - Jenkins Job Script Path: `environments/LIVE/{project}/Jenkinsfile`
 
 ### 문서 (Documentation)

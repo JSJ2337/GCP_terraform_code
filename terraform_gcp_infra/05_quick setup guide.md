@@ -23,9 +23,29 @@ cp -R proj-default-templet environments/LIVE/proj-myservice-prod
 ## 3. 공통 설정 업데이트
 | 파일 | 수정 항목 |
 |------|-----------|
-| `environments/LIVE/proj-myservice-prod/terragrunt.hcl` | `project_state_prefix`를 새 환경명으로 변경 |
+| `environments/LIVE/proj-myservice-prod/terragrunt.hcl` | **필수**: `project_state_prefix`, `remote_state_project`, `remote_state_location` 설정 확인 |
 | `environments/LIVE/proj-myservice-prod/common.naming.tfvars` | `project_id`, `project_name`, `environment`, `organization`, `region_*` 값을 신규 환경에 맞게 설정 |
 | `environments/LIVE/proj-myservice-prod/common.override.tfvars` (선택) | 공통 오버라이드가 필요하면 사용 (기본은 비어 있음) |
+
+**⚠️ terragrunt.hcl 필수 설정**:
+```hcl
+locals {
+  remote_state_bucket   = "delabs-terraform-state-prod"
+  remote_state_project  = "delabs-system-mgmt"      # ⚠️ 필수
+  remote_state_location = "US"                      # ⚠️ 필수
+  project_state_prefix  = "proj-myservice-prod"    # 환경별로 변경
+}
+
+remote_state {
+  backend = "gcs"
+  config = {
+    bucket   = local.remote_state_bucket
+    prefix   = "${local.project_state_prefix}/${path_relative_to_include()}"
+    project  = local.remote_state_project   # ⚠️ 필수
+    location = local.remote_state_location  # ⚠️ 필수
+  }
+}
+```
 
 ---
 
@@ -56,16 +76,50 @@ cp -R proj-default-templet environments/LIVE/proj-myservice-prod
 
 ---
 
-## 5. Jenkinsfile 복사 (CI/CD 사용 시)
+## 5. Jenkinsfile 복사 및 설정 (CI/CD 사용 시)
+
+### 5.1. Jenkinsfile 템플릿 복사
 ```bash
 # Jenkinsfile 템플릿 복사
 cp .jenkins/Jenkinsfile.template environments/LIVE/proj-myservice-prod/Jenkinsfile
-
-# Jenkins Job 생성 시 Script Path 설정:
-# environments/LIVE/proj-myservice-prod/Jenkinsfile
 ```
 
-> 템플릿은 수정 없이 바로 사용 가능. TG_WORKING_DIR='.'로 자동 설정됨
+### 5.2. TG_WORKING_DIR 수정 (⚠️ 필수)
+```bash
+# Jenkinsfile 편집
+vim environments/LIVE/proj-myservice-prod/Jenkinsfile
+
+# TG_WORKING_DIR을 실제 프로젝트 경로로 변경:
+# TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/proj-myservice-prod'
+```
+
+**⚠️ 중요**:
+- `TG_WORKING_DIR`은 workspace root 기준 **절대 경로** 사용
+- `.` (상대 경로)를 사용하면 템플릿 디렉터리까지 실행됨
+- Jenkins Pipeline은 항상 workspace root에서 시작
+
+### 5.3. Jenkins Job 생성
+```
+Jenkins → New Item → Pipeline
+
+Configuration:
+  - Pipeline script from SCM
+  - SCM: Git
+  - Repository URL: <your-git-repo>
+  - Script Path: terraform_gcp_infra/environments/LIVE/proj-myservice-prod/Jenkinsfile
+```
+
+### 5.4. GCP Credential 설정
+Jenkins에 GCP Service Account Key 등록 (최초 1회):
+```
+Jenkins → Manage Jenkins → Credentials → Add Credentials
+  - Kind: Secret file
+  - File: jenkins-sa-key.json (bootstrap에서 생성)
+  - ID: gcp-jenkins-service-account  ⚠️ 정확히 이 ID로 입력
+  - Description: GCP Service Account for Jenkins
+```
+
+> 상세 내용은 `00_README.md`의 "GCP 인증 설정 (Jenkins용)" 섹션 참조
 
 ---
 

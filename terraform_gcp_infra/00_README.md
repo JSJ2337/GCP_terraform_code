@@ -466,53 +466,83 @@ gsutil cp terraform.tfstate gs://your-backup-bucket/bootstrap/
 
 **중앙 관리 Service Account 방식** (권장):
 
-1. **관리용 프로젝트에서 Service Account 생성**
-   ```bash
-   # delabs-system-mgmt 프로젝트에서
-   gcloud iam service-accounts create jenkins-terraform-admin \
-       --display-name="Jenkins Terraform Admin" \
-       --project=delabs-system-mgmt
-   ```
+#### 1. Bootstrap으로 Service Account 생성 (자동)
 
-2. **조직/폴더 레벨 권한 부여**
-   ```bash
-   # 프로젝트 생성 권한
-   gcloud organizations add-iam-policy-binding ORG_ID \
-       --member="serviceAccount:jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com" \
-       --role="roles/resourcemanager.projectCreator"
+Bootstrap 배포 시 `jenkins-terraform-admin` Service Account가 자동으로 생성됩니다 (`bootstrap/main.tf` 참조).
 
-   # 청구 계정 연결 권한
-   gcloud organizations add-iam-policy-binding ORG_ID \
-       --member="serviceAccount:jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com" \
-       --role="roles/billing.user"
-   ```
+```bash
+cd bootstrap
+terraform apply  # Service Account 자동 생성
+```
 
-3. **Key 파일 생성 및 Jenkins 등록**
-   ```bash
-   # Key 다운로드
-   gcloud iam service-accounts keys create jenkins-sa-key.json \
-       --iam-account=jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com
+**생성되는 리소스**:
+- Service Account: `jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com`
+- 조직 레벨 권한 (조직이 있는 경우):
+  - `roles/resourcemanager.projectCreator` (프로젝트 생성)
+  - `roles/billing.user` (청구 계정 연결)
+  - `roles/editor` (리소스 관리)
 
-   # Jenkins → Manage Jenkins → Credentials → Add Credentials
-   # Kind: Secret file
-   # File: jenkins-sa-key.json 업로드
-   # ID: gcp-service-account
-   ```
+#### 2. 프로젝트 생성 방식
 
-4. **Jenkinsfile에 환경 변수 추가** (이미 템플릿에 포함됨)
-   ```groovy
-   environment {
-       GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-service-account')
-       TG_WORKING_DIR = '.'  // 환경 디렉터리 루트
-   }
-   ```
+**조직이 있는 경우**: Jenkins가 자동으로 프로젝트 생성 가능
+
+**조직이 없는 경우**: 프로젝트를 수동으로 생성하고 권한 부여
+```bash
+# 1. 프로젝트 수동 생성
+gcloud projects create YOUR-PROJECT-ID --name="Your Project Name"
+
+# 2. Billing 계정 연결
+gcloud beta billing projects link YOUR-PROJECT-ID \
+    --billing-account=YOUR-BILLING-ACCOUNT-ID
+
+# 3. Service Account에 프로젝트별 Editor 권한 부여
+gcloud projects add-iam-policy-binding YOUR-PROJECT-ID \
+    --member="serviceAccount:jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com" \
+    --role="roles/editor"
+```
+
+#### 3. Key 파일 생성 및 Jenkins 등록
+
+```bash
+# 1. Key 다운로드 (bootstrap output 명령 사용)
+cd bootstrap
+terraform output jenkins_key_creation_command  # 명령어 확인 후 실행
+
+# 또는 직접 실행:
+gcloud iam service-accounts keys create jenkins-sa-key.json \
+    --iam-account=jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com \
+    --project=delabs-system-mgmt
+
+# 2. Jenkins에 Credential 등록
+# Jenkins → Manage Jenkins → Credentials → Add Credentials
+# - Kind: Secret file
+# - File: jenkins-sa-key.json 업로드
+# - ID: gcp-jenkins-service-account  ⚠️ 정확히 이 ID로 입력
+# - Description: GCP Service Account for Jenkins Terraform
+```
+
+#### 4. Jenkinsfile 환경 변수 (이미 템플릿에 포함됨)
+
+```groovy
+environment {
+    GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-jenkins-service-account')
+    // ⚠️ workspace root 기준 절대 경로 사용
+    TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/YOUR-PROJECT-NAME'
+}
+```
+
+**⚠️ 중요**:
+- Credential ID는 반드시 `gcp-jenkins-service-account`로 설정 (Jenkinsfile과 일치 필요)
+- `TG_WORKING_DIR`은 workspace root 기준 절대 경로 사용 (`.` 사용 불가)
+- 템플릿 복사 시 `YOUR-PROJECT-NAME`을 실제 프로젝트 이름으로 변경
 
 **장점**:
+- Infrastructure as Code로 Service Account 관리
 - 하나의 SA로 모든 프로젝트 관리
-- Key 교체 시 한 번만 변경
+- Key 교체 시 Jenkins에서 한 번만 변경
 - 중앙 집중식 권한 관리 및 감사
 
-**상세 내용**: [Terragrunt Pipeline 가이드](../jenkins_docker/TERRAGRUNT_PIPELINE.md) 참조
+**상세 내용**: `bootstrap/README.md` 및 [Terragrunt Pipeline 가이드](../jenkins_docker/TERRAGRUNT_PIPELINE.md) 참조
 
 ## 일반적인 작업
 
