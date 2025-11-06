@@ -40,6 +40,7 @@
   - 18개 레이어 파일 업데이트 (jsj-game-g 9개 + proj-default-templet 9개)
 - **Terragrunt region 기본값 문서화**: 모든 레이어 tfvars/example/README에서 `region = ""` 패턴을 제거하고, 필요 시 주석 해제 방식으로 Terragrunt 기본값(`region_primary`)을 재사용하도록 안내
 - **Bootstrap Cloud Billing API 활성화**: `delabs-system-mgmt` 프로젝트가 자동으로 `cloudbilling.googleapis.com`을 사용하도록 설정, 신규 프로젝트 생성 시 Billing API 오류 방지
+- **Bootstrap Service Usage API 활성화**: 프로젝트 생성/서비스 사용 검증을 위해 `serviceusage.googleapis.com`을 자동 활성화
 
 ### 수정 (Fixed)
 - **Jenkinsfile 경로 이슈 해결**: workspace root vs Jenkinsfile 위치

@@ -151,7 +151,7 @@ environments/LIVE/
 - `delabs-system-mgmt` 프로젝트: `roles/storage.admin` (State 버킷 접근)
 - 조직/폴더: `roles/resourcemanager.projectCreator`, `roles/editor`
 - Billing Account `01076D-327AD5-FC8922`: `roles/billing.user`
-- Cloud Billing API가 `delabs-system-mgmt`에서 활성화되어 있는지 확인하세요.
+- Cloud Billing API와 Service Usage API가 `delabs-system-mgmt`에서 활성화되어 있는지 확인하세요.
 
 ---
 

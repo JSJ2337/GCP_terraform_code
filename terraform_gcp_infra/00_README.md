@@ -570,7 +570,10 @@ gcloud projects add-iam-policy-binding delabs-system-mgmt \
     --role="roles/storage.admin"
 ```
 
-> ✅ `cloudbilling.googleapis.com`이 `delabs-system-mgmt` 프로젝트에서 활성화되어 있어야 합니다. bootstrap을 다시 적용하거나 `gcloud services enable cloudbilling.googleapis.com --project=delabs-system-mgmt`로 확인하세요.
+> ✅ `cloudbilling.googleapis.com`과 `serviceusage.googleapis.com`이 `delabs-system-mgmt` 프로젝트에서 활성화되어 있어야 합니다. bootstrap을 다시 적용하거나 아래 명령으로 확인하세요.
+> ```bash
+> gcloud services enable cloudbilling.googleapis.com serviceusage.googleapis.com --project=delabs-system-mgmt
+> ```
 
 ## 일반적인 작업
 
