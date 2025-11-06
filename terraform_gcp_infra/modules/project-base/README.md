@@ -4,7 +4,7 @@
 
 ## 기능
 
-- **프로젝트 생성**: 폴더 내에 결제 계정이 연결된 GCP 프로젝트 생성
+- **프로젝트 생성**: 지정한 폴더 또는 조직 아래에 결제 계정이 연결된 GCP 프로젝트 생성
 - **삭제 정책**: 프로젝트 삭제 동작 제어 (기본값: 자유롭게 삭제 가능)
 - **API 관리**: 필요한 Google Cloud API 활성화
 - **예산 알림**: 선택적 예산 모니터링 및 이메일 알림
@@ -22,7 +22,7 @@ module "project" {
 
   project_id      = "my-project-123"
   project_name    = "My Project"
-  folder_id       = "folders/123456789012"
+  folder_id       = "folders/123456789012"  # 폴더가 없다면 대신 org_id를 설정
   billing_account = "ABCDEF-123456-GHIJKL"
 
   labels = {
@@ -121,7 +121,8 @@ module "production_project" {
 |------|------|------|--------|------|
 | project_id | 생성할 프로젝트 ID | string | - | yes |
 | project_name | 프로젝트 표시 이름 | string | "" | no |
-| folder_id | 프로젝트를 생성할 폴더 ID | string | - | yes |
+| folder_id | 프로젝트를 생성할 폴더 ID (없으면 null) | string | `null` | no |
+| org_id | 상위 조직 ID (`folder_id`가 없을 때 필수) | string | `null` | no |
 | billing_account | 프로젝트에 연결할 결제 계정 | string | - | yes |
 | deletion_policy | 프로젝트 삭제 정책 (DELETE/PREVENT/ABANDON) | string | "DELETE" | no |
 | labels | 프로젝트에 적용할 레이블 | map(string) | {} | no |
@@ -131,6 +132,8 @@ module "production_project" {
 | budget_currency | 예산 통화 | string | "USD" | no |
 | log_retention_days | 기본 로그 보관 기간 (일) | number | 30 | no |
 | cmek_key_id | 로그용 고객 관리 암호화 키 | string | "" | no |
+
+> ✅ `folder_id` 또는 `org_id` 중 하나는 반드시 제공해야 합니다. 조직이 있는 환경에서 서비스 계정이 프로젝트를 생성하려면 상위 리소스를 명시해야 합니다.
 
 ### 기본 API 목록
 

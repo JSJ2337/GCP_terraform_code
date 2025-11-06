@@ -1,7 +1,9 @@
 # Project Configuration
 # Uncomment and set region to override the default from common.naming.tfvars.
 # region = "asia-northeast3"
-folder_id       = null # No folder (standalone project)
+# Parent settings
+folder_id       = null
+org_id          = "71994629047" # 조직에 속한 경우 필수
 billing_account = "01076D-327AD5-FC8922"
 
 # Labels (only add extra labels here; modules/naming.common_labels will be merged)
@@ -19,8 +21,8 @@ apis = [
   "cloudkms.googleapis.com",
   "cloudbuild.googleapis.com",
   "container.googleapis.com",
-  "sqladmin.googleapis.com",        # Cloud SQL
-  "redis.googleapis.com"             # Memorystore Redis
+  "sqladmin.googleapis.com", # Cloud SQL
+  "redis.googleapis.com"     # Memorystore Redis
 ]
 
 # Budget settings

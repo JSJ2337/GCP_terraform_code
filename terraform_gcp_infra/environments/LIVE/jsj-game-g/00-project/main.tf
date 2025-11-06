@@ -40,6 +40,7 @@ module "project_base" {
   project_id      = var.project_id
   project_name    = var.project_name != "" ? var.project_name : module.naming.project_name
   folder_id       = var.folder_id
+  org_id          = var.org_id
   billing_account = var.billing_account
   labels          = merge(module.naming.common_labels, var.labels)
 

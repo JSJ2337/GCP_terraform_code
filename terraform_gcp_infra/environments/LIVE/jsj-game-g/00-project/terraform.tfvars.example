@@ -8,7 +8,8 @@ project_id      = "your-project-id"
 project_name    = "Default Template Production"
 
 # 조직/과금 정보
-folder_id       = "folders/123456789012"   # 최상위가 Organization이면 folders 대신 organizations 사용
+folder_id       = "folders/123456789012"   # 폴더가 없다면 null로 두고 아래 org_id를 설정
+org_id          = "71994629047"
 billing_account = "ABCDEF-123456-GHIJKL"
 
 # 공통 라벨 (modules/naming에서 제공하는 라벨과 병합됨)

@@ -6,11 +6,18 @@ terraform {
   }
 }
 
+# Project parent resolution
+locals {
+  parent_folder_id = var.folder_id != null && trimspace(var.folder_id) != "" ? var.folder_id : null
+  parent_org_id    = var.org_id != null && trimspace(var.org_id) != "" ? var.org_id : null
+}
+
 # 0) 프로젝트 생성 (+ 폴더/결제 연결)
 resource "google_project" "this" {
   project_id          = var.project_id
   name                = var.project_name != "" ? var.project_name : var.project_id
-  folder_id           = var.folder_id
+  folder_id           = local.parent_folder_id
+  org_id              = local.parent_folder_id == null ? local.parent_org_id : null
   billing_account     = var.billing_account
   labels              = var.labels
   auto_create_network = false

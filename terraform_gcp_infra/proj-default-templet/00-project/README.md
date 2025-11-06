@@ -17,7 +17,7 @@ Terraform/Terragrunt 구성을 통해 GCP 프로젝트 생성과 기본 설정(A
    ```
 2. 아래 항목을 환경에 맞게 수정하세요.
    - `project_id`, `project_name`
-   - `folder_id` 또는 `organization_id`
+   - `folder_id` (있는 경우) 또는 `org_id` (조직 최상위에 생성 시 필수)
    - `billing_account`
    - 라벨(`labels`) 및 API 목록(`apis`)
    - 예산 설정(`enable_budget`, `budget_amount`, `budget_currency`)

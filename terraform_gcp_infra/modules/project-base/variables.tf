@@ -12,6 +12,11 @@ variable "folder_id" {
   default = null
 }
 
+variable "org_id" {
+  type    = string
+  default = null
+}
+
 variable "billing_account" {
   type = string
 }

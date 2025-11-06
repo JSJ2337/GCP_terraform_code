@@ -1,5 +1,7 @@
 # Project Configuration
-folder_id       = null # No folder (standalone project)
+# Provide either folder_id (preferred) or org_id for project parent.
+folder_id       = null # Set to "folders/<FOLDER_ID>" if applicable
+org_id          = "71994629047"
 billing_account = "01076D-327AD5-FC8922"
 
 # Labels (only add extra labels here; modules/naming.common_labels will be merged)
@@ -17,8 +19,8 @@ apis = [
   "cloudkms.googleapis.com",
   "cloudbuild.googleapis.com",
   "container.googleapis.com",
-  "sqladmin.googleapis.com",        # Cloud SQL
-  "redis.googleapis.com"             # Memorystore Redis
+  "sqladmin.googleapis.com", # Cloud SQL
+  "redis.googleapis.com"     # Memorystore Redis
 ]
 
 # Budget settings
