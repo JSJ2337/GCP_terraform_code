@@ -11,7 +11,7 @@ locals {
   common_inputs     = try(jsondecode(local.raw_common_inputs), local.raw_common_inputs)
 
   override_file_path  = "${local.parent_dir}/common.override.tfvars"
-  raw_override_inputs = fileexists(local.override_file_path) ? read_tfvars_file(local.override_file_path) : {}
+  raw_override_inputs = read_tfvars_file(local.override_file_path)
   override_inputs     = can(tomap(local.raw_override_inputs)) ? tomap(local.raw_override_inputs) : {}
 
   raw_layer_inputs = try(read_tfvars_file("${get_terragrunt_dir()}/terraform.tfvars"), tomap({}))
