@@ -24,7 +24,7 @@ Terraform/Terragrunt 구성을 통해 GCP 프로젝트 생성과 기본 설정(A
    - 로그 보존 기간(`log_retention_days`)
    - CMEK를 사용할 경우 `cmek_key_id`
 
-> Terragrunt는 `common.override.tfvars` 내용을 자동으로 병합합니다. 폴더가 없고 조직 하위에 프로젝트를 생성해야 한다면 `common.override.tfvars`에 `org_id = "YOUR_ORG_ID"`를 한번만 입력하면 모든 레이어에서 사용됩니다.
+> Terragrunt 루트(`proj-default-templet/terragrunt.hcl`)의 `inputs` 섹션에 `org_id`, `billing_account` 등을 설정하면 모든 레이어에서 자동으로 사용됩니다.
 
 > ⚠️ `terraform.tfvars` 파일은 Git에 커밋하면 안 됩니다.
 

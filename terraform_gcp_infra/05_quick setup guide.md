@@ -25,7 +25,7 @@ cp -R proj-default-templet environments/LIVE/proj-myservice-prod
 |------|-----------|
 | `environments/LIVE/proj-myservice-prod/terragrunt.hcl` | **필수**: `project_state_prefix`, `remote_state_project`, `remote_state_location` 설정 확인 |
 | `environments/LIVE/proj-myservice-prod/common.naming.tfvars` | `project_id`, `project_name`, `environment`, `organization`, `region_*` 값을 신규 환경에 맞게 설정 |
-| `environments/LIVE/proj-myservice-prod/common.override.tfvars` (선택) | 공통 오버라이드가 필요하면 사용 (기본은 비어 있음) |
+| `environments/LIVE/proj-myservice-prod/terragrunt.hcl` | 루트 `inputs`에 공통 값(`org_id`, `billing_account` 등) 설정 |
 
 **⚠️ terragrunt.hcl 필수 설정**:
 ```hcl
@@ -52,7 +52,7 @@ remote_state {
 ## Terragrunt & Naming 구조 개요
 - 각 레이어의 `terragrunt.hcl`은 `common.naming.tfvars`와 레이어 전용 `terraform.tfvars`를 자동 병합해 Terraform에 전달합니다.
 - `common.naming.tfvars`에 적은 값(예: `project_id`, `region_primary`)은 naming 모듈을 통해 공통 리소스 이름·라벨·기본 존(`region_primary` + suffix)을 계산합니다.
-- 레이어의 `terraform.tfvars`에 값이 비어 있으면 Terragrunt가 위 공통 값을 주입하고, 필요한 경우에만 해당 파일에서 override 하면 됩니다.
+- 레이어의 `terraform.tfvars`에 값이 비어 있으면 Terragrunt가 루트 `inputs` 값을 주입하고, 필요한 경우에만 해당 파일에서 재정의하면 됩니다.
 - 프로젝트마다 리전을 바꾸고 싶다면 해당 환경의 `common.naming.tfvars`에서 `region_primary`/`region_backup`만 수정하면 되고, naming 모듈이 자동으로 존까지 계산합니다.
 - 특정 레이어에서 다른 리전·존을 써야 한다면 그 레이어 `terraform.tfvars`에 직접 값을 넣어 Terragrunt 입력을 덮어쓰면 됩니다.
 

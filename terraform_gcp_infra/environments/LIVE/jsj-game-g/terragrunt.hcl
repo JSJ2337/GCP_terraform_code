@@ -16,3 +16,8 @@ remote_state {
     location = local.remote_state_location
   }
 }
+
+inputs = {
+  org_id          = "71994629047"
+  billing_account = "01076D-327AD5-FC8922"
+}

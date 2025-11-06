@@ -50,7 +50,7 @@
    - Terragrunt가 `region_primary`를 기본 적용하도록 모든 레이어 `terraform.tfvars(.example)`과 README에서 `region = ""` 패턴 제거, 주석 기반 오버라이드 방식으로 통일
    - `modules/gcs-bucket`의 `public_access_prevention`, `retention_policy_days`가 `null`일 때 Terraform이 실패하지 않도록 validation과 동적 블록 로직 개선
    - Bootstrap 프로젝트가 `cloudbilling.googleapis.com`, `serviceusage.googleapis.com`을 자동 활성화하여 새 프로젝트 생성 시 Billing/Service Usage API 오류 예방
-   - `modules/project-base`가 `org_id` 입력을 지원하고 00-project 문서/예제에 상위 리소스 및 Billing Account를 Terragrunt `common.override.tfvars`로 중앙 관리하도록 안내
+   - `modules/project-base`가 `org_id` 입력을 지원하고 00-project 문서/예제에 상위 리소스 및 Billing Account를 Terragrunt 루트 `inputs`로 중앙 관리하도록 안내
    - Jenkins Service Account 필수 권한(roles/storage.admin, roles/billing.user 등) 체크리스트를 README와 Jenkins 문서에 추가해 apply 실패를 사전 방지
 
 ### 해결한 에러 🐛

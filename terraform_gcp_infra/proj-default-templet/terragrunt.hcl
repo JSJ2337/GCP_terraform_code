@@ -16,3 +16,9 @@ remote_state {
     location = local.remote_state_location
   }
 }
+
+# 환경별 공통 입력 (필요 시 설정)
+inputs = {
+  # org_id          = "123456789012"
+  # billing_account = "ABCDEF-123456-GHIJKL"
+}

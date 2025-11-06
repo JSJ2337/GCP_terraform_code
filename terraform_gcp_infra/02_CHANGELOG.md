@@ -43,7 +43,7 @@
 - **Bootstrap Service Usage API 활성화**: 프로젝트 생성/서비스 사용 검증을 위해 `serviceusage.googleapis.com`을 자동 활성화
 - **Project 부모/결제 지정 강화**:
   - `modules/project-base`가 `org_id` 입력을 지원해 폴더가 없을 때도 서비스 계정이 조직 하위에 프로젝트를 생성 가능
-  - Terragrunt `common.override.tfvars`로 `org_id`, `billing_account` 등 환경 공통 값을 중앙 관리
+  - 환경 루트 `terragrunt.hcl`의 `inputs`로 `org_id`, `billing_account` 등 공통 값을 중앙 관리
 
 ### 수정 (Fixed)
 - **Jenkinsfile 경로 이슈 해결**: workspace root vs Jenkinsfile 위치
