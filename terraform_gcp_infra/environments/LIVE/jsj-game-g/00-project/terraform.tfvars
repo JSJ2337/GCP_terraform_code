@@ -1,5 +1,4 @@
 # Project Configuration
-region = ""
 folder_id       = null # No folder (standalone project)
 billing_account = "01076D-327AD5-FC8922"
 
