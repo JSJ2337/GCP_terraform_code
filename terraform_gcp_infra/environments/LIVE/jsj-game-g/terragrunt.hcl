@@ -1,6 +1,7 @@
 locals {
   # 모든 레이어에서 공유하는 원격 상태 버킷과 prefix 기본값
   remote_state_bucket  = "delabs-terraform-state-prod"
+  remote_state_project = "delabs-system-mgmt"
   project_state_prefix = "jsj-game-g"
 }
 
@@ -8,7 +9,8 @@ locals {
 remote_state {
   backend = "gcs"
   config = {
-    bucket = local.remote_state_bucket
-    prefix = "${local.project_state_prefix}/${path_relative_to_include()}"
+    bucket  = local.remote_state_bucket
+    prefix  = "${local.project_state_prefix}/${path_relative_to_include()}"
+    project = local.remote_state_project
   }
 }

@@ -20,8 +20,9 @@ pipeline {
         TF_IN_AUTOMATION = 'true'
         TF_INPUT = 'false'
         // Terragrunt 작업 디렉터리 (현재 환경 루트)
-        // 수정 불필요: Jenkinsfile이 환경 디렉터리에 있으므로 '.'로 고정
-        TG_WORKING_DIR = '.'
+        // ⚠️ 수정 필요: 실제 환경 디렉터리 경로로 변경하세요
+        // 예: TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/your-project'
+        TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/YOUR-PROJECT-NAME'
         // GCP 인증 설정 (Jenkins Credential 사용)
         // 수정 불필요: Jenkins에 'gcp-jenkins-service-account' ID로 등록된 credential 사용
         GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-jenkins-service-account')
