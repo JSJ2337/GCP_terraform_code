@@ -565,5 +565,13 @@ graph LR
 
 각 모듈의 상세 아키텍처는 해당 모듈의 README.md를 참조하세요:
 - [cloudsql-mysql/README.md](modules/cloudsql-mysql/README.md)
+- [gce-vmset/README.md](modules/gce-vmset/README.md)
+- [gcs-bucket/README.md](modules/gcs-bucket/README.md)
+- [gcs-root/README.md](modules/gcs-root/README.md)
+- [iam/README.md](modules/iam/README.md)
 - [load-balancer/README.md](modules/load-balancer/README.md)
-- 기타 모듈...
+- [memorystore-redis/README.md](modules/memorystore-redis/README.md)
+- [naming/README.md](modules/naming/README.md)
+- [network-dedicated-vpc/README.md](modules/network-dedicated-vpc/README.md)
+- [observability/README.md](modules/observability/README.md)
+- [project-base/README.md](modules/project-base/README.md)
