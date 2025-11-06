@@ -21,5 +21,5 @@ bucket_location  = "US"
 create_dev_bucket = false
 
 # GCP 조직 ID (Service Account 권한 부여 시 필요)
-# 조직 ID 확인: gcloud organizations list
-organization_id = ""  # 예: "123456789012"
+# 조직 ID 확인: gcloud projects get-ancestors PROJECT_ID
+organization_id = "71994629047"
