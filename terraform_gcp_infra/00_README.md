@@ -544,6 +544,34 @@ environment {
 
 **상세 내용**: `bootstrap/README.md` 및 [Terragrunt Pipeline 가이드](../jenkins_docker/TERRAGRUNT_PIPELINE.md) 참조
 
+#### 5. Jenkins Service Account 권한 체크리스트
+Jenkins가 Terragrunt를 통해 새 프로젝트를 만들고 청구 계정에 연결하려면 아래 권한이 모두 필요합니다.
+
+- `delabs-system-mgmt` 프로젝트  
+  - `roles/storage.admin` – State 버킷 읽기/쓰기  
+  - (선택) `roles/editor` – Jenkins 자체 리소스 관리
+- 조직 또는 폴더 (자동 프로젝트 생성 시)  
+  - `roles/resourcemanager.projectCreator`  
+  - `roles/editor`
+- 청구 계정 `01076D-327AD5-FC8922`  
+  - `roles/billing.user` – 새 프로젝트 청구 계정 연결을 위해 필수
+
+권한 부여 예시:
+
+```bash
+# Billing Account 권한
+gcloud beta billing accounts add-iam-policy-binding 01076D-327AD5-FC8922 \
+    --member="serviceAccount:jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com" \
+    --role="roles/billing.user"
+
+# State 버킷이 있는 관리 프로젝트
+gcloud projects add-iam-policy-binding delabs-system-mgmt \
+    --member="serviceAccount:jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com" \
+    --role="roles/storage.admin"
+```
+
+> ✅ `cloudbilling.googleapis.com`이 `delabs-system-mgmt` 프로젝트에서 활성화되어 있어야 합니다. bootstrap을 다시 적용하거나 `gcloud services enable cloudbilling.googleapis.com --project=delabs-system-mgmt`로 확인하세요.
+
 ## 일반적인 작업
 
 ### 새 버킷 추가

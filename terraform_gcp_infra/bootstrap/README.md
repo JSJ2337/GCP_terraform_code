@@ -98,6 +98,14 @@ gcloud projects add-iam-policy-binding delabs-system-mgmt \
     --role="roles/storage.admin"
 ```
 
+**Billing Account 연결 권한** (필수):
+```bash
+# 청구 계정에 billing.user 권한 부여
+gcloud beta billing accounts add-iam-policy-binding 01076D-327AD5-FC8922 \
+    --member="serviceAccount:jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com" \
+    --role="roles/billing.user"
+```
+
 **워크로드 프로젝트 관리 권한** (프로젝트별로 부여):
 ```bash
 # 각 워크로드 프로젝트에 Editor 권한 부여
