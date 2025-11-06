@@ -8,8 +8,11 @@ terraform {
 
 # Project parent resolution
 locals {
-  parent_folder_id = var.folder_id != null && trimspace(var.folder_id) != "" ? var.folder_id : null
-  parent_org_id    = var.org_id != null && trimspace(var.org_id) != "" ? var.org_id : null
+  trimmed_folder_id = var.folder_id == null ? "" : trimspace(var.folder_id)
+  trimmed_org_id    = var.org_id == null ? "" : trimspace(var.org_id)
+
+  parent_folder_id = trimmed_folder_id != "" ? trimmed_folder_id : null
+  parent_org_id    = trimmed_org_id != "" ? trimmed_org_id : null
 }
 
 # 0) 프로젝트 생성 (+ 폴더/결제 연결)
