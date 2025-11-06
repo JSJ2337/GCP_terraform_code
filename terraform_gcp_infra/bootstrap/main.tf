@@ -27,6 +27,7 @@ resource "google_project_service" "apis" {
     "storage.googleapis.com",
     "cloudresourcemanager.googleapis.com",
     "iam.googleapis.com",
+    "cloudbilling.googleapis.com",
   ])
 
   project            = google_project.mgmt.project_id

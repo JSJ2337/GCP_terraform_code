@@ -56,6 +56,7 @@ terragrunt plan
 - **추가 후속 정리** (2025-11-06 오후):
   - Terragrunt가 `region_primary`를 기본 적용하도록 모든 tfvars/example/README에서 `region = ""` 패턴 삭제
   - `modules/gcs-bucket`이 `public_access_prevention`·`retention_policy_days`가 `null`일 때도 안전하게 동작하도록 validation/동적 블록 보완
+  - Bootstrap이 `cloudbilling.googleapis.com`을 자동 활성화하여 신규 프로젝트 생성 시 Billing API 오류 예방
 
 ### 세션 12: Jenkins CI/CD 통합 및 프로젝트 재구성 (2025-11-05)
 - **디렉터리 구조 재정리**:

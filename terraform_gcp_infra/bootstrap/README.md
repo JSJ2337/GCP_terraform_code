@@ -54,6 +54,8 @@ gcloud iam service-accounts describe jenkins-terraform-admin@delabs-system-mgmt.
     --project=delabs-system-mgmt
 ```
 
+Cloud Billing API는 bootstrap이 자동으로 활성화합니다. 적용 직후 `gcloud services list --enabled --project delabs-system-mgmt | grep billing`으로 상태를 점검할 수 있습니다.
+
 ### 4. Jenkins용 Service Account Key 생성
 
 **Key 파일 생성**:
