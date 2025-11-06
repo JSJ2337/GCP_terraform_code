@@ -1,5 +1,6 @@
 # Project Configuration
-region = ""
+# Uncomment and set region to override the default from common.naming.tfvars.
+# region = "asia-northeast3"
 folder_id       = null # No folder (standalone project)
 billing_account = "01076D-327AD5-FC8922"
 

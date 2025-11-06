@@ -11,7 +11,8 @@ environment    = "prod"
 organization   = "myorg"
 region_primary = "us-central1"
 region_backup  = "us-east1"
-region         = ""
+# region 값을 직접 지정하려면 아래 라인을 주석 해제하고 설정하세요.
+# region         = "asia-northeast3-a"
 
 # Memorystore 설정
 instance_name = "" # 비워두면 naming 모듈 기준으로 자동 생성

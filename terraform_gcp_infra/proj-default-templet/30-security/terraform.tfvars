@@ -1,5 +1,6 @@
 # Security Configuration
-region = ""
+# Uncomment and set region to override the default from common.naming.tfvars.
+# region = "asia-northeast3"
 
 # IAM bindings (empty for now - add real users/groups later)
 bindings = []

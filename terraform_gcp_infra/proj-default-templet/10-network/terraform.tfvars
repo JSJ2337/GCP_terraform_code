@@ -1,5 +1,6 @@
 # Network Configuration
-region = ""
+# region overrides the default from common.naming.tfvars when set.
+# region = "asia-northeast3"
 routing_mode = "GLOBAL"
 
 # Subnet CIDR blocks (names come from modules/naming)

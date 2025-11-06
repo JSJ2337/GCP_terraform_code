@@ -1,5 +1,6 @@
 # Region Configuration
-region = ""
+# Uncomment to override the default region from common.naming.tfvars.
+# region = "asia-northeast3"
 
 # Observability Configuration
 
