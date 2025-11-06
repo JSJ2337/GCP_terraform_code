@@ -45,7 +45,9 @@ resource "google_storage_bucket" "bucket" {
   }
 
   dynamic "retention_policy" {
-    for_each = var.retention_policy_days != null && var.retention_policy_days > 0 ? [1] : []
+    for_each = var.retention_policy_days == null ? [] : (
+      var.retention_policy_days > 0 ? [1] : []
+    )
     content {
       retention_period = var.retention_policy_days * 24 * 60 * 60 # Convert days to seconds
       is_locked        = var.retention_policy_locked
