@@ -22,6 +22,9 @@ pipeline {
         // Terragrunt 작업 디렉터리 (현재 환경 루트)
         // 수정 불필요: Jenkinsfile이 환경 디렉터리에 있으므로 '.'로 고정
         TG_WORKING_DIR = '.'
+        // GCP 인증 설정 (Jenkins Credential 사용)
+        // 수정 불필요: Jenkins에 'gcp-service-account' ID로 등록된 credential 사용
+        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-service-account')
     }
 
     parameters {

@@ -6,6 +6,8 @@ pipeline {
         TF_INPUT = 'false'
         // Terragrunt 작업 디렉터리 (현재 환경 루트)
         TG_WORKING_DIR = '.'
+        // GCP 인증 설정 (Jenkins Credential 사용)
+        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-service-account')
     }
 
     parameters {
