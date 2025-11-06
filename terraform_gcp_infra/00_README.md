@@ -212,7 +212,7 @@ terragrunt apply  --non-interactive  # 검토 후 --non-interactive 옵션 제�
 /mnt/d/jsj_wsl_data/terragrunt_linux_amd64 plan
 ```
 
-> Terragrunt가 `common.naming.tfvars`와 현재 레이어의 `terraform.tfvars`를 자동으로 병합하므로 `-var-file` 옵션을 수동으로 전달할 필요가 없습니다.
+> Terragrunt가 `common.naming.tfvars`, `common.override.tfvars`, 현재 레이어의 `terraform.tfvars`를 자동으로 병합하므로 `-var-file` 옵션을 수동으로 전달할 필요가 없습니다. 환경 전체에 공통으로 적용할 값(예: `org_id`, 공통 네트워크 설정)은 `common.override.tfvars`에 정의하세요.
 > ⚠️ WSL1/일부 WSL2 빌드에서는 Google Provider가 Unix 소켓 옵션을 설정하지 못해 `setsockopt: operation not permitted` 오류가 발생할 수 있습니다. 이 경우 Windows 터미널이 아닌 Linux VM/컨테이너에서 Terragrunt를 실행하거나, 최신 WSL2 커널로 업데이트하세요.
 
 ### 배포 순서
