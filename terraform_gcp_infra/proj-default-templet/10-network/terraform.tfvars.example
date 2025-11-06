@@ -18,6 +18,12 @@ routing_mode = "GLOBAL"
 subnet_primary_cidr = "10.10.0.0/20"
 subnet_backup_cidr  = "10.20.0.0/20"
 
+# 용도별 서브넷 CIDR (각 VM 타입별로 분리된 서브넷)
+# 50-workloads에서 VM별로 다른 서브넷을 사용할 수 있습니다
+subnet_web_cidr = "10.10.0.0/24"  # Web 서버용 (256 IP)
+subnet_app_cidr = "10.10.1.0/24"  # App 서버용 (256 IP)
+subnet_db_cidr  = "10.10.2.0/24"  # DB 프록시용 (256 IP)
+
 # GKE 등에서 사용할 보조 CIDR
 pods_cidr     = "10.10.16.0/20"
 services_cidr = "10.10.32.0/20"
