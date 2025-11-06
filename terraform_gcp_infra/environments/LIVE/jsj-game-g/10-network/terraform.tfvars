@@ -1,5 +1,4 @@
 # Network Configuration
-region = ""
 routing_mode = "GLOBAL"
 
 # Subnet CIDR blocks (names come from modules/naming)
