@@ -25,7 +25,7 @@ output "tfstate_bucket_dev" {
 
 output "backend_config" {
   description = "다른 프로젝트에서 사용할 backend 설정"
-  value = <<-EOT
+  value       = <<-EOT
 
   # 다른 프로젝트의 backend.tf에 사용:
   terraform {
@@ -49,7 +49,7 @@ output "jenkins_service_account_name" {
 
 output "jenkins_key_creation_command" {
   description = "Service Account Key 생성 명령어"
-  value = <<-EOT
+  value       = <<-EOT
 
   # Service Account Key 파일 생성:
   gcloud iam service-accounts keys create jenkins-sa-key.json \

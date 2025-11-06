@@ -47,9 +47,13 @@ module "gce_vmset" {
   zone                 = length(trimspace(var.zone)) > 0 ? var.zone : module.naming.default_zone
   subnetwork_self_link = local.subnetwork_self_link
 
+  # 기존 count 방식 (하위 호환성)
   instance_count = var.instance_count
   name_prefix    = local.name_prefix
   machine_type   = var.machine_type
+
+  # 새로운 for_each 방식 (권장)
+  instances = var.instances
 
   enable_public_ip = var.enable_public_ip
   enable_os_login  = var.enable_os_login

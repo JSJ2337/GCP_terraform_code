@@ -55,6 +55,25 @@ module "net" {
       private_google_access = true
       secondary_ranges      = []
     }
+    # 용도별 서브넷
+    "game-g-prod-subnet-web" = {
+      region                = module.naming.region_primary
+      cidr                  = var.subnet_web_cidr
+      private_google_access = true
+      secondary_ranges      = []
+    }
+    "game-g-prod-subnet-app" = {
+      region                = module.naming.region_primary
+      cidr                  = var.subnet_app_cidr
+      private_google_access = true
+      secondary_ranges      = []
+    }
+    "game-g-prod-subnet-db" = {
+      region                = module.naming.region_primary
+      cidr                  = var.subnet_db_cidr
+      private_google_access = true
+      secondary_ranges      = []
+    }
   }
 
   nat_region           = module.naming.region_primary

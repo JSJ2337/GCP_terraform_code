@@ -57,7 +57,7 @@ resource "google_storage_bucket" "tfstate_prod" {
   # Lifecycle - 오래된 버전 자동 삭제
   lifecycle_rule {
     condition {
-      num_newer_versions = 10 # 최근 10개 버전만 유지
+      num_newer_versions         = 10 # 최근 10개 버전만 유지
       days_since_noncurrent_time = 30 # 30일 지난 버전 삭제
     }
     action {
@@ -66,7 +66,7 @@ resource "google_storage_bucket" "tfstate_prod" {
   }
 
   labels = merge(var.labels, {
-    purpose = "terraform-state"
+    purpose     = "terraform-state"
     environment = "prod"
   })
 
@@ -92,7 +92,7 @@ resource "google_storage_bucket" "tfstate_dev" {
 
   lifecycle_rule {
     condition {
-      num_newer_versions = 5
+      num_newer_versions         = 5
       days_since_noncurrent_time = 30
     }
     action {
@@ -101,7 +101,7 @@ resource "google_storage_bucket" "tfstate_dev" {
   }
 
   labels = merge(var.labels, {
-    purpose = "terraform-state"
+    purpose     = "terraform-state"
     environment = "dev"
   })
 

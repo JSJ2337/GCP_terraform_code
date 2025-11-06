@@ -5,6 +5,11 @@ routing_mode = "GLOBAL"
 subnet_primary_cidr = "10.1.0.0/20"
 subnet_backup_cidr  = "10.2.0.0/20"
 
+# 용도별 서브넷 CIDR blocks
+subnet_web_cidr = "10.1.0.0/24" # Web 서버용
+subnet_app_cidr = "10.1.1.0/24" # App 서버용
+subnet_db_cidr  = "10.1.2.0/24" # DB 프록시용
+
 # GKE Secondary IP ranges
 pods_cidr     = "10.1.16.0/20"
 services_cidr = "10.1.32.0/20"

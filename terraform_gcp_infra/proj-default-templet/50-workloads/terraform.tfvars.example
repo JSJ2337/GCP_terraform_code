@@ -8,16 +8,17 @@ organization   = "myorg"
 region_primary = "us-central1"
 region_backup  = "us-east1"
 
+# ==================== 방법 1: 기존 count 방식 (간단한 경우) ====================
+# 모든 VM이 동일한 설정을 사용할 때
+instance_count = 2
+name_prefix    = ""              # 비워두면 naming 모듈이 자동 생성
+machine_type   = "e2-medium"
+
 # 특정 존을 명시하고 싶을 때만 설정, 비워두면 naming 모듈 기본 존 사용
 zone = ""
 
 # 명시적으로 다른 서브넷을 사용하려면 self link 입력
 subnetwork_self_link = ""
-
-# 인스턴스 기본 설정
-instance_count = 2
-name_prefix    = ""              # 비워두면 naming 모듈이 자동 생성
-machine_type   = "e2-medium"
 
 enable_public_ip = false
 enable_os_login  = true
@@ -38,3 +39,55 @@ tags = ["web", "prod"]
 labels = {
   component = "game-server"
 }
+
+# ==================== 방법 2: 새로운 for_each 방식 (권장) ====================
+# 각 VM마다 다른 호스트네임, 서브넷, 설정이 필요할 때
+# 이 방식을 사용하려면 위의 instance_count = 0 으로 설정하고 아래 주석 해제
+
+# instance_count = 0
+#
+# instances = {
+#   "web-server-01" = {
+#     hostname             = "web-srv-01"
+#     subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/web-subnet"
+#     zone                 = "us-central1-a"
+#     machine_type         = "e2-small"
+#     enable_public_ip     = false
+#     tags                 = ["web", "frontend", "ssh-allowed"]
+#     labels = {
+#       role      = "web"
+#       component = "nginx"
+#     }
+#     startup_script = <<-EOF
+# #!/bin/bash
+# apt-get update && apt-get install -y nginx
+# systemctl enable nginx && systemctl start nginx
+# EOF
+#   }
+#
+#   "app-server-01" = {
+#     hostname             = "app-srv-01"
+#     subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/app-subnet"
+#     zone                 = "us-central1-b"
+#     machine_type         = "e2-medium"
+#     enable_public_ip     = false
+#     tags                 = ["app", "backend"]
+#     labels = {
+#       role      = "app"
+#       component = "api"
+#     }
+#     startup_script = <<-EOF
+# #!/bin/bash
+# apt-get update && apt-get install -y docker.io
+# EOF
+#   }
+#
+#   "db-proxy-01" = {
+#     hostname             = "db-proxy-01"
+#     subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/db-subnet"
+#     zone                 = "us-central1-c"
+#     machine_type         = "e2-micro"
+#     enable_public_ip     = false
+#     tags                 = ["db-proxy"]
+#   }
+# }

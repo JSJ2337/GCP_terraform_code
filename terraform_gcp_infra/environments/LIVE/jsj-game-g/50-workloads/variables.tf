@@ -112,3 +112,22 @@ variable "labels" {
   description = "Labels for instances"
   default     = {}
 }
+
+# 새로운 for_each 방식 (권장)
+variable "instances" {
+  type = map(object({
+    hostname             = optional(string)
+    zone                 = optional(string)
+    machine_type         = optional(string)
+    subnetwork_self_link = optional(string)
+    enable_public_ip     = optional(bool)
+    enable_os_login      = optional(bool)
+    preemptible          = optional(bool)
+    startup_script       = optional(string)
+    metadata             = optional(map(string))
+    tags                 = optional(list(string))
+    labels               = optional(map(string))
+  }))
+  default     = {}
+  description = "VM 인스턴스 맵 (키=인스턴스명, 값=설정). 비워두면 instance_count 방식 사용"
+}

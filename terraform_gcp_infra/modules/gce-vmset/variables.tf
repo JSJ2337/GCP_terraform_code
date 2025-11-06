@@ -11,14 +11,40 @@ variable "subnetwork_self_link" {
   description = "projects/<p>/regions/<r>/subnetworks/<name>"
 }
 
+# 기존 count 방식 (하위 호환성)
 variable "instance_count" {
-  type    = number
-  default = 4
+  type        = number
+  default     = 0
+  description = "인스턴스 개수 (instances가 비어있을 때만 사용)"
 }
 
 variable "name_prefix" {
   type    = string
   default = "gce-node"
+}
+
+# 새로운 for_each 방식 (권장)
+variable "instances" {
+  type = map(object({
+    hostname              = optional(string)
+    zone                  = optional(string)
+    machine_type          = optional(string)
+    subnetwork_self_link  = optional(string)
+    enable_public_ip      = optional(bool)
+    enable_os_login       = optional(bool)
+    preemptible           = optional(bool)
+    startup_script        = optional(string)
+    metadata              = optional(map(string))
+    tags                  = optional(list(string))
+    labels                = optional(map(string))
+    boot_disk_size_gb     = optional(number)
+    boot_disk_type        = optional(string)
+    image_family          = optional(string)
+    image_project         = optional(string)
+    service_account_email = optional(string)
+  }))
+  default     = {}
+  description = "VM 인스턴스 맵 (키=인스턴스명, 값=설정). 비워두면 instance_count 방식 사용"
 }
 
 variable "machine_type" {

@@ -3,6 +3,6 @@ project_id     = "jsj-game-g"
 project_name   = "game-g"
 environment    = "prod"
 organization   = "jsj"
-region         = "asia-northeast3"      # Provider 기본 region
+region         = "asia-northeast3" # Provider 기본 region
 region_primary = "asia-northeast3"
 region_backup  = "asia-northeast1"

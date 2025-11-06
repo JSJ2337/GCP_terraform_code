@@ -5,6 +5,9 @@
 ## 기능
 
 - **다중 인스턴스**: 단일 영역에 여러 동일한 인스턴스 생성
+- **유연한 배치**: 두 가지 방식 지원
+  - **count 방식**: 모든 VM이 동일한 설정 (간단한 경우)
+  - **for_each 방식** (권장): 각 VM마다 다른 호스트네임, 서브넷, 존, 설정 가능
 - **이미지 선택**: 사용자 정의 이미지 및 공개 이미지 제품군 지원
 - **디스크 구성**: 부팅 디스크 크기 및 타입 구성 가능
 - **네트워크 구성**: 비공개 또는 공개 IP 주소 지원
@@ -14,10 +17,13 @@
 - **OS 로그인**: SSH 액세스를 위한 Google Cloud OS 로그인 활성화
 - **메타데이터 및 레이블**: 사용자 정의 인스턴스 메타데이터 및 레이블
 - **네트워크 태그**: 방화벽 규칙 타겟팅을 위한 태그 적용
+- **커스텀 호스트네임**: VM별로 독립적인 호스트네임 설정
 
 ## 사용법
 
-### 기본 VM 세트
+### 방법 1: 기본 VM 세트 (count 방식)
+
+모든 VM이 동일한 설정을 사용할 때 간단하게 사용:
 
 ```hcl
 module "app_vms" {
@@ -30,6 +36,62 @@ module "app_vms" {
   instance_count = 3
   name_prefix    = "app-server"
   machine_type   = "e2-medium"
+}
+```
+
+### 방법 2: 개별 설정 VM (for_each 방식 - 권장)
+
+각 VM마다 다른 호스트네임, 서브넷, 존, 설정이 필요할 때:
+
+```hcl
+module "app_vms" {
+  source = "../../modules/gce-vmset"
+
+  project_id = "my-project-id"
+
+  # 기본값 (각 VM에서 override 가능)
+  zone                 = "us-central1-a"
+  subnetwork_self_link = "projects/my-project/regions/us-central1/subnetworks/default"
+  machine_type         = "e2-medium"
+
+  # VM별 개별 설정
+  instances = {
+    "web-server-01" = {
+      hostname             = "web-srv-01"
+      subnetwork_self_link = "projects/my-project/regions/us-central1/subnetworks/web-subnet"
+      zone                 = "us-central1-a"
+      machine_type         = "e2-small"
+      enable_public_ip     = true
+      tags                 = ["web", "frontend"]
+      labels = {
+        role = "web"
+      }
+      startup_script = <<-EOF
+        #!/bin/bash
+        apt-get update && apt-get install -y nginx
+      EOF
+    }
+
+    "app-server-01" = {
+      hostname             = "app-srv-01"
+      subnetwork_self_link = "projects/my-project/regions/us-central1/subnetworks/app-subnet"
+      zone                 = "us-central1-b"
+      machine_type         = "e2-medium"
+      enable_public_ip     = false
+      tags                 = ["app", "backend"]
+      labels = {
+        role = "app"
+      }
+    }
+
+    "db-proxy-01" = {
+      hostname             = "db-proxy-01"
+      subnetwork_self_link = "projects/my-project/regions/us-central1/subnetworks/db-subnet"
+      zone                 = "us-central1-c"
+      machine_type         = "e2-micro"
+      tags                 = ["db-proxy"]
+    }
+  }
 }
 ```
 

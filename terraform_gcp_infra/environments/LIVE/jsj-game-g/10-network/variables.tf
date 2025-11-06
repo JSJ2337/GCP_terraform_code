@@ -57,6 +57,25 @@ variable "subnet_backup_cidr" {
   default     = "10.2.0.0/20"
 }
 
+# 용도별 서브넷 CIDR blocks
+variable "subnet_web_cidr" {
+  type        = string
+  description = "Web 서버용 서브넷 CIDR"
+  default     = "10.1.0.0/24"
+}
+
+variable "subnet_app_cidr" {
+  type        = string
+  description = "App 서버용 서브넷 CIDR"
+  default     = "10.1.1.0/24"
+}
+
+variable "subnet_db_cidr" {
+  type        = string
+  description = "DB 프록시용 서브넷 CIDR"
+  default     = "10.1.2.0/24"
+}
+
 variable "pods_cidr" {
   type        = string
   description = "GKE Pods용 Secondary IP 범위 CIDR"
