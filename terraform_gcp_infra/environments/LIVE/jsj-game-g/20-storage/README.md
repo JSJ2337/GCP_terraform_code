@@ -34,3 +34,4 @@ terragrunt apply  --non-interactive
 ## 기타
 - 로그 버킷을 중앙 조직 로그 프로젝트로 전송하려면 40-observability 레이어의 log sink와 함께 구성하세요.
 - 버킷 정책 변경 시 기존 객체에 영향이 없는지 검토 후 apply 하십시오.
+- `retention_policy_days`, `public_access_prevention` 등 선택 입력을 비워두면 Terragrunt 기본값(0, `"enforced"`)이 적용되며, 필요 시에만 값을 지정하세요.

@@ -117,6 +117,8 @@ module "public_assets_bucket" {
 | iam_bindings | IAM 역할 바인딩 | `list(object)` | `[]` | no |
 | notifications | Pub/Sub 알림 | `list(object)` | `[]` | no |
 
+> ℹ️ Terragrunt에서 선택 입력을 생략하거나 `null`을 전달해도 안전합니다. 모듈이 기본값(예: `retention_policy_days = 0`, `public_access_prevention = "enforced"`)을 적용하도록 보완되어 있습니다.
+
 ## 출력 값
 
 | 이름 | 설명 |

@@ -46,6 +46,9 @@
    - bootstrap/README.md: Service Account 권한 설정 섹션 추가
    - .jenkins/Jenkinsfile.template: Credential ID 업데이트
    - .gitignore: jenkins-sa-key.json 추가
+6. **후속 정리**
+   - Terragrunt가 `region_primary`를 기본 적용하도록 모든 레이어 `terraform.tfvars(.example)`과 README에서 `region = ""` 패턴 제거, 주석 기반 오버라이드 방식으로 통일
+   - `modules/gcs-bucket`의 `public_access_prevention`, `retention_policy_days`가 `null`일 때 Terraform이 실패하지 않도록 validation과 동적 블록 로직 개선
 
 ### 해결한 에러 🐛
 

@@ -38,6 +38,7 @@
   - 현재 디렉토리에서 직접 실행 (상대 경로 모듈 참조 유지)
   - `.terragrunt-cache`로 복사하지 않아 더 빠른 실행
   - 18개 레이어 파일 업데이트 (jsj-game-g 9개 + proj-default-templet 9개)
+- **Terragrunt region 기본값 문서화**: 모든 레이어 tfvars/example/README에서 `region = ""` 패턴을 제거하고, 필요 시 주석 해제 방식으로 Terragrunt 기본값(`region_primary`)을 재사용하도록 안내
 
 ### 수정 (Fixed)
 - **Jenkinsfile 경로 이슈 해결**: workspace root vs Jenkinsfile 위치
@@ -50,6 +51,9 @@
   - "Unreadable module directory" 오류 수정
   - `.terragrunt-cache`에서 상대 경로(`../../../../modules`) 찾지 못하는 문제 해결
   - `terraform.source` 제거로 in-place 실행하여 해결
+- **GCS 버킷 validation 보완**:
+  - `public_access_prevention`, `retention_policy_days`가 `null`일 때 Terraform이 실패하던 문제 해결
+  - Terragrunt에서 선택 입력을 생략해도 안전하게 통과
 
 ## [미배포] - 2025-11-05
 

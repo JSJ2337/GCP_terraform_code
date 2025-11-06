@@ -17,7 +17,7 @@ Google Cloud Memorystore for Redis(Standard HA) 인스턴스를 배포합니다.
    ```
 2. 필수 수정 항목:
    - `project_id`
-   - `region` (비워두면 Terragrunt가 `region_primary` 값을 주입)
+   - (선택) `region` — Terragrunt가 기본으로 `region_primary`를 주입하므로 필요할 때만 주석을 해제하고 값을 지정
    - `alternative_location_id` 또는 `alternative_location_suffix` (같은 리전 내 다른 존)
    - `memory_size_gb` (1~300GB 범위)
    - 필요 시 `authorized_network` (비워두면 템플릿 VPC 자동 사용)

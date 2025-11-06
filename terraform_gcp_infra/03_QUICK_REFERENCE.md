@@ -53,6 +53,9 @@ terragrunt plan
   - 05_quick setup guide.md: terragrunt.hcl 필수 설정, Jenkinsfile 설정 가이드 추가
   - bootstrap/README.md: Service Account 권한 설정 추가
   - 03_QUICK_REFERENCE.md: 세션 13 기록
+- **추가 후속 정리** (2025-11-06 오후):
+  - Terragrunt가 `region_primary`를 기본 적용하도록 모든 tfvars/example/README에서 `region = ""` 패턴 삭제
+  - `modules/gcs-bucket`이 `public_access_prevention`·`retention_policy_days`가 `null`일 때도 안전하게 동작하도록 validation/동적 블록 보완
 
 ### 세션 12: Jenkins CI/CD 통합 및 프로젝트 재구성 (2025-11-05)
 - **디렉터리 구조 재정리**:

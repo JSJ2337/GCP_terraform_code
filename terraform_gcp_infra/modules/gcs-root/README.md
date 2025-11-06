@@ -61,6 +61,8 @@ module "storage" {
 | default_kms_key_name | 버킷 암호화용 기본 KMS 키 이름 | `string` | `""` | no |
 | default_public_access_prevention | 기본 공개 액세스 방지 설정 | `string` | `"enforced"` | no |
 
+> ℹ️ 개별 버킷 항목에서 `public_access_prevention`, `retention_policy_days` 등을 생략하거나 `null`로 두어도 모듈이 안전하게 기본값을 적용합니다.
+
 ## 출력 값
 
 | 이름 | 설명 |
