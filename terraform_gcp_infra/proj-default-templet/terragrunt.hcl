@@ -15,11 +15,6 @@ remote_state {
     project  = local.remote_state_project
     location = local.remote_state_location
   }
-  generate = {
-    path      = "backend.tf"
-    if_exists = "overwrite_terragrunt"
-  }
-  disable_init = true
 }
 
 # 환경별 공통 입력
