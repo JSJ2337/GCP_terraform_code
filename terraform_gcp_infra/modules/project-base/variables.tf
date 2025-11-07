@@ -58,6 +58,12 @@ variable "log_retention_days" {
   default = 30
 }
 
+variable "manage_default_logging_bucket" {
+  description = "Whether to manage the default Cloud Logging bucket (_Default). Disable for initial project bootstraps if API propagation causes failures."
+  type        = bool
+  default     = true
+}
+
 variable "logging_api_wait_duration" {
   description = "Duration to wait after enabling logging.googleapis.com before configuring the default logging bucket (e.g., \"60s\")"
   type        = string

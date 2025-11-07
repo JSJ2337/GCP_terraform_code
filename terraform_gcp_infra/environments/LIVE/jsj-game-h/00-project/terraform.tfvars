@@ -31,6 +31,7 @@ budget_currency = "USD"
 
 # Logging settings
 log_retention_days = 90
+manage_default_logging_bucket = false
 
 # CMEK settings (optional)
 # cmek_key_id = "projects/security-project/locations/us-central1/keyRings/main-ring/cryptoKeys/main-key"

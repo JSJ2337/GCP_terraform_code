@@ -42,11 +42,6 @@ resource "google_project_service" "services" {
   disable_on_destroy = false
 }
 
-resource "time_sleep" "wait_for_logging_api" {
-  depends_on = [google_project_service.services]
-  create_duration = var.logging_api_wait_duration
-}
-
 # 2) Budget(간단 템플릿)
 resource "google_billing_budget" "budget" {
   count           = var.enable_budget ? 1 : 0
@@ -69,18 +64,25 @@ resource "google_billing_budget" "budget" {
 }
 
 # 3) 프로젝트 로그 버킷(기본 30일) + 보존기간 설정
+resource "time_sleep" "wait_for_logging_api" {
+  depends_on      = [google_project_service.services]
+  create_duration = var.manage_default_logging_bucket ? var.logging_api_wait_duration : "0s"
+}
+
 resource "google_logging_project_bucket_config" "default" {
+  count          = var.manage_default_logging_bucket ? 1 : 0
   project        = google_project.this.project_id
   location       = "global"
   retention_days = var.log_retention_days
   bucket_id      = "_Default"
 
-  depends_on = [time_sleep.wait_for_logging_api]
+  depends_on = [google_project_service.services, time_sleep.wait_for_logging_api]
 }
 
 # 4) CMEK 참조(옵션) – 실제 키는 외부에서 제공
 #    var.cmek_key_id 예: projects/<p>/locations/<r>/keyRings/<kr>/cryptoKeys/<key>
 resource "google_project_service_identity" "logging_sa" {
+  count    = var.manage_default_logging_bucket && var.cmek_key_id != "" ? 1 : 0
   provider = google-beta
   service  = "logging.googleapis.com"
   project  = google_project.this.project_id
@@ -89,10 +91,10 @@ resource "google_project_service_identity" "logging_sa" {
 }
 
 resource "google_kms_crypto_key_iam_member" "cmek_bind_logging" {
-  count         = var.cmek_key_id == "" ? 0 : 1
+  count         = var.manage_default_logging_bucket && var.cmek_key_id != "" ? 1 : 0
   crypto_key_id = var.cmek_key_id
   role          = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
-  member        = "serviceAccount:${google_project_service_identity.logging_sa.email}"
+  member        = "serviceAccount:${google_project_service_identity.logging_sa[0].email}"
 }
 
 output "project_number" { value = google_project.this.number }
