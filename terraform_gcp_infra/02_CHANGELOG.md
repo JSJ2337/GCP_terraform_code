@@ -5,6 +5,22 @@
 형식: [Keep a Changelog](https://keepachangelog.com/ko/1.0.0/) 기반
 버저닝: [Semantic Versioning](https://semver.org/lang/ko/) 준수
 
+## [미배포] - 2025-11-07
+
+### 수정 (Fixed)
+- **Terragrunt remote_state 설정 구조 수정**: skip 옵션 위치 변경
+  - `skip_bucket_creation`, `skip_bucket_versioning`, `skip_bucket_accesslogging`을 `config` 블록 외부로 이동
+  - 이 옵션들은 Terragrunt 자체 설정이므로 `remote_state` 블록에 직접 배치
+  - `config` 블록에서 `project`, `location` 제거 (Terraform GCS backend가 인식하지 못하는 파라미터)
+  - `config` 블록에는 Terraform backend가 인식하는 `bucket`, `prefix`만 유지
+  - "Unsupported argument" 오류 해결
+  - "Duplicate backend configuration" 오류 해결
+
+### 변경 (Changed)
+- **문서 업데이트**: `05_quick setup guide.md`의 terragrunt.hcl 예제를 최신 구조로 갱신
+  - 올바른 remote_state 설정 구조 반영
+  - skip 옵션들의 올바른 위치 문서화
+
 ## [미배포] - 2025-11-06
 
 ### 추가 (Added)

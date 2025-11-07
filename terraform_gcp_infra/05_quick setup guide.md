@@ -30,9 +30,9 @@ cp -R proj-default-templet environments/LIVE/proj-myservice-prod
 **⚠️ terragrunt.hcl 필수 설정**:
 ```hcl
 locals {
-  remote_state_bucket   = "delabs-terraform-state-prod"
-  remote_state_project  = "delabs-system-mgmt"      # ⚠️ 필수
-  remote_state_location = "US"                      # ⚠️ 필수
+  remote_state_bucket   = "jsj-terraform-state-prod"
+  remote_state_project  = "jsj-system-mgmt"
+  remote_state_location = "US"
   project_state_prefix  = "proj-myservice-prod"    # 환경별로 변경
 }
 
@@ -41,9 +41,11 @@ remote_state {
   config = {
     bucket   = local.remote_state_bucket
     prefix   = "${local.project_state_prefix}/${path_relative_to_include()}"
-    project  = local.remote_state_project   # ⚠️ 필수
-    location = local.remote_state_location  # ⚠️ 필수
   }
+  # 버킷이 이미 존재하므로 생성 건너뛰기
+  skip_bucket_creation      = true
+  skip_bucket_versioning    = true
+  skip_bucket_accesslogging = true
 }
 ```
 
