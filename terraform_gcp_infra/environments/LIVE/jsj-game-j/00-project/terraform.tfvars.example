@@ -1,0 +1,50 @@
+# Terragrunt entrypoint: environments/LIVE/proj-default-templet/00-project/terragrunt.hcl
+# 프로젝트 기본 설정 예시
+# 1) 이 파일을 terraform.tfvars로 복사
+# 2) 값 수정 후 terraform 명령 실행
+# 3) terraform.tfvars는 절대 Git에 커밋하지 마세요
+
+project_id      = "your-project-id"
+project_name    = "Default Template Production"
+
+# 조직/과금 정보
+folder_id       = "folders/123456789012"   # 폴더가 없다면 null로 두고 루트 terragrunt.hcl inputs에 org_id 설정
+org_id          = "71994629047"            # 조직 ID (폴더가 있다면 optional)
+billing_account = "ABCDEF-123456-GHIJKL"   # 공통으로 사용한다면 루트 terragrunt.hcl inputs에 설정 가능
+
+# 공통 라벨 (modules/naming에서 제공하는 라벨과 병합됨)
+labels = {
+  environment = "prod"
+  project     = "default-templet"
+  managed-by  = "terraform"
+  cost-center = "gaming"
+}
+
+# 활성화가 필요한 API 목록
+# Cloud SQL Private IP 등을 사용하려면 servicenetworking.googleapis.com 이 필수입니다.
+apis = [
+  "compute.googleapis.com",
+  "iam.googleapis.com",
+  "servicenetworking.googleapis.com",
+  "logging.googleapis.com",
+  "monitoring.googleapis.com",
+  "cloudkms.googleapis.com",
+  "storage.googleapis.com",
+  "cloudresourcemanager.googleapis.com"
+]
+
+# 비용 모니터링 예산 (선택)
+# Billing API 권한 설정이 완료되지 않았다면 enable_budget을 false로 두고
+# 이후 콘솔에서 예산을 직접 생성하거나 재적용하세요.
+enable_budget   = false
+budget_amount   = 1000
+budget_currency = "USD"
+
+# 기본 로그 보관 기간 (일)
+log_retention_days = 30
+
+# 선택: 로그 버킷을 고객 관리 키(CMEK)로 암호화하고 싶을 때만 설정
+# cmek_key_id = "projects/YOUR_PROJECT/locations/REGION/keyRings/KEYRING/cryptoKeys/KEY"
+
+# 참고: 프로덕션에서 프로젝트 삭제를 막고 싶다면
+# modules/project-base/main.tf 내부 lifecycle 블록의 prevent_destroy 주석을 해제하세요.

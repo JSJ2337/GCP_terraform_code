@@ -1,0 +1,59 @@
+# Terragrunt entrypoint: environments/LIVE/proj-default-templet/10-network/terragrunt.hcl
+# 네트워크 레이어 설정 예시
+# 1) 이 파일을 terraform.tfvars로 복사
+# 2) VPC/Subnet/방화벽 등 필요한 값을 채운 뒤 적용
+# 3) terraform.tfvars는 Git에 커밋하지 마세요
+
+project_id     = "your-project-id"
+project_name   = "default-templet"
+environment    = "prod"
+organization   = "myorg"
+region_primary = "us-central1"
+region_backup  = "us-east1"
+
+# VPC 라우팅 모드: 글로벌 라우팅이 필요 없으면 REGIONAL 로 변경하세요.
+routing_mode = "GLOBAL"
+
+# 기본 서브넷 CIDR (필요 시 조직 표준에 맞게 수정)
+subnet_primary_cidr = "10.10.0.0/20"
+subnet_backup_cidr  = "10.20.0.0/20"
+
+# 용도별 서브넷 CIDR (각 VM 타입별로 분리된 서브넷)
+# 50-workloads에서 VM별로 다른 서브넷을 사용할 수 있습니다
+subnet_web_cidr = "10.10.0.0/24"  # Web 서버용 (256 IP)
+subnet_app_cidr = "10.10.1.0/24"  # App 서버용 (256 IP)
+subnet_db_cidr  = "10.10.2.0/24"  # DB 프록시용 (256 IP)
+
+# GKE 등에서 사용할 보조 CIDR
+pods_cidr     = "10.10.16.0/20"
+services_cidr = "10.10.32.0/20"
+
+# Cloud NAT 동시 연결 수(포트)
+nat_min_ports_per_vm = 1024
+
+# 방화벽 규칙 예시
+firewall_rules = [
+  {
+    name           = "allow-ssh-from-iap"
+    direction      = "INGRESS"
+    ranges         = ["35.235.240.0/20"]          # IAP 고정 IP
+    allow_protocol = "tcp"
+    allow_ports    = ["22"]
+    target_tags    = ["ssh-allowed"]
+    description    = "IAP를 통한 SSH 허용"
+  },
+  {
+    name           = "allow-health-check"
+    direction      = "INGRESS"
+    ranges         = ["130.211.0.0/22", "35.191.0.0/16"]
+    allow_protocol = "tcp"
+    allow_ports    = ["8080"]
+    target_tags    = ["lb-health-check"]
+    description    = "Google 로드밸런서 헬스체크 허용"
+  }
+]
+
+# Cloud SQL Private IP 등을 사용하려면 true 유지
+enable_private_service_connection          = true
+private_service_connection_prefix_length   = 24   # 256 IP 예약
+private_service_connection_name            = ""   # 비워두면 자동 이름 사용
