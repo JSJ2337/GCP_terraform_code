@@ -102,6 +102,7 @@ pipeline {
                     echo '⚙️  Ensuring required APIs are enabled for the new project...'
                     dir("${TG_WORKING_DIR}/00-project") {
                         sh '''
+                            set -e
                             terragrunt apply \
                                 --terragrunt-non-interactive \
                                 -auto-approve \
@@ -109,14 +110,11 @@ pipeline {
 
                             PROJECT_ID=$(terragrunt output -raw project_id 2>/dev/null | tr -d '\\n')
                             if [ -z "$PROJECT_ID" ]; then
-                              echo "⚠️  Could not read project_id output; skipping API verification"
-                            else
-                              echo "✅ Project ID: $PROJECT_ID"
-                              echo "🔎 Checking enabled services..."
-                              gcloud services list --enabled --project="$PROJECT_ID" \
-                                | egrep 'logging.googleapis.com|monitoring.googleapis.com|serviceusage.googleapis.com|compute.googleapis.com' \
-                                || true
+                              PROJECT_ID=$(awk -F= '/^project_id/ {gsub(/[ "]/,"",$2); print $2; exit}' ../common.naming.tfvars)
                             fi
+                            echo "✅ Project ID: $PROJECT_ID"
+                            echo '🔎 Terraform state entries for google_project_service:'
+                            terragrunt state list | grep -E 'google_project_service' || echo '  (none yet)'
                         '''
                     }
                 }
