@@ -15,6 +15,11 @@
   - `config` 블록에는 Terraform backend가 인식하는 `bucket`, `prefix`만 유지
   - "Unsupported argument" 오류 해결
   - "Duplicate backend configuration" 오류 해결
+- **Terragrunt backend 파일 자동 생성**:
+  - `environments/LIVE/jsj-game-g/terragrunt.hcl`과 `proj-default-templet/terragrunt.hcl`에 `generate` 블록 추가
+  - 각 레이어 디렉터리에 `backend.tf`를 자동 생성하며 기존 파일을 덮어쓰도록 설정
+  - Terraform 코드(`main.tf`)에서 빈 `backend "gcs" {}`를 제거해 중복 선언 없이 Terragrunt 설정만 사용
+  - Jenkins에서 `terraform init` 재실행 시 더 이상 `backend.tf` 수동 관리가 필요 없음
 
 ### 변경 (Changed)
 - **문서 업데이트**: `05_quick setup guide.md`의 terragrunt.hcl 예제를 최신 구조로 갱신
@@ -165,7 +170,7 @@
 ### 변경 (Changed)
 - `environments/prod/proj-default-templet` 전역을 Terragrunt 구조로 전환
   - 루트 및 각 레이어에 `terragrunt.hcl` 추가하고 의존 관계를 선언해 실행 순서 자동화
-  - Terraform 코드에는 빈 `backend "gcs" {}` 블록만 유지하여 Terragrunt가 원격 상태를 관리하도록 조정
+  - Terraform backend 관리는 Terragrunt가 생성하는 `backend.tf` 파일로 이관되어 코드에 직접 backend 블록을 둘 필요가 없음
   - `common.naming.tfvars`와 레이어별 `terraform.tfvars`를 Terragrunt가 자동 병합하도록 구성해 `-var-file` 전달이 불필요해짐
 - README/QUICK_REFERENCE/ARCHITECTURE/WORK_HISTORY 등 문서를 Terragrunt 플로우와 호환되도록 업데이트
 - Terragrunt 0.92 CLI 기준 명령 예시(`terragrunt init/plan/apply`, `terragrunt state/output`)로 가이드 갱신

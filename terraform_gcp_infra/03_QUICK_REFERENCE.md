@@ -59,6 +59,7 @@ terragrunt plan
   - Bootstrap이 `cloudbilling.googleapis.com`, `serviceusage.googleapis.com`을 자동 활성화하여 신규 프로젝트 생성 시 Billing/API 오류 예방
   - Jenkins 서비스 계정 필수 권한/Billing API 체크리스트를 README·Jenkins 문서에 명시 (billing.user 미설정으로 인한 apply 실패 방지)
   - Project 베이스 모듈이 `org_id` 입력을 지원하고 환경 루트 Terragrunt `inputs`에 `org_id`·`billing_account` 등을 정의해 중복 없이 재사용
+  - Terragrunt `remote_state`가 각 레이어 `backend.tf`를 자동 생성하도록 `generate` 블록 추가, Terraform 코드에서는 backend 선언을 제거하여 중복 오류 방지
 
 ### 세션 12: Jenkins CI/CD 통합 및 프로젝트 재구성 (2025-11-05)
 - **디렉터리 구조 재정리**:
@@ -205,7 +206,7 @@ terragrunt plan
 ### 세션 9: Terragrunt 기반 실행 전환 (2025-11-03)
 - **구조 변경**:
   - `environments/prod/proj-default-templet` 루트 및 모든 레이어에 `terragrunt.hcl` 도입
-  - 빈 `backend "gcs" {}` 블록만 남기고 기존 `backend.tf` 파일 제거
+  - (2025-11-07) 이후에는 Terragrunt `generate` 기능이 `backend.tf`를 자동으로 작성하므로 Terraform 코드에 backend 블록이 필요 없음
   - Terragrunt가 `common.naming.tfvars`와 각 레이어의 `terraform.tfvars`를 자동 병합하도록 구성
 - **자동화**:
   - 의존성(`dependencies`)으로 레이어 순서를 선언하여 상위 레이어 완료 후 실행 보장

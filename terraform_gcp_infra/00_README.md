@@ -98,7 +98,7 @@ region_backup  = "us-east1"
 ### Terragrunt 기반 실행
 - 전체 레이어를 순서대로 실행하려면 `./run_terragrunt_stack.sh <plan|apply|destroy>` 스크립트를 사용하세요. 추가 인자는 그대로 전달됩니다.
 - 각 레이어에는 `terragrunt.hcl`이 존재하며, 공통 입력(`common.naming.tfvars`)과 레이어 전용 `terraform.tfvars`를 자동 병합합니다.
-- 원격 상태(GCS)는 Terragrunt가 관리하며, Terraform 코드에는 빈 `backend "gcs" {}` 블록만 있으면 됩니다.
+- 원격 상태(GCS)는 Terragrunt가 관리하며 루트 `terragrunt.hcl`이 각 레이어에 `backend.tf`를 자동 생성합니다. Terraform 코드에 별도의 backend 블록을 둘 필요가 없습니다.
 - Terragrunt 0.92 이상을 사용하면 `terragrunt init/plan/apply`로 Terraform 명령을 그대로 호출할 수 있습니다.
 - 루트(`environments/prod/proj-default-templet/terragrunt.hcl`)에서 원격 상태 버킷과 prefix를 정의하고, 각 레이어는 의존 관계(`dependencies` 블록)로 실행 순서를 보장합니다.
 - `common.naming.tfvars`를 직접 `-var-file`로 넘길 필요가 없으며, Terragrunt가 자동으로 주입합니다.

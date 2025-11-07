@@ -38,6 +38,10 @@ locals {
 
 remote_state {
   backend = "gcs"
+  generate = {
+    path      = "backend.tf"
+    if_exists = "overwrite_terragrunt"
+  }
   config = {
     bucket   = local.remote_state_bucket
     prefix   = "${local.project_state_prefix}/${path_relative_to_include()}"
@@ -48,6 +52,8 @@ remote_state {
   skip_bucket_accesslogging = true
 }
 ```
+
+- Terragrunt가 위 `generate` 설정으로 각 레이어에 `backend.tf`를 자동 생성합니다. 별도의 backend 파일을 커밋하거나 수동으로 관리할 필요가 없습니다.
 
 ---
 
