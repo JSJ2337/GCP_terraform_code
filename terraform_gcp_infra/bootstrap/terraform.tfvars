@@ -1,7 +1,7 @@
 # Management Project Configuration
-project_id      = "delabs-system-mgmt"
-project_name    = "delabs-system-mgmt"
-billing_account = "01076D-327AD5-FC8922"
+project_id      = "jsj-system-mgmt"
+project_name    = "jsj-system-mgmt"
+billing_account = "REDACTED_BILLING_ACCOUNT"
 folder_id       = null # No folder
 
 # Labels
@@ -13,13 +13,13 @@ labels = {
 }
 
 # Terraform State Buckets
-bucket_name_prod = "delabs-terraform-state-prod"
-bucket_name_dev  = "delabs-terraform-state-dev" # 선택사항
+bucket_name_prod = "jsj-terraform-state-prod"
+bucket_name_dev  = "jsj-terraform-state-dev" # 선택사항
 bucket_location  = "US"
 
 # Dev 버킷 생성 여부 (필요하면 true로 변경)
 create_dev_bucket = false
 
 # GCP 조직 ID (Service Account 권한 부여 시 필요)
-# 조직 ID 확인: gcloud projects get-ancestors PROJECT_ID
-organization_id = "71994629047"
+# 조직 ID: REDACTED_ORG_ID (jsj-dev.com)
+organization_id = "REDACTED_ORG_ID"

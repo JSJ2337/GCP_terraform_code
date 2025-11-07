@@ -1,7 +1,7 @@
 locals {
   # 모든 레이어에서 공유하는 원격 상태 버킷과 prefix 기본값
-  remote_state_bucket   = "delabs-terraform-state-prod"
-  remote_state_project  = "delabs-system-mgmt"
+  remote_state_bucket   = "jsj-terraform-state-prod"
+  remote_state_project  = "jsj-system-mgmt"
   remote_state_location = "US"
   project_state_prefix  = "proj-default-templet"
 }
@@ -17,8 +17,8 @@ remote_state {
   }
 }
 
-# 환경별 공통 입력 (필요 시 설정)
+# 환경별 공통 입력
 inputs = {
-  # org_id          = "123456789012"
-  # billing_account = "ABCDEF-123456-GHIJKL"
+  org_id          = "REDACTED_ORG_ID"  # jsj-dev.com
+  billing_account = "REDACTED_BILLING_ACCOUNT"
 }

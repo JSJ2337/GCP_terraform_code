@@ -2,6 +2,6 @@
 project_id     = "gcp-terraform-imsi"
 project_name   = "default-templet"
 environment    = "prod"
-organization   = "myorg"
+organization   = "jsj"
 region_primary = "us-central1"
 region_backup  = "us-east1"

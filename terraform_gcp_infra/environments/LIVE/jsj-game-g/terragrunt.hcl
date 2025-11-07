@@ -1,7 +1,7 @@
 locals {
   # 모든 레이어에서 공유하는 원격 상태 버킷과 prefix 기본값
-  remote_state_bucket   = "delabs-terraform-state-prod"
-  remote_state_project  = "delabs-system-mgmt"
+  remote_state_bucket   = "jsj-terraform-state-prod"
+  remote_state_project  = "jsj-system-mgmt"
   remote_state_location = "US"
   project_state_prefix  = "jsj-game-g"
 }
@@ -18,6 +18,6 @@ remote_state {
 }
 
 inputs = {
-  org_id          = "71994629047"
-  billing_account = "01076D-327AD5-FC8922"
+  org_id          = "REDACTED_ORG_ID"  # jsj-dev.com
+  billing_account = "REDACTED_BILLING_ACCOUNT"
 }
