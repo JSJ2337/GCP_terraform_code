@@ -13,6 +13,16 @@
 - **[2025-11-07](./work_history/2025-11-07.md)** - jsj-game-j 환경 추가 및 65-cache zone 설정 이슈 해결
 - **[2025-11-06](./work_history/2025-11-06.md)** - Jenkins CI/CD 통합 및 Terragrunt 실행 최적화
 - **[2025-11-04](./work_history/2025-11-04.md)** - Private Service Connect 기본화 및 템플릿 정비
+- **[2025-11-03](./work_history/2025-11-03.md)** - Terragrunt 기반 실행 구조 전환
+
+### 2025년 10월
+
+- **[2025-10-31](./work_history/2025-10-31.md)** - 네트워크/데이터베이스 모듈 안정화 및 jsj-game-d 환경 종료
+- **[2025-10-29 Session 6](./work_history/2025-10-29-session6.md)** - Redis 캐싱 레이어 추가 및 Load Balancer 통합
+- **[2025-10-29 Session 5](./work_history/2025-10-29-session5.md)** - Load Balancer 모듈 및 레이어 구현
+- **[2025-10-29 Session 4](./work_history/2025-10-29-session4.md)** - 워크로드/데이터베이스 레이어 안정화
+- **[2025-10-29 Session 3](./work_history/2025-10-29-session3.md)** - 관찰성 및 워크로드 레이어 구현
+- **[2025-10-28](./work_history/2025-10-28.md)** - 초기 인프라 구축 및 모듈 설계
 
 ---
 
@@ -34,6 +44,25 @@
 - ✅ Private Service Connect 기본화
 - ✅ proj-default-templet 변수 및 문서 정비
 - ✅ 모듈별 README 업데이트
+
+### 2025-11-03: Terragrunt 전환
+- ✅ Terragrunt 기반 실행 구조로 전환
+- ✅ 공통 변수 및 원격 상태 자동화
+- ✅ WSL 환경 제약 문서화
+
+### 2025-10-31: 모듈 안정화
+- ✅ 네트워크/데이터베이스 모듈 개선
+- ✅ jsj-game-d 환경 종료
+
+### 2025-10-29: 레이어 확장
+- ✅ Redis 캐싱 레이어 추가 (Session 6)
+- ✅ Load Balancer 구현 (Session 5)
+- ✅ 워크로드/데이터베이스 안정화 (Session 4)
+- ✅ 관찰성 레이어 구현 (Session 3)
+
+### 2025-10-28: 초기 구축
+- ✅ 프로젝트 초기 설정
+- ✅ 기본 모듈 설계 및 구현
 
 ---
 
