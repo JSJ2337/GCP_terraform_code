@@ -13,11 +13,10 @@ remote_state {
     bucket   = local.remote_state_bucket
     prefix   = "${local.project_state_prefix}/${path_relative_to_include()}"
   }
-
-  # 버킷이 이미 존재하므로 생성 건너뛰기
-  skip_bucket_creation    = true
-  skip_bucket_versioning  = true
-  skip_bucket_accesslogging = true
+  generate = {
+    path      = "backend.tf"
+    if_exists = "overwrite_terragrunt"
+  }
 }
 
 inputs = {
