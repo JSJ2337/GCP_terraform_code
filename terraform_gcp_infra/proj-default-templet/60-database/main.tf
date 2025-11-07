@@ -12,7 +12,6 @@ terraform {
     }
   }
 
-  backend "gcs" {}
 }
 
 module "naming" {
