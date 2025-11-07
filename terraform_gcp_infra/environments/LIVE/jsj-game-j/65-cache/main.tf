@@ -25,7 +25,7 @@ module "naming" {
 }
 
 locals {
-  region_effective   = length(trimspace(var.region)) > 0 ? trimspace(var.region) : module.naming.region_primary
+  region_effective   = length(trimspace(var.region)) > 0 ? trimspace(var.region) : module.naming.default_zone
   instance_name      = length(trimspace(var.instance_name)) > 0 ? var.instance_name : module.naming.redis_instance_name
   authorized_network = length(trimspace(var.authorized_network)) > 0 ? var.authorized_network : "projects/${var.project_id}/global/networks/${module.naming.vpc_name}"
   labels             = merge(module.naming.common_labels, var.labels)
