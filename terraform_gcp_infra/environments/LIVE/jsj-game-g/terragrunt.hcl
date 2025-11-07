@@ -12,6 +12,7 @@ remote_state {
   config = {
     bucket   = local.remote_state_bucket
     prefix   = "${local.project_state_prefix}/${path_relative_to_include()}"
+    project  = local.remote_state_project
   }
   generate = {
     path      = "backend.tf"
