@@ -83,6 +83,11 @@ variable "log_retention_days" {
   default = 30
 }
 
+variable "manage_default_logging_bucket" {
+  type    = bool
+  default = true
+}
+
 variable "cmek_key_id" {
   type    = string
   default = ""
