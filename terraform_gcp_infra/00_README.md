@@ -45,7 +45,7 @@ terraform_gcp_infra/
 │
 ├── environments/               # 환경별 구성 (실제 배포 환경)
 │   └── LIVE/
-│       └── jsj-game-h/        # 실제 프로젝트 환경
+│       └── jsj-game-h/        # 실제 프로젝트 환경 (jsj-game-i 등 복제 가능)
 │           ├── Jenkinsfile    # 🚀 jsj-game-h CI/CD Pipeline
 │           ├── 00-project/
 │           ├── 10-network/
@@ -81,7 +81,7 @@ terraform_gcp_infra/
 - **70-loadbalancer**: HTTP(S) 및 Internal Load Balancer
 
 ### modules/naming을 통한 중앙 집중식 Naming
-각 레이어는 `modules/naming` 모듈을 호출해 일관된 리소스 이름과 공통 라벨을 계산합니다. 입력 값은 각 환경의 `common.naming.tfvars` 한 곳에서 관리합니다 (예: `proj-default-templet/common.naming.tfvars`, `environments/LIVE/jsj-game-h/common.naming.tfvars`):
+각 레이어는 `modules/naming` 모듈을 호출해 일관된 리소스 이름과 공통 라벨을 계산합니다. 입력 값은 각 환경의 `common.naming.tfvars` 한 곳에서 관리합니다 (예: `proj-default-templet/common.naming.tfvars`, `environments/LIVE/jsj-game-h/common.naming.tfvars`, `environments/LIVE/jsj-game-i/common.naming.tfvars`):
 
 ```hcl
 # common.naming.tfvars
@@ -192,7 +192,7 @@ Bootstrap 배포 후, 실제 워크로드 프로젝트를 배포합니다:
 
 ```bash
 # 1. 환경 디렉토리로 이동
-cd ../environments/LIVE/jsj-game-h/00-project
+cd ../environments/LIVE/jsj-game-h/00-project  # 또는 jsj-game-i
 
 # 2. 변수 파일 준비 (처음 한 번)
 cp terraform.tfvars.example terraform.tfvars
@@ -438,7 +438,7 @@ gsutil cp terraform.tfstate gs://your-backup-bucket/bootstrap/
 
 ### Terragrunt CI/CD Pipeline
 
-**Jenkinsfile 위치**: 각 환경 디렉터리 내 (예: `environments/LIVE/jsj-game-h/Jenkinsfile`)
+**Jenkinsfile 위치**: 각 환경 디렉터리 내 (예: `environments/LIVE/jsj-game-h/Jenkinsfile`, `environments/LIVE/jsj-game-i/Jenkinsfile`)
 
 **템플릿**: `.jenkins/Jenkinsfile.template` (새 프로젝트 생성 시 복사)
 

@@ -22,7 +22,7 @@
   - Jenkins에서 `terraform init` 재실행 시 더 이상 `backend.tf` 수동 관리가 필요 없음
 
 ### 변경 (Changed)
-- **실제 배포 환경 ID 교체**: 기존 `jsj-game-g` 프로젝트 ID가 전역에서 사용 중이라 `jsj-game-h`로 교체하고 Terragrunt remote_state prefix 및 naming 입력을 모두 갱신
+- **실제 배포 환경 ID 교체**: 기존 `jsj-game-g` 프로젝트 ID가 전역에서 사용 중이라 `jsj-game-h`로 교체하고 Terragrunt remote_state prefix 및 naming 입력을 모두 갱신 (추가로 실험용 `jsj-game-i` 환경을 동일 템플릿으로 준비)
 - **문서 업데이트**: `05_quick setup guide.md`의 terragrunt.hcl 예제를 최신 구조로 갱신
   - 올바른 remote_state 설정 구조 반영
   - skip 옵션들의 올바른 위치 문서화
@@ -36,6 +36,7 @@
   - 조직 권한 없는 환경에서 프로젝트별 권한 부여 방식 지원
 - **GCP 프로젝트 수동 생성 프로세스**: 조직 없는 환경 대응
   - `jsj-game-h` 프로젝트 생성 (기존 `jsj-game-g` ID 충돌로 교체, Project Number는 생성 후 업데이트)
+  - 추가 테스트용 `jsj-game-i` 템플릿 환경 구성
   - Service Account에 프로젝트별 Editor 권한 부여
   - Billing account 수동 연결 방식
 - **Jenkins GCP 인증 설정**: Jenkinsfile에 GCP 인증 통합
@@ -92,6 +93,7 @@
   - 승인 단계가 있는 안전한 배포 Pipeline (30분 타임아웃, admin 전용)
 - **첫 번째 실제 환경 생성**: `environments/LIVE/jsj-game-h` (초기에는 `jsj-game-g`로 준비했으나 ID 충돌로 교체)
   - Project ID: jsj-game-h
+- **추가 환경 템플릿**: `environments/LIVE/jsj-game-i` (jsj-game-h를 복제해 새 프로젝트 ID 실험)
   - Region: asia-northeast3 (Seoul)
   - Organization: jsj
 - **중앙 관리 Service Account 문서화**: Jenkins용 GCP 인증 방법 추가
