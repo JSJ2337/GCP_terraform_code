@@ -91,35 +91,6 @@ pipeline {
             }
         }
 
-        stage('Enable Required APIs (00-project only)') {
-            when {
-                expression {
-                    params.ACTION == 'apply' && (params.TARGET_LAYER == 'all' || params.TARGET_LAYER == '00-project')
-                }
-            }
-            steps {
-                script {
-                    echo '⚙️  Ensuring required APIs are enabled for the new project...'
-                    dir("${TG_WORKING_DIR}/00-project") {
-                        sh '''
-                            set -e
-                            terragrunt apply \
-                                --terragrunt-non-interactive \
-                                -auto-approve \
-                                -target=module.project_base.google_project_service.services
-
-                            PROJECT_ID=$(terragrunt output -raw project_id 2>/dev/null | tr -d '\\n')
-                            if [ -z "$PROJECT_ID" ]; then
-                              PROJECT_ID=$(awk -F= '/^project_id/ {gsub(/[ "]/,"",$2); print $2; exit}' ../common.naming.tfvars)
-                            fi
-                            echo "✅ Project ID: $PROJECT_ID"
-                            echo '🔎 Terraform state entries for google_project_service:'
-                            terragrunt state list | grep -E 'google_project_service' || echo '  (none yet)'
-                        '''
-                    }
-                }
-            }
-        }
 
         stage('Terragrunt Plan') {
             steps {
