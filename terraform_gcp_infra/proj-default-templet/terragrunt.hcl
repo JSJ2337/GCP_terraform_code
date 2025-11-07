@@ -10,14 +10,12 @@ locals {
 remote_state {
   backend = "gcs"
   config = {
-    bucket                      = local.remote_state_bucket
-    prefix                      = "${local.project_state_prefix}/${path_relative_to_include()}"
-    project                     = local.remote_state_project
-    location                    = local.remote_state_location
-    skip_bucket_creation        = true
-    skip_bucket_versioning      = true
-    skip_bucket_accesslogging   = true
+    bucket   = local.remote_state_bucket
+    prefix   = "${local.project_state_prefix}/${path_relative_to_include()}"
   }
+  skip_bucket_creation      = true
+  skip_bucket_versioning    = true
+  skip_bucket_accesslogging = true
 }
 
 # 환경별 공통 입력
