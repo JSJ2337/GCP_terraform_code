@@ -13,6 +13,7 @@ remote_state {
     bucket   = local.remote_state_bucket
     prefix   = "${local.project_state_prefix}/${path_relative_to_include()}"
     project  = local.remote_state_project
+    location = local.remote_state_location
   }
   generate = {
     path      = "backend.tf"
