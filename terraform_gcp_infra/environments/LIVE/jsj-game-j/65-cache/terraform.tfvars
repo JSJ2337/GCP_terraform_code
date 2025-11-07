@@ -1,7 +1,7 @@
 # Region & Project
 # IMPORTANT: Redis location_id requires a ZONE (e.g., us-central1-a), not a region.
 # Terragrunt supplies region_primary by default; override with a zone if needed.
-# region         = "asia-northeast3-a"
+region = "asia-northeast3-a"
 
 # Memorystore configuration
 alternative_location_id     = ""
