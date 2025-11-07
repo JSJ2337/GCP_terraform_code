@@ -16,12 +16,13 @@
   - "Unsupported argument" 오류 해결
   - "Duplicate backend configuration" 오류 해결
 - **Terragrunt backend 파일 자동 생성**:
-  - `environments/LIVE/jsj-game-g/terragrunt.hcl`과 `proj-default-templet/terragrunt.hcl`에 `generate` 블록 추가
+  - `environments/LIVE/jsj-game-h/terragrunt.hcl`과 `proj-default-templet/terragrunt.hcl`에 `generate` 블록 추가
   - 각 레이어 디렉터리에 `backend.tf`를 자동 생성하며 기존 파일을 덮어쓰도록 설정
   - Terraform 코드(`main.tf`)에서 빈 `backend "gcs" {}`를 제거해 중복 선언 없이 Terragrunt 설정만 사용
   - Jenkins에서 `terraform init` 재실행 시 더 이상 `backend.tf` 수동 관리가 필요 없음
 
 ### 변경 (Changed)
+- **실제 배포 환경 ID 교체**: 기존 `jsj-game-g` 프로젝트 ID가 전역에서 사용 중이라 `jsj-game-h`로 교체하고 Terragrunt remote_state prefix 및 naming 입력을 모두 갱신
 - **문서 업데이트**: `05_quick setup guide.md`의 terragrunt.hcl 예제를 최신 구조로 갱신
   - 올바른 remote_state 설정 구조 반영
   - skip 옵션들의 올바른 위치 문서화
@@ -34,7 +35,7 @@
   - Bootstrap Terraform 코드로 관리 (Infrastructure as Code)
   - 조직 권한 없는 환경에서 프로젝트별 권한 부여 방식 지원
 - **GCP 프로젝트 수동 생성 프로세스**: 조직 없는 환경 대응
-  - `jsj-game-g` 프로젝트 생성 (Project Number: 865467708587)
+  - `jsj-game-h` 프로젝트 생성 (기존 `jsj-game-g` ID 충돌로 교체, Project Number는 생성 후 업데이트)
   - Service Account에 프로젝트별 Editor 권한 부여
   - Billing account 수동 연결 방식
 - **Jenkins GCP 인증 설정**: Jenkinsfile에 GCP 인증 통합
@@ -48,17 +49,17 @@
 ### 변경 (Changed)
 - **Jenkinsfile Working Directory 수정**: 절대 경로 사용
   - `TG_WORKING_DIR`을 상대 경로 '.'에서 절대 경로로 변경
-  - 예: `terraform_gcp_infra/environments/LIVE/jsj-game-g`
+  - 예: `terraform_gcp_infra/environments/LIVE/jsj-game-h`
   - 템플릿 디렉터리와의 충돌 방지
 - **terragrunt.hcl GCS Remote State 설정 강화**: 필수 파라미터 추가
   - `project`: GCS 버킷이 위치한 프로젝트 (delabs-system-mgmt)
   - `location`: 버킷 위치 (US)
-  - `jsj-game-g` 및 `proj-default-templet` 모두 적용
+  - `jsj-game-h` 및 `proj-default-templet` 모두 적용
 - **Terragrunt in-place 실행**: `.terragrunt-cache` 사용 안 함
   - 모든 레이어 `terragrunt.hcl`에서 `terraform.source` 블록 제거
   - 현재 디렉토리에서 직접 실행 (상대 경로 모듈 참조 유지)
   - `.terragrunt-cache`로 복사하지 않아 더 빠른 실행
-  - 18개 레이어 파일 업데이트 (jsj-game-g 9개 + proj-default-templet 9개)
+  - 18개 레이어 파일 업데이트 (jsj-game-h 9개 + proj-default-templet 9개)
 - **Terragrunt region 기본값 문서화**: 모든 레이어 tfvars/example/README에서 `region = ""` 패턴을 제거하고, 필요 시 주석 해제 방식으로 Terragrunt 기본값(`region_primary`)을 재사용하도록 안내
 - **Bootstrap Cloud Billing API 활성화**: `delabs-system-mgmt` 프로젝트가 자동으로 `cloudbilling.googleapis.com`을 사용하도록 설정, 신규 프로젝트 생성 시 Billing API 오류 방지
 - **Bootstrap Service Usage API 활성화**: 프로젝트 생성/서비스 사용 검증을 위해 `serviceusage.googleapis.com`을 자동 활성화
@@ -89,8 +90,8 @@
   - Plan/Apply/Destroy 파라미터 선택 가능
   - 전체 스택 또는 개별 레이어 실행 지원
   - 승인 단계가 있는 안전한 배포 Pipeline (30분 타임아웃, admin 전용)
-- **첫 번째 실제 환경 생성**: `environments/LIVE/jsj-game-g`
-  - Project ID: jsj-game-g
+- **첫 번째 실제 환경 생성**: `environments/LIVE/jsj-game-h` (초기에는 `jsj-game-g`로 준비했으나 ID 충돌로 교체)
+  - Project ID: jsj-game-h
   - Region: asia-northeast3 (Seoul)
   - Organization: jsj
 - **중앙 관리 Service Account 문서화**: Jenkins용 GCP 인증 방법 추가
@@ -104,7 +105,7 @@
   - `environments/LIVE/`는 실제 배포 환경만 포함
   - 템플릿 복사 시 더 명확한 구조 제공
 - **환경별 Jenkinsfile 구조**: 각 환경이 독립적인 Jenkinsfile 보유
-  - `Jenkinsfile`을 `environments/LIVE/jsj-game-g/` 로 이동
+  - `Jenkinsfile`을 `environments/LIVE/jsj-game-h/` 로 이동
   - `.jenkins/Jenkinsfile.template` 생성 (재사용 가능한 템플릿)
   - `TG_WORKING_DIR`을 절대 경로로 변경 (workspace root 기준)
   - Jenkins Job Script Path: `environments/LIVE/{project}/Jenkinsfile`

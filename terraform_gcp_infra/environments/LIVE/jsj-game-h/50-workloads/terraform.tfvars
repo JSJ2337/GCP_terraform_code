@@ -9,9 +9,9 @@ instance_count = 0
 # 새로운 for_each 방식 (권장)
 # 각 VM마다 다른 호스트네임, 서브넷, 설정 가능
 instances = {
-  "game-g-web-01" = {
+  "game-h-web-01" = {
     hostname             = "web-server-01"
-    subnetwork_self_link = "projects/jsj-game-g/regions/asia-northeast3/subnetworks/game-g-prod-subnet-web"
+    subnetwork_self_link = "projects/jsj-game-h/regions/asia-northeast3/subnetworks/game-h-prod-subnet-web"
     zone                 = "asia-northeast3-a"
     machine_type         = "e2-small"
     enable_public_ip     = false
@@ -29,9 +29,9 @@ echo "Web server ready" | logger
 EOF
   }
 
-  "game-g-app-01" = {
+  "game-h-app-01" = {
     hostname             = "app-server-01"
-    subnetwork_self_link = "projects/jsj-game-g/regions/asia-northeast3/subnetworks/game-g-prod-subnet-app"
+    subnetwork_self_link = "projects/jsj-game-h/regions/asia-northeast3/subnetworks/game-h-prod-subnet-app"
     zone                 = "asia-northeast3-b"
     machine_type         = "e2-medium"
     enable_public_ip     = false
@@ -49,9 +49,9 @@ echo "App server ready" | logger
 EOF
   }
 
-  "game-g-db-proxy-01" = {
+  "game-h-db-proxy-01" = {
     hostname             = "db-proxy-01"
-    subnetwork_self_link = "projects/jsj-game-g/regions/asia-northeast3/subnetworks/game-g-prod-subnet-db"
+    subnetwork_self_link = "projects/jsj-game-h/regions/asia-northeast3/subnetworks/game-h-prod-subnet-db"
     zone                 = "asia-northeast3-c"
     machine_type         = "e2-micro"
     enable_public_ip     = false

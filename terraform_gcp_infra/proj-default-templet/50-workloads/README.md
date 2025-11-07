@@ -93,9 +93,9 @@ projects/{project-id}/regions/{region}/subnetworks/{subnet-name}
 ```
 
 **예시:**
-- Web 서브넷: `projects/jsj-game-g/regions/asia-northeast3/subnetworks/game-g-prod-subnet-web`
-- App 서브넷: `projects/jsj-game-g/regions/asia-northeast3/subnetworks/game-g-prod-subnet-app`
-- DB 서브넷: `projects/jsj-game-g/regions/asia-northeast3/subnetworks/game-g-prod-subnet-db`
+- Web 서브넷: `projects/jsj-game-h/regions/asia-northeast3/subnetworks/game-h-prod-subnet-web`
+- App 서브넷: `projects/jsj-game-h/regions/asia-northeast3/subnetworks/game-h-prod-subnet-app`
+- DB 서브넷: `projects/jsj-game-h/regions/asia-northeast3/subnetworks/game-h-prod-subnet-db`
 
 **Terragrunt로 확인:**
 ```bash
@@ -140,4 +140,4 @@ terragrunt apply  --non-interactive
 ## 예제 참조
 - count 방식 예제: `terraform.tfvars.example` 상단 참조
 - for_each 방식 예제: `terraform.tfvars.example` 하단 주석 참조
-- 실제 운영 예제: `environments/LIVE/jsj-game-g/50-workloads/terraform.tfvars`
+- 실제 운영 예제: `environments/LIVE/jsj-game-h/50-workloads/terraform.tfvars`

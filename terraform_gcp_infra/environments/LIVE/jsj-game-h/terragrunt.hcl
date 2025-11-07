@@ -3,7 +3,7 @@ locals {
   remote_state_bucket   = "jsj-terraform-state-prod"
   remote_state_project  = "jsj-system-mgmt"
   remote_state_location = "US"
-  project_state_prefix  = "jsj-game-g"
+  project_state_prefix  = "jsj-game-h"
 }
 
 # Terragrunt 원격 상태 구성: 각 레이어별로 고유 prefix를 자동 부여한다.

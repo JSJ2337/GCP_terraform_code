@@ -24,7 +24,7 @@ Terraform/Terragrunt 구성을 통해 GCP 프로젝트 생성과 기본 설정(A
    - 로그 보존 기간(`log_retention_days`)
    - CMEK를 사용할 경우 `cmek_key_id`
 
-> Terragrunt 루트(`environments/LIVE/jsj-game-g/terragrunt.hcl`)의 `inputs`에 `org_id`, `billing_account`를 정의해 두면 각 레이어에서 별도로 설정하지 않아도 자동으로 주입됩니다.
+> Terragrunt 루트(`environments/LIVE/jsj-game-h/terragrunt.hcl`)의 `inputs`에 `org_id`, `billing_account`를 정의해 두면 각 레이어에서 별도로 설정하지 않아도 자동으로 주입됩니다.
 
 > ⚠️ `terraform.tfvars` 파일은 Git에 커밋하면 안 됩니다.
 

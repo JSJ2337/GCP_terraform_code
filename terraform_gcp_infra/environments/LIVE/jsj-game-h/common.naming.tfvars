@@ -1,6 +1,6 @@
 # 공통 네이밍 입력 (모든 레이어에서 공유)
-project_id     = "jsj-game-g"
-project_name   = "game-g"
+project_id     = "jsj-game-h"
+project_name   = "game-h"
 environment    = "prod"
 organization   = "jsj"
 region         = "asia-northeast3" # Provider 기본 region
