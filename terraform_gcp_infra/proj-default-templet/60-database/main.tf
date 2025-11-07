@@ -27,7 +27,6 @@ locals {
   region_effective = length(trimspace(var.region)) > 0 ? trimspace(var.region) : module.naming.region_primary
   private_network  = length(trimspace(var.private_network)) > 0 ? var.private_network : "projects/${var.project_id}/global/networks/${module.naming.vpc_name}"
   labels           = merge(module.naming.common_labels, var.labels)
-  backend "gcs" {}
 
 }
 

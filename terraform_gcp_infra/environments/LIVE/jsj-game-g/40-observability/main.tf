@@ -8,8 +8,6 @@ terraform {
     }
   }
 
-  backend "gcs" {}
-
 }
 
 provider "google" {

@@ -9,6 +9,10 @@ locals {
 # Terragrunt 원격 상태 구성: 각 레이어별로 고유 prefix를 자동 부여한다.
 remote_state {
   backend = "gcs"
+  generate = {
+    path      = "backend.tf"
+    if_exists = "overwrite_terragrunt"
+  }
   config = {
     bucket                = local.remote_state_bucket
     prefix                = "${local.project_state_prefix}/${path_relative_to_include()}"
