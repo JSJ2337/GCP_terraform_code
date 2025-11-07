@@ -45,8 +45,12 @@ terraform_gcp_infra/
 │
 ├── environments/               # 환경별 구성 (실제 배포 환경)
 │   └── LIVE/
-│       └── jsj-game-h/        # 실제 프로젝트 환경 (jsj-game-i 등 복제 가능)
-│           ├── Jenkinsfile    # 🚀 jsj-game-h CI/CD Pipeline
+│       ├── jsj-game-j/        # 신규 프로젝트 환경 (2025-11-07 추가)
+│       │   ├── Jenkinsfile    # 🚀 jsj-game-j CI/CD Pipeline
+│       │   ├── common.naming.tfvars  # 프로젝트 메타데이터
+│       │   └── 00-project/ ~ 70-loadbalancer/
+│       └── jsj-game-g/        # 기존 프로젝트 환경
+│           ├── Jenkinsfile    # 🚀 jsj-game-g CI/CD Pipeline
 │           ├── 00-project/
 │           ├── 10-network/
 │           ├── ... (9개 레이어)

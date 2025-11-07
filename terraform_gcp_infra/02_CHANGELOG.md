@@ -7,7 +7,28 @@
 
 ## [미배포] - 2025-11-07
 
+### 추가 (Added)
+- **jsj-game-j 환경 생성**: 신규 프로젝트 환경 완전 구성
+  - 9개 인프라 레이어 전체 설정 완료 (00-project ~ 70-loadbalancer)
+  - `common.naming.tfvars` 생성 (project_id: jsj-game-j, region: asia-northeast3)
+  - `Jenkinsfile` 추가 (TG_WORKING_DIR: terraform_gcp_infra/environments/LIVE/jsj-game-j)
+  - `terragrunt.hcl` 구성 (state prefix: jsj-game-j)
+  - 총 72개 파일 추가
+- **work_history 폴더 구조**: 작업 이력을 날짜별 파일로 관리
+  - `work_history/2025-11-07.md` 생성
+  - `04_WORK_HISTORY.md`를 인덱스 파일로 변경
+  - 날짜별 파일 링크 및 작업 가이드 추가
+
 ### 수정 (Fixed)
+- **65-cache 레이어 zone 설정 이슈 해결**: Redis는 zone 필요, region만 제공되던 문제 수정
+  - 1차 시도: `terraform.tfvars`에 region 직접 지정 → 중앙 관리 원칙 위반
+  - 2차 수정: `main.tf`에서 `module.naming.default_zone` 사용 → zone 자동 생성
+  - 3차 수정: `provider "google"`가 `var.region_primary` 사용하도록 변경
+  - 최종 구조:
+    - provider.region = "asia-northeast3" (API 호출용 region)
+    - redis.region = "asia-northeast3-a" (리소스 배치용 zone, naming 모듈 자동 생성)
+    - alternative_zone = "asia-northeast3-b" (suffix 'b' 사용)
+  - 관련 커밋: `696493a`, `c9dae19`, `a25b878`, `11c8667`
 - **Terragrunt remote_state 설정 구조 수정**: skip 옵션 위치 변경
   - `skip_bucket_creation`, `skip_bucket_versioning`, `skip_bucket_accesslogging`을 `config` 블록 외부로 이동
   - 이 옵션들은 Terragrunt 자체 설정이므로 `remote_state` 블록에 직접 배치
