@@ -584,3 +584,6 @@ terraform plan
 - [ ] 실제 사용 사례 (Use Cases) 문서
 - [ ] 트러블슈팅 가이드 확장
 - [ ] 성능 튜닝 가이드
+- **Cloud Logging API 대기 시간 추가**:
+  - `modules/project-base`에 `time_sleep` 리소스를 도입해 Logging API 활성화 후 `_Default` 버킷 구성을 시작하기 전에 `logging_api_wait_duration`만큼 대기 (기본 60초)
+  - 신규 프로젝트에서 API 전파 지연으로 `_Default` 버킷 생성이 반복적으로 403을 내던 문제 완화

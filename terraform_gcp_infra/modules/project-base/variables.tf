@@ -58,6 +58,12 @@ variable "log_retention_days" {
   default = 30
 }
 
+variable "logging_api_wait_duration" {
+  description = "Duration to wait after enabling logging.googleapis.com before configuring the default logging bucket (e.g., \"60s\")"
+  type        = string
+  default     = "60s"
+}
+
 variable "cmek_key_id" {
   type    = string
   default = ""
