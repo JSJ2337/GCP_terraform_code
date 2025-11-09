@@ -46,7 +46,7 @@ module "project_base" {
 
   project_id      = var.project_id
   project_name    = var.project_name != "" ? var.project_name : module.naming.project_name
-  folder_id       = data.terraform_remote_state.bootstrap.outputs.folder_live_id
+  folder_id       = data.terraform_remote_state.bootstrap.outputs.folder_structure["games"]["kr-region"]["LIVE"]
   org_id          = null # 폴더 사용 시 org_id는 null
   billing_account = var.billing_account
   labels          = merge(module.naming.common_labels, var.labels)
