@@ -23,6 +23,7 @@ Terraform/Terragrunt 구성을 통해 GCP 프로젝트 생성과 기본 설정(A
    - 예산 설정(`enable_budget`, `budget_amount`, `budget_currency`)
    - 로그 보존 기간(`log_retention_days`)
    - CMEK를 사용할 경우 `cmek_key_id`
+   - (Terragrunt 사용 시) `folder_product`, `folder_region`, `folder_env` 입력으로 원하는 폴더 조합을 지정
 
 > Terragrunt 루트(`proj-default-templet/terragrunt.hcl`)의 `inputs` 섹션에 `org_id`, `billing_account` 등을 설정하면 모든 레이어에서 자동으로 사용됩니다.
 

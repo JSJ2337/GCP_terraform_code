@@ -19,6 +19,11 @@
 
 ## 사용 방법
 
+### 폴더 구조 확장
+- `main.tf` 상단의 `local.product_regions` 맵에 게임별 리전 조합을 정의하면 해당 조합에 맞춰 **최상위 → 리전 → 환경(LIVE/Staging/GQ-dev)** 폴더가 자동 생성됩니다.
+- 예) `games2 = ["jp-region", "uk-region"]` 를 추가하면 `games2/jp-region/*`, `games2/uk-region/*` 폴더가 모두 만들어집니다.
+- 폴더 ID는 `terraform output folder_structure`로 확인하고, 환경 코드에서는 `folder_structure["games2"]["jp-region"]["LIVE"]`처럼 참조하면 됩니다.
+
 ### 1. terraform.tfvars 설정
 
 **조직 ID 확인** (Service Account 권한 부여에 필요):

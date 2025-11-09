@@ -24,6 +24,9 @@
     - games/us-region/GQ-dev (folders/1024560108932)
   - Output: `folder_structure[product][region][env]` 중첩 맵 구조
   - 관련 커밋: `2982d65`, `56a7306`
+- **games2 폴더 정식 추가**: Bootstrap `product_regions` 맵에 `games2 = ["jp-region", "uk-region"]`을 반영하고 실제 폴더까지 배포해 멀티 게임 구조를 활용 가능하도록 확장
+  - README에 `product_regions` 편집 방법을 추가해 다른 팀이 새 게임/리전 조합을 쉽게 정의할 수 있도록 문서화
+- **Terragrunt 입력으로 폴더 선택**: jsj-game-j 00-project가 `folder_product/folder_region/folder_env` 입력을 참조하도록 수정해 하드코딩 없이 폴더 조합을 전환 가능
 
 - **Bootstrap Remote State 자동 참조**: 프로젝트에서 폴더 ID 자동 참조
   - `terraform_remote_state` data source 추가
