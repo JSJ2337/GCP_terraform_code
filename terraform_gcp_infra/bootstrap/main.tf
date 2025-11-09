@@ -9,6 +9,35 @@ terraform {
   }
 }
 
+# 0) 폴더 구조 생성
+# 최상위 폴더: games
+resource "google_folder" "games" {
+  display_name = "games"
+  parent       = "organizations/${var.organization_id}"
+}
+
+# 2단계 폴더: kr-region
+resource "google_folder" "kr_region" {
+  display_name = "kr-region"
+  parent       = google_folder.games.name
+}
+
+# 3단계 폴더: 환경별
+resource "google_folder" "live" {
+  display_name = "LIVE"
+  parent       = google_folder.kr_region.name
+}
+
+resource "google_folder" "staging" {
+  display_name = "Staging"
+  parent       = google_folder.kr_region.name
+}
+
+resource "google_folder" "gq_dev" {
+  display_name = "GQ-dev"
+  parent       = google_folder.kr_region.name
+}
+
 # 1) 관리용 프로젝트 생성
 resource "google_project" "mgmt" {
   project_id      = var.project_id

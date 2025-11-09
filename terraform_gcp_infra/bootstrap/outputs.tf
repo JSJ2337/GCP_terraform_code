@@ -1,3 +1,29 @@
+# 폴더 출력
+output "folder_games_id" {
+  description = "games 폴더 ID"
+  value       = google_folder.games.name
+}
+
+output "folder_kr_region_id" {
+  description = "kr-region 폴더 ID"
+  value       = google_folder.kr_region.name
+}
+
+output "folder_live_id" {
+  description = "LIVE 환경 폴더 ID"
+  value       = google_folder.live.name
+}
+
+output "folder_staging_id" {
+  description = "Staging 환경 폴더 ID"
+  value       = google_folder.staging.name
+}
+
+output "folder_gq_dev_id" {
+  description = "GQ-dev 환경 폴더 ID"
+  value       = google_folder.gq_dev.name
+}
+
 output "project_id" {
   description = "관리용 프로젝트 ID"
   value       = google_project.mgmt.project_id

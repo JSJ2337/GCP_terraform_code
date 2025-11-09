@@ -2,7 +2,7 @@
 # Uncomment and set region to override the default from common.naming.tfvars.
 # region = "asia-northeast3"
 # Parent settings
-folder_id       = null
+folder_id       = "folders/587862617074" # LIVE environment folder
 billing_account = "REDACTED_BILLING_ACCOUNT"
 
 # Labels (only add extra labels here; modules/naming.common_labels will be merged)
