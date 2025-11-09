@@ -10,6 +10,7 @@
 
 ### 2025년 11월
 
+- **[2025-11-09](./work_history/2025-11-09.md)** - GCP 폴더 구조 자동화 및 유연한 게임/리전 조합 지원
 - **[2025-11-07](./work_history/2025-11-07.md)** - jsj-game-j 환경 추가 및 65-cache zone 설정 이슈 해결
 - **[2025-11-06](./work_history/2025-11-06.md)** - Jenkins CI/CD 통합 및 Terragrunt 실행 최적화
 - **[2025-11-04](./work_history/2025-11-04.md)** - Private Service Connect 기본화 및 템플릿 정비
@@ -27,6 +28,14 @@
 ---
 
 ## 📋 최근 작업 요약
+
+### 2025-11-09: GCP 폴더 구조 자동화
+- ✅ Cloud Logging API 타이밍 이슈 해결 (depends_on 명시적 참조)
+- ✅ GCP 폴더 구조 생성 (games/kr-region/LIVE,Staging,GQ-dev)
+- ✅ Bootstrap remote state로 폴더 ID 자동 참조
+- ✅ 게임별 다른 리전 조합 지원 (for_each 3차원 구조)
+- ✅ games/us-region 추가 (LIVE/Staging/GQ-dev 자동 생성)
+- 🔗 커밋: `effe94a`, `2982d65`, `f6fdda8`, `56a7306`, `353aa10`
 
 ### 2025-11-07: jsj-game-j 환경 추가
 - ✅ 신규 프로젝트 jsj-game-j 환경 생성 (9개 레이어 완료)
@@ -80,7 +89,8 @@
 
 ### Phase 3: 환경 확장 🚧 (진행 중)
 - [x] jsj-game-j 환경 추가
-- [ ] 추가 환경 배포
+- [x] GCP 폴더 구조 자동화 (게임별 다른 리전 조합 지원)
+- [ ] 추가 환경 배포 (games2, games3 등)
 - [ ] 모니터링 강화
 
 ---
@@ -108,7 +118,7 @@ work_history/YYYY-MM-DD.md
 ```markdown
 # 작업 이력 - YYYY-MM-DD
 
-**작업자**: [이름]
+**작업자**: jsj
 **브랜치**: [브랜치명]
 
 ---

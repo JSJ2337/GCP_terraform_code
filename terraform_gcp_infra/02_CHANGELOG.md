@@ -5,6 +5,54 @@
 형식: [Keep a Changelog](https://keepachangelog.com/ko/1.0.0/) 기반
 버저닝: [Semantic Versioning](https://semver.org/lang/ko/) 준수
 
+## [미배포] - 2025-11-09
+
+### 추가 (Added)
+- **GCP 폴더 구조 자동화**: 게임별로 다른 리전 조합을 지원하는 유연한 폴더 구조
+  - Bootstrap에 3차원 for_each 구조 추가 (게임 × 리전 × 환경)
+  - `product_regions` 맵에서 게임별 사용 리전 정의 가능
+    - games: kr-region, us-region
+    - games2 추가 예시: jp-region, uk-region
+    - games3 추가 예시: kr-region만
+  - 환경(LIVE/Staging/GQ-dev)은 모든 조합에 자동 생성
+  - 생성된 폴더:
+    - games/kr-region/LIVE (folders/587862617074)
+    - games/kr-region/Staging (folders/832653143511)
+    - games/kr-region/GQ-dev (folders/873010178233)
+    - games/us-region/LIVE (folders/577170857863)
+    - games/us-region/Staging (folders/902417803159)
+    - games/us-region/GQ-dev (folders/1024560108932)
+  - Output: `folder_structure[product][region][env]` 중첩 맵 구조
+  - 관련 커밋: `2982d65`, `56a7306`
+
+- **Bootstrap Remote State 자동 참조**: 프로젝트에서 폴더 ID 자동 참조
+  - `terraform_remote_state` data source 추가
+  - Bootstrap의 output을 자동으로 참조
+  - terraform.tfvars에서 folder_id 수동 입력 제거
+  - 새 프로젝트 생성 시 수동 작업 최소화
+  - 사용 예시: `folder_id = data.terraform_remote_state.bootstrap.outputs.folder_structure["games"]["kr-region"]["LIVE"]`
+  - 관련 커밋: `f6fdda8`, `353aa10`
+
+### 수정 (Fixed)
+- **Cloud Logging API 활성화 타이밍 이슈 해결**: 명시적 depends_on으로 API 대기 보장
+  - 문제: google_logging_project_bucket_config가 logging API 활성화 전에 실행
+  - 에러: `Error 403: Cloud Logging API has not been used in project 110061486541`
+  - 해결: `depends_on = [google_project_service.services["logging.googleapis.com"], ...]`
+  - for_each 맵에서 특정 API 명시적 참조로 타이밍 문제 해결
+  - 60초 대기 시간과 함께 이중 보호 메커니즘 적용
+  - 파일: `modules/project-base/main.tf:79-82`
+  - 관련 커밋: `effe94a`
+
+### 변경 (Changed)
+- **Bootstrap 폴더 리소스 구조 변경**: 정적 리소스 → for_each 동적 생성
+  - State 이동:
+    - `google_folder.games` → `google_folder.products["games"]`
+    - `google_folder.kr_region` → `google_folder.regions["games/kr-region"]`
+    - `google_folder.live` → `google_folder.environments["games/kr-region/LIVE"]`
+    - `google_folder.staging` → `google_folder.environments["games/kr-region/Staging"]`
+    - `google_folder.gq_dev` → `google_folder.environments["games/kr-region/GQ-dev"]`
+  - 기존 폴더 유지하면서 새로운 구조로 전환 완료
+
 ## [미배포] - 2025-11-07
 
 ### 추가 (Added)
