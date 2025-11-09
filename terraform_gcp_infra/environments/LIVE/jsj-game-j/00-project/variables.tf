@@ -34,7 +34,9 @@ variable "region" {
 }
 
 variable "folder_id" {
-  type = string
+  type        = string
+  default     = null
+  description = "Deprecated: 폴더 ID는 main.tf에서 bootstrap remote state로 자동 참조됨"
 }
 
 variable "org_id" {

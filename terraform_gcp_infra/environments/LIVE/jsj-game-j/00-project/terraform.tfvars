@@ -1,8 +1,10 @@
 # Project Configuration
 # Uncomment and set region to override the default from common.naming.tfvars.
 # region = "asia-northeast3"
+
 # Parent settings
-folder_id       = "folders/587862617074" # LIVE environment folder
+# folder_id는 main.tf에서 bootstrap remote state로 자동 참조
+# 환경에 따라 자동 설정됨: LIVE, Staging, GQ-dev
 billing_account = "REDACTED_BILLING_ACCOUNT"
 
 # Labels (only add extra labels here; modules/naming.common_labels will be merged)

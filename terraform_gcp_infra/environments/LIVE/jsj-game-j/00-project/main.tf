@@ -24,6 +24,14 @@ provider "google-beta" {
   region  = var.region
 }
 
+# Bootstrap에서 폴더 구조 정보 가져오기
+data "terraform_remote_state" "bootstrap" {
+  backend = "local"
+  config = {
+    path = "../../../../bootstrap/terraform.tfstate"
+  }
+}
+
 module "naming" {
   source         = "../../../../modules/naming"
   project_name   = var.project_name != "" ? var.project_name : var.project_id
@@ -38,8 +46,8 @@ module "project_base" {
 
   project_id      = var.project_id
   project_name    = var.project_name != "" ? var.project_name : module.naming.project_name
-  folder_id       = var.folder_id
-  org_id          = var.org_id
+  folder_id       = data.terraform_remote_state.bootstrap.outputs.folder_live_id
+  org_id          = null # 폴더 사용 시 org_id는 null
   billing_account = var.billing_account
   labels          = merge(module.naming.common_labels, var.labels)
 
