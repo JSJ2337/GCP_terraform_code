@@ -26,9 +26,10 @@ provider "google-beta" {
 
 # Bootstrap에서 폴더 구조 정보 가져오기
 data "terraform_remote_state" "bootstrap" {
-  backend = "local"
+  backend = "gcs"
   config = {
-    path = "../../../../bootstrap/terraform.tfstate"
+    bucket = var.bootstrap_state_bucket
+    prefix = var.bootstrap_state_prefix
   }
 }
 

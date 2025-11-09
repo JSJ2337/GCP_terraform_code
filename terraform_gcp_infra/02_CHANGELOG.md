@@ -30,10 +30,20 @@
 
 - **Bootstrap Remote State 자동 참조**: 프로젝트에서 폴더 ID 자동 참조
   - `terraform_remote_state` data source 추가
-  - Bootstrap의 output을 자동으로 참조
+  - Bootstrap의 output을 자동으로 참조 (GCS backend: `bucket = "jsj-terraform-state-prod", prefix = "bootstrap"`)
   - terraform.tfvars에서 folder_id 수동 입력 제거
   - 새 프로젝트 생성 시 수동 작업 최소화
-  - 사용 예시: `folder_id = data.terraform_remote_state.bootstrap.outputs.folder_structure["games"]["kr-region"]["LIVE"]`
+  - 사용 예시:
+    ```hcl
+    data "terraform_remote_state" "bootstrap" {
+      backend = "gcs"
+      config = {
+        bucket = "jsj-terraform-state-prod"
+        prefix = "bootstrap"
+      }
+    }
+    folder_id = data.terraform_remote_state.bootstrap.outputs.folder_structure["games"]["kr-region"]["LIVE"]
+    ```
   - 관련 커밋: `f6fdda8`, `353aa10`
 
 ### 수정 (Fixed)
