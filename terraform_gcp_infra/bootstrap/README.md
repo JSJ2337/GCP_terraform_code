@@ -24,6 +24,23 @@
 - 예) `games2 = ["jp-region", "uk-region"]` 를 추가하면 `games2/jp-region/*`, `games2/uk-region/*` 폴더가 모두 만들어집니다.
 - 폴더 ID는 `terraform output folder_structure`로 확인하고, 환경 코드에서는 `folder_structure["games2"]["jp-region"]["LIVE"]`처럼 참조하면 됩니다.
 
+### Bootstrap state를 다른 환경에서 참조하기
+- bootstrap은 local backend를 사용합니다. `terraform apply`가 끝난 뒤에는 최신 `terraform.tfstate`를 안전한 위치에 백업하고, 파이프라인이나 다른 개발자가 참조할 수 있도록 GCS 버킷에 복사본을 올려두세요.
+  ```bash
+  # 로컬 state를 GCS에 복사 (Terragrunt/CI에서 data.terraform_remote_state로 사용)
+  gsutil cp terraform.tfstate gs://jsj-terraform-state-prod/bootstrap/default.tfstate
+  ```
+- 환경 코드에서는 아래와 같이 GCS backend를 사용하는 `data "terraform_remote_state"`를 선언해 bootstrap 출력값을 읽습니다.
+  ```hcl
+  data "terraform_remote_state" "bootstrap" {
+    backend = "gcs"
+    config = {
+      bucket = "jsj-terraform-state-prod"
+      prefix = "bootstrap"
+    }
+  }
+  ```
+
 ### 1. terraform.tfvars 설정
 
 **조직 ID 확인** (Service Account 권한 부여에 필요):
