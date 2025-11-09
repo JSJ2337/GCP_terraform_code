@@ -1,27 +1,30 @@
-# 폴더 출력
-output "folder_games_id" {
-  description = "games 폴더 ID"
-  value       = google_folder.games.name
+# 폴더 구조 출력 (중첩 맵: [product][region][env] = folder_id)
+output "folder_structure" {
+  description = "전체 폴더 구조. 사용법: folder_structure[\"games\"][\"kr-region\"][\"LIVE\"]"
+  value = {
+    for product, regions in local.product_regions : product => {
+      for region in regions : region => {
+        for env in local.environments : env =>
+        google_folder.environments["${product}/${region}/${env}"].name
+      }
+    }
+  }
 }
 
-output "folder_kr_region_id" {
-  description = "kr-region 폴더 ID"
-  value       = google_folder.kr_region.name
-}
-
+# 편의용 단축 출력 (하위 호환성 유지)
 output "folder_live_id" {
-  description = "LIVE 환경 폴더 ID"
-  value       = google_folder.live.name
+  description = "games/kr-region/LIVE 폴더 ID (하위 호환용)"
+  value       = try(google_folder.environments["games/kr-region/LIVE"].name, null)
 }
 
 output "folder_staging_id" {
-  description = "Staging 환경 폴더 ID"
-  value       = google_folder.staging.name
+  description = "games/kr-region/Staging 폴더 ID (하위 호환용)"
+  value       = try(google_folder.environments["games/kr-region/Staging"].name, null)
 }
 
 output "folder_gq_dev_id" {
-  description = "GQ-dev 환경 폴더 ID"
-  value       = google_folder.gq_dev.name
+  description = "games/kr-region/GQ-dev 폴더 ID (하위 호환용)"
+  value       = try(google_folder.environments["games/kr-region/GQ-dev"].name, null)
 }
 
 output "project_id" {
