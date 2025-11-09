@@ -76,7 +76,10 @@ resource "google_logging_project_bucket_config" "default" {
   retention_days = var.log_retention_days
   bucket_id      = "_Default"
 
-  depends_on = [google_project_service.services, time_sleep.wait_for_logging_api]
+  depends_on = [
+    google_project_service.services["logging.googleapis.com"],
+    time_sleep.wait_for_logging_api
+  ]
 }
 
 # 4) CMEK 참조(옵션) – 실제 키는 외부에서 제공
