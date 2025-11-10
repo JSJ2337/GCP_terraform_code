@@ -66,3 +66,9 @@ variable "manage_org_iam" {
   type        = bool
   default     = false
 }
+
+variable "manage_folders" {
+  description = "게임/리전/환경 폴더 구조를 Terraform으로 생성/관리할지 여부"
+  type        = bool
+  default     = false
+}

@@ -23,3 +23,8 @@ create_dev_bucket = false
 # GCP 조직 ID (Service Account 권한 부여 시 필요)
 # 조직 ID: REDACTED_ORG_ID (jsj-dev.com)
 organization_id = "REDACTED_ORG_ID"
+
+# Bootstrap 옵션 플래그
+manage_folders = true
+manage_org_iam = false
+enable_billing_account_binding = false

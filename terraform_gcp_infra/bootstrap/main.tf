@@ -49,16 +49,16 @@ locals {
 
 # 1단계: 최상위 폴더 (games, games2, games3 등)
 resource "google_folder" "products" {
-  for_each     = toset(keys(local.product_regions))
+  for_each     = var.manage_folders ? toset(keys(local.product_regions)) : toset([])
   display_name = each.key
   parent       = "organizations/${var.organization_id}"
 }
 
 # 2단계: 리전 폴더 (각 게임마다 다른 리전 조합)
 resource "google_folder" "regions" {
-  for_each = {
+  for_each = var.manage_folders ? {
     for combo in local.product_region_combinations : combo.key => combo
-  }
+  } : {}
 
   display_name = each.value.region
   parent       = google_folder.products[each.value.product].name
@@ -66,9 +66,9 @@ resource "google_folder" "regions" {
 
 # 3단계: 환경 폴더 (LIVE, Staging, GQ-dev)
 resource "google_folder" "environments" {
-  for_each = {
+  for_each = var.manage_folders ? {
     for combo in local.folder_combinations : combo.key => combo
-  }
+  } : {}
 
   display_name = each.value.env
   parent       = google_folder.regions["${each.value.product}/${each.value.region}"].name

@@ -19,10 +19,11 @@
 
 ## 사용 방법
 
-### 폴더 구조 확장
-- `main.tf` 상단의 `local.product_regions` 맵에 게임별 리전 조합을 정의하면 해당 조합에 맞춰 **최상위 → 리전 → 환경(LIVE/Staging/GQ-dev)** 폴더가 자동 생성됩니다.
+### 폴더 구조 확장(옵션)
+- `manage_folders=true`로 설정하면 `local.product_regions` 정의에 맞춰 **최상위 → 리전 → 환경(LIVE/Staging/GQ-dev)** 폴더를 생성/관리합니다.
 - 예) `games2 = ["jp-region", "uk-region"]` 를 추가하면 `games2/jp-region/*`, `games2/uk-region/*` 폴더가 모두 만들어집니다.
 - 폴더 ID는 `terraform output folder_structure`로 확인하고, 환경 코드에서는 `folder_structure["games2"]["jp-region"]["LIVE"]`처럼 참조하면 됩니다.
+- 기본값은 `manage_folders=false`이며, 기존 수동 폴더 구조를 유지하는 환경에서도 안전하게 적용할 수 있습니다.
 
 ### Bootstrap state를 다른 환경에서 참조하기
 - bootstrap은 local backend를 사용합니다. `terraform apply`가 끝난 뒤에는 최신 `terraform.tfstate`를 안전한 위치에 백업하고, 파이프라인이나 다른 개발자가 참조할 수 있도록 GCS 버킷에 복사본을 올려두세요.

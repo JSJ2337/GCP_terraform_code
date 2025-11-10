@@ -1,14 +1,14 @@
 # 폴더 구조 출력 (중첩 맵: [product][region][env] = folder_id)
 output "folder_structure" {
   description = "전체 폴더 구조. 사용법: folder_structure[\"games\"][\"kr-region\"][\"LIVE\"]"
-  value = {
+  value       = var.manage_folders ? {
     for product, regions in local.product_regions : product => {
       for region in regions : region => {
         for env in local.environments : env =>
         google_folder.environments["${product}/${region}/${env}"].name
       }
     }
-  }
+  } : {}
 }
 
 # 편의용 단축 출력 (하위 호환성 유지)
