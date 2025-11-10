@@ -29,7 +29,11 @@ module "naming" {
 locals {
   # Memorystore requires a ZONE for location_id; use default_zone when region is not explicitly set
   region_effective   = length(trimspace(var.region)) > 0 ? trimspace(var.region) : module.naming.default_zone
-  region_base        = regexreplace(local.region_effective, "-[a-z]$", "")
+  region_base        = (
+    length(local.region_effective) > 2
+    ? substr(local.region_effective, 0, length(local.region_effective) - 2)
+    : local.region_effective
+  )
   instance_name      = length(trimspace(var.instance_name)) > 0 ? var.instance_name : module.naming.redis_instance_name
   authorized_network = length(trimspace(var.authorized_network)) > 0 ? var.authorized_network : "projects/${var.project_id}/global/networks/${module.naming.vpc_name}"
   labels             = merge(module.naming.common_labels, var.labels)
