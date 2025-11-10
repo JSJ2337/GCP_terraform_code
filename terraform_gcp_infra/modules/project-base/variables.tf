@@ -29,12 +29,22 @@ variable "labels" {
 variable "apis" {
   type = list(string)
   default = [
+    # Core
     "compute.googleapis.com",
     "iam.googleapis.com",
+    "cloudresourcemanager.googleapis.com",
+    "serviceusage.googleapis.com",
+    # Networking
     "servicenetworking.googleapis.com",
+    # Observability
     "logging.googleapis.com",
     "monitoring.googleapis.com",
+    # Storage/Secrets/KMS
+    "storage.googleapis.com",
     "cloudkms.googleapis.com",
+    # Workloads (옵션: 실제 사용 레이어에서 불필요 시 무시됨)
+    "sqladmin.googleapis.com",      # Cloud SQL
+    "redis.googleapis.com"          # Memorystore
   ]
 }
 
