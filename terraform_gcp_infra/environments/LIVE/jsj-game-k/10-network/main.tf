@@ -60,28 +60,27 @@ module "net" {
   nat_min_ports_per_vm = var.nat_min_ports_per_vm
 
   firewall_rules = var.firewall_rules
+
+  # 모듈 실행 전에 Service Networking API 활성화/전파 대기를 보장하기 위해
+  # 아래 google_project_service + time_sleep 리소스에 의존합니다.
+  depends_on = [
+    google_project_service.servicenetworking,
+    time_sleep.wait_for_servicenetworking_api
+  ]
 }
 
 locals {
   private_service_connection_name = length(trimspace(var.private_service_connection_name)) > 0 ? var.private_service_connection_name : "${module.naming.vpc_name}-psc"
 }
 
-resource "google_compute_global_address" "private_service_connect" {
-  count        = var.enable_private_service_connection ? 1 : 0
-  name         = local.private_service_connection_name
-  project      = var.project_id
-  purpose      = "VPC_PEERING"
-  address_type = "INTERNAL"
-
-  prefix_length = var.private_service_connection_prefix_length
-  network       = module.net.vpc_self_link
+# Service Networking API 활성화 및 전파 대기 (모듈 의존성으로 연결)
+resource "google_project_service" "servicenetworking" {
+  project            = var.project_id
+  service            = "servicenetworking.googleapis.com"
+  disable_on_destroy = false
 }
 
-resource "google_service_networking_connection" "private_vpc_connection" {
-  count                   = var.enable_private_service_connection ? 1 : 0
-  network                 = module.net.vpc_self_link
-  service                 = "services/servicenetworking.googleapis.com"
-  reserved_peering_ranges = [google_compute_global_address.private_service_connect[0].name]
-
-  depends_on = [google_compute_global_address.private_service_connect]
+resource "time_sleep" "wait_for_servicenetworking_api" {
+  depends_on      = [google_project_service.servicenetworking]
+  create_duration = "90s"
 }
