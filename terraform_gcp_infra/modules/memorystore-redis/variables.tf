@@ -43,8 +43,8 @@ variable "memory_size_gb" {
 
 variable "redis_version" {
   type        = string
-  description = "Desired Redis version (e.g., REDIS_6_X)"
-  default     = "REDIS_6_X"
+  description = "Desired Redis version (e.g., REDIS_7_X)"
+  default     = "REDIS_7_X"
 }
 
 variable "authorized_network" {

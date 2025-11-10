@@ -20,7 +20,7 @@ instance_name = "" # 비워두면 naming 모듈 기준으로 자동 생성
 alternative_location_id     = ""
 alternative_location_suffix = "b"            # 결과: us-central1-b
 memory_size_gb          = 2
-redis_version           = "REDIS_6_X"
+redis_version           = "REDIS_7_X"
 tier                    = "STANDARD_HA"
 
 # 네트워크 (비워두면 템플릿 VPC 자동 사용)

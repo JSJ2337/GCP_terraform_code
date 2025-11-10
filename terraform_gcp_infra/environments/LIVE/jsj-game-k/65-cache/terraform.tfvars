@@ -7,7 +7,7 @@
 alternative_location_id     = ""
 alternative_location_suffix = "b"
 memory_size_gb              = 1
-redis_version               = "REDIS_6_X"
+redis_version               = "REDIS_7_X"
 tier                        = "STANDARD_HA"
 
 # Networking (비워두면 naming 모듈 VPC 사용)
