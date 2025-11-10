@@ -121,15 +121,18 @@ gcloud projects add-iam-policy-binding delabs-system-mgmt \
 ```
 
 **Billing Account 연결 권한** (필수):
-- Bootstrap이 `var.billing_account`에 설정된 청구 계정에 대해 Jenkins SA에 `roles/billing.user`를 자동으로 부여합니다.
+- `enable_billing_account_binding=true`인 경우, Bootstrap이 `var.billing_account`에 대해 Jenkins SA에 `roles/billing.user`를 자동 부여합니다.
 - 단, 이 변경은 Bootstrap을 적용하는 주체에게 해당 청구 계정의 `billing.accounts.setIamPolicy` 권한이 있어야 성공합니다.
+  실패 시 아래처럼 수동으로 부여하세요.
+  ```bash
+  gcloud beta billing accounts add-iam-policy-binding YOUR-BILLING-ACCOUNT \
+      --member="serviceAccount:jenkins-terraform-admin@${PROJECT_ID}.iam.gserviceaccount.com" \
+      --role="roles/billing.user"
+  ```
 
-수동으로 부여해야 하는 경우 예시:
-```bash
-gcloud beta billing accounts add-iam-policy-binding YOUR-BILLING-ACCOUNT \
-    --member="serviceAccount:jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com" \
-    --role="roles/billing.user"
-```
+**조직/폴더 권한** (옵션):
+- `manage_org_iam=true`로 설정하면 Terraform이 조직 레벨 IAM(프로젝트 생성, billing.user, editor)을 관리하려 시도합니다.
+- 대부분의 환경에서는 조직 IAM은 수동으로 한 번만 부여하고 `manage_org_iam=false`로 유지하는 것을 권장합니다(권한 부족으로 인해 apply 실패를 방지).
 
 **워크로드 프로젝트 관리 권한** (프로젝트별로 부여):
 ```bash

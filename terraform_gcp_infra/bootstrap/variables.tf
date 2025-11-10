@@ -60,3 +60,9 @@ variable "enable_billing_account_binding" {
   type        = bool
   default     = false
 }
+
+variable "manage_org_iam" {
+  description = "Terraform으로 조직 레벨 IAM(프로젝트 생성, billing.user, editor) 부여를 관리할지 여부"
+  type        = bool
+  default     = false
+}

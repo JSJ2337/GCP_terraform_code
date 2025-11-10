@@ -185,7 +185,7 @@ resource "google_service_account" "jenkins_terraform" {
 
 # 6) 조직 레벨 권한 부여 (프로젝트 생성 권한)
 resource "google_organization_iam_member" "jenkins_project_creator" {
-  count = var.organization_id != "" ? 1 : 0
+  count = var.manage_org_iam && var.organization_id != "" ? 1 : 0
 
   org_id = var.organization_id
   role   = "roles/resourcemanager.projectCreator"
@@ -194,7 +194,7 @@ resource "google_organization_iam_member" "jenkins_project_creator" {
 
 # 7) 조직 레벨 권한 부여 (청구 계정 연결 권한)
 resource "google_organization_iam_member" "jenkins_billing_user" {
-  count = var.organization_id != "" ? 1 : 0
+  count = var.manage_org_iam && var.organization_id != "" ? 1 : 0
 
   org_id = var.organization_id
   role   = "roles/billing.user"
@@ -203,7 +203,7 @@ resource "google_organization_iam_member" "jenkins_billing_user" {
 
 # 8) 조직 레벨 권한 부여 (리소스 관리 권한)
 resource "google_organization_iam_member" "jenkins_editor" {
-  count = var.organization_id != "" ? 1 : 0
+  count = var.manage_org_iam && var.organization_id != "" ? 1 : 0
 
   org_id = var.organization_id
   role   = "roles/editor"
