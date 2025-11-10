@@ -63,26 +63,15 @@ module "net" {
 
   firewall_rules = var.firewall_rules
 
-  # 모듈 실행 전에 Service Networking API 활성화/전파 대기를 보장하기 위해
-  # 아래 google_project_service + time_sleep 리소스에 의존합니다.
-  depends_on = [
-    google_project_service.servicenetworking,
-    time_sleep.wait_for_servicenetworking_api
-  ]
+  # 초기 프로젝트 API(Cloud Resource Manager/Service Usage/Service Networking) 전파 대기
+  depends_on = [time_sleep.initial_wait_for_project_apis]
 }
 
 locals {
   private_service_connection_name = length(trimspace(var.private_service_connection_name)) > 0 ? var.private_service_connection_name : "${module.naming.vpc_name}-psc"
 }
 
-# Service Networking API 활성화 및 전파 대기 (모듈 의존성으로 연결)
-resource "google_project_service" "servicenetworking" {
-  project            = var.project_id
-  service            = "servicenetworking.googleapis.com"
-  disable_on_destroy = false
-}
-
-resource "time_sleep" "wait_for_servicenetworking_api" {
-  depends_on      = [google_project_service.servicenetworking]
-  create_duration = "90s"
+# 초기 API 전파 대기 (00-project에서 API 활성화 직후 지연 흡수)
+resource "time_sleep" "initial_wait_for_project_apis" {
+  create_duration = "120s"
 }

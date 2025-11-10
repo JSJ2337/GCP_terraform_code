@@ -63,21 +63,11 @@ module "net" {
 
   firewall_rules = var.firewall_rules
 
-  # Ensure Service Networking API is enabled and propagated before module creates PSC
-  depends_on = [
-    google_project_service.servicenetworking,
-    time_sleep.wait_for_servicenetworking_api
-  ]
+  # Wait for initial API propagation after 00-project enables required services
+  depends_on = [time_sleep.initial_wait_for_project_apis]
 }
 
-# Service Networking API enable + wait (to avoid 403 during PSC creation)
-resource "google_project_service" "servicenetworking" {
-  project            = var.project_id
-  service            = "servicenetworking.googleapis.com"
-  disable_on_destroy = false
-}
-
-resource "time_sleep" "wait_for_servicenetworking_api" {
-  depends_on      = [google_project_service.servicenetworking]
-  create_duration = "90s"
+# Initial wait to absorb API propagation delays (Cloud Resource Manager/Service Usage/Service Networking)
+resource "time_sleep" "initial_wait_for_project_apis" {
+  create_duration = "120s"
 }
