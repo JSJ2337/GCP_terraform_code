@@ -60,28 +60,22 @@ module "net" {
   nat_min_ports_per_vm = var.nat_min_ports_per_vm
 
   firewall_rules = var.firewall_rules
+
+  # Ensure Service Networking API is enabled and propagated before module creates PSC
+  depends_on = [
+    google_project_service.servicenetworking,
+    time_sleep.wait_for_servicenetworking_api
+  ]
 }
 
-locals {
-  private_service_connection_name = length(trimspace(var.private_service_connection_name)) > 0 ? var.private_service_connection_name : "${module.naming.vpc_name}-psc"
+# Service Networking API enable + wait (to avoid 403 during PSC creation)
+resource "google_project_service" "servicenetworking" {
+  project            = var.project_id
+  service            = "servicenetworking.googleapis.com"
+  disable_on_destroy = false
 }
 
-resource "google_compute_global_address" "private_service_connect" {
-  count        = var.enable_private_service_connection ? 1 : 0
-  name         = local.private_service_connection_name
-  project      = var.project_id
-  purpose      = "VPC_PEERING"
-  address_type = "INTERNAL"
-
-  prefix_length = var.private_service_connection_prefix_length
-  network       = module.net.vpc_self_link
-}
-
-resource "google_service_networking_connection" "private_vpc_connection" {
-  count                   = var.enable_private_service_connection ? 1 : 0
-  network                 = module.net.vpc_self_link
-  service                 = "services/servicenetworking.googleapis.com"
-  reserved_peering_ranges = [google_compute_global_address.private_service_connect[0].name]
-
-  depends_on = [google_compute_global_address.private_service_connect]
+resource "time_sleep" "wait_for_servicenetworking_api" {
+  depends_on      = [google_project_service.servicenetworking]
+  create_duration = "90s"
 }
