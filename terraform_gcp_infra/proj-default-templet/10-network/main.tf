@@ -63,11 +63,36 @@ module "net" {
 
   firewall_rules = var.firewall_rules
 
-  # Wait for initial API propagation after 00-project enables required services
-  depends_on = [time_sleep.initial_wait_for_project_apis]
+  # Ensure all required APIs are enabled and propagated
+  depends_on = [time_sleep.wait_servicenetworking_api]
 }
 
-# Initial wait to absorb API propagation delays (Cloud Resource Manager/Service Usage/Service Networking)
-resource "time_sleep" "initial_wait_for_project_apis" {
-  create_duration = "120s"
+# Explicitly enable and wait for required APIs so this layer can run independently
+resource "google_project_service" "crm" {
+  project            = var.project_id
+  service            = "cloudresourcemanager.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_project_service" "serviceusage" {
+  project            = var.project_id
+  service            = "serviceusage.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "time_sleep" "wait_core_apis" {
+  depends_on      = [google_project_service.crm, google_project_service.serviceusage]
+  create_duration = "60s"
+}
+
+resource "google_project_service" "servicenetworking" {
+  project            = var.project_id
+  service            = "servicenetworking.googleapis.com"
+  disable_on_destroy = false
+  depends_on         = [time_sleep.wait_core_apis]
+}
+
+resource "time_sleep" "wait_servicenetworking_api" {
+  depends_on      = [google_project_service.servicenetworking]
+  create_duration = "90s"
 }

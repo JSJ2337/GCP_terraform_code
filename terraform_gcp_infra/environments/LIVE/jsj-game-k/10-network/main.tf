@@ -63,15 +63,40 @@ module "net" {
 
   firewall_rules = var.firewall_rules
 
-  # 초기 프로젝트 API(Cloud Resource Manager/Service Usage/Service Networking) 전파 대기
-  depends_on = [time_sleep.initial_wait_for_project_apis]
+  # Ensure all required APIs are enabled and propagated
+  depends_on = [time_sleep.wait_servicenetworking_api]
 }
 
 locals {
   private_service_connection_name = length(trimspace(var.private_service_connection_name)) > 0 ? var.private_service_connection_name : "${module.naming.vpc_name}-psc"
 }
 
-# 초기 API 전파 대기 (00-project에서 API 활성화 직후 지연 흡수)
-resource "time_sleep" "initial_wait_for_project_apis" {
-  create_duration = "120s"
+# 필수 API 명시적 활성화 (신규 프로젝트에서 단독 실행해도 안전)
+resource "google_project_service" "crm" {
+  project            = var.project_id
+  service            = "cloudresourcemanager.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_project_service" "serviceusage" {
+  project            = var.project_id
+  service            = "serviceusage.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "time_sleep" "wait_core_apis" {
+  depends_on      = [google_project_service.crm, google_project_service.serviceusage]
+  create_duration = "60s"
+}
+
+resource "google_project_service" "servicenetworking" {
+  project            = var.project_id
+  service            = "servicenetworking.googleapis.com"
+  disable_on_destroy = false
+  depends_on         = [time_sleep.wait_core_apis]
+}
+
+resource "time_sleep" "wait_servicenetworking_api" {
+  depends_on      = [google_project_service.servicenetworking]
+  create_duration = "90s"
 }
