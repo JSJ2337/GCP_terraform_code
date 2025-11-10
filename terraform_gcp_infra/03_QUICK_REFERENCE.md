@@ -297,10 +297,9 @@ terragrunt apply
 terragrunt state list
 terragrunt output -json | jq
 
-# 전체 레이어 일괄 실행
-./run_terragrunt_stack.sh plan --terragrunt-non-interactive
-# 예: apply/destroy 시 추가 플래그 전달 가능
-./run_terragrunt_stack.sh destroy --terragrunt-non-interactive -auto-approve
+# 전체 스택 실행(파이프라인 기준)
+# - Plan(all)은 00-project만 수행 → 승인 → Apply(all)에서 의존 순서대로 전체 적용
+# - 워크스페이스/캐시(.terragrunt-cache/.terraform/tfplan)는 매 빌드 clean 처리
 
 
 # 데이터베이스 배포 (60-database)
@@ -354,6 +353,9 @@ terraform init && terraform apply
 4. [ ] tfsec 보안 스캔 (새 모듈 포함)
 5. [ ] 실제 프로젝트에 배포 (terragrunt plan/apply)
 6. [ ] State 마이그레이션 (기존 인프라가 있다면)
+7. [ ] (필요 시) 10-network 단독 실행 시 사전 API 활성화: 
+   - `gcloud services enable cloudresourcemanager.googleapis.com serviceusage.googleapis.com servicenetworking.googleapis.com --project=<PROJECT>`
+   - 1–2분 대기 후 재실행
 
 ### 향후 개선 사항
 6. [ ] PostgreSQL 모듈 추가 (cloudsql-postgresql)

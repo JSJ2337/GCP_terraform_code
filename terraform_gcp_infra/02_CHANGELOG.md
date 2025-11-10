@@ -15,11 +15,15 @@
 - Bootstrap: 관리 옵션 토글 추가 및 문서 정리
   - variables: `manage_folders`, `manage_org_iam`, `enable_billing_account_binding`
   - README/가이드 전반에서 명칭을 `jsj-system-mgmt`, `jsj-terraform-state-prod`로 정리
+  - Provider 정책: 전 레이어에 `user_project_override=true`, `billing_project=var.project_id` 적용(ADC 의존 제거). 단, 00-project는 예외(프로젝트 생성/필수 API 활성화 담당)
+  - 10-network: Service Networking 프로젝트 서비스 조작으로 인한 403 방지를 위해 초기 API 전파 대기 및 단계별 대기 로직 추가(Cloud Resource Manager → Service Usage → Service Networking 순), PSC 리소스는 모듈 일원화
+  - Jenkins 파이프라인: clean checkout, 캐시(.terragrunt-cache/.terraform/tfplan) 정리, run-all Plan은 00-project만 수행, run-all Apply는 최신 코드/상태 기준 의존 순서대로 적용
 
 ### 추가 (Added)
 - 신규 환경 `jsj-game-k` 생성 (LIVE)
   - `common.naming.tfvars`, `terragrunt.hcl`, `Jenkinsfile`에 jsj-game-k 식별자 반영
  - Bootstrap 실제 적용 완료: folder_structure 출력 확인(games/kr-region, us-region)
+ - 00-project/10-network에 초기 전파 지연을 흡수하기 위한 대기 로직(time_sleep) 도입
 
 ### 제거 (Removed)
 - 기존 `jsj-game-j` 환경 디렉터리 제거 (템플릿 최신화 반영된 `jsj-game-k`로 이관)
@@ -66,6 +70,8 @@
   - 관련 커밋: `f6fdda8`, `353aa10`
 
 ### 수정 (Fixed)
+ - project-base HCL 표현 오류 수정: 필수 API(core)와 사용자 API 목록을 `setunion`으로 병합하고 `locals` 위치 정리(초기화 실패 방지)
+ - 00-project → 모듈에 `manage_default_logging_bucket`/`logging_api_wait_duration` 전달 누락 보완, env tfvars에서 초기 1차 적용 시 로그 버킷 스킵 가능하도록 문서/예제 반영
 - **Cloud Logging API 활성화 타이밍 이슈 해결**: 명시적 depends_on으로 API 대기 보장
   - 문제: google_logging_project_bucket_config가 logging API 활성화 전에 실행
   - 에러: `Error 403: Cloud Logging API has not been used in project 110061486541`
