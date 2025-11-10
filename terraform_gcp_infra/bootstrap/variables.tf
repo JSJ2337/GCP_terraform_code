@@ -54,3 +54,9 @@ variable "organization_id" {
   type        = string
   default     = ""
 }
+
+variable "enable_billing_account_binding" {
+  description = "청구 계정에 Jenkins SA의 roles/billing.user를 Terraform으로 부여할지 여부"
+  type        = bool
+  default     = false
+}
