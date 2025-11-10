@@ -44,7 +44,14 @@
       "Bash(gcloud projects create:*)",
       "Bash(gcloud billing projects link:*)",
       "Bash(gcloud auth:*)",
-      "Bash(gcloud projects get-iam-policy:*)"
+      "Bash(gcloud projects get-iam-policy:*)",
+      "Bash(gcloud billing accounts list:*)",
+      "Bash(cp:*)",
+      "Bash(terragrunt plan:*)",
+      "Read(//tmp/**)",
+      "WebSearch",
+      "Read(//usr/**)",
+      "Bash(git reset:*)"
     ],
     "deny": [],
     "ask": []
