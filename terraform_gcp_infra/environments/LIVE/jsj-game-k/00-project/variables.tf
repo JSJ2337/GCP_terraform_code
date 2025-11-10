@@ -116,6 +116,18 @@ variable "log_retention_days" {
   default = 30
 }
 
+variable "manage_default_logging_bucket" {
+  description = "Cloud Logging 기본 버킷(_Default) 보존기간 설정을 관리할지 여부"
+  type        = bool
+  default     = true
+}
+
+variable "logging_api_wait_duration" {
+  description = "logging.googleapis.com 활성화 후 대기 시간 (예: \"60s\")"
+  type        = string
+  default     = "60s"
+}
+
 variable "cmek_key_id" {
   type    = string
   default = ""

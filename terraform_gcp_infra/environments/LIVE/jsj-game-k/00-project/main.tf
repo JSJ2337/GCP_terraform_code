@@ -60,4 +60,8 @@ module "project_base" {
   budget_currency    = var.budget_currency
   log_retention_days = var.log_retention_days
   cmek_key_id        = var.cmek_key_id
+
+  # Logging bucket management toggles
+  manage_default_logging_bucket = var.manage_default_logging_bucket
+  logging_api_wait_duration     = var.logging_api_wait_duration
 }
