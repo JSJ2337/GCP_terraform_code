@@ -25,6 +25,7 @@ cp -R proj-default-templet environments/LIVE/proj-myservice-prod
 |------|-----------|
 | `environments/LIVE/proj-myservice-prod/terragrunt.hcl` | **필수**: `project_state_prefix`, `remote_state_project`, `remote_state_location` 설정 확인 |
 | `environments/LIVE/proj-myservice-prod/common.naming.tfvars` | `project_id`, `project_name`, `environment`, `organization`, `region_*` 값을 신규 환경에 맞게 설정 |
+| Terragrunt `inputs` | 필요 시 `folder_product`, `folder_region`, `folder_env` 입력을 정의해 bootstrap 폴더 조합을 선택 |
 | `environments/LIVE/proj-myservice-prod/terragrunt.hcl` | 루트 `inputs`에 공통 값(`org_id`, `billing_account` 등) 설정 |
 
 **⚠️ terragrunt.hcl 필수 설정**:
@@ -153,3 +154,23 @@ terragrunt run-all apply --terragrunt-include-dir 10-network
 - [ ] README/작업 내역(CHANGELOG 등)에 신규 환경 추가 기록
 
 필요 시 `04_WORK_HISTORY.md`에 신규 배포 이력을 남기고, 후속 자동화(CI/CD, tfsec 등)를 연동해주세요.
+
+---
+
+## Bootstrap state 공유 메모
+- bootstrap은 local backend를 사용합니다. `terraform_gcp_infra/bootstrap/terraform.tfstate`를 안전한 곳에 백업하고, 파이프라인/다른 엔지니어가 `data "terraform_remote_state"`로 읽을 수 있도록 GCS 복사본을 유지하세요.
+  ```bash
+  cd terraform_gcp_infra/bootstrap
+  terraform apply
+  gsutil cp terraform.tfstate gs://jsj-terraform-state-prod/bootstrap/default.tfstate
+  ```
+- 환경 코드에서는 아래와 같이 GCS backend로 bootstrap state를 조회합니다.
+  ```hcl
+  data "terraform_remote_state" "bootstrap" {
+    backend = "gcs"
+    config = {
+      bucket = "jsj-terraform-state-prod"
+      prefix = "bootstrap"
+    }
+  }
+  ```

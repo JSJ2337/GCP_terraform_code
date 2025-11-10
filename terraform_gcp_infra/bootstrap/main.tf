@@ -13,10 +13,9 @@ terraform {
 locals {
   # 게임별 사용 리전 매핑 (여기만 수정하면 자동으로 폴더 생성!)
   product_regions = {
-    games = ["kr-region", "us-region"]      # games는 한국, 미국
-    # 추가 예시:
-    # games2 = ["jp-region", "uk-region"]   # games2는 일본, 영국
-    # games3 = ["kr-region"]                # games3는 한국만
+    games  = ["kr-region", "us-region"] # games는 한국, 미국
+    games2 = ["jp-region", "uk-region"] # games2는 일본, 영국
+    # games3 = ["kr-region"]               # games3는 한국만
   }
 
   # 환경은 모든 게임/리전에서 동일 (고정)

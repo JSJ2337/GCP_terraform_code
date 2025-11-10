@@ -44,6 +44,36 @@ variable "org_id" {
   default = null
 }
 
+variable "folder_product" {
+  type        = string
+  default     = "games"
+  description = "Bootstrap 폴더 구조에서 사용할 product 키 (예: games, games2)"
+}
+
+variable "folder_region" {
+  type        = string
+  default     = "kr-region"
+  description = "Bootstrap 폴더 구조에서 사용할 region 키"
+}
+
+variable "folder_env" {
+  type        = string
+  default     = "LIVE"
+  description = "Bootstrap 폴더 구조에서 사용할 환경 키 (LIVE/Staging/GQ-dev)"
+}
+
+variable "bootstrap_state_bucket" {
+  type        = string
+  default     = "jsj-terraform-state-prod"
+  description = "Bootstrap state가 저장된 GCS 버킷"
+}
+
+variable "bootstrap_state_prefix" {
+  type        = string
+  default     = "bootstrap"
+  description = "Bootstrap state가 저장된 GCS prefix (workspace별 default.tfstate)"
+}
+
 variable "billing_account" {
   type = string
 }

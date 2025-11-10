@@ -292,6 +292,7 @@ terragrunt apply
 - ✅ **Lifecycle 정책**: 30일 지난 State 버전 자동 정리
 - ✅ **환경 및 레이어별 State 분리**: prefix를 통한 격리
 - ✅ **Terragrunt 자동화**: 각 레이어의 원격 상태 prefix와 공통 변수를 Terragrunt가 일관되게 관리
+- ⚠️ **Bootstrap State는 로컬**: bootstrap은 의도적으로 local backend를 사용하므로 `terraform_gcp_infra/bootstrap/terraform.tfstate`를 백업하고, 파이프라인/다른 환경에서 참조할 수 있도록 GCS 복사본(예: `gs://jsj-terraform-state-prod/bootstrap/default.tfstate`)을 유지해야 합니다. Terraform 코드에서는 이 GCS 복사본을 `data "terraform_remote_state"`로 읽습니다.
 
 ### 보안
 - ✅ Uniform bucket-level access 기본 활성화

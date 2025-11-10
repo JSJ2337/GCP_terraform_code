@@ -24,4 +24,7 @@ remote_state {
 inputs = {
   org_id          = "REDACTED_ORG_ID"  # jsj-dev.com
   billing_account = "REDACTED_BILLING_ACCOUNT"
+  folder_product  = "games"
+  folder_region   = "kr-region"
+  folder_env      = "LIVE"
 }
