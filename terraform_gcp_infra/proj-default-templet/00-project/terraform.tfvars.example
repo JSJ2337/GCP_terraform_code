@@ -49,6 +49,11 @@ budget_currency = "USD"
 # 기본 로그 보관 기간 (일)
 log_retention_days = 30
 
+# (선택) 초기 적용 안정화를 위한 Cloud Logging 기본 버킷 관리 토글
+# API 전파 지연으로 403이 날 경우 1차 적용에서 false로 두고, 몇 분 뒤 true로 되돌려 재적용하세요.
+# manage_default_logging_bucket = false
+# logging_api_wait_duration     = "120s"
+
 # 선택: 로그 버킷을 고객 관리 키(CMEK)로 암호화하고 싶을 때만 설정
 # cmek_key_id = "projects/YOUR_PROJECT/locations/REGION/keyRings/KEYRING/cryptoKeys/KEY"
 
