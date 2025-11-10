@@ -16,6 +16,12 @@
 pipeline {
     agent any
 
+    options {
+        skipDefaultCheckout(true)
+        timestamps()
+        disableConcurrentBuilds()
+    }
+
     environment {
         TF_IN_AUTOMATION = 'true'
         TF_INPUT = 'false'
@@ -55,11 +61,16 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                echo "✅ Repository checked out"
-                echo "Branch: ${env.GIT_BRANCH}"
-                echo "Commit: ${env.GIT_COMMIT}"
-                echo "Action: ${params.ACTION}"
-                echo "Target: ${params.TARGET_LAYER}"
+                cleanWs()
+                checkout scm
+                script {
+                    def shortCommit = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+                    echo "✅ Repository checked out"
+                    echo "Branch: ${env.BRANCH_NAME ?: env.GIT_BRANCH}"
+                    echo "Commit: ${shortCommit}"
+                    echo "Action: ${params.ACTION}"
+                    echo "Target: ${params.TARGET_LAYER}"
+                }
             }
         }
 
@@ -80,11 +91,20 @@ pipeline {
                     echo '🔧 Initializing Terragrunt...'
                     if (params.TARGET_LAYER == 'all') {
                         dir("${TG_WORKING_DIR}") {
-                            sh 'terragrunt run-all init --terragrunt-non-interactive'
+                            sh '''
+                                find . -type d -name ".terragrunt-cache" -prune -exec rm -rf {} + || true
+                                find . -type d -name ".terraform" -prune -exec rm -rf {} + || true
+                                find . -name "tfplan" -type f -delete || true
+                                terragrunt run-all init --terragrunt-non-interactive
+                            '''
                         }
                     } else {
                         dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
-                            sh 'terragrunt init --terragrunt-non-interactive'
+                            sh '''
+                                rm -rf .terragrunt-cache .terraform || true
+                                rm -f tfplan || true
+                                terragrunt init --terragrunt-non-interactive
+                            '''
                         }
                     }
                 }
@@ -98,19 +118,11 @@ pipeline {
                     echo '📋 Running Terragrunt Plan...'
                     if (params.TARGET_LAYER == 'all') {
                         dir("${TG_WORKING_DIR}") {
-                            sh '''
-                                terragrunt run-all plan \\
-                                    --terragrunt-non-interactive \\
-                                    -out=tfplan
-                            '''
+                            sh 'terragrunt run-all plan --terragrunt-non-interactive -out=tfplan'
                         }
                     } else {
                         dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
-                            sh '''
-                                terragrunt plan \\
-                                    --terragrunt-non-interactive \\
-                                    -out=tfplan
-                            '''
+                            sh 'terragrunt plan --terragrunt-non-interactive -out=tfplan'
                         }
                     }
                 }
@@ -211,10 +223,11 @@ pipeline {
             echo "Target: ${params.TARGET_LAYER}"
         }
         always {
-            echo '🧹 Cleaning up plan files...'
+            echo '🧹 Cleaning up plan/cache files...'
             sh '''
                 find . -name "tfplan" -type f -delete || true
-                find . -name ".terraform.lock.hcl" -type f || true
+                find . -type d -name ".terragrunt-cache" -prune -exec rm -rf {} + || true
+                find . -type d -name ".terraform" -prune -exec rm -rf {} + || true
             '''
             echo '🏁 Pipeline finished'
         }
