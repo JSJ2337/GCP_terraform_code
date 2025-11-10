@@ -117,8 +117,9 @@ pipeline {
                 script {
                     echo '📋 Running Terragrunt Plan...'
                     if (params.TARGET_LAYER == 'all') {
+                        // 00-project만 우선 Plan (API enable 전파 이전에 다른 레이어 Plan 방지)
                         dir("${TG_WORKING_DIR}") {
-                            sh 'terragrunt run-all plan --terragrunt-non-interactive -out=tfplan'
+                            sh 'terragrunt run-all plan --terragrunt-non-interactive --terragrunt-include-dir 00-project -out=tfplan-00-project'
                         }
                     } else {
                         dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
@@ -187,7 +188,8 @@ pipeline {
                         echo '🚀 Applying Terragrunt changes...'
                         if (params.TARGET_LAYER == 'all') {
                             dir("${TG_WORKING_DIR}") {
-                                sh 'terragrunt run-all apply --terragrunt-non-interactive tfplan'
+                                // 전체 스택은 최신 코드/상태 기준으로 의존 순서대로 Apply (plan 파일 미사용)
+                                sh 'terragrunt run-all apply --terragrunt-non-interactive -auto-approve'
                             }
                         } else {
                             dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
