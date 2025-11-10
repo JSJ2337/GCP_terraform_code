@@ -8,6 +8,13 @@ terraform {
   }
 }
 
+locals {
+  vm_instance_filter_regex_escaped   = replace(var.vm_instance_filter_regex, "\\", "\\\\")
+  cloudsql_instance_regex_escaped    = replace(var.cloudsql_instance_regex, "\\", "\\\\")
+  memorystore_instance_regex_escaped = replace(var.memorystore_instance_regex, "\\", "\\\\")
+  lb_target_proxy_regex_escaped      = replace(var.lb_target_proxy_regex, "\\", "\\\\")
+}
+
 resource "google_logging_project_sink" "to_central" {
   count                  = var.enable_central_log_sink ? 1 : 0
   name                   = "to-central-${var.project_id}"
@@ -34,7 +41,7 @@ resource "google_monitoring_alert_policy" "vm_cpu_high" {
       filter = <<-EOT
 metric.type="compute.googleapis.com/instance/cpu/utilization"
 AND resource.type="gce_instance"
-AND metric.label.instance_name=monitoring.regex.full_match("${var.vm_instance_filter_regex}")
+AND metric.label.instance_name=monitoring.regex.full_match("${local.vm_instance_filter_regex_escaped}")
       EOT
 
       comparison      = "COMPARISON_GT"
@@ -70,7 +77,7 @@ resource "google_monitoring_alert_policy" "cloudsql_cpu_high" {
       filter = <<-EOT
 metric.type="cloudsql.googleapis.com/database/cpu/utilization"
 AND resource.type="cloudsql_database"
-AND resource.label.database_id=monitoring.regex.full_match("${var.cloudsql_instance_regex}")
+AND resource.label.database_id=monitoring.regex.full_match("${local.cloudsql_instance_regex_escaped}")
       EOT
 
       comparison      = "COMPARISON_GT"
@@ -106,7 +113,7 @@ resource "google_monitoring_alert_policy" "memorystore_memory_high" {
       filter = <<-EOT
 metric.type="redis.googleapis.com/stats/memory/usage_ratio"
 AND resource.type="redis_instance"
-AND resource.label.instance_id=monitoring.regex.full_match("${var.memorystore_instance_regex}")
+AND resource.label.instance_id=monitoring.regex.full_match("${local.memorystore_instance_regex_escaped}")
       EOT
 
       comparison      = "COMPARISON_GT"
@@ -140,10 +147,10 @@ resource "google_monitoring_alert_policy" "lb_5xx_rate" {
 
     condition_threshold {
       filter = <<-EOT
-metric.type="loadbalancing.googleapis.com/lb_rule/https/backend_request_count"
+metric.type="loadbalancing.googleapis.com/https/request_count"
 AND resource.type="https_lb_rule"
 AND metric.label.response_code_class="500"
-AND resource.label.target_proxy_name=monitoring.regex.full_match("${var.lb_target_proxy_regex}")
+AND resource.label.target_proxy_name=monitoring.regex.full_match("${local.lb_target_proxy_regex_escaped}")
       EOT
 
       comparison      = "COMPARISON_GT"
