@@ -234,3 +234,12 @@ resource "google_folder_iam_member" "jenkins_editor_folder" {
   role   = "roles/editor"
   member = "serviceAccount:${google_service_account.jenkins_terraform.email}"
 }
+
+# 9) 청구 계정 레벨 권한 부여 (프로젝트에 Billing 연결 권한)
+#    참고: 조직/폴더 레벨의 roles/billing.user만으로는 billingAccounts/* 리소스에 대한
+#          setIamPolicy/association 권한이 부족할 수 있으므로, 명시적으로 청구 계정에 부여합니다.
+resource "google_billing_account_iam_member" "jenkins_billing_user_on_account" {
+  billing_account_id = var.billing_account
+  role               = "roles/billing.user"
+  member             = "serviceAccount:${google_service_account.jenkins_terraform.email}"
+}

@@ -121,9 +121,12 @@ gcloud projects add-iam-policy-binding delabs-system-mgmt \
 ```
 
 **Billing Account 연결 권한** (필수):
+- Bootstrap이 `var.billing_account`에 설정된 청구 계정에 대해 Jenkins SA에 `roles/billing.user`를 자동으로 부여합니다.
+- 단, 이 변경은 Bootstrap을 적용하는 주체에게 해당 청구 계정의 `billing.accounts.setIamPolicy` 권한이 있어야 성공합니다.
+
+수동으로 부여해야 하는 경우 예시:
 ```bash
-# 청구 계정에 billing.user 권한 부여
-gcloud beta billing accounts add-iam-policy-binding 01076D-327AD5-FC8922 \
+gcloud beta billing accounts add-iam-policy-binding YOUR-BILLING-ACCOUNT \
     --member="serviceAccount:jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com" \
     --role="roles/billing.user"
 ```
