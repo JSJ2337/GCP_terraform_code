@@ -29,6 +29,8 @@ labels = {
 # 활성화가 필요한 API 목록
 # Cloud SQL Private IP 등을 사용하려면 servicenetworking.googleapis.com 이 필수입니다.
 apis = [
+  "cloudresourcemanager.googleapis.com",
+  "serviceusage.googleapis.com",
   "compute.googleapis.com",
   "iam.googleapis.com",
   "servicenetworking.googleapis.com",

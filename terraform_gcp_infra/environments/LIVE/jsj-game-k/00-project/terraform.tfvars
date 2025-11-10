@@ -14,6 +14,8 @@ labels = {
 
 # APIs to enable
 apis = [
+  "cloudresourcemanager.googleapis.com",
+  "serviceusage.googleapis.com",
   "compute.googleapis.com",
   "iam.googleapis.com",
   "servicenetworking.googleapis.com",

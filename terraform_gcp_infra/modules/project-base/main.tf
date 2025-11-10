@@ -37,9 +37,19 @@ resource "google_project" "this" {
 # 1) 필수 API
 resource "google_project_service" "services" {
   project            = google_project.this.project_id
-  for_each           = toset(var.apis)
+  for_each           = local.apis_effective
   service            = each.key
   disable_on_destroy = false
+}
+
+locals {
+  core_apis = toset([
+    "cloudresourcemanager.googleapis.com",
+    "serviceusage.googleapis.com",
+    "servicenetworking.googleapis.com",
+  ])
+  apis_effective = toset(var.apis) 
+    |> setunion(local.core_apis)
 }
 
 # 2) Budget(간단 템플릿)
