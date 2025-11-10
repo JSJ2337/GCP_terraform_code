@@ -54,3 +54,7 @@ locals {
 ```
 
 모든 레이어가 동일한 모듈을 사용하므로, 프로젝트/환경/조직 정보만 변경하면 전체 인프라 네이밍이 자동으로 갱신됩니다. 실제 운영에서는 `environments/<env>/<project>/common.naming.tfvars`처럼 공통 입력 파일을 두고 `terraform plan/apply -var-file=../common.naming.tfvars -var-file=terraform.tfvars` 형태로 실행하는 것을 권장합니다.
+
+주의 사항
+- organization 입력값은 리소스 네이밍에 직접 사용됩니다. 다수의 GCP 리소스는 소문자/숫자/하이픈만 허용하므로 도메인 문자열(`example.com`)은 슬러그(`example-com` 또는 `example`)로 변환해 사용하는 것을 권장합니다.
+- `default_zone`은 `region_primary` + `default_zone_suffix`로 계산됩니다. Memorystore 등 존(location_id)을 요구하는 리소스에서 유용합니다.
