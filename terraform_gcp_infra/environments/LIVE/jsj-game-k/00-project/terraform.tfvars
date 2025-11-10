@@ -35,7 +35,12 @@ budget_amount   = 1000
 budget_currency = "USD"
 
 # Logging settings
-log_retention_days = 90
+log_retention_days              = 90
+# 신규 프로젝트 초기 적용에서 Cloud Logging API 전파 지연으로 실패할 수 있어
+# 기본 로그 버킷 관리를 1차 적용에서 비활성화합니다. (추후 true로 바꿔 재적용)
+manage_default_logging_bucket   = false
+# 전파 시간이 충분할 경우 주석 해제하여 대기시간을 늘릴 수 있습니다. (예: "180s")
+# logging_api_wait_duration       = "120s"
 
 # CMEK settings (optional)
 # cmek_key_id = "projects/security-project/locations/us-central1/keyRings/main-ring/cryptoKeys/main-key"
