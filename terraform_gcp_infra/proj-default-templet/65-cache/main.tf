@@ -12,7 +12,7 @@ terraform {
 
 provider "google" {
   project = var.project_id
-  region  = var.region
+  region  = var.region_primary
 }
 
 module "naming" {
@@ -25,7 +25,8 @@ module "naming" {
 }
 
 locals {
-  region_effective   = length(trimspace(var.region)) > 0 ? trimspace(var.region) : module.naming.region_primary
+  # Memorystore requires a ZONE for location_id; use default_zone when region is not explicitly set
+  region_effective   = length(trimspace(var.region)) > 0 ? trimspace(var.region) : module.naming.default_zone
   instance_name      = length(trimspace(var.instance_name)) > 0 ? var.instance_name : module.naming.redis_instance_name
   authorized_network = length(trimspace(var.authorized_network)) > 0 ? var.authorized_network : "projects/${var.project_id}/global/networks/${module.naming.vpc_name}"
   labels             = merge(module.naming.common_labels, var.labels)

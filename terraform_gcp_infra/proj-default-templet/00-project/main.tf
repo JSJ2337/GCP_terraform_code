@@ -24,6 +24,15 @@ provider "google-beta" {
   region  = var.region
 }
 
+## Bootstrap remote state for folder structure (optional, when using dynamic folders)
+data "terraform_remote_state" "bootstrap" {
+  backend = "gcs"
+  config = {
+    bucket = var.bootstrap_state_bucket
+    prefix = var.bootstrap_state_prefix
+  }
+}
+
 module "naming" {
   source         = "../../../../modules/naming"
   project_name   = var.project_name != "" ? var.project_name : var.project_id
@@ -36,10 +45,12 @@ module "naming" {
 module "project_base" {
   source = "../../../../modules/project-base"
 
-  project_id      = var.project_id
-  project_name    = var.project_name != "" ? var.project_name : module.naming.project_name
-  folder_id       = var.folder_id
-  org_id          = var.org_id
+  project_id   = var.project_id
+  project_name = var.project_name != "" ? var.project_name : module.naming.project_name
+  # Prefer dynamic folder from bootstrap remote state when folder_id is not provided
+  folder_id = var.folder_id != null ? var.folder_id : data.terraform_remote_state.bootstrap.outputs.folder_structure[var.folder_product][var.folder_region][var.folder_env]
+  # When using folders, org_id should be null
+  org_id          = var.folder_id != null ? var.org_id : null
   billing_account = var.billing_account
   labels          = merge(module.naming.common_labels, var.labels)
 

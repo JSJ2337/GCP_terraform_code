@@ -36,7 +36,7 @@ variable "region" {
 variable "folder_id" {
   type        = string
   default     = null
-  description = "Deprecated: 폴더 ID는 main.tf에서 bootstrap remote state로 자동 참조됨"
+  description = "Optional: set when not using dynamic folders via bootstrap state"
 }
 
 variable "org_id" {
@@ -44,34 +44,35 @@ variable "org_id" {
   default = null
 }
 
+## Dynamic folder selection via bootstrap remote state
 variable "folder_product" {
   type        = string
   default     = "games"
-  description = "Bootstrap 폴더 구조에서 사용할 product 키 (예: games, games2)"
+  description = "Bootstrap folder product key (e.g., games, games2)"
 }
 
 variable "folder_region" {
   type        = string
   default     = "kr-region"
-  description = "Bootstrap 폴더 구조에서 사용할 region 키"
+  description = "Bootstrap folder region key (e.g., kr-region, us-region)"
 }
 
 variable "folder_env" {
   type        = string
   default     = "LIVE"
-  description = "Bootstrap 폴더 구조에서 사용할 환경 키 (LIVE/Staging/GQ-dev)"
+  description = "Bootstrap folder environment key (LIVE/Staging/GQ-dev)"
 }
 
 variable "bootstrap_state_bucket" {
   type        = string
   default     = "jsj-terraform-state-prod"
-  description = "Bootstrap state가 저장된 GCS 버킷"
+  description = "GCS bucket storing bootstrap state"
 }
 
 variable "bootstrap_state_prefix" {
   type        = string
   default     = "bootstrap"
-  description = "Bootstrap state가 저장된 GCS prefix (workspace별 default.tfstate)"
+  description = "GCS prefix for bootstrap state"
 }
 
 variable "billing_account" {

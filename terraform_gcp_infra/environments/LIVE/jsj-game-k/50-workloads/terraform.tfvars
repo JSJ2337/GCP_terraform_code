@@ -37,6 +37,6 @@ EOF
 # Tags and labels
 tags = ["game", "app", "ssh-allowed"]
 labels = {
-  app       = "game-j"
+  app       = "default-templet"
   component = "game-server"
 }

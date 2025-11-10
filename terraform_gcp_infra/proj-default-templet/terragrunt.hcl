@@ -15,6 +15,8 @@ remote_state {
   }
   config = {
     bucket                = local.remote_state_bucket
+    project               = local.remote_state_project
+    location              = local.remote_state_location
     prefix                = "${local.project_state_prefix}/${path_relative_to_include()}"
     skip_bucket_creation  = true
   }

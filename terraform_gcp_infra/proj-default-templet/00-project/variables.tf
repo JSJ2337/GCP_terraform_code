@@ -34,12 +34,45 @@ variable "region" {
 }
 
 variable "folder_id" {
-  type = string
+  type        = string
+  default     = null
+  description = "Optional: set when not using dynamic folders via bootstrap state"
 }
 
 variable "org_id" {
   type    = string
   default = null
+}
+
+## Dynamic folder selection via bootstrap remote state
+variable "folder_product" {
+  type        = string
+  default     = "games"
+  description = "Bootstrap folder product key (e.g., games, games2)"
+}
+
+variable "folder_region" {
+  type        = string
+  default     = "kr-region"
+  description = "Bootstrap folder region key (e.g., kr-region, us-region)"
+}
+
+variable "folder_env" {
+  type        = string
+  default     = "LIVE"
+  description = "Bootstrap folder environment key (LIVE/Staging/GQ-dev)"
+}
+
+variable "bootstrap_state_bucket" {
+  type        = string
+  default     = "jsj-terraform-state-prod"
+  description = "GCS bucket storing bootstrap state"
+}
+
+variable "bootstrap_state_prefix" {
+  type        = string
+  default     = "bootstrap"
+  description = "GCS prefix for bootstrap state"
 }
 
 variable "billing_account" {

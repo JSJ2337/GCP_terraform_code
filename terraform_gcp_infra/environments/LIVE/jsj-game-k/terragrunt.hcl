@@ -3,7 +3,7 @@ locals {
   remote_state_bucket   = "jsj-terraform-state-prod"
   remote_state_project  = "jsj-system-mgmt"
   remote_state_location = "US"
-  project_state_prefix  = "jsj-game-j"
+  project_state_prefix  = "jsj-game-k"
 }
 
 # Terragrunt 원격 상태 구성: 각 레이어별로 고유 prefix를 자동 부여한다.
@@ -15,6 +15,8 @@ remote_state {
   }
   config = {
     bucket                = local.remote_state_bucket
+    project               = local.remote_state_project
+    location              = local.remote_state_location
     prefix                = "${local.project_state_prefix}/${path_relative_to_include()}"
     skip_bucket_creation  = true
   }
@@ -24,7 +26,4 @@ remote_state {
 inputs = {
   org_id          = "REDACTED_ORG_ID"  # jsj-dev.com
   billing_account = "REDACTED_BILLING_ACCOUNT"
-  folder_product  = "games"
-  folder_region   = "kr-region"
-  folder_env      = "LIVE"
 }

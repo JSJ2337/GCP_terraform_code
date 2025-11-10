@@ -24,7 +24,7 @@ provider "google-beta" {
   region  = var.region
 }
 
-# Bootstrap에서 폴더 구조 정보 가져오기
+## Bootstrap remote state for folder structure (optional, when using dynamic folders)
 data "terraform_remote_state" "bootstrap" {
   backend = "gcs"
   config = {
@@ -45,10 +45,12 @@ module "naming" {
 module "project_base" {
   source = "../../../../modules/project-base"
 
-  project_id      = var.project_id
-  project_name    = var.project_name != "" ? var.project_name : module.naming.project_name
-  folder_id       = data.terraform_remote_state.bootstrap.outputs.folder_structure[var.folder_product][var.folder_region][var.folder_env]
-  org_id          = null # 폴더 사용 시 org_id는 null
+  project_id   = var.project_id
+  project_name = var.project_name != "" ? var.project_name : module.naming.project_name
+  # Prefer dynamic folder from bootstrap remote state when folder_id is not provided
+  folder_id = var.folder_id != null ? var.folder_id : data.terraform_remote_state.bootstrap.outputs.folder_structure[var.folder_product][var.folder_region][var.folder_env]
+  # When using folders, org_id should be null
+  org_id          = var.folder_id != null ? var.org_id : null
   billing_account = var.billing_account
   labels          = merge(module.naming.common_labels, var.labels)
 

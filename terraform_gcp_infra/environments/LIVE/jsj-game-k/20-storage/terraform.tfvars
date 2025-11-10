@@ -8,7 +8,7 @@ default_labels = {
 # Common settings
 uniform_bucket_level_access = true
 public_access_prevention    = "enforced"
-# kms_key_name = "projects/jsj-game-j/locations/asia-northeast3/keyRings/game-ring/cryptoKeys/storage-key"
+# kms_key_name = "projects/proj-default-templet-prod/locations/us-central1/keyRings/game-ring/cryptoKeys/storage-key"
 
 # Assets bucket - for game assets, images, configurations
 assets_bucket_location      = "US-CENTRAL1"
@@ -43,7 +43,7 @@ assets_lifecycle_rules = [
 # CORS for web game access
 assets_cors_rules = [
   {
-    origin          = ["https://game-j.jsj-dev.com", "https://cdn-game-j.jsj-dev.com"]
+    origin          = ["https://default-templet.example.com", "https://cdn.default-templet.example.com"]
     method          = ["GET", "HEAD"]
     response_header = ["Content-Type", "Cache-Control"]
     max_age_seconds = 3600

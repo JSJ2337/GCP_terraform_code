@@ -1,7 +1,7 @@
 # Region & Project
 # IMPORTANT: Redis location_id requires a ZONE (e.g., us-central1-a), not a region.
 # Terragrunt supplies region_primary by default; override with a zone if needed.
-# region = "asia-northeast3-a"  # 주석처리 - naming 모듈의 default_zone 사용
+# region         = "asia-northeast3-a"
 
 # Memorystore configuration
 alternative_location_id     = ""
@@ -14,7 +14,7 @@ tier                        = "STANDARD_HA"
 authorized_network = ""
 
 # Display name (옵션)
-display_name = "game-j prod redis"
+display_name = "default-templet prod redis"
 
 # Maintenance window (옵션)
 maintenance_window_day          = "SUNDAY"
@@ -24,5 +24,5 @@ maintenance_window_start_minute = 0
 # 추가 라벨
 labels = {
   tier = "cache"
-  app  = "game-j"
+  app  = "default-templet"
 }
