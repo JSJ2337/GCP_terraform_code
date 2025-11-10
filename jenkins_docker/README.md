@@ -116,14 +116,14 @@ Terragrunt 자동화 Pipeline 사용 방법:
 **용도**: Jenkins 서버 실행
 
 **특징**:
-- Terraform 1.9.8 + Terragrunt 0.68.15 + Git 사전 설치
+- Terraform 1.13.5 + Terragrunt 0.93.3 + Git 사전 설치
 - 로컬 bind mount 사용 (데이터 직접 접근 가능)
 - 포트: 8080 (웹 UI), 50000 (에이전트)
 
 **설치된 도구**:
 - Jenkins LTS
-- Terraform 1.9.8
-- Terragrunt 0.68.15
+- Terraform 1.13.5
+- Terragrunt 0.93.3
 - Git 2.47.3
 
 **실행**:
@@ -437,5 +437,5 @@ docker network inspect jenkins_default
 
 **마지막 업데이트**: 2025-11-05
 **Jenkins LTS 버전**: 2.528.1
-**Terraform 버전**: 1.9.8
-**Terragrunt 버전**: 0.68.15
+**Terraform 버전**: 1.13.5
+**Terragrunt 버전**: 0.93.3
