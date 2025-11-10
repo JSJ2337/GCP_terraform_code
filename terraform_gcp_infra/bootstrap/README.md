@@ -4,9 +4,9 @@
 
 ## 목적
 
-- **관리용 GCP 프로젝트**: `delabs-system-mgmt`
-- **상태 저장 버킷**: `delabs-terraform-state-prod`
-- **Jenkins CI/CD용 Service Account**: `jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com`
+- **관리용 GCP 프로젝트**: `jsj-system-mgmt`
+- **상태 저장 버킷**: `jsj-terraform-state-prod`
+- **Jenkins CI/CD용 Service Account**: `jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com`
 - 모든 다른 프로젝트의 Terraform 상태를 여기에 중앙 관리
 - Jenkins가 모든 프로젝트를 생성하고 관리할 수 있는 중앙 인증
 
@@ -67,17 +67,17 @@ terraform apply
 
 ```bash
 # 프로젝트 확인
-gcloud projects describe delabs-system-mgmt
+gcloud projects describe jsj-system-mgmt
 
 # 버킷 확인
-gsutil ls -L gs://delabs-terraform-state-prod
+gsutil ls -L gs://jsj-terraform-state-prod
 
 # Service Account 확인
-gcloud iam service-accounts describe jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com \
-    --project=delabs-system-mgmt
+gcloud iam service-accounts describe jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com \
+    --project=jsj-system-mgmt
 ```
 
-Cloud Billing API와 Service Usage API는 bootstrap이 자동으로 활성화합니다. 적용 직후 `gcloud services list --enabled --project delabs-system-mgmt | grep -E 'billing|serviceusage'`으로 상태를 점검할 수 있습니다.
+Cloud Billing API와 Service Usage API는 bootstrap이 자동으로 활성화합니다. 적용 직후 `gcloud services list --enabled --project jsj-system-mgmt | grep -E 'billing|serviceusage'`으로 상태를 점검할 수 있습니다.
 
 ### 4. Jenkins용 Service Account Key 생성
 
@@ -88,8 +88,8 @@ terraform output jenkins_key_creation_command
 
 # 또는 직접 실행
 gcloud iam service-accounts keys create jenkins-sa-key.json \
-    --iam-account=jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com \
-    --project=delabs-system-mgmt
+    --iam-account=jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com \
+    --project=jsj-system-mgmt
 ```
 
 **Jenkins에 Credential 추가**:
@@ -108,16 +108,16 @@ terraform output jenkins_service_account_email
 # 권한 확인
 gcloud organizations get-iam-policy YOUR_ORG_ID \
     --flatten="bindings[].members" \
-    --filter="bindings.members:jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com"
+    --filter="bindings.members:jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com"
 ```
 
 ### 5. Service Account 추가 권한 설정
 
 **State 버킷 접근 권한** (필수):
 ```bash
-# delabs-system-mgmt 프로젝트에 Storage Admin 권한 부여
-gcloud projects add-iam-policy-binding delabs-system-mgmt \
-    --member="serviceAccount:jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com" \
+# jsj-system-mgmt 프로젝트에 Storage Admin 권한 부여
+gcloud projects add-iam-policy-binding jsj-system-mgmt \
+    --member="serviceAccount:jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com" \
     --role="roles/storage.admin"
 ```
 
@@ -139,16 +139,16 @@ gcloud projects add-iam-policy-binding delabs-system-mgmt \
 ```bash
 # 각 워크로드 프로젝트에 Editor 권한 부여
 gcloud projects add-iam-policy-binding <PROJECT_ID> \
-    --member="serviceAccount:jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com" \
+    --member="serviceAccount:jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com" \
     --role="roles/editor"
 ```
 
 **권한 확인**:
 ```bash
 # 특정 프로젝트의 Service Account 권한 확인
-gcloud projects get-iam-policy delabs-system-mgmt \
+gcloud projects get-iam-policy jsj-system-mgmt \
     --flatten="bindings[].members" \
-    --filter="bindings.members:jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com"
+    --filter="bindings.members:jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com"
 ```
 
 ### 6. 다른 프로젝트에서 사용
@@ -159,9 +159,9 @@ gcloud projects get-iam-policy delabs-system-mgmt \
 remote_state {
   backend = "gcs"
   config = {
-    bucket   = "delabs-terraform-state-prod"
+    bucket   = "jsj-terraform-state-prod"
     prefix   = "proj-game-a/00-project"
-    project  = "delabs-system-mgmt"  # 필수
+    project  = "jsj-system-mgmt"  # 필수
     location = "US"                  # 필수
   }
 }
@@ -172,9 +172,9 @@ remote_state {
 ```hcl
 terraform {
   backend "gcs" {
-    bucket   = "delabs-terraform-state-prod"
+    bucket   = "jsj-terraform-state-prod"
     prefix   = "proj-game-a/00-project"
-    project  = "delabs-system-mgmt"
+    project  = "jsj-system-mgmt"
     location = "US"
   }
 }
@@ -183,18 +183,18 @@ terraform {
 ## 생성되는 리소스
 
 ### 1. GCP 프로젝트
-- **Project ID**: `delabs-system-mgmt`
+- **Project ID**: `jsj-system-mgmt`
 - **Deletion Policy**: PREVENT (실수 삭제 방지)
 
 ### 2. GCS 버킷
-- **Production**: `delabs-terraform-state-prod`
+- **Production**: `jsj-terraform-state-prod`
   - Versioning: 활성화 (최근 10개 버전 유지)
   - Lifecycle: 30일 지난 버전 자동 삭제
   - Force Destroy: false (삭제 보호)
 
 ### 3. Service Account
 - **이름**: `jenkins-terraform-admin`
-- **Email**: `jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com`
+- **Email**: `jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com`
 - **용도**: Jenkins CI/CD를 통한 Terraform/Terragrunt 자동화
 
 ### 4. IAM 권한 (조직/폴더 레벨)
