@@ -3,7 +3,9 @@
 # region = "asia-northeast3"
 # Parent settings
 folder_id       = null
-billing_account = "01076D-327AD5-FC8922"
+# billing_account는 루트 terragrunt.hcl(inputs)의 값을 사용합니다.
+# 필요 시 아래 라인을 주석 해제 후 올바른 ID로 설정하세요.
+# billing_account = "REDACTED_BILLING_ACCOUNT"
 
 # Labels (only add extra labels here; modules/naming.common_labels will be merged)
 labels = {
