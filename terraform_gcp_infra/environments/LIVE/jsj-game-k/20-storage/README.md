@@ -1,5 +1,5 @@
 # 20-storage 레이어
-> Terragrunt: environments/LIVE/proj-default-templet/20-storage/terragrunt.hcl
+> Terragrunt: environments/LIVE/jsj-game-k/20-storage/terragrunt.hcl
 
 
 게임 자산, 로그, 백업 등 용도별 GCS 버킷을 일괄 관리합니다. `modules/gcs-root`와 `modules/naming`을 이용해 일관된 이름과 라벨을 적용합니다.

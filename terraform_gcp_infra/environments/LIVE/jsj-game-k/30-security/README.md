@@ -1,5 +1,5 @@
 # 30-security 레이어
-> Terragrunt: environments/LIVE/proj-default-templet/30-security/terragrunt.hcl
+> Terragrunt: environments/LIVE/jsj-game-k/30-security/terragrunt.hcl
 
 
 프로젝트 수준 IAM 바인딩과 서비스 계정 생성을 담당합니다. `modules/naming`과 연동하여 일관된 서비스 계정 명명 규칙을 유지합니다.

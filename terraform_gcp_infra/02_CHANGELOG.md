@@ -5,6 +5,21 @@
 형식: [Keep a Changelog](https://keepachangelog.com/ko/1.0.0/) 기반
 버저닝: [Semantic Versioning](https://semver.org/lang/ko/) 준수
 
+## [미배포] - 2025-11-10
+
+### 변경 (Changed)
+- 템플릿 코드 최신화(동기화)
+  - 00-project: bootstrap remote state 기반 동적 폴더 참조 추가 (`folder_product/region/env` 입력 사용, `folder_id` 미설정 시 자동)
+  - 65-cache: Redis 위치를 zone(default_zone) 기반으로 계산, provider region을 `region_primary`로 통일
+  - terragrunt.hcl: GCS remote_state에 `project`/`location` 필수 값 추가
+
+### 추가 (Added)
+- 신규 환경 `jsj-game-k` 생성 (LIVE)
+  - `common.naming.tfvars`, `terragrunt.hcl`, `Jenkinsfile`에 jsj-game-k 식별자 반영
+
+### 제거 (Removed)
+- 기존 `jsj-game-j` 환경 디렉터리 제거 (템플릿 최신화 반영된 `jsj-game-k`로 이관)
+
 ## [미배포] - 2025-11-09
 
 ### 추가 (Added)

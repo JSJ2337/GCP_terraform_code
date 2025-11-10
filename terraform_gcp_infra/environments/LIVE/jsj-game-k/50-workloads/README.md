@@ -1,5 +1,5 @@
 # 50-workloads 레이어
-> Terragrunt: environments/LIVE/proj-default-templet/50-workloads/terragrunt.hcl
+> Terragrunt: environments/LIVE/jsj-game-k/50-workloads/terragrunt.hcl
 
 
 Compute Engine VM 인스턴스를 배포하는 레이어입니다. 두 가지 방식을 지원하여 간단한 경우부터 복잡한 구성까지 유연하게 대응할 수 있습니다.

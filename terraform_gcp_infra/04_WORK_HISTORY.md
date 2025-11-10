@@ -10,6 +10,7 @@
 
 ### 2025년 11월
 
+- **[2025-11-10](./work_history/2025-11-10.md)** - 템플릿 최신화 및 jsj-game-k 환경 생성 (jsj-game-j 이관)
 - **[2025-11-09](./work_history/2025-11-09.md)** - GCP 폴더 구조 자동화 및 유연한 게임/리전 조합 지원
 - **[2025-11-07](./work_history/2025-11-07.md)** - jsj-game-j 환경 추가 및 65-cache zone 설정 이슈 해결
 - **[2025-11-06](./work_history/2025-11-06.md)** - Jenkins CI/CD 통합 및 Terragrunt 실행 최적화

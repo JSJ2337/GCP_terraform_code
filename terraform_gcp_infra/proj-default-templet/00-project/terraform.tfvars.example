@@ -12,6 +12,12 @@ folder_id       = "folders/123456789012"   # 폴더가 없다면 null로 두고 
 org_id          = "71994629047"            # 조직 ID (폴더가 있다면 optional)
 billing_account = "ABCDEF-123456-GHIJKL"   # 공통으로 사용한다면 루트 terragrunt.hcl inputs에 설정 가능
 
+# (선택) Bootstrap 폴더 구조 동적 선택 사용 시
+# 아래 입력으로 폴더 조합을 지정할 수 있습니다. folder_id를 null로 두고 사용하세요.
+# folder_product = "games"     # 예: games, games2
+# folder_region  = "kr-region"  # 예: kr-region, us-region, jp-region
+# folder_env     = "LIVE"       # LIVE / Staging / GQ-dev
+
 # 공통 라벨 (modules/naming에서 제공하는 라벨과 병합됨)
 labels = {
   environment = "prod"

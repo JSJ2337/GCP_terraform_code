@@ -17,6 +17,14 @@ terragrunt plan
 
 ## 📝 변경된 파일 요약
 
+### 세션 14: 템플릿 최신화 및 환경 교체 (2025-11-10)
+- 템플릿(00-project, 65-cache, terragrunt.hcl) 최신화
+  - 00-project: bootstrap remote state 기반 동적 폴더 참조 추가
+  - 65-cache: Redis 위치를 zone(default_zone) 기반으로 계산, provider region_primary 적용
+  - terragrunt.hcl: GCS remote_state에 project/location 추가
+- 환경 교체: jsj-game-j 제거 → jsj-game-k 신규 생성
+  - common.naming.tfvars, terragrunt.hcl, Jenkinsfile 식별자(jsj-game-k) 반영
+
 ### 세션 13: Bootstrap Service Account 및 GCP 인증 설정 (2025-11-06)
 - **Bootstrap Service Account 자동 생성**:
   - `jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com` Terraform으로 생성
