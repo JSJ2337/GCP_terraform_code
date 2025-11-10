@@ -164,16 +164,16 @@ terraform apply
 
 # 5. 출력 확인
 terraform output
-# → 버킷 이름: delabs-terraform-state-prod
-# → 프로젝트 ID: delabs-system-mgmt
+# → 버킷 이름: jsj-terraform-state-prod
+# → 프로젝트 ID: jsj-system-mgmt
 
 # 6. ⚠️ 로컬 state 파일 백업 (매우 중요!)
 cp terraform.tfstate ~/backup/bootstrap-$(date +%Y%m%d).tfstate
 ```
 
 **Bootstrap이 생성하는 것:**
-- 관리용 GCP 프로젝트 (`delabs-system-mgmt`)
-- 중앙 State 저장소 버킷 (`delabs-terraform-state-prod`)
+- 관리용 GCP 프로젝트 (`jsj-system-mgmt`)
+- 중앙 State 저장소 버킷 (`jsj-terraform-state-prod`)
 - Versioning 및 Lifecycle 정책 자동 설정
 
 #### Step 1.5: 인증 설정 (중요!)
@@ -182,10 +182,10 @@ Bootstrap 배포 후, 워크로드 프로젝트 배포 전에 인증을 설정�
 
 ```bash
 # 중앙 State 버킷이 있는 프로젝트로 설정
-gcloud config set project delabs-system-mgmt
+gcloud config set project jsj-system-mgmt
 
 # Application Default Credentials의 quota project 설정
-gcloud auth application-default set-quota-project delabs-system-mgmt
+gcloud auth application-default set-quota-project jsj-system-mgmt
 ```
 
 ⚠️ **이 단계를 생략하면 "storage: bucket doesn't exist" 오류가 발생합니다!**
@@ -280,7 +280,7 @@ terragrunt apply
 
 **배포 순서가 중요한 이유:**
 - 각 레이어는 이전 레이어의 리소스에 의존
-- State는 `delabs-terraform-state-prod` 버킷에 중앙 관리됨
+- State는 `jsj-terraform-state-prod` 버킷에 중앙 관리됨
 - 각 레이어별로 독립적인 State 파일 유지
 
 ## 적용된 베스트 프랙티스
@@ -337,8 +337,8 @@ terragrunt apply
 ### 구조
 
 ```
-delabs-system-mgmt (관리용 프로젝트)
-└── delabs-terraform-state-prod (GCS 버킷)
+jsj-system-mgmt (관리용 프로젝트)
+└── jsj-terraform-state-prod (GCS 버킷)
     ├── proj-default-templet/
     │   ├── 00-project/default.tfstate
     │   ├── 10-network/default.tfstate
@@ -481,7 +481,7 @@ terraform apply  # Service Account 자동 생성
 ```
 
 **생성되는 리소스**:
-- Service Account: `jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com`
+- Service Account: `jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com`
 - 조직 레벨 권한 (조직이 있는 경우):
   - `roles/resourcemanager.projectCreator` (프로젝트 생성)
   - `roles/billing.user` (청구 계정 연결)
@@ -502,7 +502,7 @@ gcloud beta billing projects link YOUR-PROJECT-ID \
 
 # 3. Service Account에 프로젝트별 Editor 권한 부여
 gcloud projects add-iam-policy-binding YOUR-PROJECT-ID \
-    --member="serviceAccount:jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com" \
+    --member="serviceAccount:jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com" \
     --role="roles/editor"
 ```
 
@@ -515,8 +515,8 @@ terraform output jenkins_key_creation_command  # 명령어 확인 후 실행
 
 # 또는 직접 실행:
 gcloud iam service-accounts keys create jenkins-sa-key.json \
-    --iam-account=jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com \
-    --project=delabs-system-mgmt
+    --iam-account=jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com \
+    --project=jsj-system-mgmt
 
 # 2. Jenkins에 Credential 등록
 # Jenkins → Manage Jenkins → Credentials → Add Credentials
@@ -552,7 +552,7 @@ environment {
 #### 5. Jenkins Service Account 권한 체크리스트
 Jenkins가 Terragrunt를 통해 새 프로젝트를 만들고 청구 계정에 연결하려면 아래 권한이 모두 필요합니다.
 
-- `delabs-system-mgmt` 프로젝트  
+- `jsj-system-mgmt` 프로젝트  
   - `roles/storage.admin` – State 버킷 읽기/쓰기  
   - (선택) `roles/editor` – Jenkins 자체 리소스 관리
 - 조직 또는 폴더 (자동 프로젝트 생성 시)  
@@ -570,14 +570,14 @@ gcloud beta billing accounts add-iam-policy-binding 01076D-327AD5-FC8922 \
     --role="roles/billing.user"
 
 # State 버킷이 있는 관리 프로젝트
-gcloud projects add-iam-policy-binding delabs-system-mgmt \
-    --member="serviceAccount:jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding jsj-system-mgmt \
+    --member="serviceAccount:jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com" \
     --role="roles/storage.admin"
 ```
 
-> ✅ `cloudbilling.googleapis.com`과 `serviceusage.googleapis.com`이 `delabs-system-mgmt` 프로젝트에서 활성화되어 있어야 합니다. bootstrap을 다시 적용하거나 아래 명령으로 확인하세요.
+> ✅ `cloudbilling.googleapis.com`과 `serviceusage.googleapis.com`이 `jsj-system-mgmt` 프로젝트에서 활성화되어 있어야 합니다. bootstrap을 다시 적용하거나 아래 명령으로 확인하세요.
 > ```bash
-> gcloud services enable cloudbilling.googleapis.com serviceusage.googleapis.com --project=delabs-system-mgmt
+> gcloud services enable cloudbilling.googleapis.com serviceusage.googleapis.com --project=jsj-system-mgmt
 > ```
 
 ## 일반적인 작업
@@ -670,8 +670,8 @@ Error: Failed to get existing workspaces: querying Cloud Storage failed: storage
 **해결:**
 ```bash
 # 중앙 State 버킷이 있는 프로젝트로 변경
-gcloud config set project delabs-system-mgmt
-gcloud auth application-default set-quota-project delabs-system-mgmt
+gcloud config set project jsj-system-mgmt
+gcloud auth application-default set-quota-project jsj-system-mgmt
 
 # terraform 재시도
 terraform init -reconfigure

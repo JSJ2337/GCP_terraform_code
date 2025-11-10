@@ -38,4 +38,4 @@ terragrunt apply       --non-interactive
 
 ## 참고 사항
 - Bootstrap 프로젝트(state 버킷)가 이미 배포되어 있어야 합니다.
-- Application Default Credentials의 quota project를 bootstrap 프로젝트로 설정했는지 확인하세요. (예: `gcloud auth application-default set-quota-project delabs-system-mgmt`)
+- Application Default Credentials의 quota project를 bootstrap 프로젝트로 설정했는지 확인하세요. (예: `gcloud auth application-default set-quota-project jsj-system-mgmt`)

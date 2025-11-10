@@ -19,8 +19,8 @@
 graph TB
     subgraph "Bootstrap (중앙 관리)"
         B[bootstrap/]
-        B_PROJ[delabs-system-mgmt<br/>관리용 프로젝트]
-        B_BUCKET[delabs-terraform-state-prod<br/>중앙 State 버킷]
+        B_PROJ[jsj-system-mgmt<br/>관리용 프로젝트]
+        B_BUCKET[jsj-terraform-state-prod<br/>중앙 State 버킷]
         B --> B_PROJ
         B_PROJ --> B_BUCKET
     end
@@ -99,8 +99,8 @@ graph LR
         DEV[개발자 PC]
     end
 
-    subgraph "Bootstrap Project (delabs-system-mgmt)"
-        BUCKET[GCS Bucket<br/>delabs-terraform-state-prod]
+    subgraph "Bootstrap Project (jsj-system-mgmt)"
+        BUCKET[GCS Bucket<br/>jsj-terraform-state-prod]
 
         subgraph "State 파일 구조"
             S1[proj-default-templet/<br/>00-project/default.tfstate]

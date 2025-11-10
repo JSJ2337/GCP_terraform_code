@@ -24,6 +24,8 @@ terragrunt plan
   - terragrunt.hcl: GCS remote_state에 project/location 추가
 - 환경 교체: jsj-game-j 제거 → jsj-game-k 신규 생성
   - common.naming.tfvars, terragrunt.hcl, Jenkinsfile 식별자(jsj-game-k) 반영
+ - Bootstrap 가이드/명칭 정리: jsj-system-mgmt, jsj-terraform-state-prod 기준으로 문서 업데이트
+ - Bootstrap 옵션 토글 추가: manage_folders / manage_org_iam / enable_billing_account_binding
 
 ### 세션 13: Bootstrap Service Account 및 GCP 인증 설정 (2025-11-06)
 - **Bootstrap Service Account 자동 생성**:

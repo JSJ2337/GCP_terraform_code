@@ -12,10 +12,14 @@
   - 00-project: bootstrap remote state 기반 동적 폴더 참조 추가 (`folder_product/region/env` 입력 사용, `folder_id` 미설정 시 자동)
   - 65-cache: Redis 위치를 zone(default_zone) 기반으로 계산, provider region을 `region_primary`로 통일
   - terragrunt.hcl: GCS remote_state에 `project`/`location` 필수 값 추가
+- Bootstrap: 관리 옵션 토글 추가 및 문서 정리
+  - variables: `manage_folders`, `manage_org_iam`, `enable_billing_account_binding`
+  - README/가이드 전반에서 명칭을 `jsj-system-mgmt`, `jsj-terraform-state-prod`로 정리
 
 ### 추가 (Added)
 - 신규 환경 `jsj-game-k` 생성 (LIVE)
   - `common.naming.tfvars`, `terragrunt.hcl`, `Jenkinsfile`에 jsj-game-k 식별자 반영
+ - Bootstrap 실제 적용 완료: folder_structure 출력 확인(games/kr-region, us-region)
 
 ### 제거 (Removed)
 - 기존 `jsj-game-j` 환경 디렉터리 제거 (템플릿 최신화 반영된 `jsj-game-k`로 이관)
