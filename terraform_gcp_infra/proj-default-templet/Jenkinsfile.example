@@ -12,6 +12,7 @@ pipeline {
         TF_INPUT           = 'false'
         TG_NON_INTERACTIVE = 'true'
         TG_WORKING_DIR     = 'terraform_gcp_infra/environments/LIVE/jsj-game-l'
+        TF_PLUGIN_CACHE_DIR = '${WORKSPACE}/.terraform.d/plugin-cache'
         GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-jenkins-service-account')
     }
 
@@ -54,25 +55,28 @@ pipeline {
         stage('Terragrunt Init') {
             steps {
                 script {
+                    sh "mkdir -p ${env.TF_PLUGIN_CACHE_DIR}"
                     echo '🔧 Initializing Terragrunt...'
-                    if (params.TARGET_LAYER == 'all') {
-                        dir("${TG_WORKING_DIR}") {
-                            sh '''
-                                find . -type d -name ".terragrunt-cache" -prune -exec rm -rf {} + || true
-                                find . -type d -name ".terraform" -prune -exec rm -rf {} + || true
-                                find . -name "tfplan" -type f -delete || true
-                            '''
-                        }
-                        dir("${env.WORKSPACE}") {
-                            sh "terragrunt --working-dir ${TG_WORKING_DIR} run --all init"
-                        }
-                    } else {
-                        dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
-                            sh '''
-                                rm -rf .terragrunt-cache .terraform || true
-                                rm -f tfplan || true
-                                terragrunt init
-                            '''
+                    retry(3) {
+                        if (params.TARGET_LAYER == 'all') {
+                            dir("${TG_WORKING_DIR}") {
+                                sh '''
+                                    find . -type d -name ".terragrunt-cache" -prune -exec rm -rf {} + || true
+                                    find . -type d -name ".terraform" -prune -exec rm -rf {} + || true
+                                    find . -name "tfplan" -type f -delete || true
+                                '''
+                            }
+                            dir("${env.WORKSPACE}") {
+                                sh "terragrunt --working-dir ${TG_WORKING_DIR} run --all init"
+                            }
+                        } else {
+                            dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
+                                sh '''
+                                    rm -rf .terragrunt-cache .terraform || true
+                                    rm -f tfplan || true
+                                    terragrunt init
+                                '''
+                            }
                         }
                     }
                 }
