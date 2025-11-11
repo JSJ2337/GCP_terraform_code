@@ -14,7 +14,7 @@ pipeline {
         // Terragrunt 작업 디렉터리 (환경 루트)
         TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/jsj-game-l'
         // 반복 다운로드를 줄여 provider 설치 실패를 예방
-        TF_PLUGIN_CACHE_DIR = '${WORKSPACE}/.terraform.d/plugin-cache'
+        TF_PLUGIN_CACHE_DIR = "${env.WORKSPACE}/.terraform.d/plugin-cache"
         // GCP 인증 설정 (Jenkins Credential 사용)
         GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-jenkins-service-account')
     }
