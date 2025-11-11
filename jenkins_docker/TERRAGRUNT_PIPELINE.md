@@ -42,7 +42,7 @@ Terraform/Terragrunt 코드 변경 시 안전하게 인프라를 배포할 수 �
 ```
 terraform_gcp_infra/
 └── environments/LIVE/jsj-game-f/
-    ├── terragrunt.hcl          # Remote state 설정
+    ├── root.hcl                # Terragrunt 루트 설정
     ├── common.naming.tfvars    # 공통 변수
     ├── 00-project/             # GCP 프로젝트 기본 설정
     ├── 10-network/             # VPC, 서브넷, 방화벽

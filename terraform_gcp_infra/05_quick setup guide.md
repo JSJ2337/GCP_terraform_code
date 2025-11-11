@@ -23,12 +23,12 @@ cp -R proj-default-templet environments/LIVE/proj-myservice-prod
 ## 3. 공통 설정 업데이트
 | 파일 | 수정 항목 |
 |------|-----------|
-| `environments/LIVE/proj-myservice-prod/terragrunt.hcl` | **필수**: `project_state_prefix`, `remote_state_project`, `remote_state_location` 설정 확인 |
+| `environments/LIVE/proj-myservice-prod/root.hcl` | **필수**: `project_state_prefix`, `remote_state_project`, `remote_state_location` 설정 확인 |
 | `environments/LIVE/proj-myservice-prod/common.naming.tfvars` | `project_id`, `project_name`, `environment`, `organization`, `region_*` 값을 신규 환경에 맞게 설정 |
 | Terragrunt `inputs` | 필요 시 `folder_product`, `folder_region`, `folder_env` 입력을 정의해 bootstrap 폴더 조합을 선택 |
-| `environments/LIVE/proj-myservice-prod/terragrunt.hcl` | 루트 `inputs`에 공통 값(`org_id`, `billing_account` 등) 설정 |
+| `environments/LIVE/proj-myservice-prod/root.hcl` | 루트 `inputs`에 공통 값(`org_id`, `billing_account` 등) 설정 |
 
-**⚠️ terragrunt.hcl 필수 설정**:
+**⚠️ root.hcl 필수 설정**:
 ```hcl
 locals {
   remote_state_bucket   = "jsj-terraform-state-prod"

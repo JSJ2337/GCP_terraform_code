@@ -41,7 +41,7 @@ terraform_gcp_infra/
 │   ├── 65-cache/              # Memorystore Redis 캐시
 │   ├── 70-loadbalancer/       # Load Balancer 설정
 │   ├── common.naming.tfvars   # 공통 네이밍 변수
-│   └── terragrunt.hcl         # Terragrunt 설정
+│   └── root.hcl               # Terragrunt 루트 설정
 │
 ├── environments/               # 환경별 구성 (실제 배포 환경)
 │   └── LIVE/
@@ -55,7 +55,7 @@ terraform_gcp_infra/
 │           ├── 10-network/
 │           ├── ... (9개 레이어)
 │           ├── common.naming.tfvars
-│           └── terragrunt.hcl
+│           └── root.hcl
 │
 ├── .jenkins/                   # Jenkins 템플릿
 │   ├── Jenkinsfile.template   # 재사용 가능한 Pipeline 템플릿
@@ -102,10 +102,10 @@ region_backup  = "us-east1"
 ### Terragrunt 기반 실행
 - 전체 레이어를 순서대로 실행하려면 `./run_terragrunt_stack.sh <plan|apply|destroy>` 스크립트를 사용하세요. Terragrunt 0.93 CLI의 `run --all`을 감싸며 추가 인자는 그대로 전달됩니다.
 - 각 레이어에는 `terragrunt.hcl`이 존재하며, 공통 입력(`common.naming.tfvars`)과 레이어 전용 `terraform.tfvars`를 자동 병합합니다.
-- 원격 상태(GCS)는 Terragrunt가 관리하며 루트 `terragrunt.hcl`이 각 레이어에 `backend.tf`를 자동 생성합니다. Terraform 코드에 별도의 backend 블록을 둘 필요가 없습니다.
-- Terragrunt 0.93 CLI부터는 `terragrunt run --all <command>` 형태가 기본입니다. 특정 레이어만 플랜하고 싶다면 `terragrunt run --queue-include-dir '00-project' --all plan -- -out=tfplan-00-project`처럼 `--queue-include-dir`를 사용하세요.
+- 원격 상태(GCS)는 Terragrunt가 관리하며 루트 `root.hcl`이 각 레이어에 `backend.tf`를 자동 생성합니다. Terraform 코드에 별도의 backend 블록을 둘 필요가 없습니다.
+- Terragrunt 0.93 CLI부터는 `terragrunt run --all <command>` 형태가 기본입니다. 특정 레이어만 플랜하고 싶다면 `terragrunt run --queue-include-dir '00-project' --all plan -- -out=tfplan-00-project`처럼 `run --queue-include-dir`를 사용하세요.
 - Jenkins/CI 환경에서는 `TG_NON_INTERACTIVE=true`, `--working-dir <환경 루트>` 조합으로 비대화식 실행을 강제합니다.
-- 루트(`environments/prod/proj-default-templet/terragrunt.hcl`)에서 원격 상태 버킷과 prefix를 정의하고, 각 레이어는 의존 관계(`dependencies` 블록)로 실행 순서를 보장합니다.
+- 루트(`environments/prod/proj-default-templet/root.hcl`)에서 원격 상태 버킷과 prefix를 정의하고, 각 레이어는 의존 관계(`dependencies` 블록)로 실행 순서를 보장합니다.
 - `common.naming.tfvars`를 직접 `-var-file`로 넘길 필요가 없으며, Terragrunt가 자동으로 주입합니다.
 
 ### 레이어별 변수 예시 템플릿
@@ -217,7 +217,7 @@ terragrunt apply  --non-interactive  # 검토 후 --non-interactive 옵션 제�
 /mnt/d/jsj_wsl_data/terragrunt_linux_amd64 plan
 ```
 
-> Terragrunt가 `common.naming.tfvars`와 현재 레이어의 `terraform.tfvars`, 그리고 루트 `terragrunt.hcl`의 `inputs`를 자동으로 병합하므로 `-var-file` 옵션을 수동으로 전달할 필요가 없습니다. 환경 전체에 공통으로 적용할 값(예: `org_id`, `billing_account`)은 루트 `terragrunt.hcl`의 `inputs` 섹션에 정의하세요.
+> Terragrunt가 `common.naming.tfvars`와 현재 레이어의 `terraform.tfvars`, 그리고 루트 `root.hcl`의 `inputs`를 자동으로 병합하므로 `-var-file` 옵션을 수동으로 전달할 필요가 없습니다. 환경 전체에 공통으로 적용할 값(예: `org_id`, `billing_account`)은 루트 `root.hcl`의 `inputs` 섹션에 정의하세요.
 > ⚠️ WSL1/일부 WSL2 빌드에서는 Google Provider가 Unix 소켓 옵션을 설정하지 못해 `setsockopt: operation not permitted` 오류가 발생할 수 있습니다. 이 경우 Windows 터미널이 아닌 Linux VM/컨테이너에서 Terragrunt를 실행하거나, 최신 WSL2 커널로 업데이트하세요.
 
 ### 배포 순서

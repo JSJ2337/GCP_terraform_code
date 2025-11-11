@@ -11,6 +11,9 @@
 - Memorystore Redis: `REDIS_7_X` 값이 GCP API에서 아직 허용되지 않아 apply가 실패하던 문제를 `REDIS_6_X` 기본값 및 허용 버전(validation) 추가로 해결
   - 모듈(`modules/memorystore-redis`)과 각 레이어/예제(tfvars/variables, jsj-game-k 포함)에서 기본 버전을 `REDIS_6_X`로 통일
   - README/가이드에 지원 버전 목록을 명시하고 Jenkins/Quick Setup 흐름과 일치하도록 문구 업데이트
+- Terragrunt 루트 파일 이름을 `terragrunt.hcl` → `root.hcl`로 변경해 0.93 이후 경고/미래 에러를 사전 차단
+  - `proj-default-templet/root.hcl`, `environments/LIVE/jsj-game-k/root.hcl`을 기준으로 모든 레이어 include가 `find_in_parent_folders("root.hcl")` 형태를 사용
+  - Quick Setup/README/Jenkins 가이드 등 문서에서도 새 파일명을 반영
 
 ## [미배포] - 2025-11-10
 
