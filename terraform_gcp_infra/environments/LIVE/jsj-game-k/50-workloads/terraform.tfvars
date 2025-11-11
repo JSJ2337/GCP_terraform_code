@@ -32,13 +32,7 @@ instances = {
       role = "lobby"
       tier = "frontend"
     }
-    startup_script = <<-EOL
-#!/bin/bash
-apt-get update
-apt-get install -y nginx google-fluentd
-systemctl enable nginx && systemctl start nginx
-systemctl enable google-fluentd && systemctl start google-fluentd
-EOL
+    startup_script_file = "scripts/lobby.sh"
   }
   "jsj-lobby-02" = {
     hostname = "jsj-lobby-02"
@@ -48,6 +42,7 @@ EOL
       role = "lobby"
       tier = "frontend"
     }
+    startup_script_file = "scripts/lobby.sh"
   }
   "jsj-lobby-03" = {
     hostname = "jsj-lobby-03"
@@ -57,6 +52,7 @@ EOL
       role = "lobby"
       tier = "frontend"
     }
+    startup_script_file = "scripts/lobby.sh"
   }
 
   # web tier (3대)
@@ -69,13 +65,7 @@ EOL
       role = "web"
       tier = "frontend"
     }
-    startup_script = <<-EOW
-#!/bin/bash
-apt-get update
-apt-get install -y nginx google-fluentd
-systemctl enable nginx && systemctl start nginx
-systemctl enable google-fluentd && systemctl start google-fluentd
-EOW
+    startup_script_file = "scripts/lobby.sh"
   }
   "jsj-web-02" = {
     hostname     = "jsj-web-02"
@@ -108,13 +98,7 @@ EOW
       role = "was"
       tier = "backend"
     }
-    startup_script = <<-EOWAS
-#!/bin/bash
-apt-get update
-apt-get install -y docker.io google-fluentd
-systemctl enable docker && systemctl start docker
-systemctl enable google-fluentd && systemctl start google-fluentd
-EOWAS
+    startup_script_file = "scripts/was.sh"
   }
   "jsj-was-02" = {
     hostname     = "jsj-was-02"

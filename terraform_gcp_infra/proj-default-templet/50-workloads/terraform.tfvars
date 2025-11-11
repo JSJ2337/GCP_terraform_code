@@ -15,46 +15,69 @@ enable_os_login     = true
 preemptible         = false
 startup_script      = ""
 service_account_scopes = ["https://www.googleapis.com/auth/cloud-platform"]
-tags = ["game", "ssh-allowed"]
+tags = ["prod", "ssh-allowed"]
 labels = {
-  app       = "default-templet"
   component = "game-server"
 }
 
+# Example: lobby/web/was roles
 instances = {
-  "game-template-web-01" = {
-    hostname             = "game-template-web-01"
+  "tmpl-lobby-01" = {
+    hostname             = "tmpl-lobby-01"
     zone                 = "us-central1-a"
     machine_type         = "e2-small"
+    subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/your-web-subnet"
+    tags                 = ["lobby", "ssh-allowed"]
+    labels = {
+      role = "lobby"
+      tier = "frontend"
+    }
+    startup_script_file = "scripts/lobby.sh"
+  }
+  "tmpl-lobby-02" = {
+    hostname = "tmpl-lobby-02"
+    zone     = "us-central1-b"
+    tags     = ["lobby", "ssh-allowed"]
+    labels = {
+      role = "lobby"
+      tier = "frontend"
+    }
+    startup_script_file = "scripts/lobby.sh"
+  }
+
+  "tmpl-web-01" = {
+    hostname             = "tmpl-web-01"
+    zone                 = "us-central1-a"
+    machine_type         = "e2-medium"
     subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/your-web-subnet"
     tags                 = ["web", "ssh-allowed"]
     labels = {
       role = "web"
       tier = "frontend"
     }
-    startup_script = <<-EOWEB
-#!/bin/bash
-apt-get update && apt-get install -y nginx
-systemctl enable nginx && systemctl start nginx
-EOWEB
+    startup_script_file = "scripts/lobby.sh"
+  }
+  "tmpl-web-02" = {
+    hostname = "tmpl-web-02"
+    zone     = "us-central1-b"
+    tags     = ["web", "ssh-allowed"]
+    labels = {
+      role = "web"
+      tier = "frontend"
+    }
+    startup_script_file = "scripts/lobby.sh"
   }
 
-  "game-template-app-01" = {
-    hostname             = "game-template-app-01"
-    zone                 = "us-central1-b"
-    machine_type         = "e2-standard-2"
+  "tmpl-was-01" = {
+    hostname             = "tmpl-was-01"
+    zone                 = "us-central1-c"
+    machine_type         = "e2-standard-4"
     subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/your-app-subnet"
-    tags                 = ["app", "ssh-allowed"]
+    tags                 = ["was", "ssh-allowed"]
     labels = {
-      role = "app"
+      role = "was"
       tier = "backend"
     }
-    startup_script = <<-EOAPP
-#!/bin/bash
-apt-get update
-apt-get install -y docker.io google-fluentd
-systemctl enable docker && systemctl start docker
-systemctl enable google-fluentd && systemctl start google-fluentd
-EOAPP
+    startup_script_file = "scripts/was.sh"
   }
 }

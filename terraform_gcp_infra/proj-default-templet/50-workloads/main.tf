@@ -37,6 +37,16 @@ locals {
 
   tags   = distinct(concat(module.naming.common_tags, var.tags))
   labels = merge(module.naming.common_labels, var.labels)
+
+  processed_instances = {
+    for name, cfg in var.instances :
+    name => merge(
+      { for k, v in cfg : k => v if k != "startup_script_file" },
+      try(cfg.startup_script_file, null) != null ?
+        { startup_script = file("${path.module}/${cfg.startup_script_file}") } :
+        {}
+    )
+  }
 }
 
 # Naming conventions supplied by modules/naming
@@ -54,7 +64,7 @@ module "gce_vmset" {
   machine_type   = var.machine_type
 
   # 새로운 for_each 방식 (권장)
-  instances = var.instances
+  instances = local.processed_instances
 
   enable_public_ip = var.enable_public_ip
   enable_os_login  = var.enable_os_login

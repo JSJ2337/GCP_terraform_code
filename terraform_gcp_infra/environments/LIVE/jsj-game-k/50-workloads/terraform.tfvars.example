@@ -28,23 +28,20 @@ instances = {
     hostname = "jsj-lobby-01"
     zone     = "asia-northeast3-a"
     tags     = ["lobby", "ssh-allowed"]
+    startup_script_file = "scripts/lobby.sh"
   }
   "jsj-lobby-02" = {
     hostname = "jsj-lobby-02"
     zone     = "asia-northeast3-b"
     tags     = ["lobby", "ssh-allowed"]
+    startup_script_file = "scripts/lobby.sh"
   }
   "jsj-web-01" = {
     hostname     = "jsj-web-01"
     zone         = "asia-northeast3-a"
     machine_type = "e2-small"
     tags         = ["web", "ssh-allowed"]
-    startup_script = <<-EOW
-#!/bin/bash
-apt-get update
-apt-get install -y nginx
-systemctl enable nginx && systemctl start nginx
-EOW
+    startup_script_file = "scripts/lobby.sh"
   }
   "jsj-web-02" = {
     hostname = "jsj-web-02"
@@ -56,5 +53,6 @@ EOW
     zone         = "asia-northeast3-c"
     machine_type = "e2-standard-4"
     tags         = ["was", "ssh-allowed"]
+    startup_script_file = "scripts/was.sh"
   }
 }
