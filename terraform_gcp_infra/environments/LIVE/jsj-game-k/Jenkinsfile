@@ -10,6 +10,7 @@ pipeline {
     environment {
         TF_IN_AUTOMATION = 'true'
         TF_INPUT = 'false'
+        TERRAGRUNT_NON_INTERACTIVE = 'true'
         // Terragrunt 작업 디렉터리 (환경 루트)
         TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/jsj-game-k'
         // GCP 인증 설정 (Jenkins Credential 사용)
@@ -77,8 +78,10 @@ pipeline {
                                 find . -type d -name ".terragrunt-cache" -prune -exec rm -rf {} + || true
                                 find . -type d -name ".terraform" -prune -exec rm -rf {} + || true
                                 find . -name "tfplan" -type f -delete || true
-                                terragrunt run --all init
                             '''
+                        }
+                        dir("${env.WORKSPACE}") {
+                            sh "terragrunt --terragrunt-include-dir ${TG_WORKING_DIR} run --all init"
                         }
                     } else {
                         dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
@@ -99,8 +102,14 @@ pipeline {
                     echo '📋 Running Terragrunt Plan...'
                     if (params.TARGET_LAYER == 'all') {
                         // 00-project만 우선 Plan (API enable 전파 이전에 다른 레이어 Plan 방지)
-                        dir("${TG_WORKING_DIR}") {
-                            sh 'terragrunt run --terragrunt-include-dir 00-project --all plan -- -out=tfplan-00-project'
+                        dir("${TG_WORKING_DIR}/00-project") {
+                            sh '''
+                                rm -rf .terragrunt-cache .terraform || true
+                                rm -f tfplan-00-project || true
+                            '''
+                        }
+                        dir("${env.WORKSPACE}") {
+                            sh "terragrunt --terragrunt-include-dir ${TG_WORKING_DIR}/00-project run --all plan -- -out=tfplan-00-project"
                         }
                     } else {
                         dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
@@ -169,8 +178,13 @@ pipeline {
                         echo '🚀 Applying Terragrunt changes...'
                         if (params.TARGET_LAYER == 'all') {
                             dir("${TG_WORKING_DIR}") {
+                                sh '''
+                                    find . -type d -name ".terragrunt-cache" -prune -exec rm -rf {} + || true
+                                '''
+                            }
+                            dir("${env.WORKSPACE}") {
                                 // 전체 스택은 최신 코드/상태 기준으로 의존 순서대로 Apply (plan 파일 미사용)
-                                sh 'terragrunt run --all apply -- -auto-approve'
+                                sh "terragrunt --terragrunt-include-dir ${TG_WORKING_DIR} run --all apply -- -auto-approve"
                             }
                         } else {
                             dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
@@ -180,8 +194,8 @@ pipeline {
                     } else if (params.ACTION == 'destroy') {
                         echo '🗑️  Destroying Terragrunt resources...'
                         if (params.TARGET_LAYER == 'all') {
-                            dir("${TG_WORKING_DIR}") {
-                                sh 'terragrunt run --all destroy -- -auto-approve'
+                            dir("${env.WORKSPACE}") {
+                                sh "terragrunt --terragrunt-include-dir ${TG_WORKING_DIR} run --all destroy -- -auto-approve"
                             }
                         } else {
                             dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
