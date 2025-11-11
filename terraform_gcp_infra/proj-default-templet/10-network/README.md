@@ -17,10 +17,8 @@ VPC 네트워크, 서브넷, 방화벽, Cloud NAT, Private Service Connect(PSC)�
    cp terraform.tfvars.example terraform.tfvars
    ```
 2. 주요 항목 설명:
-   - `subnet_primary_cidr`, `subnet_backup_cidr`: 기본/DR 서브넷 CIDR
    - `additional_subnets`: DMZ/Private/DB 등 역할별 서브넷 리스트 (name/region/cidr)
    - `dmz_subnet_name`, `private_subnet_name`, `db_subnet_name`: `additional_subnets`에서 사용할 서브넷 이름
-   - `pods_cidr`, `services_cidr`: GKE 예약 IP (사용하지 않으면 공백으로 두어 생성 생략 가능)
    - `firewall_rules`: IAP, 헬스 체크, 내부 통신 등 필요한 규칙 정의
    - `enable_private_service_connection`: Cloud SQL Private IP를 사용할 경우 `true`
    - `private_service_connection_prefix_length`: PSC용 예약 CIDR 크기 (기본 /24)
@@ -38,7 +36,7 @@ terragrunt apply  --non-interactive
 
 ## 서브넷 구성 예시
 
-이 레이어는 기본적으로 **Primary/Backup 서브넷** + `additional_subnets`에 선언한 DMZ/Private/DB 서브넷을 생성합니다:
+이 레이어는 `additional_subnets`에 선언한 서브넷만 생성하며, Primary/Backup 서브넷은 더 이상 사용하지 않습니다. 예시는 다음과 같습니다:
 
 ```hcl
 additional_subnets = [
@@ -70,6 +68,6 @@ instances = {
 
 ## 참고
 - Service Networking 연결은 Cloud SQL 레이어(60-database)에서 자동으로 사용됩니다.
-- VPC/서브넷 Self Link는 naming 모듈이 자동 제공하므로 다른 레이어에서 별도 입력이 필요 없습니다.
+- VPC self-link는 naming 모듈이 제공하지만 서브넷은 `additional_subnets`에서 직접 선언해야 하므로, 다른 레이어(50-workloads/70-loadbalancer 등)에서는 해당 self-link를 명시적으로 입력해야 합니다.
 - NAT는 DMZ 서브넷만 대상으로 동작하도록 구성할 수 있어 Private/WAS/DB 영역은 인터넷 통신을 차단한 상태로 유지할 수 있습니다.
 - 용도별 서브넷은 **보안 강화**를 위해 각 계층을 물리적으로 분리합니다.

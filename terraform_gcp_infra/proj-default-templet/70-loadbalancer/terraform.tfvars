@@ -10,7 +10,7 @@ lb_type = "http"
 # Region and network (for Internal LB)
 # Set region only for regional/internal load balancers.
 # region = "asia-northeast3"
-# network/subnetwork can be left blank to use values derived from modules/naming
+# network can be left blank to use the naming-based VPC, but 내부 LB는 서브넷 self-link를 반드시 지정해야 합니다.
 # internal_subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/default-templet-subnet-private"
 
 # Backend service configuration

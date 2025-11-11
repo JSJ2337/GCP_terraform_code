@@ -29,7 +29,7 @@ module "naming" {
 locals {
   zone = length(trimspace(var.zone)) > 0 ? var.zone : module.naming.default_zone
 
-  subnetwork_self_link = length(trimspace(var.subnetwork_self_link)) > 0 ? var.subnetwork_self_link : "projects/${var.project_id}/regions/${module.naming.region_primary}/subnetworks/${module.naming.subnet_name_primary}"
+  subnetwork_self_link = trimspace(var.subnetwork_self_link)
 
   name_prefix = length(trimspace(var.name_prefix)) > 0 ? var.name_prefix : module.naming.vm_name_prefix
 

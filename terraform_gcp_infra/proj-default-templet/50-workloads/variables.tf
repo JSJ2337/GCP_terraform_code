@@ -43,8 +43,9 @@ variable "zone" {
 }
 
 variable "subnetwork_self_link" {
-  type    = string
-  default = ""
+  type        = string
+  description = "Count 방식 및 기본값으로 사용할 서브넷 self-link (instances map 사용 시 각 인스턴스에서 지정 가능)"
+  default     = ""
 }
 
 variable "instance_count" {

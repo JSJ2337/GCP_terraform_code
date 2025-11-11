@@ -27,37 +27,7 @@ module "naming" {
 }
 
 locals {
-  primary_secondary_ranges = concat(
-    length(trimspace(var.pods_cidr)) > 0 ? [
-      {
-        name = module.naming.pods_range_name
-        cidr = var.pods_cidr
-      }
-    ] : [],
-    length(trimspace(var.services_cidr)) > 0 ? [
-      {
-        name = module.naming.services_range_name
-        cidr = var.services_cidr
-      }
-    ] : []
-  )
-
-  base_subnets = {
-    (module.naming.subnet_name_primary) = {
-      region                = module.naming.region_primary
-      cidr                  = var.subnet_primary_cidr
-      private_google_access = true
-      secondary_ranges      = local.primary_secondary_ranges
-    }
-    (module.naming.subnet_name_backup) = {
-      region                = module.naming.region_backup
-      cidr                  = var.subnet_backup_cidr
-      private_google_access = true
-      secondary_ranges      = []
-    }
-  }
-
-  additional_subnets_map = {
+  requested_subnets = {
     for subnet in var.additional_subnets :
     subnet.name => {
       region                = subnet.region
@@ -67,9 +37,9 @@ locals {
     }
   }
 
-  dmz_subnet     = try(local.additional_subnets_map[var.dmz_subnet_name], null)
-  private_subnet = try(local.additional_subnets_map[var.private_subnet_name], null)
-  db_subnet      = try(local.additional_subnets_map[var.db_subnet_name], null)
+  dmz_subnet     = try(local.requested_subnets[var.dmz_subnet_name], null)
+  private_subnet = try(local.requested_subnets[var.private_subnet_name], null)
+  db_subnet      = try(local.requested_subnets[var.db_subnet_name], null)
 
   dmz_subnet_self_link     = local.dmz_subnet != null ? "projects/${var.project_id}/regions/${local.dmz_subnet.region}/subnetworks/${var.dmz_subnet_name}" : null
   private_subnet_self_link = local.private_subnet != null ? "projects/${var.project_id}/regions/${local.private_subnet.region}/subnetworks/${var.private_subnet_name}" : null
@@ -83,7 +53,7 @@ module "net" {
   vpc_name     = module.naming.vpc_name
   routing_mode = var.routing_mode
 
-  subnets = merge(local.base_subnets, local.additional_subnets_map)
+  subnets = local.requested_subnets
 
   nat_region            = module.naming.region_primary
   nat_min_ports_per_vm  = var.nat_min_ports_per_vm

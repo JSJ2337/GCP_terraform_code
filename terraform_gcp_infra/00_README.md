@@ -68,7 +68,7 @@ terraform_gcp_infra/
 ### 인프라 레이어
 - **bootstrap**: 중앙 집중식 Terraform State 관리 프로젝트
 - **00-project**: GCP 프로젝트 생성, API 활성화, 예산 알림
-- **10-network**: VPC, 기본/DR 서브넷 + DMZ/Private/DB 전용 서브넷, DMZ 한정 Cloud NAT, Private Service Connect, 방화벽 규칙
+- **10-network**: VPC, DMZ/Private/DB 전용 서브넷, DMZ 한정 Cloud NAT, Private Service Connect, 방화벽 규칙
 - **20-storage**: 에셋, 로그 및 백업용 GCS 버킷
 - **30-security**: IAM 바인딩 및 서비스 계정
 - **40-observability**: Cloud Logging 싱크 및 모니터링 대시보드

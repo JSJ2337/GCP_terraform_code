@@ -14,10 +14,6 @@ region_backup  = "us-east1"
 # VPC 라우팅 모드: 글로벌 라우팅이 필요 없으면 REGIONAL 로 변경하세요.
 routing_mode = "GLOBAL"
 
-# 기본 서브넷 CIDR (필요 시 조직 표준에 맞게 수정)
-subnet_primary_cidr = "10.10.0.0/20"
-subnet_backup_cidr  = "10.20.0.0/20"
-
 # 용도별 서브넷 (DMZ/WAS/DB). 50-workloads와 70-loadbalancer에서 self-link를 참조합니다.
 additional_subnets = [
   {
@@ -40,10 +36,6 @@ additional_subnets = [
 dmz_subnet_name     = "game-k-subnet-dmz"
 private_subnet_name = "game-k-subnet-private"
 db_subnet_name      = "game-k-subnet-db"
-
-# GKE 등에서 사용할 보조 CIDR (미사용 시 "" 로 비워두면 생성 생략 가능)
-pods_cidr     = "10.10.16.0/20"
-services_cidr = "10.10.32.0/20"
 
 # Cloud NAT 동시 연결 수(포트)
 nat_min_ports_per_vm = 1024

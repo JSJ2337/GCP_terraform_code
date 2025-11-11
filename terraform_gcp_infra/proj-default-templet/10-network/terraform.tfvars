@@ -3,15 +3,7 @@
 # region = "asia-northeast3"
 routing_mode = "GLOBAL"
 
-# Subnet CIDR blocks (names come from modules/naming)
-subnet_primary_cidr = "10.1.0.0/20"
-subnet_backup_cidr  = "10.2.0.0/20"
-
-# GKE Secondary IP ranges (사용하지 않으면 빈 문자열 "" 로 둬서 생성 생략 가능)
-pods_cidr     = "10.1.16.0/20"
-services_cidr = "10.1.32.0/20"
-
-# Additional dedicated subnets (예: DMZ/WAS/DB)
+# 역할별 전용 서브넷 (예: DMZ/WAS/DB)
 additional_subnets = [
   {
     name   = "default-templet-subnet-dmz"

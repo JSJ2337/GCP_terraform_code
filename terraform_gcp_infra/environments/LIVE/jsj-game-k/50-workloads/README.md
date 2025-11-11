@@ -92,9 +92,9 @@ projects/{project-id}/regions/{region}/subnetworks/{subnet-name}
 ```
 
 **예시:**
-- Web 서브넷: `projects/<your-project>/regions/asia-northeast3/subnetworks/<project>-prod-subnet-web`
-- App 서브넷: `projects/<your-project>/regions/asia-northeast3/subnetworks/<project>-prod-subnet-app`
-- DB 서브넷: `projects/<your-project>/regions/asia-northeast3/subnetworks/<project>-prod-subnet-db`
+- DMZ 서브넷: `projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz`
+- Private/WAS 서브넷: `projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-private`
+- DB 서브넷: `projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-db`
 
 **Terragrunt로 확인:**
 ```bash
@@ -118,6 +118,7 @@ terragrunt apply  --non-interactive
 - `enable_public_ip`: 외부 IP 할당 여부
 - `enable_os_login`: Google Cloud OS Login 활성화
 - `preemptible`: Spot VM 사용 여부 (비용 절감)
+- `subnetwork_self_link`: count 방식 또는 공통 기본값으로 사용할 서브넷 self-link (비워두면 for_each 인스턴스에서 반드시 지정해야 함)
 - `tags`: 방화벽 규칙 타겟팅용 네트워크 태그
 - `labels`: 리소스 라벨링 (관리/비용 추적)
 
@@ -134,7 +135,7 @@ terragrunt apply  --non-interactive
 - `metadata`, `service_account_email`, `boot_disk_*`: 필요한 경우 개별로 재정의
 
 ## 참고
-- 서브넷 또는 서비스 계정을 명시적으로 지정하지 않으면 naming 모듈이 제공하는 기본값을 사용합니다.
+- 서브넷은 이제 naming 기본값이 존재하지 않으므로, count 방식을 사용하거나 인스턴스 별로 `subnetwork_self_link`를 반드시 지정해야 합니다.
 - LB 백엔드로 연결하려면 `70-loadbalancer` 레이어에서 동일한 인스턴스 그룹 Self Link를 참조하세요.
 - **보안 강화**: DMZ/Private/DB 서브넷 분리로 각 계층 간 네트워크 격리 가능
 - **고가용성**: 여러 존에 VM을 분산 배치하여 단일 장애 지점 제거

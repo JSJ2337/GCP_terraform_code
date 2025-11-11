@@ -59,6 +59,11 @@ variable "internal_subnetwork_self_link" {
   type        = string
   description = "내부 LB에 사용할 VPC Subnet self-link (기본값은 naming 기반)"
   default     = ""
+
+  validation {
+    condition     = !contains(["internal", "internal_classic"], var.lb_type) || length(trimspace(var.internal_subnetwork_self_link)) > 0 || length(trimspace(var.subnetwork)) > 0
+    error_message = "internal/internal_classic LB 타입일 경우 internal_subnetwork_self_link 또는 subnetwork 중 하나는 반드시 지정해야 합니다."
+  }
 }
 
 variable "backend_protocol" {

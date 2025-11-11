@@ -3,14 +3,6 @@
 # region = "asia-northeast3"
 routing_mode = "GLOBAL"
 
-# Subnet CIDR blocks (names come from modules/naming)
-subnet_primary_cidr = "10.1.0.0/20"
-subnet_backup_cidr  = "10.2.0.0/20"
-
-# GKE Secondary IP ranges (현재는 예약 용도, 미사용 시 "" 로 비워두면 생성 생략)
-pods_cidr     = "10.1.16.0/20"
-services_cidr = "10.1.32.0/20"
-
 # Additional dedicated subnets (DMZ/WAS/DB zones)
 additional_subnets = [
   {

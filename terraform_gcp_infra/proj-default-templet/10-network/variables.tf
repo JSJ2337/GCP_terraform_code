@@ -44,31 +44,6 @@ variable "routing_mode" {
   default     = "GLOBAL"
 }
 
-# Subnet CIDR blocks
-variable "subnet_primary_cidr" {
-  type        = string
-  description = "Primary 리전 서브넷 CIDR"
-  default     = "10.1.0.0/20"
-}
-
-variable "subnet_backup_cidr" {
-  type        = string
-  description = "Backup 리전 서브넷 CIDR"
-  default     = "10.2.0.0/20"
-}
-
-variable "pods_cidr" {
-  type        = string
-  description = "GKE Pods용 Secondary IP 범위 CIDR"
-  default     = "10.1.16.0/20"
-}
-
-variable "services_cidr" {
-  type        = string
-  description = "GKE Services용 Secondary IP 범위 CIDR"
-  default     = "10.1.32.0/20"
-}
-
 variable "nat_min_ports_per_vm" {
   type        = number
   description = "Cloud NAT VM당 최소 포트 수"
