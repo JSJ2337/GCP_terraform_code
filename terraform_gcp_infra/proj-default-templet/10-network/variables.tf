@@ -109,16 +109,34 @@ variable "private_service_connection_name" {
 }
 
 variable "additional_subnets" {
-  description = "추가로 생성할 서브넷 목록 (예: DMZ, WAS, DB 등)"
+  description = "추가로 생성할 서브넷 목록 (예: DMZ, Private/WAS, DB 등 역할 기반 서브넷)"
   type = list(object({
     name                  = string
     region                = string
     cidr                  = string
     private_google_access = optional(bool, true)
-    secondary_ranges      = optional(list(object({
+    secondary_ranges = optional(list(object({
       name = string
       cidr = string
     })), [])
   }))
   default = []
+}
+
+variable "dmz_subnet_name" {
+  type        = string
+  description = "additional_subnets에 선언된 DMZ(외부 노출) 서브넷 이름"
+  default     = ""
+}
+
+variable "private_subnet_name" {
+  type        = string
+  description = "additional_subnets에 선언된 내부(Private/WAS) 서브넷 이름"
+  default     = ""
+}
+
+variable "db_subnet_name" {
+  type        = string
+  description = "additional_subnets에 선언된 DB 서브넷 이름"
+  default     = ""
 }

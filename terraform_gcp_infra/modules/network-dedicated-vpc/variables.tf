@@ -32,6 +32,12 @@ variable "nat_min_ports_per_vm" {
   default = 1024
 }
 
+variable "nat_subnet_self_links" {
+  description = "NAT 적용 대상 서브넷 self-link 목록 (비우면 모든 서브넷)"
+  type        = list(string)
+  default     = []
+}
+
 variable "firewall_rules" {
   type = list(object({
     name           = string

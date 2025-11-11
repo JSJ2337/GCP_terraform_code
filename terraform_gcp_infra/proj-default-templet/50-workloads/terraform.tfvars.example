@@ -28,72 +28,81 @@ labels = {
 
 # 역할별 인스턴스 정의 (예: lobby 2대, web 2대, was 1대)
 instances = {
-  "jsj-lobby-01" = {
-    hostname             = "jsj-lobby-01"
+  "tmpl-lobby-01" = {
+    hostname             = "tmpl-lobby-01"
     zone                 = "us-central1-a"
     machine_type         = "e2-small"
-    subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/default-templet-subnet-us-central1"
+    subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/default-templet-subnet-dmz"
     tags                 = ["lobby", "ssh-allowed"]
     labels = {
       role = "lobby"
       tier = "frontend"
     }
-    startup_script = <<-EOL
-#!/bin/bash
-apt-get update
-apt-get install -y nginx google-fluentd
-systemctl enable nginx && systemctl start nginx
-systemctl enable google-fluentd && systemctl start google-fluentd
-EOL
+    startup_script_file = "scripts/lobby.sh"
   }
 
-  "jsj-lobby-02" = {
-    hostname = "jsj-lobby-02"
-    zone     = "us-central1-b"
-    tags     = ["lobby", "ssh-allowed"]
+  "tmpl-lobby-02" = {
+    hostname             = "tmpl-lobby-02"
+    zone                 = "us-central1-b"
+    subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/default-templet-subnet-dmz"
+    tags                 = ["lobby", "ssh-allowed"]
     labels = {
       role = "lobby"
       tier = "frontend"
     }
+    startup_script_file = "scripts/lobby.sh"
   }
 
-  "jsj-web-01" = {
-    hostname             = "jsj-web-01"
+  "tmpl-web-01" = {
+    hostname             = "tmpl-web-01"
     zone                 = "us-central1-a"
     machine_type         = "e2-medium"
-    subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/default-templet-subnet-us-central1"
+    subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/default-templet-subnet-dmz"
     tags                 = ["web", "ssh-allowed"]
     labels = {
       role = "web"
       tier = "frontend"
     }
+    startup_script_file = "scripts/lobby.sh"
   }
 
-  "jsj-web-02" = {
-    hostname = "jsj-web-02"
-    zone     = "us-central1-b"
-    tags     = ["web", "ssh-allowed"]
+  "tmpl-web-02" = {
+    hostname             = "tmpl-web-02"
+    zone                 = "us-central1-b"
+    subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/default-templet-subnet-dmz"
+    tags                 = ["web", "ssh-allowed"]
     labels = {
       role = "web"
       tier = "frontend"
     }
+    startup_script_file = "scripts/lobby.sh"
   }
 
-  "jsj-was-01" = {
-    hostname     = "jsj-was-01"
-    zone         = "us-central1-c"
-    machine_type = "e2-standard-4"
-    tags         = ["was", "ssh-allowed"]
+  "tmpl-was-01" = {
+    hostname             = "tmpl-was-01"
+    zone                 = "us-central1-c"
+    machine_type         = "e2-standard-4"
+    subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/default-templet-subnet-private"
+    tags                 = ["was", "ssh-allowed"]
     labels = {
       role = "was"
       tier = "backend"
     }
-    startup_script = <<-EOWAS
-#!/bin/bash
-apt-get update
-apt-get install -y docker.io google-fluentd
-systemctl enable docker && systemctl start docker
-systemctl enable google-fluentd && systemctl start google-fluentd
-EOWAS
+    startup_script_file = "scripts/was.sh"
+  }
+
+  "tmpl-was-02" = {
+    hostname             = "tmpl-was-02"
+    zone                 = "us-central1-a"
+    machine_type         = "e2-standard-4"
+    subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/default-templet-subnet-private"
+    tags                 = ["was", "ssh-allowed"]
+    labels = {
+      role = "was"
+      tier = "backend"
+    }
+    image_family         = "ubuntu-2204-lts"
+    image_project        = "ubuntu-os-cloud"
+    startup_script_file  = "scripts/was.sh"
   }
 }

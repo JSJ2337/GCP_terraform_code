@@ -8,11 +8,11 @@
 - **유연한 배치**: 두 가지 방식 지원
   - **count 방식**: 모든 VM이 동일한 설정 (간단한 경우)
   - **for_each 방식** (권장): 각 VM마다 다른 호스트네임, 서브넷, 존, 설정 가능
-- **이미지 선택**: 사용자 정의 이미지 및 공개 이미지 제품군 지원
+- **이미지 선택**: 사용자 정의 이미지 및 공개 이미지 제품군 지원 (전역 기본값 + 인스턴스별 override)
 - **디스크 구성**: 부팅 디스크 크기 및 타입 구성 가능
 - **네트워크 구성**: 비공개 또는 공개 IP 주소 지원
 - **서비스 계정**: 사용자 정의 또는 기본 서비스 계정 연결
-- **시작 스크립트**: 인스턴스 부팅 시 초기화 스크립트 실행
+- **시작 스크립트**: 인스턴스 부팅 시 초기화 스크립트 실행 (`startup_script` 필드에 직접 문자열 삽입 또는 상위 레이어에서 `file()`로 전달)
 - **선점형/스팟**: 비용 효율적인 선점형 인스턴스 지원 (자동 재시작 비활성화 및 유지보수 시 TERMINATE로 안전 설정)
 - **OS 로그인**: SSH 액세스를 위한 Google Cloud OS 로그인 활성화
 - **메타데이터 및 레이블**: 사용자 정의 인스턴스 메타데이터 및 레이블
@@ -37,6 +37,8 @@ module "app_vms" {
   name_prefix    = "app-server"
   machine_type   = "e2-medium"
 }
+
+> 💡 상위 Terragrunt 레이어(예: `50-workloads`)에서는 `startup_script_file = "scripts/lobby.sh"`처럼 상대 경로만 선언하고, HCL에서 `startup_script = file("${path.module}/${cfg.startup_script_file}")`로 전달하는 패턴을 사용합니다.
 ```
 
 ### 방법 2: 개별 설정 VM (for_each 방식 - 권장)
@@ -66,10 +68,7 @@ module "app_vms" {
       labels = {
         role = "web"
       }
-      startup_script = <<-EOF
-        #!/bin/bash
-        apt-get update && apt-get install -y nginx
-      EOF
+      startup_script = file("${path.module}/scripts/lobby.sh")
     }
 
     "app-server-01" = {
@@ -89,6 +88,8 @@ module "app_vms" {
       subnetwork_self_link = "projects/my-project/regions/us-central1/subnetworks/db-subnet"
       zone                 = "us-central1-c"
       machine_type         = "e2-micro"
+      image_family         = "ubuntu-2204-lts"
+      image_project        = "ubuntu-os-cloud"
       tags                 = ["db-proxy"]
     }
   }
@@ -147,23 +148,26 @@ module "prod_app_servers" {
 
 | 이름 | 설명 | 타입 | 기본값 | 필수 |
 |------|------|------|--------|:----:|
-| project_id | 프로젝트 ID | `string` | n/a | yes |
-| zone | VM을 생성할 영역 | `string` | n/a | yes |
-| subnetwork_self_link | 서브넷 셀프 링크 | `string` | n/a | yes |
-| instance_count | 생성할 인스턴스 수 | `number` | `1` | no |
-| name_prefix | 인스턴스 이름 접두사 | `string` | n/a | yes |
-| machine_type | 머신 타입 | `string` | `"e2-micro"` | no |
-| boot_disk_size_gb | 부팅 디스크 크기 (GB) | `number` | `10` | no |
-| boot_disk_type | 부팅 디스크 타입 | `string` | `"pd-standard"` | no |
-| boot_disk_image | 부팅 디스크 이미지 | `string` | `"debian-cloud/debian-11"` | no |
-| enable_public_ip | 공개 IP 할당 | `bool` | `false` | no |
-| enable_os_login | OS 로그인 활성화 | `bool` | `false` | no |
-| preemptible | 선점형 VM | `bool` | `false` | no |
-| startup_script | 시작 스크립트 | `string` | `""` | no |
-| service_account_email | 서비스 계정 이메일 | `string` | `""` | no |
-| service_account_scopes | 서비스 계정 범위 | `list(string)` | `[]` | no |
-| tags | 네트워크 태그 | `list(string)` | `[]` | no |
-| labels | 리소스 레이블 | `map(string)` | `{}` | no |
+| project_id | 프로젝트 ID | `string` | n/a | ✅ |
+| zone | 기본 존 (instances에서 override 가능) | `string` | n/a | ✅ |
+| subnetwork_self_link | 기본 서브넷 self-link | `string` | n/a | ✅ |
+| instance_count | count 방식 인스턴스 개수 (`instances`가 비어 있을 때만 적용) | `number` | `0` | ❌ |
+| name_prefix | count 방식 인스턴스 이름 접두사 | `string` | `"gce-node"` | ❌ |
+| machine_type | 기본 머신 타입 | `string` | `"e2-standard-2"` | ❌ |
+| image_family | 기본 OS 이미지 패밀리 | `string` | `"debian-12"` | ❌ |
+| image_project | 기본 이미지 프로젝트 | `string` | `"debian-cloud"` | ❌ |
+| boot_disk_size_gb | 부팅 디스크 크기 (GB) | `number` | `20` | ❌ |
+| boot_disk_type | 부팅 디스크 타입 | `string` | `"pd-balanced"` | ❌ |
+| enable_public_ip | 기본 Public IP 할당 여부 | `bool` | `false` | ❌ |
+| enable_os_login | OS Login 활성화 여부 | `bool` | `true` | ❌ |
+| preemptible | Spot/선점형 인스턴스 사용 여부 | `bool` | `false` | ❌ |
+| service_account_email | 기본 서비스 계정 이메일 (미지정 시 Compute 기본 SA) | `string` | `""` | ❌ |
+| service_account_scopes | 서비스 계정 스코프 | `list(string)` | `["https://www.googleapis.com/auth/cloud-platform"]` | ❌ |
+| startup_script | 기본 startup script (문자열) | `string` | `""` | ❌ |
+| metadata | 공통 메타데이터 | `map(string)` | `{}` | ❌ |
+| tags | 공통 네트워크 태그 | `list(string)` | `[]` | ❌ |
+| labels | 공통 라벨 | `map(string)` | `{}` | ❌ |
+| instances | for_each 인스턴스 맵. `hostname`, `zone`, `machine_type`, `subnetwork_self_link`, `enable_public_ip`, `enable_os_login`, `preemptible`, `startup_script`, `metadata`, `tags`, `labels`, `boot_disk_size_gb`, `boot_disk_type`, `image_family`, `image_project`, `service_account_email` 등을 인스턴스별로 override | `map(object(...))` | `{}` | ❌ |
 
 ## 출력 값
 

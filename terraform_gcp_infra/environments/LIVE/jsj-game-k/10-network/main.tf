@@ -11,8 +11,8 @@ terraform {
 }
 
 provider "google" {
-  project = var.project_id
-  region  = var.region
+  project               = var.project_id
+  region                = var.region
   user_project_override = true
   billing_project       = var.project_id
 }
@@ -27,21 +27,27 @@ module "naming" {
 }
 
 locals {
+  primary_secondary_ranges = concat(
+    length(trimspace(var.pods_cidr)) > 0 ? [
+      {
+        name = module.naming.pods_range_name
+        cidr = var.pods_cidr
+      }
+    ] : [],
+    length(trimspace(var.services_cidr)) > 0 ? [
+      {
+        name = module.naming.services_range_name
+        cidr = var.services_cidr
+      }
+    ] : []
+  )
+
   base_subnets = {
     (module.naming.subnet_name_primary) = {
       region                = module.naming.region_primary
       cidr                  = var.subnet_primary_cidr
       private_google_access = true
-      secondary_ranges = [
-        {
-          name = module.naming.pods_range_name
-          cidr = var.pods_cidr
-        },
-        {
-          name = module.naming.services_range_name
-          cidr = var.services_cidr
-        }
-      ]
+      secondary_ranges      = local.primary_secondary_ranges
     }
     (module.naming.subnet_name_backup) = {
       region                = module.naming.region_backup
@@ -60,6 +66,14 @@ locals {
       secondary_ranges      = lookup(subnet, "secondary_ranges", [])
     }
   }
+
+  dmz_subnet     = try(local.additional_subnets_map[var.dmz_subnet_name], null)
+  private_subnet = try(local.additional_subnets_map[var.private_subnet_name], null)
+  db_subnet      = try(local.additional_subnets_map[var.db_subnet_name], null)
+
+  dmz_subnet_self_link     = local.dmz_subnet != null ? "projects/${var.project_id}/regions/${local.dmz_subnet.region}/subnetworks/${var.dmz_subnet_name}" : null
+  private_subnet_self_link = local.private_subnet != null ? "projects/${var.project_id}/regions/${local.private_subnet.region}/subnetworks/${var.private_subnet_name}" : null
+  db_subnet_self_link      = local.db_subnet != null ? "projects/${var.project_id}/regions/${local.db_subnet.region}/subnetworks/${var.db_subnet_name}" : null
 }
 
 module "net" {
@@ -71,8 +85,9 @@ module "net" {
 
   subnets = merge(local.base_subnets, local.additional_subnets_map)
 
-  nat_region           = module.naming.region_primary
-  nat_min_ports_per_vm = var.nat_min_ports_per_vm
+  nat_region            = module.naming.region_primary
+  nat_min_ports_per_vm  = var.nat_min_ports_per_vm
+  nat_subnet_self_links = local.dmz_subnet_self_link != null ? [local.dmz_subnet_self_link] : []
 
   firewall_rules = var.firewall_rules
 

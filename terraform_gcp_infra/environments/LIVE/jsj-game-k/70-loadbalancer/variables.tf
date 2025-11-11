@@ -55,6 +55,12 @@ variable "subnetwork" {
   default     = ""
 }
 
+variable "internal_subnetwork_self_link" {
+  type        = string
+  description = "내부 LB에 사용할 VPC Subnet self-link (기본값은 naming 기반)"
+  default     = ""
+}
+
 variable "backend_protocol" {
   type        = string
   description = "백엔드 프로토콜"

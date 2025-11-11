@@ -31,9 +31,10 @@ locals {
     var.lb_type == "http" ? "" : "projects/${var.project_id}/global/networks/${module.naming.vpc_name}"
   )
 
-  subnetwork = length(trimspace(var.subnetwork)) > 0 ? var.subnetwork : (
-    contains(["internal", "internal_classic"], var.lb_type) ? "projects/${var.project_id}/regions/${module.naming.region_primary}/subnetworks/${module.naming.subnet_name_primary}" : ""
-  )
+  subnetwork = length(trimspace(var.internal_subnetwork_self_link)) > 0 ? var.internal_subnetwork_self_link :
+    length(trimspace(var.subnetwork)) > 0 ? var.subnetwork : (
+      contains(["internal", "internal_classic"], var.lb_type) ? "projects/${var.project_id}/regions/${module.naming.region_primary}/subnetworks/${module.naming.subnet_name_primary}" : ""
+    )
 
   url_map_name = length(trimspace(var.url_map_name)) > 0 ? var.url_map_name : "${module.naming.backend_service_name}-url-map"
 

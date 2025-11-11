@@ -11,6 +11,7 @@ lb_type = "http"
 # Set region only for regional/internal load balancers.
 # region = "asia-northeast3"
 # network/subnetwork can be left blank to use values derived from modules/naming
+# internal_subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/default-templet-subnet-private"
 
 # Backend service configuration
 backend_protocol  = "HTTP"

@@ -9,9 +9,15 @@ terraform {
   }
 }
 
-data "google_compute_image" "os" {
+data "google_compute_image" "default" {
   family  = var.image_family
   project = var.image_project
+}
+
+data "google_compute_image" "per_instance" {
+  for_each = var.instances
+  family   = coalesce(each.value.image_family, var.image_family)
+  project  = coalesce(each.value.image_project, var.image_project)
 }
 
 # 기존 count 방식 (하위 호환성 유지)
@@ -26,7 +32,7 @@ resource "google_compute_instance" "vm_count" {
 
   boot_disk {
     initialize_params {
-      image = data.google_compute_image.os.self_link
+      image = data.google_compute_image.default.self_link
       size  = var.boot_disk_size_gb
       type  = var.boot_disk_type
     }
@@ -76,7 +82,9 @@ resource "google_compute_instance" "vm_count" {
 resource "google_compute_instance" "vm_map" {
   for_each = var.instances
 
-  name         = each.key
+  name     = each.key
+  hostname = try(each.value.hostname, null)
+
   machine_type = coalesce(each.value.machine_type, var.machine_type)
   zone         = coalesce(each.value.zone, var.zone)
   tags         = coalesce(each.value.tags, var.tags)
@@ -85,7 +93,7 @@ resource "google_compute_instance" "vm_map" {
 
   boot_disk {
     initialize_params {
-      image = data.google_compute_image.os.self_link
+      image = data.google_compute_image.per_instance[each.key].self_link
       size  = coalesce(each.value.boot_disk_size_gb, var.boot_disk_size_gb)
       type  = coalesce(each.value.boot_disk_type, var.boot_disk_type)
     }
@@ -105,8 +113,7 @@ resource "google_compute_instance" "vm_map" {
     coalesce(each.value.metadata, {}),
     {
       enable-oslogin = coalesce(each.value.enable_os_login, var.enable_os_login) ? "TRUE" : "FALSE"
-    },
-    each.value.hostname != null ? { hostname = each.value.hostname } : {}
+    }
   )
 
   metadata_startup_script = coalesce(each.value.startup_script, var.startup_script)

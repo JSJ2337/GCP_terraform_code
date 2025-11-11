@@ -11,8 +11,8 @@ terraform {
 }
 
 provider "google" {
-  project = var.project_id
-  region  = var.region
+  project               = var.project_id
+  region                = var.region
   user_project_override = true
   billing_project       = var.project_id
 }
@@ -43,8 +43,8 @@ locals {
     name => merge(
       { for k, v in cfg : k => v if k != "startup_script_file" },
       try(cfg.startup_script_file, null) != null ?
-        { startup_script = file("${path.module}/${cfg.startup_script_file}") } :
-        {}
+      { startup_script = file("${path.module}/${cfg.startup_script_file}") } :
+      {}
     )
   }
 }
@@ -70,9 +70,9 @@ module "gce_vmset" {
   enable_os_login  = var.enable_os_login
   preemptible      = var.preemptible
 
-  startup_script = var.startup_script
-  image_family   = var.image_family
-  image_project  = var.image_project
+  startup_script    = var.startup_script
+  image_family      = var.image_family
+  image_project     = var.image_project
   boot_disk_size_gb = var.boot_disk_size_gb
   boot_disk_type    = var.boot_disk_type
   metadata          = var.metadata

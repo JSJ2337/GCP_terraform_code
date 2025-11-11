@@ -8,6 +8,7 @@
 - **서브넷**: 보조 IP 범위를 가진 여러 지역의 다중 서브넷
 - **비공개 Google 액세스**: Google API에 대한 비공개 액세스 활성화
 - **Cloud NAT**: 프라이빗 인스턴스가 인터넷에 액세스하기 위한 관리형 NAT 게이트웨이
+- **용도별 서브넷 + NAT 제어**: `additional_subnets`로 DMZ/Private/DB 서브넷 선언, `nat_subnet_self_links`로 NAT 적용 대상을 DMZ 서브넷으로 제한
 - **Cloud Router**: Cloud NAT 및 BGP 라우팅에 필요
 - **방화벽 규칙**: 프로토콜 및 포트 제어가 가능한 유연한 방화벽 구성
 - **Service Networking (PSC)**: Cloud SQL 등 Private Service Connect 연동을 위한 IP 범위 예약 및 피어링
@@ -122,6 +123,47 @@ module "vpc_with_firewall" {
     }
   ]
 }
+
+### DMZ/Private/DB 서브넷 + NAT 제한
+
+```hcl
+module "vpc_roles" {
+  source = "../../modules/network-dedicated-vpc"
+
+  project_id   = "my-project-id"
+  vpc_name     = "game-vpc"
+  routing_mode = "GLOBAL"
+
+  subnets = {
+    primary = {
+      region = "asia-northeast3"
+      cidr   = "10.1.0.0/20"
+      secondary_ranges = [
+        {
+          name = "pods"
+          cidr = "10.1.16.0/20"
+        }
+      ]
+    }
+    dmz = {
+      region = "asia-northeast3"
+      cidr   = "10.3.0.0/24"
+    }
+    private = {
+      region = "asia-northeast3"
+      cidr   = "10.3.1.0/24"
+    }
+    db = {
+      region = "asia-northeast3"
+      cidr   = "10.3.2.0/24"
+    }
+  }
+
+  nat_region            = "asia-northeast3"
+  nat_subnet_self_links = ["projects/my-project-id/regions/asia-northeast3/subnetworks/game-vpc-dmz"]
+}
+```
+
 ```
 
 ### 완전한 프로덕션 예제

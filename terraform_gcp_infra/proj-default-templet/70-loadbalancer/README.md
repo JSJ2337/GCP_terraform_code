@@ -20,7 +20,7 @@ HTTP(S) 및 내부 로드밸런서를 비롯해 다양한 GCP Load Balancer 구�
    - `backends`: 인스턴스 그룹 self link 및 용량 설정
    - `create_health_check`, `health_check_*`: 헬스 체크 타입과 경로
    - `enable_cdn`, `enable_iap`, `use_ssl`: 옵션 기능 토글
-   - 내부 LB일 경우 `network`, `subnetwork`, `forwarding_rule_ports` 지정
+   - 내부 LB일 경우 `region`, `network`, `forwarding_rule_ports`, `internal_subnetwork_self_link`을 명시 (Private/WAS 서브넷 self-link 권장)
 
 ## Terragrunt 실행
 ```bash
@@ -32,5 +32,5 @@ terragrunt apply  --non-interactive
 
 ## 참고
 - 외부 HTTPS LB를 구성할 경우 SSL 인증서(Google Managed 또는 self-managed)를 미리 준비하세요.
-- 내부 LB는 네트워크와 서브넷을 명시적으로 지정해야 하며, 백엔드 인스턴스 그룹이 해당 서브넷에 존재해야 합니다.
+- 내부 LB는 네트워크와 서브넷을 명시적으로 지정해야 하며, 백엔드 인스턴스 그룹이 해당 서브넷에 존재해야 합니다. DMZ와 분리된 Private 서브넷 self-link를 `internal_subnetwork_self_link`에 전달하면 내부 트래픽만 허용됩니다.
 - Cloud CDN 또는 IAP를 활성화하면 추가 비용/설정이 필요하므로 운영 정책에 맞게 조정하세요.

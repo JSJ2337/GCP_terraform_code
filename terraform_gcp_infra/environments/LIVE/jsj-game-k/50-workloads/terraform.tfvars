@@ -4,17 +4,17 @@
 # Resource names are generated via modules/naming
 
 # VM configuration (for_each map 사용)
-instance_count     = 0
-machine_type       = "e2-micro"
-image_family       = "debian-12"
-image_project      = "debian-cloud"
-boot_disk_size_gb  = 30
-boot_disk_type     = "pd-balanced"
-enable_public_ip   = false
-enable_os_login    = true
-preemptible        = false
-startup_script     = ""
-tags               = ["game", "ssh-allowed"]
+instance_count    = 0
+machine_type      = "e2-micro"
+image_family      = "debian-12"
+image_project     = "debian-cloud"
+boot_disk_size_gb = 30
+boot_disk_type    = "pd-balanced"
+enable_public_ip  = false
+enable_os_login   = true
+preemptible       = false
+startup_script    = ""
+tags              = ["game", "ssh-allowed"]
 labels = {
   environment = "prod"
   component   = "game-server"
@@ -32,7 +32,7 @@ instances = {
       role = "lobby"
       tier = "frontend"
     }
-    startup_script_file = "scripts/lobby.sh"
+    startup_script_file  = "scripts/lobby.sh"
     subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
   }
   "jsj-lobby-02" = {
@@ -43,7 +43,7 @@ instances = {
       role = "lobby"
       tier = "frontend"
     }
-    startup_script_file = "scripts/lobby.sh"
+    startup_script_file  = "scripts/lobby.sh"
     subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
   }
   "jsj-lobby-03" = {
@@ -54,7 +54,7 @@ instances = {
       role = "lobby"
       tier = "frontend"
     }
-    startup_script_file = "scripts/lobby.sh"
+    startup_script_file  = "scripts/lobby.sh"
     subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
   }
 
@@ -68,7 +68,7 @@ instances = {
       role = "web"
       tier = "frontend"
     }
-    startup_script_file = "scripts/lobby.sh"
+    startup_script_file  = "scripts/lobby.sh"
     subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
   }
   "jsj-web-02" = {
@@ -80,6 +80,7 @@ instances = {
       role = "web"
       tier = "frontend"
     }
+    startup_script_file  = "scripts/lobby.sh"
     subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
   }
   "jsj-web-03" = {
@@ -91,6 +92,7 @@ instances = {
       role = "web"
       tier = "frontend"
     }
+    startup_script_file  = "scripts/lobby.sh"
     subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
   }
 
@@ -104,8 +106,8 @@ instances = {
       role = "was"
       tier = "backend"
     }
-    startup_script_file = "scripts/was.sh"
-    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-was"
+    startup_script_file  = "scripts/was.sh"
+    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-private"
   }
   "jsj-was-02" = {
     hostname     = "jsj-was-02"
@@ -116,6 +118,9 @@ instances = {
       role = "was"
       tier = "backend"
     }
-    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-was"
+    startup_script_file  = "scripts/was.sh"
+    image_family         = "ubuntu-2204-lts"
+    image_project        = "ubuntu-os-cloud"
+    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-private"
   }
 }

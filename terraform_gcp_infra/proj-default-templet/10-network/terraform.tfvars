@@ -7,7 +7,7 @@ routing_mode = "GLOBAL"
 subnet_primary_cidr = "10.1.0.0/20"
 subnet_backup_cidr  = "10.2.0.0/20"
 
-# GKE Secondary IP ranges
+# GKE Secondary IP ranges (사용하지 않으면 빈 문자열 "" 로 둬서 생성 생략 가능)
 pods_cidr     = "10.1.16.0/20"
 services_cidr = "10.1.32.0/20"
 
@@ -19,7 +19,7 @@ additional_subnets = [
     cidr   = "10.10.0.0/24"
   },
   {
-    name   = "default-templet-subnet-was"
+    name   = "default-templet-subnet-private"
     region = "us-central1"
     cidr   = "10.10.1.0/24"
   },
@@ -29,6 +29,10 @@ additional_subnets = [
     cidr   = "10.10.2.0/24"
   }
 ]
+
+dmz_subnet_name     = "default-templet-subnet-dmz"
+private_subnet_name = "default-templet-subnet-private"
+db_subnet_name      = "default-templet-subnet-db"
 
 # Cloud NAT configuration
 nat_min_ports_per_vm = 1024

@@ -4,18 +4,18 @@
 # Resource names are generated via modules/naming
 
 # VM configuration (use the for_each style by default)
-instance_count      = 0
-machine_type        = "e2-micro"
-image_family        = "debian-12"
-image_project       = "debian-cloud"
-boot_disk_size_gb   = 30
-boot_disk_type      = "pd-balanced"
-enable_public_ip    = false
-enable_os_login     = true
-preemptible         = false
-startup_script      = ""
+instance_count         = 0
+machine_type           = "e2-micro"
+image_family           = "debian-12"
+image_project          = "debian-cloud"
+boot_disk_size_gb      = 30
+boot_disk_type         = "pd-balanced"
+enable_public_ip       = false
+enable_os_login        = true
+preemptible            = false
+startup_script         = ""
 service_account_scopes = ["https://www.googleapis.com/auth/cloud-platform"]
-tags = ["prod", "ssh-allowed"]
+tags                   = ["prod", "ssh-allowed"]
 labels = {
   component = "game-server"
 }
@@ -42,7 +42,7 @@ instances = {
       role = "lobby"
       tier = "frontend"
     }
-    startup_script_file = "scripts/lobby.sh"
+    startup_script_file  = "scripts/lobby.sh"
     subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/default-templet-subnet-dmz"
   }
 
@@ -74,12 +74,27 @@ instances = {
     hostname             = "tmpl-was-01"
     zone                 = "us-central1-c"
     machine_type         = "e2-standard-4"
-    subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/default-templet-subnet-was"
+    subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/default-templet-subnet-private"
     tags                 = ["was", "ssh-allowed"]
     labels = {
       role = "was"
       tier = "backend"
     }
+    startup_script_file = "scripts/was.sh"
+  }
+
+  "tmpl-was-02" = {
+    hostname             = "tmpl-was-02"
+    zone                 = "us-central1-a"
+    machine_type         = "e2-standard-4"
+    subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/default-templet-subnet-private"
+    tags                 = ["was", "ssh-allowed"]
+    labels = {
+      role = "was"
+      tier = "backend"
+    }
+    image_family        = "ubuntu-2204-lts"
+    image_project       = "ubuntu-os-cloud"
     startup_script_file = "scripts/was.sh"
   }
 }

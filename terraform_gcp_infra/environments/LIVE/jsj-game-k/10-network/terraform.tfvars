@@ -7,7 +7,7 @@ routing_mode = "GLOBAL"
 subnet_primary_cidr = "10.1.0.0/20"
 subnet_backup_cidr  = "10.2.0.0/20"
 
-# GKE Secondary IP ranges
+# GKE Secondary IP ranges (현재는 예약 용도, 미사용 시 "" 로 비워두면 생성 생략)
 pods_cidr     = "10.1.16.0/20"
 services_cidr = "10.1.32.0/20"
 
@@ -19,7 +19,7 @@ additional_subnets = [
     cidr   = "10.3.0.0/24"
   },
   {
-    name   = "game-k-subnet-was"
+    name   = "game-k-subnet-private"
     region = "asia-northeast3"
     cidr   = "10.3.1.0/24"
   },
@@ -29,6 +29,10 @@ additional_subnets = [
     cidr   = "10.3.2.0/24"
   }
 ]
+
+dmz_subnet_name     = "game-k-subnet-dmz"
+private_subnet_name = "game-k-subnet-private"
+db_subnet_name      = "game-k-subnet-db"
 
 # Cloud NAT configuration
 nat_min_ports_per_vm = 1024

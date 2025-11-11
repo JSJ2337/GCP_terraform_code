@@ -9,13 +9,13 @@ cat 04_WORK_HISTORY.md
 # 2. 코드 포맷팅 (필요 시)
 terraform fmt -recursive
 
-# 3-a. 단일 레이어 Terragrunt 플랜 (예: jsj-game-h/00-project)
-cd environments/LIVE/jsj-game-h/00-project
+# 3-a. 단일 레이어 Terragrunt 플랜 (예: jsj-game-k/00-project)
+cd environments/LIVE/jsj-game-k/00-project
 terragrunt init --non-interactive
 terragrunt plan
 
 # 3-b. 전체 스택 플랜/Apply (Terragrunt 0.93~)
-cd environments/LIVE/jsj-game-h
+cd environments/LIVE/jsj-game-k
 terragrunt run --queue-include-dir '00-project' --all plan -- -out=tfplan-00-project
 terragrunt run --all apply -- -auto-approve
 ```
@@ -39,12 +39,12 @@ terragrunt run --all apply -- -auto-approve
   - 조직 레벨 권한 부여 로직 추가 (조직 있는 경우)
 - **Service Account 필수 권한 설정**:
   - `delabs-system-mgmt`: `roles/storage.admin` (State 버킷 접근)
-  - `jsj-game-h` (또는 실험 환경 `jsj-game-i`): `roles/editor` (리소스 관리)
+  - `jsj-game-k` (또는 실험 환경 `proj-default-templet`): `roles/editor` (리소스 관리)
   - 조직 없는 환경에서 프로젝트별 권한 수동 부여 방식
 - **조직 없는 환경 대응**:
   - 프로젝트 수동 생성 방식 문서화 및 실행
-  - jsj-game-h 프로젝트 생성 (기존 jsj-game-g ID 충돌로 교체, Project Number는 생성 후 업데이트)
-  - 동일 템플릿으로 jsj-game-i 실험 환경도 생성 가능
+  - jsj-game-k 프로젝트 생성 (기존 jsj-game-g ID 충돌로 교체, Project Number는 생성 후 업데이트)
+  - 동일 템플릿으로 proj-default-templet 실험 환경도 생성 가능
   - Billing account 수동 연결
 - **Jenkins GCP 인증 통합**:
   - Jenkinsfile에 `GOOGLE_APPLICATION_CREDENTIALS` 환경변수 추가
@@ -52,13 +52,13 @@ terragrunt run --all apply -- -auto-approve
   - Secret file 타입으로 Service Account Key 관리
 - **Jenkinsfile Working Directory 수정**:
   - `TG_WORKING_DIR`을 workspace root 기준 절대 경로로 변경
-  - 예: `terraform_gcp_infra/environments/LIVE/jsj-game-h`
+  - 예: `terraform_gcp_infra/environments/LIVE/jsj-game-k`
   - 템플릿 디렉터리와의 충돌 방지
 - **terragrunt.hcl 설정 개선**:
   - GCS remote_state에 `project`, `location` 파라미터 필수 추가
   - `terraform.source` 블록 제거하여 in-place 실행
   - `.terragrunt-cache` 사용 안 함으로 모듈 경로 문제 해결
-  - 18개 레이어 파일 업데이트 (jsj-game-h 9개 + proj-default-templet 9개)
+  - 18개 레이어 파일 업데이트 (jsj-game-k 9개 + proj-default-templet 9개)
 - **에러 해결**:
   - "storage.buckets.create access denied" → Storage Admin 권한 부여로 해결
   - "Missing required GCS remote state configuration" → project/location 추가로 해결
@@ -80,9 +80,9 @@ terragrunt run --all apply -- -auto-approve
 ### 세션 12: Jenkins CI/CD 통합 및 프로젝트 재구성 (2025-11-05)
 - **디렉터리 구조 재정리**:
   - `proj-default-templet`을 `terraform_gcp_infra/` 루트로 이동 (템플릿과 실제 환경 분리)
-  - `environments/LIVE/jsj-game-h` 첫 번째 실제 배포 환경 생성 (Project ID: jsj-game-h, Region: asia-northeast3)
+  - `environments/LIVE/jsj-game-k` 첫 번째 실제 배포 환경 생성 (Project ID: jsj-game-k, Region: asia-northeast3)
 - **환경별 Jenkinsfile 구조**:
-  - `Jenkinsfile`을 `environments/LIVE/jsj-game-h/` (또는 jsj-game-i)로 이동 (각 환경이 독립적인 Pipeline 보유)
+  - `Jenkinsfile`을 `environments/LIVE/jsj-game-k/` (또는 proj-default-templet)로 이동 (각 환경이 독립적인 Pipeline 보유)
   - `.jenkins/Jenkinsfile.template` 생성 (재사용 가능한 템플릿)
   - `TG_WORKING_DIR`을 절대 경로로 설정 (workspace root 기준)
   - Script Path: `environments/LIVE/{project}/Jenkinsfile`
@@ -291,8 +291,8 @@ terragrunt state mv 'module.game_backups_bucket' 'module.game_storage.module.gcs
 # 포맷팅
 terraform fmt -recursive
 
-# Terragrunt 실행 (예: jsj-game-h, 동일하게 jsj-game-i도 적용)
-cd environments/LIVE/jsj-game-h/00-project
+# Terragrunt 실행 (예: jsj-game-k, 동일하게 proj-default-templet도 적용)
+cd environments/LIVE/jsj-game-k/00-project
 terragrunt init --non-interactive
 terragrunt plan
 terragrunt apply

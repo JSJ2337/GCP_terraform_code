@@ -15,6 +15,19 @@
   - `proj-default-templet/root.hcl`, `environments/LIVE/jsj-game-k/root.hcl`을 기준으로 모든 레이어 include가 `find_in_parent_folders("root.hcl")` 형태를 사용
   - Quick Setup/README/Jenkins 가이드 등 문서에서도 새 파일명을 반영
 
+### 변경 (Changed)
+- 네트워크 레이어(10-network)
+  - `additional_subnets` + `dmz/private/db_subnet_name` 조합으로 DMZ/Private/DB 전용 서브넷을 선언하도록 템플릿·환경 tfvars/README 갱신
+  - `nat_subnet_self_links`를 이용해 Cloud NAT 적용 대상을 DMZ 서브넷으로 제한하는 패턴 문서화
+  - `pods_cidr`/`services_cidr`를 공백으로 두면 secondary range를 생략할 수 있도록 로직 개선
+- 워크로드 레이어(50-workloads) 및 `modules/gce-vmset`
+  - `instances` 맵이 `hostname`, `image_family`, `image_project`, `startup_script_file` 등을 인스턴스별로 override하도록 확장
+  - `startup_script_file` 값을 실제 스크립트 파일(`scripts/*.sh`)에서 로드하도록 구현하고 스크립트는 `/usr/bin/env bash` + `set -euo pipefail` 표준을 적용
+  - 실제 환경(jsj-game-k)과 템플릿 tfvars/example/README를 모두 업데이트해 DMZ/Private 서브넷 self-link, 역할별 스크립트, OS mix 사용 예시를 제공
+- Load Balancer/문서
+  - 내부 LB가 Private 서브넷을 바라보도록 `internal_subnetwork_self_link` 사용법을 README와 tfvars.example에 명시
+  - 최상위 README/Quick Reference/Quick Setup 등에서 새 네트워크/워크로드 구조(DMZ·Private·DB, per-instance VM)와 Terragrunt 0.93 실행 패턴을 일관되게 설명
+
 ## [미배포] - 2025-11-10
 
 ### 변경 (Changed)

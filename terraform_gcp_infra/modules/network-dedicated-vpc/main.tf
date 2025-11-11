@@ -71,13 +71,21 @@ resource "google_compute_router_nat" "nat" {
   router                              = google_compute_router.router.name
   region                              = var.nat_region
   nat_ip_allocate_option              = "AUTO_ONLY"
-  source_subnetwork_ip_ranges_to_nat  = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+  source_subnetwork_ip_ranges_to_nat  = length(var.nat_subnet_self_links) > 0 ? "LIST_OF_SUBNETWORKS" : "ALL_SUBNETWORKS_ALL_IP_RANGES"
   min_ports_per_vm                    = var.nat_min_ports_per_vm
   enable_endpoint_independent_mapping = true
 
   log_config {
     enable = true
     filter = "ERRORS_ONLY"
+  }
+
+  dynamic "subnetwork" {
+    for_each = length(var.nat_subnet_self_links) > 0 ? var.nat_subnet_self_links : []
+    content {
+      name = subnetwork.value
+      source_ip_ranges_to_nat = ["ALL_IP_RANGES"]
+    }
   }
 }
 

@@ -45,17 +45,10 @@ terraform_gcp_infra/
 │
 ├── environments/               # 환경별 구성 (실제 배포 환경)
 │   └── LIVE/
-│       ├── jsj-game-k/        # 신규 프로젝트 환경 (2025-11-10 추가)
-│       │   ├── Jenkinsfile    # 🚀 jsj-game-k CI/CD Pipeline
-│       │   ├── common.naming.tfvars  # 프로젝트 메타데이터
-│       │   └── 00-project/ ~ 70-loadbalancer/
-│       └── jsj-game-g/        # 기존 프로젝트 환경
-│           ├── Jenkinsfile    # 🚀 jsj-game-g CI/CD Pipeline
-│           ├── 00-project/
-│           ├── 10-network/
-│           ├── ... (9개 레이어)
-│           ├── common.naming.tfvars
-│           └── root.hcl
+│       └── jsj-game-k/        # 현재 운영 대상 환경
+│           ├── Jenkinsfile          # 🚀 jsj-game-k CI/CD Pipeline
+│           ├── common.naming.tfvars # 프로젝트 메타데이터
+│           └── 00-project/ ~ 70-loadbalancer/
 │
 ├── .jenkins/                   # Jenkins 템플릿
 │   ├── Jenkinsfile.template   # 재사용 가능한 Pipeline 템플릿
@@ -75,17 +68,17 @@ terraform_gcp_infra/
 ### 인프라 레이어
 - **bootstrap**: 중앙 집중식 Terraform State 관리 프로젝트
 - **00-project**: GCP 프로젝트 생성, API 활성화, 예산 알림
-- **10-network**: VPC, 서브넷, Cloud NAT, Private Service Connect, 방화벽 규칙
+- **10-network**: VPC, 기본/DR 서브넷 + DMZ/Private/DB 전용 서브넷, DMZ 한정 Cloud NAT, Private Service Connect, 방화벽 규칙
 - **20-storage**: 에셋, 로그 및 백업용 GCS 버킷
 - **30-security**: IAM 바인딩 및 서비스 계정
 - **40-observability**: Cloud Logging 싱크 및 모니터링 대시보드
-- **50-workloads**: Compute Engine 인스턴스
+- **50-workloads**: Compute Engine 인스턴스 (instances map 기반 역할별 구성, per-instance OS/서브넷/스크립트)
 - **60-database**: Cloud SQL MySQL (Private IP, PSC 연동)
 - **65-cache**: Memorystore Redis (Standard HA, Direct Peering)
 - **70-loadbalancer**: HTTP(S) 및 Internal Load Balancer
 
 ### modules/naming을 통한 중앙 집중식 Naming
-각 레이어는 `modules/naming` 모듈을 호출해 일관된 리소스 이름과 공통 라벨을 계산합니다. 입력 값은 각 환경의 `common.naming.tfvars` 한 곳에서 관리합니다 (예: `proj-default-templet/common.naming.tfvars`, `environments/LIVE/jsj-game-h/common.naming.tfvars`, `environments/LIVE/jsj-game-i/common.naming.tfvars`):
+각 레이어는 `modules/naming` 모듈을 호출해 일관된 리소스 이름과 공통 라벨을 계산합니다. 입력 값은 각 환경의 `common.naming.tfvars` 한 곳에서 관리합니다 (예: `proj-default-templet/common.naming.tfvars`, `environments/LIVE/jsj-game-k/common.naming.tfvars`):
 
 ```hcl
 # common.naming.tfvars
@@ -116,7 +109,7 @@ region_backup  = "us-east1"
   - `10-network/terraform.tfvars.example`: 서브넷 CIDR, 방화벽, Private Service Connect 예약
   - `30-security/terraform.tfvars.example`: IAM 바인딩, 서비스 계정 자동 생성 토글
   - `40-observability/terraform.tfvars.example`: 중앙 로그 싱크 및 대시보드 정의
-  - `50-workloads/terraform.tfvars.example`: VM 수량, 머신 타입, 스타트업 스크립트
+  - `50-workloads/terraform.tfvars.example`: VM 수량, 역할별 instances map, startup_script_file, per-instance OS/서브넷
   - `60-database/terraform.tfvars.example`: Cloud SQL Private IP, 백업/로깅 세부 설정
   - `65-cache/terraform.tfvars.example`: Memorystore Redis 메모리 크기, 대체 존, 유지보수 창
   - `70-loadbalancer/terraform.tfvars.example`: LB 타입, CDN, IAP, 헬스 체크
@@ -197,7 +190,7 @@ Bootstrap 배포 후, 실제 워크로드 프로젝트를 배포합니다:
 
 ```bash
 # 1. 환경 디렉토리로 이동
-cd ../environments/LIVE/jsj-game-h/00-project  # 또는 jsj-game-i
+cd ../environments/LIVE/jsj-game-k/00-project  # 또는 proj-default-templet
 
 # 2. 변수 파일 준비 (처음 한 번)
 cp terraform.tfvars.example terraform.tfvars
@@ -231,7 +224,7 @@ terraform init && terraform apply
 cd ..
 
 # 1. 프로젝트 생성
-cd environments/LIVE/jsj-game-h/00-project
+cd environments/LIVE/jsj-game-k/00-project
 terragrunt init --non-interactive
 terragrunt plan
 terragrunt apply
@@ -444,7 +437,7 @@ gsutil cp terraform.tfstate gs://your-backup-bucket/bootstrap/
 
 ### Terragrunt CI/CD Pipeline
 
-**Jenkinsfile 위치**: 각 환경 디렉터리 내 (예: `environments/LIVE/jsj-game-h/Jenkinsfile`, `environments/LIVE/jsj-game-i/Jenkinsfile`)
+**Jenkinsfile 위치**: 각 환경 디렉터리 내 (예: `environments/LIVE/jsj-game-k/Jenkinsfile`, `environments/LIVE/proj-default-templet/Jenkinsfile`)
 
 **템플릿**: `.jenkins/Jenkinsfile.template` (새 프로젝트 생성 시 복사)
 
