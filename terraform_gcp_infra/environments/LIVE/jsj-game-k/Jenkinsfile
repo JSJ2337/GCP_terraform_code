@@ -73,7 +73,7 @@ pipeline {
         stage('Terragrunt Init') {
             steps {
                 script {
-                    sh "mkdir -p ${env.TF_PLUGIN_CACHE_DIR}"
+                    sh "mkdir -p '${env.TF_PLUGIN_CACHE_DIR}'"
                     echo '🔧 Initializing Terragrunt...'
                     retry(3) {
                         if (params.TARGET_LAYER == 'all') {
