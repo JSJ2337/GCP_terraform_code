@@ -4,32 +4,32 @@
 # 2) VPC/Subnet/방화벽 등 필요한 값을 채운 뒤 적용
 # 3) terraform.tfvars는 Git에 커밋하지 마세요
 
-project_id     = "jsj-game-l"
-project_name   = "game-l"
+project_id     = "your-project-id"
+project_name   = "default-templet"
 environment    = "prod"
-organization   = "jsj-dev"
-region_primary = "asia-northeast3"
-region_backup  = "asia-northeast1"
+organization   = "myorg"
+region_primary = "us-central1"
+region_backup  = "us-east1"
 
 # VPC 라우팅 모드: 글로벌 라우팅이 필요 없으면 REGIONAL 로 변경하세요.
 routing_mode = "GLOBAL"
 
-# 용도별 서브넷 (DMZ/Private/WAS/DB 등) - 50-workloads와 70-loadbalancer에서 참조
+# 용도별 서브넷 (DMZ/WAS/DB). 50-workloads와 70-loadbalancer에서 self-link를 참조합니다.
 additional_subnets = [
   {
     name   = "game-l-subnet-dmz"
     region = "asia-northeast3"
-    cidr   = "10.4.0.0/24"
+    cidr   = "10.3.0.0/24"
   },
   {
     name   = "game-l-subnet-private"
     region = "asia-northeast3"
-    cidr   = "10.4.1.0/24"
+    cidr   = "10.3.1.0/24"
   },
   {
     name   = "game-l-subnet-db"
     region = "asia-northeast3"
-    cidr   = "10.4.2.0/24"
+    cidr   = "10.3.2.0/24"
   }
 ]
 
@@ -50,15 +50,6 @@ firewall_rules = [
     allow_ports    = ["22"]
     target_tags    = ["ssh-allowed"]
     description    = "IAP를 통한 SSH 허용"
-  },
-  {
-    name           = "allow-game-traffic"
-    direction      = "INGRESS"
-    ranges         = ["10.4.0.0/16"]
-    allow_protocol = "tcp"
-    allow_ports    = ["8080", "9090"]
-    target_tags    = ["game", "app"]
-    description    = "Allow internal game traffic between subnets"
   },
   {
     name           = "allow-health-check"

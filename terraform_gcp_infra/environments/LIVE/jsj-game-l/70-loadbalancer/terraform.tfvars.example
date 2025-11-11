@@ -9,10 +9,10 @@
 lb_type = "http"
 
 # 내부 LB 구성 시 지정 (외부 LB는 기본값 사용 가능)
-region   = "asia-northeast3"
+region   = "us-central1"
 network  = ""  # 비워두면 naming 모듈의 VPC 사용
 subnetwork = ""
-# 내부 LB가 Private/WAS 서브넷을 바라보도록 고정하고 싶다면 아래 self-link 사용
+# Private/WAS 서브넷을 명시하려면 self-link를 지정하세요.
 # internal_subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-private"
 
 # 백엔드 서비스
@@ -23,7 +23,7 @@ backend_timeout   = 30
 # 백엔드 그룹 (Instance Group Self Link 필요, named port 설정 필수)
 backends = [
   {
-    group           = "projects/jsj-game-l/zones/asia-northeast3-a/instanceGroups/web-ig"
+    group           = "projects/your-project/zones/us-central1-a/instanceGroups/web-ig"
     balancing_mode  = "UTILIZATION"
     capacity_scaler = 1.0
     description     = "웹 서비스"

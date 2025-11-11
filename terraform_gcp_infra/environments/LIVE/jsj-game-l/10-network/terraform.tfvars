@@ -3,22 +3,22 @@
 # region = "asia-northeast3"
 routing_mode = "GLOBAL"
 
-# 역할별 전용 서브넷 (DMZ/Private/DB)
+# Additional dedicated subnets (DMZ/WAS/DB zones)
 additional_subnets = [
   {
     name   = "game-l-subnet-dmz"
     region = "asia-northeast3"
-    cidr   = "10.4.0.0/24"
+    cidr   = "10.3.0.0/24"
   },
   {
     name   = "game-l-subnet-private"
     region = "asia-northeast3"
-    cidr   = "10.4.1.0/24"
+    cidr   = "10.3.1.0/24"
   },
   {
     name   = "game-l-subnet-db"
     region = "asia-northeast3"
-    cidr   = "10.4.2.0/24"
+    cidr   = "10.3.2.0/24"
   }
 ]
 
@@ -43,11 +43,11 @@ firewall_rules = [
   {
     name           = "allow-game-traffic"
     direction      = "INGRESS"
-    ranges         = ["10.4.0.0/16"]
+    ranges         = ["10.1.0.0/16", "10.2.0.0/16"]
     allow_protocol = "tcp"
     allow_ports    = ["8080", "9090"]
     target_tags    = ["game", "app"]
-    description    = "Allow internal game traffic between subnets"
+    description    = "Allow game traffic between subnets"
   },
   {
     name           = "allow-health-check"

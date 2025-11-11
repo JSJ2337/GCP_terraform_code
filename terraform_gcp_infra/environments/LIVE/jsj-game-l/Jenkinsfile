@@ -130,6 +130,7 @@ pipeline {
                     echo "Action: ${params.ACTION}"
                     echo "Target: ${params.TARGET_LAYER}"
 
+                    // Plan 출력 내용 표시
                     if (params.TARGET_LAYER == 'all') {
                         echo '⚠️  전체 스택에 대한 변경사항입니다!'
                     } else {
@@ -160,7 +161,7 @@ pipeline {
                         input(
                             message: approvalMessage,
                             ok: '✅ 승인 (Apply 실행)',
-                            submitter: 'admin'
+                            submitter: 'admin'  // 승인 가능한 사용자 제한
                         )
                     }
                 }
@@ -182,6 +183,7 @@ pipeline {
                                 '''
                             }
                             dir("${env.WORKSPACE}") {
+                                // 전체 스택은 최신 코드/상태 기준으로 의존 순서대로 Apply (plan 파일 미사용)
                                 sh "terragrunt --working-dir ${TG_WORKING_DIR} run --all apply -- -auto-approve"
                             }
                         } else {

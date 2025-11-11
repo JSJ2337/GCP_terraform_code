@@ -1,7 +1,4 @@
-# Terragrunt entrypoint: environments/LIVE/proj-default-templet/50-workloads/terragrunt.hcl
-# 워크로드(GCE VM 세트) 설정 예시
-
-# 공통 입력 (루트 root.hcl의 inputs로 대체 가능)
+# Region/Project overrides (필요 시 루트 root.hcl과 동일하게 유지)
 project_id     = "jsj-game-l"
 project_name   = "game-l"
 environment    = "prod"
@@ -9,100 +6,73 @@ organization   = "jsj-dev"
 region_primary = "asia-northeast3"
 region_backup  = "asia-northeast1"
 
-# 기본값 (roles/instances에서 override 가능)
+# 기본 VM 설정 (instances에서 override 가능)
 instance_count     = 0
 machine_type       = "e2-micro"
 image_family       = "debian-12"
 image_project      = "debian-cloud"
-boot_disk_size_gb  = 20
+boot_disk_size_gb  = 30
 boot_disk_type     = "pd-balanced"
 enable_public_ip   = false
 enable_os_login    = true
 preemptible        = false
 startup_script     = ""
-service_account_scopes = ["https://www.googleapis.com/auth/cloud-platform"]
-tags = ["game", "ssh-allowed"]
+tags               = ["prod", "ssh-allowed"]
 labels = {
   environment = "prod"
 }
 
-# 역할별 인스턴스 정의 (예: lobby 2대, web 2대, was 1대)
+# 역할별 인스턴스 정의 예시
 instances = {
   "jsj-lobby-01" = {
-    hostname             = "jsj-lobby-01"
-    zone                 = "asia-northeast3-a"
-    machine_type         = "e2-small"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
-    tags                 = ["lobby", "ssh-allowed"]
-    labels = {
-      role = "lobby"
-      tier = "frontend"
-    }
+    hostname = "jsj-lobby-01"
+    zone     = "asia-northeast3-a"
+    tags     = ["lobby", "ssh-allowed"]
     startup_script_file = "scripts/lobby.sh"
+    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
   }
-
   "jsj-lobby-02" = {
-    hostname             = "jsj-lobby-02"
-    zone                 = "asia-northeast3-b"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
-    tags                 = ["lobby", "ssh-allowed"]
-    labels = {
-      role = "lobby"
-      tier = "frontend"
-    }
+    hostname = "jsj-lobby-02"
+    zone     = "asia-northeast3-b"
+    tags     = ["lobby", "ssh-allowed"]
     startup_script_file = "scripts/lobby.sh"
+    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
   }
-
   "jsj-web-01" = {
-    hostname             = "jsj-web-01"
-    zone                 = "asia-northeast3-a"
-    machine_type         = "e2-medium"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
-    tags                 = ["web", "ssh-allowed"]
-    labels = {
-      role = "web"
-      tier = "frontend"
-    }
+    hostname     = "jsj-web-01"
+    zone         = "asia-northeast3-a"
+    machine_type = "e2-small"
+    tags         = ["web", "ssh-allowed"]
     startup_script_file = "scripts/lobby.sh"
+    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
   }
-
   "jsj-web-02" = {
-    hostname             = "jsj-web-02"
-    zone                 = "asia-northeast3-b"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
-    tags                 = ["web", "ssh-allowed"]
-    labels = {
-      role = "web"
-      tier = "frontend"
-    }
+    hostname = "jsj-web-02"
+    zone     = "asia-northeast3-b"
+    tags     = ["web", "ssh-allowed"]
     startup_script_file = "scripts/lobby.sh"
+    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
   }
-
   "jsj-was-01" = {
-    hostname             = "jsj-was-01"
-    zone                 = "asia-northeast3-a"
-    machine_type         = "e2-standard-4"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-private"
-    tags                 = ["was", "ssh-allowed"]
-    labels = {
-      role = "was"
-      tier = "backend"
-    }
+    hostname     = "jsj-was-01"
+    zone         = "asia-northeast3-c"
+    machine_type = "e2-standard-4"
+    tags         = ["was", "ssh-allowed"]
     startup_script_file = "scripts/was.sh"
+    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-private"
   }
-
   "jsj-was-02" = {
     hostname             = "jsj-was-02"
     zone                 = "asia-northeast3-b"
     machine_type         = "e2-standard-4"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-private"
     tags                 = ["was", "ssh-allowed"]
     labels = {
       role = "was"
       tier = "backend"
     }
-    image_family        = "ubuntu-2204-lts"
-    image_project       = "ubuntu-os-cloud"
-    startup_script_file = "scripts/was.sh"
+    image_family         = "ubuntu-2204-lts"
+    image_project        = "ubuntu-os-cloud"
+    startup_script_file  = "scripts/was.sh"
+    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-private"
   }
 }

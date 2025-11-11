@@ -11,9 +11,7 @@ pipeline {
         TF_IN_AUTOMATION   = 'true'
         TF_INPUT           = 'false'
         TG_NON_INTERACTIVE = 'true'
-        // Terragrunt 작업 디렉터리 (환경 루트)
-        TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/game_project'
-        // Jenkins Credentials → Secret file (ID: gcp-jenkins-service-account)
+        TG_WORKING_DIR     = 'terraform_gcp_infra/environments/LIVE/jsj-game-l'
         GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-jenkins-service-account')
     }
 

@@ -4,18 +4,17 @@
 # Resource names are generated via modules/naming
 
 # VM configuration (for_each map 사용)
-instance_count     = 0
-machine_type       = "e2-micro"
-image_family       = "debian-12"
-image_project      = "debian-cloud"
-boot_disk_size_gb  = 30
-boot_disk_type     = "pd-balanced"
-enable_public_ip   = false
-enable_os_login    = true
-preemptible        = false
-startup_script     = ""
-service_account_scopes = ["https://www.googleapis.com/auth/cloud-platform"]
-tags               = ["game", "ssh-allowed"]
+instance_count    = 0
+machine_type      = "e2-micro"
+image_family      = "debian-12"
+image_project     = "debian-cloud"
+boot_disk_size_gb = 30
+boot_disk_type    = "pd-balanced"
+enable_public_ip  = false
+enable_os_login   = true
+preemptible       = false
+startup_script    = ""
+tags              = ["game", "ssh-allowed"]
 labels = {
   environment = "prod"
   component   = "game-server"

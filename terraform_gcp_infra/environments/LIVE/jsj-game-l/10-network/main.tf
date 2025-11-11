@@ -69,7 +69,11 @@ module "net" {
   depends_on = [time_sleep.wait_servicenetworking_api]
 }
 
-# Explicitly enable and wait for required APIs so this layer can run independently
+locals {
+  private_service_connection_name = length(trimspace(var.private_service_connection_name)) > 0 ? var.private_service_connection_name : "${module.naming.vpc_name}-psc"
+}
+
+# 필수 API 명시적 활성화 (신규 프로젝트에서 단독 실행해도 안전)
 resource "google_project_service" "crm" {
   project            = var.project_id
   service            = "cloudresourcemanager.googleapis.com"
