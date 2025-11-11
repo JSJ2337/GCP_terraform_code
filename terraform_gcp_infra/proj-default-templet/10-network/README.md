@@ -69,5 +69,5 @@ instances = {
 ## 참고
 - Service Networking 연결은 Cloud SQL 레이어(60-database)에서 자동으로 사용됩니다.
 - VPC self-link는 naming 모듈이 제공하지만 서브넷은 `additional_subnets`에서 직접 선언해야 하므로, 다른 레이어(50-workloads/70-loadbalancer 등)에서는 해당 self-link를 명시적으로 입력해야 합니다.
-- NAT는 DMZ 서브넷만 대상으로 동작하도록 구성할 수 있어 Private/WAS/DB 영역은 인터넷 통신을 차단한 상태로 유지할 수 있습니다.
+- NAT는 기본적으로 DMZ/Private/DB 서브넷에 모두 적용되며, 필요한 경우 `nat_subnet_self_links` 계산 로직을 조정해 서브넷 별 인터넷 접근을 제어할 수 있습니다.
 - 용도별 서브넷은 **보안 강화**를 위해 각 계층을 물리적으로 분리합니다.

@@ -55,9 +55,13 @@ module "net" {
 
   subnets = local.requested_subnets
 
-  nat_region            = module.naming.region_primary
-  nat_min_ports_per_vm  = var.nat_min_ports_per_vm
-  nat_subnet_self_links = local.dmz_subnet_self_link != null ? [local.dmz_subnet_self_link] : []
+  nat_region           = module.naming.region_primary
+  nat_min_ports_per_vm = var.nat_min_ports_per_vm
+  nat_subnet_self_links = compact([
+    local.dmz_subnet_self_link,
+    local.private_subnet_self_link,
+    local.db_subnet_self_link
+  ])
 
   firewall_rules = var.firewall_rules
 

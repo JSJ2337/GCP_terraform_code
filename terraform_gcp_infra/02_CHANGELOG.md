@@ -20,6 +20,7 @@
   - `additional_subnets` + `dmz/private/db_subnet_name` 조합으로 DMZ/Private/DB 전용 서브넷을 선언하도록 템플릿·환경 tfvars/README 갱신
   - `nat_subnet_self_links`를 이용해 Cloud NAT 적용 대상을 DMZ 서브넷으로 제한하는 패턴 문서화
   - `subnet_primary_cidr`/`subnet_backup_cidr`/`pods_cidr`/`services_cidr` 변수를 제거하고, 모든 서브넷을 `additional_subnets`에서 직접 정의하도록 코드·문서·예제를 정리
+  - DMZ/Private/DB 서브넷 모두가 Cloud NAT를 사용할 수 있도록 `nat_subnet_self_links` 계산 로직을 `compact([dmz, private, db])` 형태로 확장
 - 워크로드 레이어(50-workloads) 및 `modules/gce-vmset`
   - `instances` 맵이 `hostname`, `image_family`, `image_project`, `startup_script_file` 등을 인스턴스별로 override하도록 확장
   - `startup_script_file` 값을 실제 스크립트 파일(`scripts/*.sh`)에서 로드하도록 구현하고 스크립트는 `/usr/bin/env bash` + `set -euo pipefail` 표준을 적용
