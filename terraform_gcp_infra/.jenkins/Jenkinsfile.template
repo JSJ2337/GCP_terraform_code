@@ -95,7 +95,7 @@ pipeline {
                                 find . -type d -name ".terragrunt-cache" -prune -exec rm -rf {} + || true
                                 find . -type d -name ".terraform" -prune -exec rm -rf {} + || true
                                 find . -name "tfplan" -type f -delete || true
-                                terragrunt --terragrunt-non-interactive run-all init
+                                terragrunt run-all init
                             '''
                         }
                     } else {
@@ -103,7 +103,7 @@ pipeline {
                             sh '''
                                 rm -rf .terragrunt-cache .terraform || true
                                 rm -f tfplan || true
-                                terragrunt --terragrunt-non-interactive init
+                                terragrunt init
                             '''
                         }
                     }
@@ -119,11 +119,11 @@ pipeline {
                     if (params.TARGET_LAYER == 'all') {
                         // 00-project만 우선 Plan (API enable 전파 이전에 다른 레이어 Plan 방지)
                         dir("${TG_WORKING_DIR}") {
-                            sh 'terragrunt run-all --terragrunt-non-interactive --terragrunt-include-dir 00-project plan -out=tfplan-00-project'
+                            sh 'terragrunt run-all --terragrunt-include-dir 00-project plan -out=tfplan-00-project'
                         }
                     } else {
                         dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
-                            sh 'terragrunt --terragrunt-non-interactive plan -out=tfplan'
+                            sh 'terragrunt plan -out=tfplan'
                         }
                     }
                 }
@@ -189,22 +189,22 @@ pipeline {
                         if (params.TARGET_LAYER == 'all') {
                             dir("${TG_WORKING_DIR}") {
                                 // 전체 스택은 최신 코드/상태 기준으로 의존 순서대로 Apply (plan 파일 미사용)
-                                sh 'terragrunt run-all --terragrunt-non-interactive apply -auto-approve'
+                                sh 'terragrunt run-all apply -auto-approve'
                             }
                         } else {
                             dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
-                                sh 'terragrunt --terragrunt-non-interactive apply tfplan'
+                                sh 'terragrunt apply tfplan'
                             }
                         }
                     } else if (params.ACTION == 'destroy') {
                         echo '🗑️  Destroying Terragrunt resources...'
                         if (params.TARGET_LAYER == 'all') {
                             dir("${TG_WORKING_DIR}") {
-                                sh 'terragrunt run-all --terragrunt-non-interactive destroy -auto-approve'
+                                sh 'terragrunt run-all destroy -auto-approve'
                             }
                         } else {
                             dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
-                                sh 'terragrunt --terragrunt-non-interactive destroy -auto-approve'
+                                sh 'terragrunt destroy -auto-approve'
                             }
                         }
                     }
