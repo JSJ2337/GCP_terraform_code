@@ -9,10 +9,15 @@ cat 04_WORK_HISTORY.md
 # 2. 코드 포맷팅 (필요 시)
 terraform fmt -recursive
 
-# 3. Terragrunt 플랜 (예: jsj-game-h 환경, 테스트용 jsj-game-i도 동일)
+# 3-a. 단일 레이어 Terragrunt 플랜 (예: jsj-game-h/00-project)
 cd environments/LIVE/jsj-game-h/00-project
 terragrunt init --non-interactive
 terragrunt plan
+
+# 3-b. 전체 스택 플랜/Apply (Terragrunt 0.93~)
+cd environments/LIVE/jsj-game-h
+terragrunt run --queue-include-dir '00-project' --all plan -- -out=tfplan-00-project
+terragrunt run --all apply -- -auto-approve
 ```
 
 ## 📝 변경된 파일 요약

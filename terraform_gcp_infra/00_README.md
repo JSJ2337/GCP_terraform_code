@@ -100,10 +100,11 @@ region_backup  = "us-east1"
 `modules/naming`은 위 값을 이용해 `vpc_name`, `bucket_name_prefix`, `db_instance_name`, `sa_name_prefix`, `forwarding_rule_name` 등을 자동으로 만들어 주며, 공통 라벨(`common_labels`)과 태그(`common_tags`)도 함께 제공합니다. 리소스 이름을 변경하고 싶다면 `common.naming.tfvars`만 수정하면 모든 레이어가 동일하게 업데이트됩니다.
 
 ### Terragrunt 기반 실행
-- 전체 레이어를 순서대로 실행하려면 `./run_terragrunt_stack.sh <plan|apply|destroy>` 스크립트를 사용하세요. 추가 인자는 그대로 전달됩니다.
+- 전체 레이어를 순서대로 실행하려면 `./run_terragrunt_stack.sh <plan|apply|destroy>` 스크립트를 사용하세요. Terragrunt 0.93 CLI의 `run --all`을 감싸며 추가 인자는 그대로 전달됩니다.
 - 각 레이어에는 `terragrunt.hcl`이 존재하며, 공통 입력(`common.naming.tfvars`)과 레이어 전용 `terraform.tfvars`를 자동 병합합니다.
 - 원격 상태(GCS)는 Terragrunt가 관리하며 루트 `terragrunt.hcl`이 각 레이어에 `backend.tf`를 자동 생성합니다. Terraform 코드에 별도의 backend 블록을 둘 필요가 없습니다.
-- Terragrunt 0.92 이상을 사용하면 `terragrunt init/plan/apply`로 Terraform 명령을 그대로 호출할 수 있습니다.
+- Terragrunt 0.93 CLI부터는 `terragrunt run --all <command>` 형태가 기본입니다. 특정 레이어만 플랜하고 싶다면 `terragrunt run --queue-include-dir '00-project' --all plan -- -out=tfplan-00-project`처럼 `--queue-include-dir`를 사용하세요.
+- Jenkins/CI 환경에서는 `TG_NON_INTERACTIVE=true`, `--working-dir <환경 루트>` 조합으로 비대화식 실행을 강제합니다.
 - 루트(`environments/prod/proj-default-templet/terragrunt.hcl`)에서 원격 상태 버킷과 prefix를 정의하고, 각 레이어는 의존 관계(`dependencies` 블록)로 실행 순서를 보장합니다.
 - `common.naming.tfvars`를 직접 `-var-file`로 넘길 필요가 없으며, Terragrunt가 자동으로 주입합니다.
 
@@ -129,7 +130,7 @@ region_backup  = "us-east1"
 # Terraform >= 1.6
 terraform version
 
-# Terragrunt >= 0.92
+# Terragrunt >= 0.93
 terragrunt --version  # alias 또는 절대 경로(`/mnt/d/jsj_wsl_data/terragrunt_linux_amd64`) 사용 가능
 
 # GCP 인증

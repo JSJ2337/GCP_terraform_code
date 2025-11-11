@@ -10,6 +10,7 @@
 
 ### 2025년 11월
 
+- **[2025-11-11](./work_history/2025-11-11.md)** - Terragrunt 0.93 CLI 적용 및 Jenkins 파이프라인 정비
 - **[2025-11-10](./work_history/2025-11-10.md)** - 템플릿 최신화 및 jsj-game-k 환경 생성 (jsj-game-j 이관)
 - **[2025-11-09](./work_history/2025-11-09.md)** - GCP 폴더 구조 자동화 및 유연한 게임/리전 조합 지원
 - **[2025-11-07](./work_history/2025-11-07.md)** - jsj-game-j 환경 추가 및 65-cache zone 설정 이슈 해결
@@ -29,6 +30,12 @@
 ---
 
 ## 📋 최근 작업 요약
+
+### 2025-11-11: Terragrunt 0.93 CLI 적용
+- ✅ Terragrunt `run --all`/`--working-dir` 패턴으로 Jenkins 템플릿·환경별 Jenkinsfile 전면 교체
+- ✅ `TG_NON_INTERACTIVE` 환경변수와 `--queue-include-dir` 기반 Plan/Apply 가이드 문서화 (README, Quick Reference, Quick Setup, Jenkins Pipeline)
+- ✅ `run_terragrunt_stack.sh`와 Quick Setup 스크립트 예제가 새 CLI를 사용하도록 업데이트
+- ✅ 2025-11-11 work_history 작성 및 문서 전반(run-all/--terragrunt) 레거시 표현 정리
 
 ### 2025-11-09: GCP 폴더 구조 자동화
 - ✅ Cloud Logging API 타이밍 이슈 해결 (depends_on 명시적 참조)
