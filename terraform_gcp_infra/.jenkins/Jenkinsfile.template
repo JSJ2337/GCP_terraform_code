@@ -99,7 +99,7 @@ pipeline {
                             '''
                         }
                         dir("${env.WORKSPACE}") {
-                            sh "terragrunt --terragrunt-include-dir ${TG_WORKING_DIR} run --all init"
+                            sh "terragrunt --include-dir ${TG_WORKING_DIR} run --all init"
                         }
                     } else {
                         dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
@@ -128,7 +128,7 @@ pipeline {
                             '''
                         }
                         dir("${env.WORKSPACE}") {
-                            sh "terragrunt --terragrunt-include-dir ${TG_WORKING_DIR}/00-project run --all plan -- -out=tfplan-00-project"
+                            sh "terragrunt --include-dir ${TG_WORKING_DIR}/00-project run --all plan -- -out=tfplan-00-project"
                         }
                     } else {
                         dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
@@ -203,7 +203,7 @@ pipeline {
                             }
                             dir("${env.WORKSPACE}") {
                                 // 전체 스택은 최신 코드/상태 기준으로 의존 순서대로 Apply (plan 파일 미사용)
-                                sh "terragrunt --terragrunt-include-dir ${TG_WORKING_DIR} run --all apply -- -auto-approve"
+                                sh "terragrunt --include-dir ${TG_WORKING_DIR} run --all apply -- -auto-approve"
                             }
                         } else {
                             dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
@@ -214,7 +214,7 @@ pipeline {
                         echo '🗑️  Destroying Terragrunt resources...'
                         if (params.TARGET_LAYER == 'all') {
                             dir("${env.WORKSPACE}") {
-                                sh "terragrunt --terragrunt-include-dir ${TG_WORKING_DIR} run --all destroy -- -auto-approve"
+                                sh "terragrunt --include-dir ${TG_WORKING_DIR} run --all destroy -- -auto-approve"
                             }
                         } else {
                             dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
