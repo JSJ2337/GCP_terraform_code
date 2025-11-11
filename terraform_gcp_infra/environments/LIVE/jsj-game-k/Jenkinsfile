@@ -109,7 +109,7 @@ pipeline {
                             '''
                         }
                         dir("${env.WORKSPACE}") {
-                            sh "terragrunt --working-dir ${TG_WORKING_DIR} --queue-include-dir '00-project' run --all plan -- -out=tfplan-00-project"
+                            sh "terragrunt --working-dir ${TG_WORKING_DIR} run --queue-include-dir '00-project' --all plan -- -out=tfplan-00-project"
                         }
                     } else {
                         dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
