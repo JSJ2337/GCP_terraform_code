@@ -65,6 +65,30 @@ variable "machine_type" {
   default     = "e2-micro"
 }
 
+variable "image_family" {
+  type        = string
+  description = "OS image family used to create the boot disk"
+  default     = "debian-12"
+}
+
+variable "image_project" {
+  type        = string
+  description = "Project that hosts the image family"
+  default     = "debian-cloud"
+}
+
+variable "boot_disk_size_gb" {
+  type        = number
+  description = "Boot disk size in GB"
+  default     = 20
+}
+
+variable "boot_disk_type" {
+  type        = string
+  description = "Boot disk type (pd-standard, pd-balanced, pd-ssd, ...)"
+  default     = "pd-balanced"
+}
+
 variable "enable_public_ip" {
   type        = bool
   description = "Whether to enable public IP for instances"
@@ -101,6 +125,12 @@ variable "service_account_scopes" {
   default     = ["https://www.googleapis.com/auth/cloud-platform"]
 }
 
+variable "metadata" {
+  type        = map(string)
+  description = "Additional metadata applied to every instance"
+  default     = {}
+}
+
 variable "tags" {
   type        = list(string)
   description = "Network tags for instances"
@@ -127,6 +157,11 @@ variable "instances" {
     metadata             = optional(map(string))
     tags                 = optional(list(string))
     labels               = optional(map(string))
+    boot_disk_size_gb    = optional(number)
+    boot_disk_type       = optional(string)
+    image_family         = optional(string)
+    image_project        = optional(string)
+    service_account_email = optional(string)
   }))
   default     = {}
   description = "VM 인스턴스 맵 (키=인스턴스명, 값=설정). 비워두면 instance_count 방식 사용"

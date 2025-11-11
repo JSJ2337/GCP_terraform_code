@@ -61,6 +61,11 @@ module "gce_vmset" {
   preemptible      = var.preemptible
 
   startup_script = var.startup_script
+  image_family   = var.image_family
+  image_project  = var.image_project
+  boot_disk_size_gb = var.boot_disk_size_gb
+  boot_disk_type    = var.boot_disk_type
+  metadata          = var.metadata
 
   service_account_email  = local.service_account_email
   service_account_scopes = var.service_account_scopes
