@@ -13,7 +13,7 @@ disk_type       = "PD_SSD"
 disk_autoresize = true
 
 # Deletion protection (Production: true, Development: false)
-deletion_protection = true # 운영 기본값 (임시 테스트 시 false로 내릴 것)
+deletion_protection = false # 환경 제거 중이라 삭제 보호 해제
 
 # Backup configuration
 backup_enabled                 = true
