@@ -52,7 +52,7 @@ variable "disk_autoresize" {
 variable "deletion_protection" {
   type        = bool
   description = "삭제 보호 (실수로 인한 삭제 방지)"
-  default     = true
+  default     = false
 }
 
 # Backup configuration

@@ -2,7 +2,7 @@
 > Terragrunt: environments/LIVE/jsj-game-l/60-database/terragrunt.hcl
 
 
-Cloud SQL(MySQL) 인스턴스를 Private IP로 배포하고, 백업/로깅/Query Insights를 구성합니다. 10-network 레이어가 제공하는 Service Networking 연결을 활용합니다. 템플릿 기본값은 고가용성(REGIONAL)과 삭제 보호를 활성화해 운영 환경을 전제로 합니다.
+Cloud SQL(MySQL) 인스턴스를 Private IP로 배포하고, 백업/로깅/Query Insights를 구성합니다. 10-network 레이어가 제공하는 Service Networking 연결을 활용합니다. 기본 예제는 고가용성(REGIONAL)을 유지하되 삭제 보호는 비활성화되어 있어 언제든지 destroy가 가능합니다.
 
 ## 주요 기능
 - MySQL 인스턴스 생성 (ZONAL/REGIONAL HA 선택)
@@ -34,5 +34,5 @@ terragrunt apply  --non-interactive
 
 ## 참고
 - Private IP를 사용하려면 10-network 레이어에서 Service Networking 연결이 배포되어 있어야 합니다.
-- 기본 `terraform.tfvars`는 삭제 보호를 `true`로 설정합니다. 일시 테스트로 비활성화할 경우 적용/삭제 절차를 별도로 검토하세요.
+- 기본 `terraform.tfvars`는 삭제 보호를 `false`로 둡니다. 프로덕션 환경에서 보호가 필요하면 `deletion_protection = true`로 명시한 뒤 `apply`를 수행하세요.
 - Query Insights나 일반 쿼리 로그는 비용에 영향을 줄 수 있으니 운영 환경에 맞게 조정하세요.

@@ -18,8 +18,8 @@ disk_size       = 20
 disk_type       = "PD_SSD"
 disk_autoresize = true
 
-# 삭제 보호 (프로덕션 권장)
-deletion_protection = true            # 운영 기본값, 삭제 테스트 시에만 false 고려
+# 삭제 보호
+deletion_protection = false           # 기본 비활성 (삭제 보호 필요 시 true로 변경)
 
 # 백업
 backup_enabled                 = true

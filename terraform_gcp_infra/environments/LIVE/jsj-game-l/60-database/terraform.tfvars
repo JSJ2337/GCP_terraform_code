@@ -13,7 +13,7 @@ disk_type       = "PD_SSD"
 disk_autoresize = true
 
 # Deletion protection (Production: true, Development: false)
-deletion_protection = true # 운영 기본값 (임시 테스트 시 false로 내릴 것)
+deletion_protection = false # 삭제 보호 기본 비활성 (필요 시 true로 변경)
 
 # Backup configuration
 backup_enabled                 = true

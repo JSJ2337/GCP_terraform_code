@@ -272,7 +272,7 @@ module "mysql_public" {
 | disk_size | 디스크 크기 (GB) | `number` | `10` | no |
 | disk_type | 디스크 타입 (PD_SSD/PD_HDD) | `string` | `"PD_SSD"` | no |
 | disk_autoresize | 디스크 자동 확장 | `bool` | `true` | no |
-| deletion_protection | 삭제 보호 | `bool` | `true` | no |
+| deletion_protection | 삭제 보호 | `bool` | `false` | no |
 | backup_enabled | 자동 백업 활성화 | `bool` | `true` | no |
 | backup_start_time | 백업 시작 시간 (HH:MM) | `string` | `"03:00"` | no |
 | point_in_time_recovery_enabled | PITR 활성화 | `bool` | `true` | no |
@@ -371,7 +371,7 @@ gcloud services vpc-peerings connect \
    - Cloud Monitoring 알림 설정
 
 7. **보안**
-   - 삭제 보호 활성화 (프로덕션)
+   - 프로덕션에서 필요 시 `deletion_protection = true`로 별도 활성화
    - 강력한 비밀번호 사용
    - 비밀번호는 Secret Manager에 저장
 
