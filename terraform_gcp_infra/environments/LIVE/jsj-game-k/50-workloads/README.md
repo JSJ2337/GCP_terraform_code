@@ -7,8 +7,8 @@ Compute Engine VM 인스턴스를 배포하는 레이어입니다. 두 가지 �
 ## 주요 기능
 - **두 가지 배포 방식 지원**:
   - **count 방식**: 모든 VM이 동일한 설정 (간단한 경우)
-  - **for_each 방식** (권장): 각 VM마다 다른 호스트네임, 서브넷, 존, 머신 타입, OS 이미지, 스크립트 지정
-- `modules/gce-vmset`을 이용한 VM 생성 (per-instance hostname/이미지 지원)
+  - **for_each 방식** (권장): 각 VM마다 다른 서브넷, 존, 머신 타입, OS 이미지, 스크립트 지정
+- `modules/gce-vmset`을 이용한 VM 생성 (per-instance 이미지/스크립트 지원)
 - Shielded VM, OS Login, Preemptible 옵션 지원
 - `startup_script_file`을 통해 스크립트를 별도 파일로 관리하고 여러 VM에서 재사용
 - **역할별 서브넷 배치**: 10-network에서 생성한 DMZ/Private/DB 서브넷에 VM 분산 배치
@@ -47,7 +47,6 @@ instance_count = 0  # count 방식 비활성화
 
 instances = {
   "web-server-01" = {
-    hostname             = "web-srv-01"
     subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
     zone                 = "asia-northeast3-a"
     machine_type         = "e2-small"
@@ -59,7 +58,6 @@ instances = {
   }
 
   "app-server-01" = {
-    hostname             = "app-srv-01"
     subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-private"
     zone                 = "asia-northeast3-b"
     machine_type         = "e2-medium"
@@ -70,7 +68,6 @@ instances = {
   }
 
   "db-proxy-01" = {
-    hostname             = "db-proxy-01"
     subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-db"
     zone                 = "asia-northeast3-c"
     machine_type         = "e2-micro"
@@ -78,7 +75,7 @@ instances = {
 }
 ```
 
-- ✅ 각 VM마다 다른 호스트네임
+- ✅ 각 VM map key가 곧 인스턴스 이름(네이밍 규칙 유지)
 - ✅ 각 VM마다 다른 서브넷 (Web/App/DB 분리)
 - ✅ 각 VM마다 다른 존 (고가용성)
 - ✅ 각 VM마다 다른 머신타입, OS 이미지, 스타트업 스크립트
@@ -123,7 +120,7 @@ terragrunt apply  --non-interactive
 - `labels`: 리소스 라벨링 (관리/비용 추적)
 
 ### VM별 개별 설정 (instances map)
-- `hostname`: VM 내부 호스트네임 (google_compute_instance.hostname에 매핑)
+- `hostname` (선택): FQDN이 필요할 때만 설정하세요. 기본값은 `instance-name.c.<project>.internal`
 - `subnetwork_self_link`: 배치할 서브넷 전체 경로 (**중요**)
 - `zone`: 배치할 존 (고가용성 구성 시 분산 배치)
 - `machine_type`: VM 타입 (기본값 override)

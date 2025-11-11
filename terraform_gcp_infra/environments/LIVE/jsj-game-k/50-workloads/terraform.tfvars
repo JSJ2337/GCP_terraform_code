@@ -24,7 +24,6 @@ labels = {
 instances = {
   # lobby tier (3대)
   "jsj-lobby-01" = {
-    hostname     = "jsj-lobby-01"
     zone         = "asia-northeast3-a"
     machine_type = "e2-small"
     tags         = ["lobby", "ssh-allowed"]
@@ -36,7 +35,6 @@ instances = {
     subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
   }
   "jsj-lobby-02" = {
-    hostname = "jsj-lobby-02"
     zone     = "asia-northeast3-b"
     tags     = ["lobby", "ssh-allowed"]
     labels = {
@@ -47,7 +45,6 @@ instances = {
     subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
   }
   "jsj-lobby-03" = {
-    hostname = "jsj-lobby-03"
     zone     = "asia-northeast3-c"
     tags     = ["lobby", "ssh-allowed"]
     labels = {
@@ -60,7 +57,6 @@ instances = {
 
   # web tier (3대)
   "jsj-web-01" = {
-    hostname     = "jsj-web-01"
     zone         = "asia-northeast3-a"
     machine_type = "e2-medium"
     tags         = ["web", "ssh-allowed"]
@@ -72,7 +68,6 @@ instances = {
     subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
   }
   "jsj-web-02" = {
-    hostname     = "jsj-web-02"
     zone         = "asia-northeast3-b"
     machine_type = "e2-medium"
     tags         = ["web", "ssh-allowed"]
@@ -84,7 +79,6 @@ instances = {
     subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
   }
   "jsj-web-03" = {
-    hostname     = "jsj-web-03"
     zone         = "asia-northeast3-c"
     machine_type = "e2-medium"
     tags         = ["web", "ssh-allowed"]
@@ -98,7 +92,6 @@ instances = {
 
   # WAS tier (2대)
   "jsj-was-01" = {
-    hostname     = "jsj-was-01"
     zone         = "asia-northeast3-a"
     machine_type = "e2-standard-4"
     tags         = ["was", "ssh-allowed"]
@@ -110,7 +103,6 @@ instances = {
     subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-private"
   }
   "jsj-was-02" = {
-    hostname     = "jsj-was-02"
     zone         = "asia-northeast3-b"
     machine_type = "e2-standard-4"
     tags         = ["was", "ssh-allowed"]
