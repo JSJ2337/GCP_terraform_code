@@ -494,43 +494,46 @@ Pipeline에서 실제 실행되는 Terragrunt 명령어:
 ### Init
 
 ```bash
-# 전체 스택
+# 전체 스택 (스택 루트에서 실행)
 cd terraform_gcp_infra/environments/LIVE/jsj-game-f
-terragrunt run-all init --terragrunt-non-interactive
+terragrunt run --all init
 
 # 개별 레이어
 cd terraform_gcp_infra/environments/LIVE/jsj-game-f/10-network
-terragrunt init --terragrunt-non-interactive
+terragrunt init
 ```
 
 ### Plan
 
 ```bash
-# 전체 스택
-terragrunt run-all plan --terragrunt-non-interactive -out=tfplan
+# 전체 스택 (예: 00-project만 선 실행)
+terragrunt run --queue-include-dir '00-project' --all plan -- -out=tfplan-00-project
 
 # 개별 레이어
-terragrunt plan --terragrunt-non-interactive -out=tfplan
+terragrunt plan -out=tfplan
 ```
 
 ### Apply
 
 ```bash
 # 전체 스택 (의존성 순서 자동)
-terragrunt run-all apply --terragrunt-non-interactive tfplan
+terragrunt run --all apply -- -auto-approve
 
-# 개별 레이어
-terragrunt apply --terragrunt-non-interactive tfplan
+# 특정 레이어만
+terragrunt run --queue-include-dir '10-network' --all apply -- -auto-approve
+
+# 완전 단일 레이어
+terragrunt apply tfplan
 ```
 
 ### Destroy
 
 ```bash
 # 전체 스택 (역순으로 삭제)
-terragrunt run-all destroy --terragrunt-non-interactive -auto-approve
+terragrunt run --all destroy -- -auto-approve
 
 # 개별 레이어
-terragrunt destroy --terragrunt-non-interactive -auto-approve
+terragrunt destroy -auto-approve
 ```
 
 ---

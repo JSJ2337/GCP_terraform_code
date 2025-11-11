@@ -17,7 +17,7 @@
   - README/가이드 전반에서 명칭을 `jsj-system-mgmt`, `jsj-terraform-state-prod`로 정리
   - Provider 정책: 전 레이어에 `user_project_override=true`, `billing_project=var.project_id` 적용(ADC 의존 제거). 단, 00-project는 예외(프로젝트 생성/필수 API 활성화 담당)
   - 10-network: Service Networking 프로젝트 서비스 조작으로 인한 403 방지를 위해 초기 API 전파 대기 및 단계별 대기 로직 추가(Cloud Resource Manager → Service Usage → Service Networking 순), PSC 리소스는 모듈 일원화
-  - Jenkins 파이프라인: clean checkout, 캐시(.terragrunt-cache/.terraform/tfplan) 정리, run-all Plan은 00-project만 수행, run-all Apply는 최신 코드/상태 기준 의존 순서대로 적용
+  - Jenkins 파이프라인: clean checkout, 캐시(.terragrunt-cache/.terraform/tfplan) 정리, `terragrunt run --queue-include-dir '00-project' --all plan`으로 선 검증, 전체 Apply는 `run --all apply` 기반 최신 코드/상태 기준 의존 순서대로 적용
 
 ### 추가 (Added)
 - 신규 환경 `jsj-game-k` 생성 (LIVE)

@@ -10,7 +10,7 @@ pipeline {
     environment {
         TF_IN_AUTOMATION = 'true'
         TF_INPUT = 'false'
-        TERRAGRUNT_NON_INTERACTIVE = 'true'
+        TG_NON_INTERACTIVE = 'true'
         // Terragrunt 작업 디렉터리 (환경 루트)
         TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/jsj-game-k'
         // GCP 인증 설정 (Jenkins Credential 사용)
@@ -81,7 +81,7 @@ pipeline {
                             '''
                         }
                         dir("${env.WORKSPACE}") {
-                            sh "terragrunt --include-dir ${TG_WORKING_DIR} run --all init"
+                            sh "terragrunt --working-dir ${TG_WORKING_DIR} run --all init"
                         }
                     } else {
                         dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
@@ -109,7 +109,7 @@ pipeline {
                             '''
                         }
                         dir("${env.WORKSPACE}") {
-                            sh "terragrunt --include-dir ${TG_WORKING_DIR}/00-project run --all plan -- -out=tfplan-00-project"
+                            sh "terragrunt --working-dir ${TG_WORKING_DIR} --queue-include-dir '00-project' run --all plan -- -out=tfplan-00-project"
                         }
                     } else {
                         dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
@@ -184,7 +184,7 @@ pipeline {
                             }
                             dir("${env.WORKSPACE}") {
                                 // 전체 스택은 최신 코드/상태 기준으로 의존 순서대로 Apply (plan 파일 미사용)
-                                sh "terragrunt --include-dir ${TG_WORKING_DIR} run --all apply -- -auto-approve"
+                                sh "terragrunt --working-dir ${TG_WORKING_DIR} run --all apply -- -auto-approve"
                             }
                         } else {
                             dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
@@ -195,7 +195,7 @@ pipeline {
                         echo '🗑️  Destroying Terragrunt resources...'
                         if (params.TARGET_LAYER == 'all') {
                             dir("${env.WORKSPACE}") {
-                                sh "terragrunt --include-dir ${TG_WORKING_DIR} run --all destroy -- -auto-approve"
+                                sh "terragrunt --working-dir ${TG_WORKING_DIR} run --all destroy -- -auto-approve"
                             }
                         } else {
                             dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {

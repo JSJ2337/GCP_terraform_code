@@ -4,7 +4,7 @@ set -euo pipefail
 # Helper script to run Terragrunt commands across all prod template layers in order.
 # Usage: ./run_terragrunt_stack.sh <command>
 # Example: ./run_terragrunt_stack.sh plan
-# Commands are forwarded to `terragrunt run-all` (requires terragrunt on PATH).
+# Commands are forwarded to `terragrunt run --all` (requires terragrunt ≥0.93 on PATH).
 
 TG_CMD="${1:-}"
 if [[ -z "$TG_CMD" ]]; then
@@ -25,6 +25,6 @@ if ! command -v terragrunt &>/dev/null; then
   exit 1
 fi
 
-# Forward all arguments to run-all, ensuring layers execute in dependency order
+# Forward all arguments to Terragrunt's new run command
 cd "$ROOT_DIR"
-terragrunt run-all "$@"
+terragrunt run --all "$@"

@@ -138,14 +138,14 @@ Jenkins → Manage Jenkins → Credentials → Add Credentials
 ```bash
 cd environments/LIVE/proj-myservice-prod
 # 레이어별 배포 (예시)
-terragrunt run-all init
-terragrunt run-all plan
-terragrunt run-all apply --terragrunt-include-dir 00-project
-terragrunt run-all apply --terragrunt-include-dir 10-network
-# 이후 20 → 30 → 40 → 50 → 60 → 65 → 70 순서로 실행
+terragrunt run --all init
+terragrunt run --all plan
+terragrunt run --queue-include-dir '00-project' --all apply -- -auto-approve   # 00-project
+terragrunt run --queue-include-dir '10-network' --all apply -- -auto-approve  # 10-network
+# 이후 20 → 30 → ... → 70 순서로 동일하게 실행
 ```
 
-> `run-all apply` 대신 단계적으로 `terragrunt -chdir=<layer> plan/apply`를 사용할 수도 있습니다.
+> Terragrunt 0.93 이상에서는 `run --all` 명령을 사용합니다. 특정 레이어만 실행하려면 `--queue-include-dir '<레이어 디렉터리>'`로 큐를 필터링하거나, 필요 시 `terragrunt -chdir=<layer> plan/apply` 형태로 단일 레이어를 직접 실행할 수도 있습니다.
 
 ---
 
