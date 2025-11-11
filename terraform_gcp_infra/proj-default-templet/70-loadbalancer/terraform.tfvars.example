@@ -12,8 +12,8 @@ lb_type = "http"
 region   = "us-central1"
 network  = ""  # 비워두면 naming 모듈의 VPC 사용
 subnetwork = ""
-# 내부 LB가 Private/WAS 서브넷을 바라보도록 고정하고 싶다면 아래 self-link 사용
-# internal_subnetwork_self_link = "projects/your-project/regions/us-central1/subnetworks/default-templet-subnet-private"
+# Private/WAS 서브넷을 명시하려면 self-link를 지정하세요.
+# internal_subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-private"
 
 # 백엔드 서비스
 backend_protocol  = "HTTP"

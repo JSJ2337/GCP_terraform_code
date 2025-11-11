@@ -14,28 +14,28 @@ region_backup  = "us-east1"
 # VPC 라우팅 모드: 글로벌 라우팅이 필요 없으면 REGIONAL 로 변경하세요.
 routing_mode = "GLOBAL"
 
-# 용도별 서브넷 (DMZ/Private/WAS/DB 등) - 50-workloads와 70-loadbalancer에서 참조
+# 용도별 서브넷 (DMZ/WAS/DB). 50-workloads와 70-loadbalancer에서 self-link를 참조합니다.
 additional_subnets = [
   {
-    name   = "default-templet-subnet-dmz"
-    region = "us-central1"
-    cidr   = "10.10.0.0/24"
+    name   = "game-l-subnet-dmz"
+    region = "asia-northeast3"
+    cidr   = "10.3.0.0/24"
   },
   {
-    name   = "default-templet-subnet-private"
-    region = "us-central1"
-    cidr   = "10.10.1.0/24"
+    name   = "game-l-subnet-private"
+    region = "asia-northeast3"
+    cidr   = "10.3.1.0/24"
   },
   {
-    name   = "default-templet-subnet-db"
-    region = "us-central1"
-    cidr   = "10.10.2.0/24"
+    name   = "game-l-subnet-db"
+    region = "asia-northeast3"
+    cidr   = "10.3.2.0/24"
   }
 ]
 
-dmz_subnet_name     = "default-templet-subnet-dmz"
-private_subnet_name = "default-templet-subnet-private"
-db_subnet_name      = "default-templet-subnet-db"
+dmz_subnet_name     = "game-l-subnet-dmz"
+private_subnet_name = "game-l-subnet-private"
+db_subnet_name      = "game-l-subnet-db"
 
 # Cloud NAT 동시 연결 수(포트)
 nat_min_ports_per_vm = 1024

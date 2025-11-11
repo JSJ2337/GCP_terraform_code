@@ -3,28 +3,28 @@
 # region = "asia-northeast3"
 routing_mode = "GLOBAL"
 
-# 역할별 전용 서브넷 (예: DMZ/WAS/DB)
+# Additional dedicated subnets (DMZ/WAS/DB zones)
 additional_subnets = [
   {
-    name   = "default-templet-subnet-dmz"
-    region = "us-central1"
-    cidr   = "10.10.0.0/24"
+    name   = "game-l-subnet-dmz"
+    region = "asia-northeast3"
+    cidr   = "10.3.0.0/24"
   },
   {
-    name   = "default-templet-subnet-private"
-    region = "us-central1"
-    cidr   = "10.10.1.0/24"
+    name   = "game-l-subnet-private"
+    region = "asia-northeast3"
+    cidr   = "10.3.1.0/24"
   },
   {
-    name   = "default-templet-subnet-db"
-    region = "us-central1"
-    cidr   = "10.10.2.0/24"
+    name   = "game-l-subnet-db"
+    region = "asia-northeast3"
+    cidr   = "10.3.2.0/24"
   }
 ]
 
-dmz_subnet_name     = "default-templet-subnet-dmz"
-private_subnet_name = "default-templet-subnet-private"
-db_subnet_name      = "default-templet-subnet-db"
+dmz_subnet_name     = "game-l-subnet-dmz"
+private_subnet_name = "game-l-subnet-private"
+db_subnet_name      = "game-l-subnet-db"
 
 # Cloud NAT configuration
 nat_min_ports_per_vm = 1024

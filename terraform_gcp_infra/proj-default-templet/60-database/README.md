@@ -1,5 +1,5 @@
 # 60-database 레이어
-> Terragrunt: environments/LIVE/proj-default-templet/60-database/terragrunt.hcl
+> Terragrunt: environments/LIVE/jsj-game-l/60-database/terragrunt.hcl
 
 
 Cloud SQL(MySQL) 인스턴스를 Private IP로 배포하고, 백업/로깅/Query Insights를 구성합니다. 10-network 레이어가 제공하는 Service Networking 연결을 활용합니다. 템플릿 기본값은 고가용성(REGIONAL)과 삭제 보호를 활성화해 운영 환경을 전제로 합니다.

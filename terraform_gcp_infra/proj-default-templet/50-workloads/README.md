@@ -1,5 +1,5 @@
 # 50-workloads 레이어
-> Terragrunt: environments/LIVE/proj-default-templet/50-workloads/terragrunt.hcl
+> Terragrunt: environments/LIVE/jsj-game-l/50-workloads/terragrunt.hcl
 
 
 Compute Engine VM 인스턴스를 배포하는 레이어입니다. 두 가지 방식을 지원하여 간단한 경우부터 복잡한 구성까지 유연하게 대응할 수 있습니다.
@@ -48,10 +48,9 @@ instance_count = 0  # count 방식 비활성화
 instances = {
   "web-server-01" = {
     hostname             = "web-srv-01"
-    subnetwork_self_link = "projects/your-project/regions/us-central1/subnetworks/default-templet-subnet-dmz"
-    zone                 = "us-central1-a"
+    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
+    zone                 = "asia-northeast3-a"
     machine_type         = "e2-small"
-    enable_public_ip     = false
     tags                 = ["web", "frontend"]
     labels = {
       role = "web"
@@ -61,8 +60,8 @@ instances = {
 
   "app-server-01" = {
     hostname             = "app-srv-01"
-    subnetwork_self_link = "projects/your-project/regions/us-central1/subnetworks/default-templet-subnet-private"
-    zone                 = "us-central1-b"
+    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-private"
+    zone                 = "asia-northeast3-b"
     machine_type         = "e2-medium"
     tags                 = ["app", "backend"]
     image_family         = "ubuntu-2204-lts"
@@ -72,8 +71,8 @@ instances = {
 
   "db-proxy-01" = {
     hostname             = "db-proxy-01"
-    subnetwork_self_link = "projects/your-project/regions/us-central1/subnetworks/default-templet-subnet-db"
-    zone                 = "us-central1-c"
+    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-db"
+    zone                 = "asia-northeast3-c"
     machine_type         = "e2-micro"
   }
 }
@@ -93,9 +92,9 @@ projects/{project-id}/regions/{region}/subnetworks/{subnet-name}
 ```
 
 **예시:**
-- DMZ 서브넷: `projects/<your-project>/regions/us-central1/subnetworks/default-templet-subnet-dmz`
-- Private/WAS 서브넷: `projects/<your-project>/regions/us-central1/subnetworks/default-templet-subnet-private`
-- DB 서브넷: `projects/<your-project>/regions/us-central1/subnetworks/default-templet-subnet-db`
+- DMZ 서브넷: `projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz`
+- Private/WAS 서브넷: `projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-private`
+- DB 서브넷: `projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-db`
 
 **Terragrunt로 확인:**
 ```bash
@@ -144,4 +143,4 @@ terragrunt apply  --non-interactive
 ## 예제 참조
 - count 방식 예제: `terraform.tfvars.example` 상단 참조
 - for_each 방식 예제: `terraform.tfvars.example` 하단 주석 참조
-- 실제 운영 예제: `environments/LIVE/jsj-game-k/50-workloads/terraform.tfvars`
+- 실제 운영 예제: `environments/LIVE/jsj-game-l/50-workloads/terraform.tfvars`

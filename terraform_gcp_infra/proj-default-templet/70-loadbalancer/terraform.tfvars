@@ -10,8 +10,8 @@ lb_type = "http"
 # Region and network (for Internal LB)
 # Set region only for regional/internal load balancers.
 # region = "asia-northeast3"
-# network can be left blank to use the naming-based VPC, but 내부 LB는 서브넷 self-link를 반드시 지정해야 합니다.
-# internal_subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/default-templet-subnet-private"
+# 내부 LB를 사용할 경우 반드시 Private/WAS 서브넷 self-link를 입력하세요.
+# internal_subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-private"
 
 # Backend service configuration
 backend_protocol  = "HTTP"

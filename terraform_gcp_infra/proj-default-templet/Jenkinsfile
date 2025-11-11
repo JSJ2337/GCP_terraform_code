@@ -8,18 +8,35 @@ pipeline {
     }
 
     environment {
-        TF_IN_AUTOMATION   = 'true'
-        TF_INPUT           = 'false'
+        TF_IN_AUTOMATION = 'true'
+        TF_INPUT = 'false'
         TG_NON_INTERACTIVE = 'true'
-        TG_WORKING_DIR     = 'terraform_gcp_infra/environments/LIVE/jsj-game-l'
+        // Terragrunt 작업 디렉터리 (환경 루트)
+        TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/jsj-game-l'
+        // GCP 인증 설정 (Jenkins Credential 사용)
         GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-jenkins-service-account')
     }
 
     parameters {
-        choice(name: 'ACTION', choices: ['plan', 'apply', 'destroy'], description: 'Terragrunt 실행할 작업 선택')
+        choice(
+            name: 'ACTION',
+            choices: ['plan', 'apply', 'destroy'],
+            description: 'Terragrunt 실행할 작업 선택'
+        )
         choice(
             name: 'TARGET_LAYER',
-            choices: ['all','00-project','10-network','20-storage','30-security','40-observability','50-workloads','60-database','65-cache','70-loadbalancer'],
+            choices: [
+                'all',
+                '00-project',
+                '10-network',
+                '20-storage',
+                '30-security',
+                '40-observability',
+                '50-workloads',
+                '60-database',
+                '65-cache',
+                '70-loadbalancer'
+            ],
             description: '실행할 레이어 (all = 전체 스택)'
         )
     }
@@ -84,6 +101,7 @@ pipeline {
                 script {
                     echo '📋 Running Terragrunt Plan...'
                     if (params.TARGET_LAYER == 'all') {
+                        // 00-project만 우선 Plan (API enable 전파 이전에 다른 레이어 Plan 방지)
                         dir("${TG_WORKING_DIR}/00-project") {
                             sh '''
                                 rm -rf .terragrunt-cache .terraform || true
@@ -97,6 +115,26 @@ pipeline {
                         dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
                             sh 'terragrunt plan -out=tfplan'
                         }
+                    }
+                }
+            }
+        }
+
+        stage('Review Plan') {
+            when {
+                expression { params.ACTION == 'apply' || params.ACTION == 'destroy' }
+            }
+            steps {
+                script {
+                    echo '👀 Plan 결과를 확인하세요!'
+                    echo "Action: ${params.ACTION}"
+                    echo "Target: ${params.TARGET_LAYER}"
+
+                    // Plan 출력 내용 표시
+                    if (params.TARGET_LAYER == 'all') {
+                        echo '⚠️  전체 스택에 대한 변경사항입니다!'
+                    } else {
+                        echo "⚠️  ${params.TARGET_LAYER} 레이어에 대한 변경사항입니다!"
                     }
                 }
             }
@@ -120,7 +158,11 @@ pipeline {
                     """
 
                     timeout(time: 30, unit: 'MINUTES') {
-                        input(message: approvalMessage, ok: '✅ 승인 (Apply 실행)', submitter: 'admin')
+                        input(
+                            message: approvalMessage,
+                            ok: '✅ 승인 (Apply 실행)',
+                            submitter: 'admin'  // 승인 가능한 사용자 제한
+                        )
                     }
                 }
             }
@@ -141,6 +183,7 @@ pipeline {
                                 '''
                             }
                             dir("${env.WORKSPACE}") {
+                                // 전체 스택은 최신 코드/상태 기준으로 의존 순서대로 Apply (plan 파일 미사용)
                                 sh "terragrunt --working-dir ${TG_WORKING_DIR} run --all apply -- -auto-approve"
                             }
                         } else {
@@ -166,6 +209,16 @@ pipeline {
     }
 
     post {
+        success {
+            echo '✅ Pipeline completed successfully!'
+            echo "Action: ${params.ACTION}"
+            echo "Target: ${params.TARGET_LAYER}"
+        }
+        failure {
+            echo '❌ Pipeline failed!'
+            echo "Failed at action: ${params.ACTION}"
+            echo "Target: ${params.TARGET_LAYER}"
+        }
         always {
             echo '🧹 Cleaning up plan/cache files...'
             sh '''

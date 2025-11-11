@@ -1,5 +1,5 @@
 # 65-cache 레이어
-> Terragrunt: environments/LIVE/proj-default-templet/65-cache/terragrunt.hcl
+> Terragrunt: environments/LIVE/jsj-game-l/65-cache/terragrunt.hcl
 
 
 Google Cloud Memorystore for Redis(Standard HA) 인스턴스를 배포합니다. 10-network 레이어가 생성한 전용 VPC에 프라이빗으로 연결하며, naming 모듈 규칙을 따라 일관된 리소스 이름과 라벨을 부여합니다.
