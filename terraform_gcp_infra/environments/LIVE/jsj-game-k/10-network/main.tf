@@ -26,15 +26,8 @@ module "naming" {
   region_backup  = var.region_backup
 }
 
-module "net" {
-  source = "../../../../modules/network-dedicated-vpc"
-
-  project_id   = var.project_id
-  vpc_name     = module.naming.vpc_name
-  routing_mode = var.routing_mode
-
-  # Construct subnets map using modules/naming outputs for names
-  subnets = {
+locals {
+  base_subnets = {
     (module.naming.subnet_name_primary) = {
       region                = module.naming.region_primary
       cidr                  = var.subnet_primary_cidr
@@ -57,6 +50,26 @@ module "net" {
       secondary_ranges      = []
     }
   }
+
+  additional_subnets_map = {
+    for subnet in var.additional_subnets :
+    subnet.name => {
+      region                = subnet.region
+      cidr                  = subnet.cidr
+      private_google_access = lookup(subnet, "private_google_access", true)
+      secondary_ranges      = lookup(subnet, "secondary_ranges", [])
+    }
+  }
+}
+
+module "net" {
+  source = "../../../../modules/network-dedicated-vpc"
+
+  project_id   = var.project_id
+  vpc_name     = module.naming.vpc_name
+  routing_mode = var.routing_mode
+
+  subnets = merge(local.base_subnets, local.additional_subnets_map)
 
   nat_region           = module.naming.region_primary
   nat_min_ports_per_vm = var.nat_min_ports_per_vm

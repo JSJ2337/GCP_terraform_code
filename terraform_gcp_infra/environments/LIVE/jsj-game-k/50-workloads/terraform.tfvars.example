@@ -29,12 +29,14 @@ instances = {
     zone     = "asia-northeast3-a"
     tags     = ["lobby", "ssh-allowed"]
     startup_script_file = "scripts/lobby.sh"
+    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
   }
   "jsj-lobby-02" = {
     hostname = "jsj-lobby-02"
     zone     = "asia-northeast3-b"
     tags     = ["lobby", "ssh-allowed"]
     startup_script_file = "scripts/lobby.sh"
+    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
   }
   "jsj-web-01" = {
     hostname     = "jsj-web-01"
@@ -42,11 +44,13 @@ instances = {
     machine_type = "e2-small"
     tags         = ["web", "ssh-allowed"]
     startup_script_file = "scripts/lobby.sh"
+    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
   }
   "jsj-web-02" = {
     hostname = "jsj-web-02"
     zone     = "asia-northeast3-b"
     tags     = ["web", "ssh-allowed"]
+    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
   }
   "jsj-was-01" = {
     hostname     = "jsj-was-01"
@@ -54,5 +58,6 @@ instances = {
     machine_type = "e2-standard-4"
     tags         = ["was", "ssh-allowed"]
     startup_script_file = "scripts/was.sh"
+    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-was"
   }
 }

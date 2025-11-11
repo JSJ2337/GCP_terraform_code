@@ -107,3 +107,18 @@ variable "private_service_connection_name" {
   description = "사설 서비스 연결용 Global Address 이름 (비워두면 자동 생성)"
   default     = ""
 }
+
+variable "additional_subnets" {
+  description = "추가로 생성할 서브넷 목록 (예: DMZ, WAS, DB 등)"
+  type = list(object({
+    name                  = string
+    region                = string
+    cidr                  = string
+    private_google_access = optional(bool, true)
+    secondary_ranges      = optional(list(object({
+      name = string
+      cidr = string
+    })), [])
+  }))
+  default = []
+}

@@ -11,6 +11,25 @@ subnet_backup_cidr  = "10.2.0.0/20"
 pods_cidr     = "10.1.16.0/20"
 services_cidr = "10.1.32.0/20"
 
+# Additional dedicated subnets (DMZ/WAS/DB zones)
+additional_subnets = [
+  {
+    name   = "game-k-subnet-dmz"
+    region = "asia-northeast3"
+    cidr   = "10.3.0.0/24"
+  },
+  {
+    name   = "game-k-subnet-was"
+    region = "asia-northeast3"
+    cidr   = "10.3.1.0/24"
+  },
+  {
+    name   = "game-k-subnet-db"
+    region = "asia-northeast3"
+    cidr   = "10.3.2.0/24"
+  }
+]
+
 # Cloud NAT configuration
 nat_min_ports_per_vm = 1024
 

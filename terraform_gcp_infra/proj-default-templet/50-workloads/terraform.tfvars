@@ -26,7 +26,7 @@ instances = {
     hostname             = "tmpl-lobby-01"
     zone                 = "us-central1-a"
     machine_type         = "e2-small"
-    subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/your-web-subnet"
+    subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/default-templet-subnet-dmz"
     tags                 = ["lobby", "ssh-allowed"]
     labels = {
       role = "lobby"
@@ -43,13 +43,14 @@ instances = {
       tier = "frontend"
     }
     startup_script_file = "scripts/lobby.sh"
+    subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/default-templet-subnet-dmz"
   }
 
   "tmpl-web-01" = {
     hostname             = "tmpl-web-01"
     zone                 = "us-central1-a"
     machine_type         = "e2-medium"
-    subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/your-web-subnet"
+    subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/default-templet-subnet-dmz"
     tags                 = ["web", "ssh-allowed"]
     labels = {
       role = "web"
@@ -65,14 +66,15 @@ instances = {
       role = "web"
       tier = "frontend"
     }
-    startup_script_file = "scripts/lobby.sh"
+    subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/default-templet-subnet-dmz"
+    startup_script_file  = "scripts/lobby.sh"
   }
 
   "tmpl-was-01" = {
     hostname             = "tmpl-was-01"
     zone                 = "us-central1-c"
     machine_type         = "e2-standard-4"
-    subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/your-app-subnet"
+    subnetwork_self_link = "projects/your-project-id/regions/us-central1/subnetworks/default-templet-subnet-was"
     tags                 = ["was", "ssh-allowed"]
     labels = {
       role = "was"

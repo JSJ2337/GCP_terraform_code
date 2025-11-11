@@ -11,6 +11,25 @@ subnet_backup_cidr  = "10.2.0.0/20"
 pods_cidr     = "10.1.16.0/20"
 services_cidr = "10.1.32.0/20"
 
+# Additional dedicated subnets (예: DMZ/WAS/DB)
+additional_subnets = [
+  {
+    name   = "default-templet-subnet-dmz"
+    region = "us-central1"
+    cidr   = "10.10.0.0/24"
+  },
+  {
+    name   = "default-templet-subnet-was"
+    region = "us-central1"
+    cidr   = "10.10.1.0/24"
+  },
+  {
+    name   = "default-templet-subnet-db"
+    region = "us-central1"
+    cidr   = "10.10.2.0/24"
+  }
+]
+
 # Cloud NAT configuration
 nat_min_ports_per_vm = 1024
 
