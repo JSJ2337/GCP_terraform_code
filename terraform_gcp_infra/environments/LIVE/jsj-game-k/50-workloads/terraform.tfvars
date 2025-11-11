@@ -3,7 +3,7 @@
 # Workloads Configuration
 # Resource names are generated via modules/naming
 
-# VM configuration (use the new for_each map)
+# VM configuration (for_each map 사용)
 instance_count     = 0
 machine_type       = "e2-micro"
 image_family       = "debian-12"
@@ -16,47 +16,114 @@ preemptible        = false
 startup_script     = ""
 tags               = ["game", "ssh-allowed"]
 labels = {
-  app       = "game-k"
-  component = "game-server"
+  environment = "prod"
+  component   = "game-server"
 }
 
+# 역할별 인스턴스 정의
 instances = {
-  "game-k-web-01" = {
-    hostname             = "game-k-web-01"
-    zone                 = "asia-northeast3-a"
-    machine_type         = "e2-small"
-    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-prod-subnet-asia-northeast3"
-    tags                 = ["web", "ssh-allowed"]
+  # lobby tier (3대)
+  "jsj-lobby-01" = {
+    hostname     = "jsj-lobby-01"
+    zone         = "asia-northeast3-a"
+    machine_type = "e2-small"
+    tags         = ["lobby", "ssh-allowed"]
     labels = {
-      role = "web"
+      role = "lobby"
       tier = "frontend"
     }
-    startup_script = <<-EOWEB
+    startup_script = <<-EOL
 #!/bin/bash
 apt-get update
 apt-get install -y nginx google-fluentd
 systemctl enable nginx && systemctl start nginx
 systemctl enable google-fluentd && systemctl start google-fluentd
-EOWEB
+EOL
+  }
+  "jsj-lobby-02" = {
+    hostname = "jsj-lobby-02"
+    zone     = "asia-northeast3-b"
+    tags     = ["lobby", "ssh-allowed"]
+    labels = {
+      role = "lobby"
+      tier = "frontend"
+    }
+  }
+  "jsj-lobby-03" = {
+    hostname = "jsj-lobby-03"
+    zone     = "asia-northeast3-c"
+    tags     = ["lobby", "ssh-allowed"]
+    labels = {
+      role = "lobby"
+      tier = "frontend"
+    }
   }
 
-  "game-k-app-01" = {
-    hostname             = "game-k-app-01"
-    zone                 = "asia-northeast3-b"
-    machine_type         = "e2-standard-2"
-    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-prod-subnet-asia-northeast3"
-    enable_public_ip     = false
-    tags                 = ["app", "ssh-allowed"]
+  # web tier (3대)
+  "jsj-web-01" = {
+    hostname     = "jsj-web-01"
+    zone         = "asia-northeast3-a"
+    machine_type = "e2-medium"
+    tags         = ["web", "ssh-allowed"]
     labels = {
-      role = "app"
+      role = "web"
+      tier = "frontend"
+    }
+    startup_script = <<-EOW
+#!/bin/bash
+apt-get update
+apt-get install -y nginx google-fluentd
+systemctl enable nginx && systemctl start nginx
+systemctl enable google-fluentd && systemctl start google-fluentd
+EOW
+  }
+  "jsj-web-02" = {
+    hostname     = "jsj-web-02"
+    zone         = "asia-northeast3-b"
+    machine_type = "e2-medium"
+    tags         = ["web", "ssh-allowed"]
+    labels = {
+      role = "web"
+      tier = "frontend"
+    }
+  }
+  "jsj-web-03" = {
+    hostname     = "jsj-web-03"
+    zone         = "asia-northeast3-c"
+    machine_type = "e2-medium"
+    tags         = ["web", "ssh-allowed"]
+    labels = {
+      role = "web"
+      tier = "frontend"
+    }
+  }
+
+  # WAS tier (2대)
+  "jsj-was-01" = {
+    hostname     = "jsj-was-01"
+    zone         = "asia-northeast3-a"
+    machine_type = "e2-standard-4"
+    tags         = ["was", "ssh-allowed"]
+    labels = {
+      role = "was"
       tier = "backend"
     }
-    startup_script = <<-EOAPP
+    startup_script = <<-EOWAS
 #!/bin/bash
 apt-get update
 apt-get install -y docker.io google-fluentd
 systemctl enable docker && systemctl start docker
 systemctl enable google-fluentd && systemctl start google-fluentd
-EOAPP
+EOWAS
+  }
+  "jsj-was-02" = {
+    hostname     = "jsj-was-02"
+    zone         = "asia-northeast3-b"
+    machine_type = "e2-standard-4"
+    tags         = ["was", "ssh-allowed"]
+    labels = {
+      role = "was"
+      tier = "backend"
+    }
   }
 }
