@@ -38,7 +38,7 @@ module "cache" {
 | `alternative_location_id` | Standard HA용 대체 존 (예: `us-central1-b`) | `string` | `""` | ➖ |
 | `tier` | Memorystore 티어 (`STANDARD_HA`, `BASIC`, `ENTERPRISE`, `ENTERPRISE_PLUS`) | `string` | `"STANDARD_HA"` | ➖ |
 | `memory_size_gb` | 메모리 크기(GB) | `number` | `1` | ➖ |
-| `redis_version` | Redis 버전 (`REDIS_7_X`, 등) | `string` | `"REDIS_7_X"` | ➖ |
+| `redis_version` | Redis 버전 (`REDIS_3_2`, `REDIS_4_0`, `REDIS_5_0`, `REDIS_6_X`) | `string` | `"REDIS_6_X"` | ➖ |
 | `authorized_network` | 접근 허용 VPC self link | `string` | n/a | ✅ |
 | `connect_mode` | 연결 모드 (`DIRECT_PEERING`, `PRIVATE_SERVICE_CONNECT`) | `string` | `"DIRECT_PEERING"` | ➖ |
 | `transit_encryption_mode` | 전송 암호화 (`DISABLED`, `SERVER_AUTHENTICATION`) | `string` | `"DISABLED"` | ➖ |

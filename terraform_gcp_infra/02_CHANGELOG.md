@@ -5,6 +5,13 @@
 형식: [Keep a Changelog](https://keepachangelog.com/ko/1.0.0/) 기반
 버저닝: [Semantic Versioning](https://semver.org/lang/ko/) 준수
 
+## [미배포] - 2025-11-11
+
+### 수정 (Fixed)
+- Memorystore Redis: `REDIS_7_X` 값이 GCP API에서 아직 허용되지 않아 apply가 실패하던 문제를 `REDIS_6_X` 기본값 및 허용 버전(validation) 추가로 해결
+  - 모듈(`modules/memorystore-redis`)과 각 레이어/예제(tfvars/variables, jsj-game-k 포함)에서 기본 버전을 `REDIS_6_X`로 통일
+  - README/가이드에 지원 버전 목록을 명시하고 Jenkins/Quick Setup 흐름과 일치하도록 문구 업데이트
+
 ## [미배포] - 2025-11-10
 
 ### 변경 (Changed)

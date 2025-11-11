@@ -76,8 +76,8 @@ variable "memory_size_gb" {
 
 variable "redis_version" {
   type        = string
-  description = "Redis 버전 (예: REDIS_7_X)"
-  default     = "REDIS_7_X"
+  description = "Redis 버전 (REDIS_3_2/4_0/5_0/6_X)"
+  default     = "REDIS_6_X"
 }
 
 variable "connect_mode" {
