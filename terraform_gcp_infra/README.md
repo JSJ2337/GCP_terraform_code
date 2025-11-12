@@ -2,7 +2,7 @@
 
 Google Cloud Platform 인프라를 위한 프로덕션 레디 Terraform 모듈 및 환경 구성.
 
-## 🚀 빠른 시작
+## 빠른 시작
 
 ### 1. 사전 요구사항
 - Terraform >= 1.6 (권장: 1.10+)
@@ -19,7 +19,7 @@ terraform apply
 # 인증 설정
 gcloud auth application-default set-quota-project jsj-system-mgmt
 ```
-📖 [Bootstrap 상세 가이드](./docs/getting-started/bootstrap-setup.md)
+[Bootstrap 상세 가이드](./docs/getting-started/bootstrap-setup.md)
 
 ### 3. 첫 프로젝트 배포
 ```bash
@@ -28,14 +28,14 @@ terragrunt init --non-interactive
 terragrunt plan
 terragrunt apply
 ```
-📖 [첫 배포 가이드](./docs/getting-started/first-deployment.md)
+[첫 배포 가이드](./docs/getting-started/first-deployment.md)
 
-## 📁 프로젝트 구조
+## 프로젝트 구조
 
 ```
 terraform_gcp_infra/
-├── bootstrap/              # ⭐ 중앙 State 관리 (최우선 배포)
-├── modules/                # 재사용 가능한 모듈 (9개)
+├── bootstrap/              # 중앙 State 관리 (최우선 배포)
+├── modules/                # 재사용 가능한 모듈 (11개)
 ├── environments/           # 환경별 배포
 │   └── LIVE/
 │       ├── jsj-game-k/    # 프로덕션 환경
@@ -57,7 +57,7 @@ terraform_gcp_infra/
 | `65-cache` | Memorystore Redis | 10-network |
 | `70-loadbalancer` | Load Balancer | 50-workloads |
 
-## 📚 문서
+## 문서
 
 ### 시작하기
 - [사전 요구사항](./docs/getting-started/prerequisites.md)
@@ -84,34 +84,34 @@ terraform_gcp_infra/
 
 ### 변경 이력
 - [CHANGELOG](./docs/changelog/CHANGELOG.md)
-- [작업 이력](./docs/changelog/work-history/)
+- [작업 이력](./docs/changelog/work_history/)
 
-## ✨ 주요 기능
+## 주요 기능
 
 ### 보안 우선
-- ✅ DMZ/Private/DB 서브넷 분리
-- ✅ Private IP only (DB, Redis)
-- ✅ Shielded VM (Secure Boot)
-- ✅ Non-authoritative IAM 바인딩
+- DMZ/Private/DB 서브넷 분리
+- Private IP only (DB, Redis)
+- Shielded VM (Secure Boot)
+- Non-authoritative IAM 바인딩
 
 ### 중앙 집중식 관리
-- ✅ Bootstrap 기반 State 관리
-- ✅ `modules/naming`으로 일관된 네이밍
-- ✅ Terragrunt 자동화
+- Bootstrap 기반 State 관리
+- `modules/naming`으로 일관된 네이밍
+- Terragrunt 자동화
 
 ### 프로덕션 레디
-- ✅ 9개 재사용 모듈
-- ✅ 환경별 독립 State
-- ✅ Jenkins CI/CD 통합
-- ✅ HA 구성 (Cloud SQL, Redis)
+- 11개 재사용 모듈
+- 환경별 독립 State
+- Jenkins CI/CD 통합
+- HA 구성 (Cloud SQL, Redis)
 
 ### 완전한 문서화
-- ✅ 모든 모듈 README 포함
-- ✅ 단계별 가이드
-- ✅ 트러블슈팅 가이드
-- ✅ Mermaid 다이어그램
+- 모든 모듈 README 포함
+- 단계별 가이드
+- 트러블슈팅 가이드
+- Mermaid 다이어그램
 
-## 🏗️ 네트워크 아키텍처
+## 네트워크 아키텍처
 
 ```
 Internet → Load Balancer
@@ -126,7 +126,7 @@ Internet → Load Balancer
          [Cloud SQL MySQL]
 ```
 
-## 🔧 자주 쓰는 명령어
+## 자주 쓰는 명령어
 
 ```bash
 # 단일 레이어
@@ -148,9 +148,9 @@ terragrunt output -json | jq
 terraform fmt -recursive
 ```
 
-📖 [전체 명령어 치트시트](./docs/getting-started/quick-commands.md)
+[전체 명령어 치트시트](./docs/getting-started/quick-commands.md)
 
-## 📦 재사용 가능한 모듈
+## 재사용 가능한 모듈
 
 | 모듈 | 기능 | 문서 |
 |------|------|------|
@@ -166,7 +166,7 @@ terraform fmt -recursive
 | **memorystore-redis** | Redis 캐시 | [README](./modules/memorystore-redis/README.md) |
 | **load-balancer** | Load Balancer | [README](./modules/load-balancer/README.md) |
 
-## 🆕 새 환경 추가
+## 새 환경 추가
 
 ```bash
 # 1. 템플릿 복사
@@ -182,9 +182,9 @@ cd ../10-network && terragrunt apply
 # ... 계속
 ```
 
-📖 [상세 가이드](./docs/guides/adding-new-project.md)
+[상세 가이드](./docs/guides/adding-new-project.md)
 
-## 🔍 트러블슈팅
+## 트러블슈팅
 
 ### "storage: bucket doesn't exist"
 ```bash
@@ -203,9 +203,9 @@ gcloud services enable compute.googleapis.com \
     --project=<PROJECT_ID>
 ```
 
-📖 [전체 트러블슈팅 가이드](./docs/troubleshooting/common-errors.md)
+[전체 트러블슈팅 가이드](./docs/troubleshooting/common-errors.md)
 
-## 🤝 기여하기
+## 기여하기
 
 1. 모듈 구조 따르기
 2. README.md 포함
@@ -213,11 +213,11 @@ gcloud services enable compute.googleapis.com \
 4. `terraform fmt` 실행
 5. `terraform validate` 통과
 
-## 📞 지원
+## 지원
 
 - [GitHub Issues](https://github.com/your-org/terraform-gcp-infra/issues)
 - [문서 포털](./docs/)
 
 ---
 
-**Made with ❤️ by Infrastructure Team**
+**Infrastructure Team**
