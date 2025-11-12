@@ -133,15 +133,3 @@ mig_groups = {
     image_project       = "rocky-linux-cloud"
   }
 }
-    image_family  = "rocky-linux-9"
-    image_project = "rocky-linux-cloud"
-    image_family  = "rocky-linux-9"
-    image_project = "rocky-linux-cloud"
-    image_family  = "rocky-linux-9"
-    image_project = "rocky-linux-cloud"
-    image_family  = "rocky-linux-9"
-    image_project = "rocky-linux-cloud"
-    image_family  = "rocky-linux-9"
-    image_project = "rocky-linux-cloud"
-    image_family  = "rocky-linux-9"
-    image_project = "rocky-linux-cloud"
