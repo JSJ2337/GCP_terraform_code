@@ -106,8 +106,10 @@ pipeline {
                             sh '''
                                 rm -rf .terragrunt-cache .terraform || true
                                 rm -f tfplan || true
-                                terragrunt init
                             '''
+                        }
+                        dir("${env.WORKSPACE}") {
+                            sh "terragrunt --working-dir '${TG_WORKING_DIR}/${params.TARGET_LAYER}' init"
                         }
                     }
                 }
@@ -131,8 +133,8 @@ pipeline {
                             sh "terragrunt --working-dir ${TG_WORKING_DIR} run --queue-include-dir '00-project' --all plan -- -out=tfplan-00-project"
                         }
                     } else {
-                        dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
-                            sh 'terragrunt plan -out=tfplan'
+                        dir("${env.WORKSPACE}") {
+                            sh "terragrunt --working-dir '${TG_WORKING_DIR}/${params.TARGET_LAYER}' plan -out=tfplan"
                         }
                     }
                 }
@@ -206,8 +208,8 @@ pipeline {
                                 sh "terragrunt --working-dir ${TG_WORKING_DIR} run --all apply -- -auto-approve"
                             }
                         } else {
-                            dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
-                                sh 'terragrunt apply tfplan'
+                            dir("${env.WORKSPACE}") {
+                                sh "terragrunt --working-dir '${TG_WORKING_DIR}/${params.TARGET_LAYER}' apply tfplan"
                             }
                         }
                     } else if (params.ACTION == 'destroy') {
@@ -217,8 +219,8 @@ pipeline {
                                 sh "terragrunt --working-dir ${TG_WORKING_DIR} run --all destroy -- -auto-approve"
                             }
                         } else {
-                            dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
-                                sh 'terragrunt destroy -auto-approve'
+                            dir("${env.WORKSPACE}") {
+                                sh "terragrunt --working-dir '${TG_WORKING_DIR}/${params.TARGET_LAYER}' destroy -auto-approve"
                             }
                         }
                     }

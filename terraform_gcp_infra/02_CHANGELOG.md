@@ -5,6 +5,19 @@
 형식: [Keep a Changelog](https://keepachangelog.com/ko/1.0.0/) 기반
 버저닝: [Semantic Versioning](https://semver.org/lang/ko/) 준수
 
+## [미배포] - 2025-11-12
+
+### 수정 (Fixed)
+- **Jenkinsfile 단일 레이어 실행 시 경로 문제 해결**: `--working-dir` 플래그를 사용하여 terragrunt.hcl 파일을 찾지 못하는 문제 수정
+  - 단일 레이어 실행 시 `dir()` 블록 안에서 직접 `terragrunt init`을 실행하면 terragrunt.hcl 파일 인식 실패
+  - 모든 terragrunt 명령(`init`, `plan`, `apply`, `destroy`)에 `--working-dir` 플래그를 사용하도록 변경
+  - 영향을 받는 파일:
+    - `environments/LIVE/jsj-game-k/Jenkinsfile`
+    - `environments/LIVE/jsj-game-l/Jenkinsfile`
+    - `proj-default-templet/Jenkinsfile`
+    - `.jenkins/Jenkinsfile.template`
+  - `all` 레이어 실행 패턴과 단일 레이어 실행 패턴 일관성 확보
+
 ## [미배포] - 2025-11-11
 
 ### 수정 (Fixed)
