@@ -76,3 +76,16 @@ instances = {
     subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-private"
   }
 }
+
+# Managed Instance Groups (LB/Autoscaling용)
+mig_groups = {
+#  "web" = {
+#    zone                 = "asia-northeast3-a"
+#    target_size          = 3
+#    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
+#    named_ports = [
+#      { name = "http", port = 80 }
+#    ]
+#    startup_script_file = "scripts/lobby.sh"
+#  }
+}

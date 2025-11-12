@@ -116,3 +116,5 @@ instances = {
     subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-private"
   }
 }
+
+mig_groups = {}

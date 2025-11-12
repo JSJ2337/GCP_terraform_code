@@ -47,6 +47,21 @@ locals {
       {}
     )
   }
+
+  processed_mig_groups = {
+    for name, cfg in var.mig_groups :
+    name => merge(
+      {
+        for k, v in cfg : k => v if k != "startup_script_file"
+      },
+      try(cfg.startup_script_file, null) != null ?
+      { startup_script = file("${path.module}/${cfg.startup_script_file}") } :
+      {},
+      {
+        enable_public_ip = coalesce(try(cfg.enable_public_ip, null), var.enable_public_ip)
+      }
+    )
+  }
 }
 
 # Naming conventions supplied by modules/naming
@@ -82,4 +97,23 @@ module "gce_vmset" {
 
   tags   = local.tags
   labels = local.labels
+}
+
+module "gce_mig" {
+  source = "../../../../modules/gce-mig"
+
+  project_id            = var.project_id
+  machine_type          = var.machine_type
+  boot_disk_size_gb     = var.boot_disk_size_gb
+  boot_disk_type        = var.boot_disk_type
+  image_family          = var.image_family
+  image_project         = var.image_project
+  startup_script        = var.startup_script
+  metadata              = var.metadata
+  tags                  = local.tags
+  labels                = local.labels
+  service_account_email = local.service_account_email
+  service_account_scopes = var.service_account_scopes
+
+  groups = local.processed_mig_groups
 }

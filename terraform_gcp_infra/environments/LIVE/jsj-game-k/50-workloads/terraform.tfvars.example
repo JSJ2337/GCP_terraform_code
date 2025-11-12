@@ -1,6 +1,6 @@
 # Region/Project overrides (필요 시 루트 root.hcl과 동일하게 유지)
-project_id     = "jsj-game-k"
-project_name   = "game-k"
+project_id     = "jsj-game-l"
+project_name   = "game-l"
 environment    = "prod"
 organization   = "jsj-dev"
 region_primary = "asia-northeast3"
@@ -29,14 +29,14 @@ instances = {
     zone     = "asia-northeast3-a"
     tags     = ["lobby", "ssh-allowed"]
     startup_script_file = "scripts/lobby.sh"
-    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
+    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
   }
   "jsj-lobby-02" = {
     hostname = "jsj-lobby-02"
     zone     = "asia-northeast3-b"
     tags     = ["lobby", "ssh-allowed"]
     startup_script_file = "scripts/lobby.sh"
-    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
+    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
   }
   "jsj-web-01" = {
     hostname     = "jsj-web-01"
@@ -44,14 +44,14 @@ instances = {
     machine_type = "e2-small"
     tags         = ["web", "ssh-allowed"]
     startup_script_file = "scripts/lobby.sh"
-    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
+    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
   }
   "jsj-web-02" = {
     hostname = "jsj-web-02"
     zone     = "asia-northeast3-b"
     tags     = ["web", "ssh-allowed"]
     startup_script_file = "scripts/lobby.sh"
-    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
+    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
   }
   "jsj-was-01" = {
     hostname     = "jsj-was-01"
@@ -59,7 +59,7 @@ instances = {
     machine_type = "e2-standard-4"
     tags         = ["was", "ssh-allowed"]
     startup_script_file = "scripts/was.sh"
-    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-private"
+    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-private"
   }
   "jsj-was-02" = {
     hostname             = "jsj-was-02"
@@ -73,6 +73,19 @@ instances = {
     image_family         = "ubuntu-2204-lts"
     image_project        = "ubuntu-os-cloud"
     startup_script_file  = "scripts/was.sh"
-    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-private"
+    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-private"
   }
+}
+
+# Managed Instance Groups (LB/Autoscaling용)
+mig_groups = {
+#  "web" = {
+#    zone                 = "asia-northeast3-a"
+#    target_size          = 3
+#    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
+#    named_ports = [
+#      { name = "http", port = 80 }
+#    ]
+#    startup_script_file = "scripts/lobby.sh"
+#  }
 }

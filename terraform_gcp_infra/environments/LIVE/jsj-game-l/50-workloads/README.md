@@ -109,6 +109,25 @@ terragrunt plan   --non-interactive
 terragrunt apply  --non-interactive
 ```
 
+## Managed Instance Group 사용
+대규모 트래픽 또는 Load Balancer 백엔드를 구성하려면 `mig_groups` 맵을 정의해 MIG를 생성할 수 있습니다.
+
+```hcl
+mig_groups = {
+  "web" = {
+    zone                 = "asia-northeast3-a"
+    target_size          = 3
+    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
+    named_ports = [
+      { name = "http", port = 80 }
+    ]
+    startup_script_file = "scripts/lobby.sh"
+  }
+}
+```
+
+`terragrunt output managed_instance_groups` 명령으로 MIG instance group self-link를 확인한 뒤, Load Balancer 백엔드(`70-loadbalancer/terraform.tfvars`)의 `backends` 항목에 전달하면 됩니다.
+
 ## 설정 항목 설명
 
 ### 공통 설정 (기본값)

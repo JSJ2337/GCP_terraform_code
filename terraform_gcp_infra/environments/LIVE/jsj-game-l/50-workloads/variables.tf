@@ -169,3 +169,29 @@ variable "instances" {
   default     = {}
   description = "VM 인스턴스 맵 (키=인스턴스명, 값=설정). 비워두면 instance_count 방식 사용"
 }
+
+variable "mig_groups" {
+  description = "Managed Instance Group 정의 (필요 시 로드밸런서/오토스케일링에 사용)"
+  type = map(object({
+    zone                  = optional(string)
+    target_size           = number
+    subnetwork_self_link  = string
+    machine_type          = optional(string)
+    enable_public_ip      = optional(bool)
+    startup_script        = optional(string)
+    startup_script_file   = optional(string)
+    metadata              = optional(map(string))
+    tags                  = optional(list(string))
+    labels                = optional(map(string))
+    boot_disk_size_gb     = optional(number)
+    boot_disk_type        = optional(string)
+    image_family          = optional(string)
+    image_project         = optional(string)
+    service_account_email = optional(string)
+    named_ports = optional(list(object({
+      name = string
+      port = number
+    })))
+  }))
+  default = {}
+}
