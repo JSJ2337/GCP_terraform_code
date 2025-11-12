@@ -71,9 +71,9 @@ pipeline {
                             }
                     } else {
                         sh """
-                            cd '${TG_WORKING_DIR}/${params.TARGET_LAYER}' && \
-                            rm -rf .terragrunt-cache .terraform || true && \
-                            rm -f tfplan || true && \
+                            cd '${TG_WORKING_DIR}/${params.TARGET_LAYER}'
+                            rm -rf .terragrunt-cache .terraform || true
+                            rm -f tfplan || true
                             terragrunt init
                         """
                     }
@@ -97,7 +97,10 @@ pipeline {
                             sh "terragrunt --working-dir ${TG_WORKING_DIR} run --queue-include-dir '00-project' --all plan -- -out=tfplan-00-project"
                         }
                     } else {
-                        sh "cd '${TG_WORKING_DIR}/${params.TARGET_LAYER}' && terragrunt plan -out=tfplan"
+                        sh """
+                            cd '${TG_WORKING_DIR}/${params.TARGET_LAYER}'
+                            terragrunt plan -out=tfplan
+                        """
                     }
                 }
             }
@@ -145,7 +148,10 @@ pipeline {
                                 sh "terragrunt --working-dir ${TG_WORKING_DIR} run --all apply -- -auto-approve"
                             }
                         } else {
-                            sh "cd '${TG_WORKING_DIR}/${params.TARGET_LAYER}' && terragrunt apply tfplan"
+                            sh """
+                                cd '${TG_WORKING_DIR}/${params.TARGET_LAYER}'
+                                terragrunt apply tfplan
+                            """
                         }
                     } else if (params.ACTION == 'destroy') {
                         echo '🗑️  Destroying Terragrunt resources...'
@@ -154,7 +160,10 @@ pipeline {
                                 sh "terragrunt --working-dir ${TG_WORKING_DIR} run --all destroy -- -auto-approve"
                             }
                         } else {
-                            sh "cd '${TG_WORKING_DIR}/${params.TARGET_LAYER}' && terragrunt destroy -auto-approve"
+                            sh """
+                                cd '${TG_WORKING_DIR}/${params.TARGET_LAYER}'
+                                terragrunt destroy -auto-approve
+                            """
                         }
                     }
                 }
