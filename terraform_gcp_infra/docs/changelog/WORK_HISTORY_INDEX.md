@@ -159,7 +159,7 @@ work_history/YYYY-MM-DD.md
 
 ## 📚 관련 문서
 
-- [00_README.md](./00_README.md) - 프로젝트 개요 및 시작 가이드
-- [02_CHANGELOG.md](./02_CHANGELOG.md) - 변경 로그
-- [03_QUICK_REFERENCE.md](./03_QUICK_REFERENCE.md) - 빠른 참조 가이드
-- [05_quick setup guide.md](./05_quick%20setup%20guide.md) - 신규 환경 설정 가이드
+- [README](../../README.md) - 프로젝트 개요
+- [문서 포털](../README.md) - 전체 문서 인덱스
+- [CHANGELOG](./CHANGELOG.md) - 변경 로그
+- [빠른 시작 가이드](../getting-started/first-deployment.md) - 신규 환경 설정 가이드
