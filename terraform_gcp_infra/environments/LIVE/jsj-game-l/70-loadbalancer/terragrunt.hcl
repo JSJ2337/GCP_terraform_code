@@ -23,22 +23,10 @@ dependencies {
   ]
 }
 
-dependency "workloads" {
-  config_path = "../50-workloads"
-
-  mock_outputs = {
-    instance_groups = {}
-  }
-}
-
-locals {
-  workloads_instance_groups = try(dependency.workloads.outputs.instance_groups, {})
-}
-
 inputs = merge(
   local.common_inputs,
   local.layer_inputs,
   {
-    auto_instance_groups = local.workloads_instance_groups
+    auto_instance_groups = try(dependency.workloads.outputs.instance_groups, {})
   }
 )
