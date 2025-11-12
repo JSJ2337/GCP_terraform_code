@@ -81,9 +81,11 @@ GCP Terraform Infrastructure 프로젝트의 모든 문서를 한눈에 확인�
 | 문서 | 설명 |
 |------|------|
 | [CHANGELOG](./changelog/CHANGELOG.md) | 버전별 변경 내역 |
-| [작업 이력 인덱스](./changelog/WORK_HISTORY_INDEX.md) | 날짜별 작업 요약 |
-| [2025-11-12](./changelog/work-history/2025-11-12.md) | 최신 작업 이력 |
-| [전체 이력](./changelog/work-history/) | 날짜별 상세 작업 이력 |
+| [작업 이력 인덱스](./changelog/WORK_HISTORY_INDEX.md) | 📋 전체 작업 이력 인덱스 |
+| [2025-11-12](./changelog/work-history/2025-11-12.md) | 최신: 문서 재구성 |
+| [2025-11-11](./changelog/work-history/2025-11-11.md) | Terragrunt 0.93 적용 |
+| [2025-11-10](./changelog/work-history/2025-11-10.md) | jsj-game-k 환경 생성 |
+| [전체 이력 보기](./changelog/WORK_HISTORY_INDEX.md) | 모든 날짜별 작업 이력 |
 
 ## 🎯 시나리오별 가이드
 
