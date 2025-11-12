@@ -12,7 +12,6 @@ disk_size       = 20
 disk_type       = "PD_SSD"
 disk_autoresize = true
 
-
 # Deletion protection (Production: true, Development: false)
 deletion_protection = false # 삭제 보호 기본 비활성 (필요 시 true로 변경)
 

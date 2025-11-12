@@ -4,7 +4,7 @@
 project_id     = "jsj-game-l"
 project_name   = "game-l"
 environment    = "prod"
-organization   = "jsj-dev" # 실제 도메인: jsj-dev.com
+organization   = "jsj-dev"  # 실제 도메인: jsj-dev.com
 region_primary = "asia-northeast3"
 region_backup  = "asia-northeast1"
 
