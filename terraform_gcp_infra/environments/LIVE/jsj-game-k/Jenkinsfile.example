@@ -69,13 +69,14 @@ pipeline {
                             dir("${env.WORKSPACE}") {
                                 sh "terragrunt --working-dir ${TG_WORKING_DIR} run --all init"
                             }
-                        } else {
-                            sh """
-                                cd "${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}"
+                    } else {
+                        dir("${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
+                            sh '''
                                 rm -rf .terragrunt-cache .terraform || true
                                 rm -f tfplan || true
                                 terragrunt init
-                        """
+                            '''
+                        }
                     }
                     }
                 }
@@ -97,10 +98,9 @@ pipeline {
                             sh "terragrunt --working-dir ${TG_WORKING_DIR} run --queue-include-dir '00-project' --all plan -- -out=tfplan-00-project"
                         }
                     } else {
-                        sh """
-                            cd "${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}"
-                            terragrunt plan -out=tfplan
-                        """
+                        dir("${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
+                            sh 'terragrunt plan -out=tfplan'
+                        }
                     }
                 }
             }
@@ -148,10 +148,9 @@ pipeline {
                                 sh "terragrunt --working-dir ${TG_WORKING_DIR} run --all apply -- -auto-approve"
                             }
                         } else {
-                            sh """
-                                cd "${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}"
-                                terragrunt apply tfplan
-                            """
+                            dir("${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
+                                sh 'terragrunt apply tfplan'
+                            }
                         }
                     } else if (params.ACTION == 'destroy') {
                         echo '🗑️  Destroying Terragrunt resources...'
@@ -160,10 +159,9 @@ pipeline {
                                 sh "terragrunt --working-dir ${TG_WORKING_DIR} run --all destroy -- -auto-approve"
                             }
                         } else {
-                            sh """
-                                cd "${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}"
-                                terragrunt destroy -auto-approve
-                            """
+                            dir("${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
+                                sh 'terragrunt destroy -auto-approve'
+                            }
                         }
                     }
                 }
