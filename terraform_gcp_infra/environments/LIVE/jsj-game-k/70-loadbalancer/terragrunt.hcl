@@ -15,11 +15,6 @@ locals {
   layer_inputs     = try(jsondecode(local.raw_layer_inputs), local.raw_layer_inputs)
 }
 
-inputs = merge(
-  local.common_inputs,
-  local.layer_inputs
-)
-
 dependencies {
   paths = [
     "../00-project",
@@ -27,3 +22,23 @@ dependencies {
     "../50-workloads"
   ]
 }
+
+dependency "workloads" {
+  config_path = "../50-workloads"
+
+  mock_outputs = {
+    instance_groups = {}
+  }
+}
+
+locals {
+  workloads_instance_groups = try(dependency.workloads.outputs.instance_groups, {})
+}
+
+inputs = merge(
+  local.common_inputs,
+  local.layer_inputs,
+  {
+    auto_instance_groups = local.workloads_instance_groups
+  }
+)
