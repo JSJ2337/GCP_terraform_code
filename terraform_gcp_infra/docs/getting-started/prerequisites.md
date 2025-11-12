@@ -8,7 +8,7 @@
 ```bash
 # 버전 확인
 terraform version
-# Required: >= 1.6
+# Required: >= 1.6 (권장: 1.10+ / 최신: 1.13.5)
 ```
 
 **설치**:

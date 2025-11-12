@@ -5,7 +5,7 @@ Google Cloud Platform 인프라를 위한 프로덕션 레디 Terraform 모듈 �
 ## 🚀 빠른 시작
 
 ### 1. 사전 요구사항
-- Terraform >= 1.6
+- Terraform >= 1.6 (권장: 1.10+)
 - Terragrunt >= 0.93
 - Google Cloud SDK
 - [상세 가이드](./docs/getting-started/prerequisites.md)
