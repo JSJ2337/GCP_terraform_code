@@ -159,6 +159,7 @@ variable "instances" {
     metadata              = optional(map(string))
     tags                  = optional(list(string))
     labels                = optional(map(string))
+    boot_disk_name        = optional(string)
     boot_disk_size_gb     = optional(number)
     boot_disk_type        = optional(string)
     image_family          = optional(string)

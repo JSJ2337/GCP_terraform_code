@@ -1,5 +1,5 @@
 # 50-workloads 레이어
-> Terragrunt: environments/LIVE/jsj-game-k/50-workloads/terragrunt.hcl
+> Terragrunt: environments/LIVE/jsj-game-l/50-workloads/terragrunt.hcl
 
 
 Compute Engine VM 인스턴스를 배포하는 레이어입니다. 두 가지 방식을 지원하여 간단한 경우부터 복잡한 구성까지 유연하게 대응할 수 있습니다.
@@ -9,6 +9,7 @@ Compute Engine VM 인스턴스를 배포하는 레이어입니다. 두 가지 �
   - **count 방식**: 모든 VM이 동일한 설정 (간단한 경우)
   - **for_each 방식** (권장): 각 VM마다 다른 서브넷, 존, 머신 타입, OS 이미지, 스크립트 지정
 - `modules/gce-vmset`을 이용한 VM 생성 (per-instance 이미지/스크립트 지원)
+- 부팅 디스크를 별도 Persistent Disk로 생성하여 인스턴스 교체 시에도 데이터를 유지
 - Shielded VM, OS Login, Preemptible 옵션 지원
 - `startup_script_file`을 통해 스크립트를 별도 파일로 관리하고 여러 VM에서 재사용
 - **역할별 서브넷 배치**: 10-network에서 생성한 DMZ/Private/DB 서브넷에 VM 분산 배치
@@ -47,7 +48,7 @@ instance_count = 0  # count 방식 비활성화
 
 instances = {
   "web-server-01" = {
-    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
+    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
     zone                 = "asia-northeast3-a"
     machine_type         = "e2-small"
     tags                 = ["web", "frontend"]
@@ -58,7 +59,7 @@ instances = {
   }
 
   "app-server-01" = {
-    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-private"
+    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-private"
     zone                 = "asia-northeast3-b"
     machine_type         = "e2-medium"
     tags                 = ["app", "backend"]
@@ -68,7 +69,7 @@ instances = {
   }
 
   "db-proxy-01" = {
-    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-db"
+    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-db"
     zone                 = "asia-northeast3-c"
     machine_type         = "e2-micro"
   }
@@ -89,9 +90,9 @@ projects/{project-id}/regions/{region}/subnetworks/{subnet-name}
 ```
 
 **예시:**
-- DMZ 서브넷: `projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz`
-- Private/WAS 서브넷: `projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-private`
-- DB 서브넷: `projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-db`
+- DMZ 서브넷: `projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz`
+- Private/WAS 서브넷: `projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-private`
+- DB 서브넷: `projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-db`
 
 **Terragrunt로 확인:**
 ```bash
@@ -121,6 +122,7 @@ terragrunt apply  --non-interactive
 
 ### VM별 개별 설정 (instances map)
 - `hostname` (선택): FQDN이 필요할 때만 설정하세요. 기본값은 `instance-name.c.<project>.internal`
+- `boot_disk_name`: 부팅 디스크 리소스 이름(기본: `<instance-name>-boot`). 인스턴스 교체 시 동일 디스크를 재사용합니다.
 - `subnetwork_self_link`: 배치할 서브넷 전체 경로 (**중요**)
 - `zone`: 배치할 존 (고가용성 구성 시 분산 배치)
 - `machine_type`: VM 타입 (기본값 override)
@@ -140,4 +142,4 @@ terragrunt apply  --non-interactive
 ## 예제 참조
 - count 방식 예제: `terraform.tfvars.example` 상단 참조
 - for_each 방식 예제: `terraform.tfvars.example` 하단 주석 참조
-- 실제 운영 예제: `environments/LIVE/jsj-game-k/50-workloads/terraform.tfvars`
+- 실제 운영 예제: `environments/LIVE/jsj-game-l/50-workloads/terraform.tfvars`

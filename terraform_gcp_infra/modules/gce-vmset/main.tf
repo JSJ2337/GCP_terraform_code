@@ -20,6 +20,19 @@ data "google_compute_image" "per_instance" {
   project  = coalesce(each.value.image_project, var.image_project)
 }
 
+resource "google_compute_disk" "vm_map_boot" {
+  for_each = var.instances
+
+  name    = coalesce(lookup(each.value, "boot_disk_name", null), "${each.key}-boot")
+  project = var.project_id
+  zone    = coalesce(each.value.zone, var.zone)
+  size    = coalesce(each.value.boot_disk_size_gb, var.boot_disk_size_gb)
+  type    = coalesce(each.value.boot_disk_type, var.boot_disk_type)
+  image   = data.google_compute_image.per_instance[each.key].self_link
+
+  labels = merge(var.labels, coalesce(each.value.labels, {}))
+}
+
 # 기존 count 방식 (하위 호환성 유지)
 resource "google_compute_instance" "vm_count" {
   count        = length(var.instances) == 0 ? var.instance_count : 0
@@ -92,11 +105,8 @@ resource "google_compute_instance" "vm_map" {
   project      = var.project_id
 
   boot_disk {
-    initialize_params {
-      image = data.google_compute_image.per_instance[each.key].self_link
-      size  = coalesce(each.value.boot_disk_size_gb, var.boot_disk_size_gb)
-      type  = coalesce(each.value.boot_disk_type, var.boot_disk_type)
-    }
+    source      = google_compute_disk.vm_map_boot[each.key].self_link
+    auto_delete = false
   }
 
   network_interface {

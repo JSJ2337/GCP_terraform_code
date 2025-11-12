@@ -9,6 +9,7 @@ Compute Engine VM 인스턴스를 배포하는 레이어입니다. 두 가지 �
   - **count 방식**: 모든 VM이 동일한 설정 (간단한 경우)
   - **for_each 방식** (권장): 각 VM마다 다른 서브넷, 존, 머신 타입, OS 이미지, 스크립트 지정
 - `modules/gce-vmset`을 이용한 VM 생성 (per-instance 이미지/스크립트 지원)
+- 부팅 디스크를 별도 Persistent Disk로 생성하여 인스턴스 교체 시에도 데이터를 유지
 - Shielded VM, OS Login, Preemptible 옵션 지원
 - `startup_script_file`을 통해 스크립트를 별도 파일로 관리하고 여러 VM에서 재사용
 - **역할별 서브넷 배치**: 10-network에서 생성한 DMZ/Private/DB 서브넷에 VM 분산 배치
@@ -121,6 +122,7 @@ terragrunt apply  --non-interactive
 
 ### VM별 개별 설정 (instances map)
 - `hostname` (선택): FQDN이 필요할 때만 설정하세요. 기본값은 `instance-name.c.<project>.internal`
+- `boot_disk_name`: 부팅 디스크 리소스 이름(기본: `<instance-name>-boot`). 인스턴스 교체 시 동일 디스크를 재사용합니다.
 - `subnetwork_self_link`: 배치할 서브넷 전체 경로 (**중요**)
 - `zone`: 배치할 존 (고가용성 구성 시 분산 배치)
 - `machine_type`: VM 타입 (기본값 override)
