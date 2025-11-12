@@ -120,22 +120,49 @@ instances = {
 }
 
 instance_groups = {
-  "jsj-web-ig" = {
-    instances = ["jsj-web-01", "jsj-web-02", "jsj-web-03"]
-    named_ports = [
-      { name = "http", port = 80 }
-    ]
+  # Web (존별 분리)
+  "jsj-web-ig-a" = {
+    instances  = ["jsj-web-01"]
+    zone       = "asia-northeast3-a"
+    named_ports = [{ name = "http", port = 80 }]
   }
-  "jsj-lobby-ig" = {
-    instances = ["jsj-lobby-01", "jsj-lobby-02", "jsj-lobby-03"]
-    named_ports = [
-      { name = "http", port = 80 }
-    ]
+  "jsj-web-ig-b" = {
+    instances  = ["jsj-web-02"]
+    zone       = "asia-northeast3-b"
+    named_ports = [{ name = "http", port = 80 }]
   }
-  "jsj-was-ig" = {
-    instances = ["jsj-was-01", "jsj-was-02"]
-    named_ports = [
-      { name = "http", port = 8080 }
-    ]
+  "jsj-web-ig-c" = {
+    instances  = ["jsj-web-03"]
+    zone       = "asia-northeast3-c"
+    named_ports = [{ name = "http", port = 80 }]
+  }
+
+  # Lobby (존별 분리)
+  "jsj-lobby-ig-a" = {
+    instances  = ["jsj-lobby-01"]
+    zone       = "asia-northeast3-a"
+    named_ports = [{ name = "http", port = 80 }]
+  }
+  "jsj-lobby-ig-b" = {
+    instances  = ["jsj-lobby-02"]
+    zone       = "asia-northeast3-b"
+    named_ports = [{ name = "http", port = 80 }]
+  }
+  "jsj-lobby-ig-c" = {
+    instances  = ["jsj-lobby-03"]
+    zone       = "asia-northeast3-c"
+    named_ports = [{ name = "http", port = 80 }]
+  }
+
+  # WAS (각 존에 1대씩)
+  "jsj-was-ig-a" = {
+    instances  = ["jsj-was-01"]
+    zone       = "asia-northeast3-a"
+    named_ports = [{ name = "http", port = 8080 }]
+  }
+  "jsj-was-ig-b" = {
+    instances  = ["jsj-was-02"]
+    zone       = "asia-northeast3-b"
+    named_ports = [{ name = "http", port = 8080 }]
   }
 }

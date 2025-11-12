@@ -113,25 +113,21 @@ terragrunt apply  --non-interactive
 ```
 
 ## Instance Group 구성 (Load Balancer 연동)
-`instance_groups` 맵을 사용하면 기존 VM들을 역할별로 묶어 수동 Instance Group을 만들 수 있습니다. 각 그룹은 같은 존의 VM만 포함해야 합니다.
+`instance_groups` 맵을 사용하면 기존 VM들을 역할/존별로 묶어 수동 Instance Group을 만들 수 있습니다. **Unmanaged Instance Group은 동일한 Zone의 VM만 포함할 수 있으므로, 멀티존 고가용성이 필요하면 Zone별로 그룹을 나눠야 합니다.**
 
 ```hcl
 instance_groups = {
-  "web-ig" = {
-    instances = ["jsj-web-01", "jsj-web-02", "jsj-web-03"]
-    named_ports = [
-      { name = "http", port = 80 }
-    ]
+  "web-ig-a" = {
+    instances  = ["jsj-web-01"]
+    zone       = "asia-northeast3-a"
+    named_ports = [{ name = "http", port = 80 }]
   }
-  "lobby-ig" = {
-    instances = ["jsj-lobby-01", "jsj-lobby-02", "jsj-lobby-03"]
+  "web-ig-b" = {
+    instances  = ["jsj-web-02"]
+    zone       = "asia-northeast3-b"
+    named_ports = [{ name = "http", port = 80 }]
   }
-  "was-ig" = {
-    instances = ["jsj-was-01", "jsj-was-02"]
-    named_ports = [
-      { name = "http", port = 8080 }
-    ]
-  }
+  ...
 }
 ```
 
