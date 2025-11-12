@@ -11,6 +11,7 @@ Compute Engine VM 인스턴스를 배포하는 레이어입니다. 두 가지 �
 - `modules/gce-vmset`을 이용한 VM 생성 (per-instance 이미지/스크립트 지원)
 - 부팅 디스크를 별도 Persistent Disk로 생성하여 인스턴스 교체 시에도 데이터를 유지
 - 기본 OS는 상단의 `image_family`/`image_project`가 모든 인스턴스에 적용되며, 특정 VM만 다른 OS가 필요하면 해당 인스턴스 블록 안에서 `image_family` 등을 override하세요.
+- Load Balancer 연동을 위해 역할별 수동 Instance Group을 선언할 수 있습니다.
 - 기본 OS는 Rocky Linux 9이며, 인스턴스별로 `image_family`/`image_project`를 재정의 가능
 - Shielded VM, OS Login, Preemptible 옵션 지원
 - `startup_script_file`을 통해 스크립트를 별도 파일로 관리하고 여러 VM에서 재사용
@@ -111,24 +112,30 @@ terragrunt plan   --non-interactive
 terragrunt apply  --non-interactive
 ```
 
-## Managed Instance Group 사용
-대규모 트래픽 또는 Load Balancer 백엔드를 구성하려면 `mig_groups` 맵을 정의해 MIG를 생성할 수 있습니다.
+## Instance Group 구성 (Load Balancer 연동)
+`instance_groups` 맵을 사용하면 기존 VM들을 역할별로 묶어 수동 Instance Group을 만들 수 있습니다. 각 그룹은 같은 존의 VM만 포함해야 합니다.
 
 ```hcl
-mig_groups = {
-  "web" = {
-    zone                 = "asia-northeast3-a"
-    target_size          = 3
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
+instance_groups = {
+  "web-ig" = {
+    instances = ["jsj-web-01", "jsj-web-02", "jsj-web-03"]
     named_ports = [
       { name = "http", port = 80 }
     ]
-    startup_script_file = "scripts/lobby.sh"
+  }
+  "lobby-ig" = {
+    instances = ["jsj-lobby-01", "jsj-lobby-02", "jsj-lobby-03"]
+  }
+  "was-ig" = {
+    instances = ["jsj-was-01", "jsj-was-02"]
+    named_ports = [
+      { name = "http", port = 8080 }
+    ]
   }
 }
 ```
 
-`terragrunt output managed_instance_groups` 명령으로 MIG instance group self-link를 확인한 뒤, Load Balancer 백엔드(`70-loadbalancer/terraform.tfvars`)의 `backends` 항목에 전달하면 됩니다.
+`terragrunt output instance_groups` 명령으로 생성된 Instance Group self-link를 확인한 뒤, Load Balancer 백엔드(`70-loadbalancer/terraform.tfvars`)의 `backends` 항목에 전달하면 됩니다.
 
 ## 설정 항목 설명
 

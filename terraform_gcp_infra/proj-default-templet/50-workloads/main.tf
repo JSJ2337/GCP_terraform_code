@@ -48,19 +48,22 @@ locals {
     )
   }
 
-  processed_mig_groups = {
-    for name, cfg in var.mig_groups :
-    name => merge(
-      {
-        for k, v in cfg : k => v if k != "startup_script_file"
-      },
-      try(cfg.startup_script_file, null) != null ?
-      { startup_script = file("${path.module}/${cfg.startup_script_file}") } :
-      {},
-      {
-        enable_public_ip = coalesce(try(cfg.enable_public_ip, null), var.enable_public_ip)
-      }
-    )
+  vm_details = module.gce_vmset.vm_details
+
+  processed_instance_groups = {
+    for name, cfg in var.instance_groups :
+    name => {
+      resolved_instances = [
+        for inst_name in cfg.instances : {
+          name      = inst_name
+          self_link = local.vm_details[inst_name].self_link
+          zone      = local.vm_details[inst_name].zone
+        }
+      ]
+      zone        = coalesce(cfg.zone, local.vm_details[cfg.instances[0]].zone)
+      named_ports = coalesce(cfg.named_ports, [])
+    }
+    if length(cfg.instances) > 0
   }
 }
 
@@ -99,21 +102,27 @@ module "gce_vmset" {
   labels = local.labels
 }
 
-module "gce_mig" {
-  source = "../../../../modules/gce-mig"
+resource "google_compute_instance_group" "custom" {
+  for_each = local.processed_instance_groups
 
-  project_id            = var.project_id
-  machine_type          = var.machine_type
-  boot_disk_size_gb     = var.boot_disk_size_gb
-  boot_disk_type        = var.boot_disk_type
-  image_family          = var.image_family
-  image_project         = var.image_project
-  startup_script        = var.startup_script
-  metadata              = var.metadata
-  tags                  = local.tags
-  labels                = local.labels
-  service_account_email = local.service_account_email
-  service_account_scopes = var.service_account_scopes
+  project = var.project_id
+  name    = each.key
+  zone    = each.value.zone
 
-  groups = local.processed_mig_groups
+  instances = [for inst in each.value.resolved_instances : inst.self_link]
+
+  dynamic "named_port" {
+    for_each = each.value.named_ports
+    content {
+      name = named_port.value.name
+      port = named_port.value.port
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition     = length(distinct([for inst in each.value.resolved_instances : inst.zone])) == 1
+      error_message = "${each.key} instance group에는 동일한 존의 VM만 포함해야 합니다."
+    }
+  }
 }

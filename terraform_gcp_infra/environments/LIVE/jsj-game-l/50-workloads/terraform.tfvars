@@ -119,17 +119,23 @@ instances = {
   }
 }
 
-mig_groups = {
-  "jsj-web-mig" = {
-    zone                 = "asia-northeast3-a"
-    target_size          = 2
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
+instance_groups = {
+  "jsj-web-ig" = {
+    instances = ["jsj-web-01", "jsj-web-02", "jsj-web-03"]
     named_ports = [
       { name = "http", port = 80 }
     ]
-    startup_script_file = "scripts/lobby.sh"
-    machine_type        = "e2-medium"
-    image_family        = "rocky-linux-9"
-    image_project       = "rocky-linux-cloud"
+  }
+  "jsj-lobby-ig" = {
+    instances = ["jsj-lobby-01", "jsj-lobby-02", "jsj-lobby-03"]
+    named_ports = [
+      { name = "http", port = 80 }
+    ]
+  }
+  "jsj-was-ig" = {
+    instances = ["jsj-was-01", "jsj-was-02"]
+    named_ports = [
+      { name = "http", port = 8080 }
+    ]
   }
 }
