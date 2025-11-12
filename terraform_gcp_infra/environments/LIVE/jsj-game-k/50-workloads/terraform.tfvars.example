@@ -1,6 +1,6 @@
 # Region/Project overrides (필요 시 루트 root.hcl과 동일하게 유지)
-project_id     = "jsj-game-l"
-project_name   = "game-l"
+project_id     = "jsj-game-k"
+project_name   = "game-k"
 environment    = "prod"
 organization   = "jsj-dev"
 region_primary = "asia-northeast3"
@@ -9,8 +9,8 @@ region_backup  = "asia-northeast1"
 # 기본 VM 설정 (instances에서 override 가능)
 instance_count     = 0
 machine_type       = "e2-micro"
-image_family       = "debian-12"
-image_project      = "debian-cloud"
+image_family       = "rocky-linux-9"
+image_project      = "rocky-linux-cloud"
 boot_disk_size_gb  = 30
 boot_disk_type     = "pd-balanced"
 enable_public_ip   = false
@@ -28,38 +28,48 @@ instances = {
     hostname = "jsj-lobby-01"
     zone     = "asia-northeast3-a"
     tags     = ["lobby", "ssh-allowed"]
+    image_family  = "rocky-linux-9"
+    image_project = "rocky-linux-cloud"
     startup_script_file = "scripts/lobby.sh"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
+    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
   }
   "jsj-lobby-02" = {
     hostname = "jsj-lobby-02"
     zone     = "asia-northeast3-b"
     tags     = ["lobby", "ssh-allowed"]
+    image_family  = "rocky-linux-9"
+    image_project = "rocky-linux-cloud"
     startup_script_file = "scripts/lobby.sh"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
+    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
   }
   "jsj-web-01" = {
     hostname     = "jsj-web-01"
     zone         = "asia-northeast3-a"
     machine_type = "e2-small"
     tags         = ["web", "ssh-allowed"]
+    image_family  = "rocky-linux-9"
+    image_project = "rocky-linux-cloud"
     startup_script_file = "scripts/lobby.sh"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
+    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
   }
   "jsj-web-02" = {
     hostname = "jsj-web-02"
     zone     = "asia-northeast3-b"
     tags     = ["web", "ssh-allowed"]
+    image_family  = "rocky-linux-9"
+    image_project = "rocky-linux-cloud"
     startup_script_file = "scripts/lobby.sh"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
+    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
   }
   "jsj-was-01" = {
     hostname     = "jsj-was-01"
     zone         = "asia-northeast3-c"
     machine_type = "e2-standard-4"
     tags         = ["was", "ssh-allowed"]
+    image_family  = "rocky-linux-9"
+    image_project = "rocky-linux-cloud"
     startup_script_file = "scripts/was.sh"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-private"
+    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-private"
   }
   "jsj-was-02" = {
     hostname             = "jsj-was-02"
@@ -70,22 +80,24 @@ instances = {
       role = "was"
       tier = "backend"
     }
-    image_family         = "ubuntu-2204-lts"
-    image_project        = "ubuntu-os-cloud"
+    image_family         = "rocky-linux-9"
+    image_project        = "rocky-linux-cloud"
     startup_script_file  = "scripts/was.sh"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-private"
+    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-private"
   }
 }
 
 # Managed Instance Groups (LB/Autoscaling용)
 mig_groups = {
-#  "web" = {
-#    zone                 = "asia-northeast3-a"
-#    target_size          = 3
-#    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
-#    named_ports = [
-#      { name = "http", port = 80 }
-#    ]
-#    startup_script_file = "scripts/lobby.sh"
-#  }
+  "jsj-web-mig" = {
+    zone                 = "asia-northeast3-a"
+    target_size          = 2
+    subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-dmz"
+    named_ports = [
+      { name = "http", port = 80 }
+    ]
+    startup_script_file = "scripts/lobby.sh"
+    image_family        = "rocky-linux-9"
+    image_project       = "rocky-linux-cloud"
+  }
 }

@@ -13,7 +13,7 @@ region   = "us-central1"
 network  = ""  # 비워두면 naming 모듈의 VPC 사용
 subnetwork = ""
 # Private/WAS 서브넷을 명시하려면 self-link를 지정하세요.
-# internal_subnetwork_self_link = "projects/jsj-game-k/regions/asia-northeast3/subnetworks/game-k-subnet-private"
+# internal_subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-private"
 
 # 백엔드 서비스
 backend_protocol  = "HTTP"
@@ -23,7 +23,9 @@ backend_timeout   = 30
 # 백엔드 그룹 (Instance Group Self Link 필요, named port 설정 필수)
 backends = [
   {
-    group           = "projects/your-project/zones/us-central1-a/instanceGroups/web-ig"
+    # 50-workloads에서 생성된 MIG 출력 사용 예:
+    # group = module.gce_mig.instance_groups["jsj-web-mig"]
+    group           = "projects/jsj-game-l/zones/asia-northeast3-a/instanceGroups/jsj-web-mig-mig"
     balancing_mode  = "UTILIZATION"
     capacity_scaler = 1.0
     description     = "웹 서비스"

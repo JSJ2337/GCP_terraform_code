@@ -10,6 +10,7 @@ Compute Engine VM 인스턴스를 배포하는 레이어입니다. 두 가지 �
   - **for_each 방식** (권장): 각 VM마다 다른 서브넷, 존, 머신 타입, OS 이미지, 스크립트 지정
 - `modules/gce-vmset`을 이용한 VM 생성 (per-instance 이미지/스크립트 지원)
 - 부팅 디스크를 별도 Persistent Disk로 생성하여 인스턴스 교체 시에도 데이터를 유지
+- 기본 OS는 Rocky Linux 9이며, 인스턴스별로 `image_family`/`image_project`를 재정의 가능
 - Shielded VM, OS Login, Preemptible 옵션 지원
 - `startup_script_file`을 통해 스크립트를 별도 파일로 관리하고 여러 VM에서 재사용
 - **역할별 서브넷 배치**: 10-network에서 생성한 DMZ/Private/DB 서브넷에 VM 분산 배치

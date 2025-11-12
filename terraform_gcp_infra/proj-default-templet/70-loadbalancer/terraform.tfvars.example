@@ -23,7 +23,9 @@ backend_timeout   = 30
 # 백엔드 그룹 (Instance Group Self Link 필요, named port 설정 필수)
 backends = [
   {
-    group           = "projects/your-project/zones/us-central1-a/instanceGroups/web-ig"
+    # 50-workloads에서 생성된 MIG 출력 사용 예:
+    # group = module.gce_mig.instance_groups["jsj-web-mig"]
+    group           = "projects/jsj-game-l/zones/asia-northeast3-a/instanceGroups/jsj-web-mig-mig"
     balancing_mode  = "UTILIZATION"
     capacity_scaler = 1.0
     description     = "웹 서비스"
