@@ -89,7 +89,7 @@ pipeline {
                             }
                         } else {
                             sh """
-                                cd '${TG_WORKING_DIR}/${params.TARGET_LAYER}'
+                                cd '${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}'
                                 rm -rf .terragrunt-cache .terraform || true
                                 rm -f tfplan || true
                                 terragrunt init
@@ -117,7 +117,7 @@ pipeline {
                         }
                     } else {
                         sh """
-                            cd '${TG_WORKING_DIR}/${params.TARGET_LAYER}'
+                            cd '${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}'
                             terragrunt plan -out=tfplan
                         """
                     }
@@ -193,7 +193,7 @@ pipeline {
                             }
                         } else {
                             sh """
-                                cd '${TG_WORKING_DIR}/${params.TARGET_LAYER}'
+                                cd '${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}'
                                 terragrunt apply tfplan
                             """
                         }
@@ -205,7 +205,7 @@ pipeline {
                             }
                         } else {
                             sh """
-                                cd '${TG_WORKING_DIR}/${params.TARGET_LAYER}'
+                                cd '${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}'
                                 terragrunt destroy -auto-approve
                             """
                         }
