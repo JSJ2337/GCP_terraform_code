@@ -723,6 +723,8 @@ gcloud alpha resource-manager liens list --project=PROJECT_ID
 gcloud alpha resource-manager liens delete LIEN_ID
 
 # deletion_policy 변경 후 재시도
+
+자세한 destroy 순서와 트러블슈팅은 [Terraform Destroy Guide](./06_destroy_guide.md)를 참고하세요.
 ```
 
 ## 기여하기

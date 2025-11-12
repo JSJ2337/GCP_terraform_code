@@ -218,6 +218,7 @@ terragrunt run --all apply -- -auto-approve
 - **운영 작업**:
   - 테스트 환경(jsj-game-d) 전면 제거 및 디렉터리 정리
   - Storage retention lien 제거 후 프로젝트 삭제 완료
+  - 자세한 destroy 절차는 [Terraform Destroy Guide](./06_destroy_guide.md)를 참고
 
 ### 세션 9: Terragrunt 기반 실행 전환 (2025-11-03)
 - **구조 변경**:
