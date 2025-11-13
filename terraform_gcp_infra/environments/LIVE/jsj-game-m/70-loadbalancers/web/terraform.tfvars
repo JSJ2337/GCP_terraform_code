@@ -1,14 +1,14 @@
-lb_type = "http"
-region   = "asia-northeast3"
+lb_type           = "http"
+region            = "asia-northeast3"
 backend_protocol  = "HTTP"
 backend_port_name = "http"
 backend_timeout   = 30
 
-backend_service_name = "game-m-web-backend"
-url_map_name         = "game-m-web-url-map"
-target_http_proxy_name  = "game-m-web-http-proxy"
-forwarding_rule_name = "game-m-web-lb"
-static_ip_name       = "game-m-web-ip"
+backend_service_name   = "game-m-web-backend"
+url_map_name           = "game-m-web-url-map"
+target_http_proxy_name = "game-m-web-http-proxy"
+forwarding_rule_name   = "game-m-web-lb"
+static_ip_name         = "game-m-web-ip"
 
 backends = []
 
@@ -21,6 +21,7 @@ affinity_cookie_ttl         = 0
 connection_draining_timeout = 300
 
 create_health_check              = true
+health_check_name                = "game-m-web-health"
 health_check_type                = "http"
 health_check_port                = 80
 health_check_request_path        = "/"
@@ -32,7 +33,7 @@ health_check_healthy_threshold   = 2
 health_check_unhealthy_threshold = 2
 health_check_logging             = false
 
-enable_cdn            = false
-enable_iap            = false
-enable_logging        = true
-logging_sample_rate   = 1.0
+enable_cdn          = false
+enable_iap          = false
+enable_logging      = true
+logging_sample_rate = 1.0

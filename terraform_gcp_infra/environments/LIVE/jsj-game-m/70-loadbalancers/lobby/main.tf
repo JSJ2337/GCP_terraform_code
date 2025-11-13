@@ -38,7 +38,8 @@ locals {
   target_http_proxy_name  = length(trimspace(var.target_http_proxy_name)) > 0 ? var.target_http_proxy_name : "${module.naming.forwarding_rule_name}-http-proxy"
   target_https_proxy_name = length(trimspace(var.target_https_proxy_name)) > 0 ? var.target_https_proxy_name : "${module.naming.forwarding_rule_name}-https-proxy"
 
-  static_ip_name = length(trimspace(var.static_ip_name)) > 0 ? var.static_ip_name : "${module.naming.forwarding_rule_name}-ip"
+  static_ip_name    = length(trimspace(var.static_ip_name)) > 0 ? var.static_ip_name : "${module.naming.forwarding_rule_name}-ip"
+  health_check_name = length(trimspace(var.health_check_name)) > 0 ? var.health_check_name : module.naming.health_check_name
 
   auto_backends = [
     for name, link in var.auto_instance_groups : {
@@ -78,7 +79,7 @@ module "load_balancer" {
 
   # Health Check
   create_health_check              = var.create_health_check
-  health_check_name                = module.naming.health_check_name
+  health_check_name                = local.health_check_name
   health_check_type                = var.health_check_type
   health_check_port                = var.health_check_port
   health_check_request_path        = var.health_check_request_path

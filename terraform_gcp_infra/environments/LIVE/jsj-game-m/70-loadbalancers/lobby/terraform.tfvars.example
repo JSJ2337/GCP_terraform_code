@@ -40,6 +40,7 @@ connection_draining_timeout = 300
 
 # 헬스 체크
 create_health_check              = true
+health_check_name                = "game-m-lobby-health"
 health_check_type                = "http"  # http, https, tcp
 health_check_port                = 80
 health_check_request_path        = "/"

@@ -150,6 +150,12 @@ variable "create_health_check" {
   default     = true
 }
 
+variable "health_check_name" {
+  type        = string
+  description = "헬스 체크 이름 override"
+  default     = ""
+}
+
 variable "health_check_type" {
   type        = string
   description = "헬스 체크 타입"
