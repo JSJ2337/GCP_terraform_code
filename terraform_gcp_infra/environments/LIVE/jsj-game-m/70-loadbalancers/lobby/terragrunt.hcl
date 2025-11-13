@@ -22,6 +22,7 @@ dependency "workloads" {
   }
 
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+  skip_outputs = true
 }
 
 locals {
