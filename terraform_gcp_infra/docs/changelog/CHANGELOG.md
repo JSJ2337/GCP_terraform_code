@@ -17,6 +17,10 @@
     - `proj-default-templet/Jenkinsfile`
     - `.jenkins/Jenkinsfile.template`
   - `all` 레이어 실행 패턴과 단일 레이어 실행 패턴 일관성 확보
+- **로드 밸런서 자동 백엔드 연동 복구**: Terragrunt가 `50-workloads` 출력(Instance Group self link)을 읽지 못해 새 VM이 LB 백엔드에 자동 등록되지 않던 문제 해결
+  - 기존에는 `dependencies { paths = [...] }`만 선언되어 실행 순서만 보장되고 outputs는 전달되지 않았음
+  - `dependency "workloads"` 블록을 추가해 `instance_groups` output을 실제 입력으로 주입하고, plan/validate 시 사용 가능한 mock output을 정의
+  - 템플릿 및 운영 환경(`proj-default-templet`, `jsj-game-k`, `jsj-game-l`)의 `70-loadbalancer/terragrunt.hcl`에 동일하게 적용
 
 ## [미배포] - 2025-11-11
 

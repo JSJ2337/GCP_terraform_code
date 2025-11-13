@@ -23,6 +23,16 @@ dependencies {
   ]
 }
 
+dependency "workloads" {
+  config_path = "../50-workloads"
+
+  mock_outputs = {
+    instance_groups = {}
+  }
+
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+}
+
 inputs = merge(
   local.common_inputs,
   local.layer_inputs,
