@@ -31,18 +31,16 @@ locals {
 
   raw_layer_inputs = try(read_tfvars_file("${get_terragrunt_dir()}/terraform.tfvars"), tomap({}))
   layer_inputs     = try(jsondecode(local.raw_layer_inputs), local.raw_layer_inputs)
-
-  web_instance_groups = {
-    for name, link in try(dependency.workloads.outputs.instance_groups, {}) :
-    name => link
-    if contains(lower(name), "web")
-  }
 }
 
 inputs = merge(
   local.common_inputs,
   local.layer_inputs,
   {
-    auto_instance_groups = local.web_instance_groups
+    auto_instance_groups = {
+      for name, link in try(dependency.workloads.outputs.instance_groups, {}) :
+      name => link
+      if contains(lower(name), "web")
+    }
   }
 )
