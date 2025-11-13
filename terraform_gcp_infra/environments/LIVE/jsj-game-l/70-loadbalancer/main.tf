@@ -39,6 +39,18 @@ locals {
   target_https_proxy_name = length(trimspace(var.target_https_proxy_name)) > 0 ? var.target_https_proxy_name : "${module.naming.forwarding_rule_name}-https-proxy"
 
   static_ip_name = length(trimspace(var.static_ip_name)) > 0 ? var.static_ip_name : "${module.naming.forwarding_rule_name}-ip"
+
+  auto_backends = [
+    for name, link in var.auto_instance_groups : {
+      group           = link
+      balancing_mode  = var.auto_backend_balancing_mode
+      capacity_scaler = var.auto_backend_capacity_scaler
+      max_utilization = var.auto_backend_max_utilization
+      description     = "auto-${name}"
+    }
+  ]
+
+  effective_backends = concat(var.backends, local.auto_backends)
 }
 
 module "load_balancer" {
@@ -57,7 +69,7 @@ module "load_balancer" {
   backend_protocol     = var.backend_protocol
   backend_port_name    = var.backend_port_name
   backend_timeout      = var.backend_timeout
-  backends             = var.backends
+  backends             = local.effective_backends
 
   # Session affinity
   session_affinity            = var.session_affinity

@@ -17,7 +17,8 @@ HTTP(S) 및 내부 로드밸런서를 비롯해 다양한 GCP Load Balancer 구�
    ```
 2. 주요 항목 설명:
    - `lb_type`: `http`, `internal`, `internal_classic` 중 선택
-   - `backends`: 인스턴스 그룹 self link 및 용량 설정 (예: 50-workloads `instance_groups["jsj-web-ig"]` 출력값)
+   - `backends`: 인스턴스 그룹 self link 및 용량 설정 (예: 50-workloads `instance_groups["jsj-web-ig-a"]` 출력값)
+   - `auto_instance_groups`: Terragrunt dependency로 50-workloads 출력을 주입하면 자동으로 백엔드가 생성됨 (balancing mode 등은 기본값 사용)
    - `create_health_check`, `health_check_*`: 헬스 체크 타입과 경로
    - `enable_cdn`, `enable_iap`, `use_ssl`: 옵션 기능 토글
    - 내부 LB일 경우 `region`, `network`, `forwarding_rule_ports`, `internal_subnetwork_self_link`(예: game-l-subnet-private self-link) 지정

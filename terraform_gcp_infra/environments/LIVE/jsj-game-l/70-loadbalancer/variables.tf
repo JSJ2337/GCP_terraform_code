@@ -96,6 +96,30 @@ variable "backends" {
   default     = []
 }
 
+variable "auto_instance_groups" {
+  type        = map(string)
+  description = "50-workloads에서 생성한 Instance Group self-link 맵 (Terragrunt dependency로 주입)"
+  default     = {}
+}
+
+variable "auto_backend_balancing_mode" {
+  type        = string
+  description = "auto_instance_groups로 생성되는 백엔드의 balancing_mode 기본값"
+  default     = "UTILIZATION"
+}
+
+variable "auto_backend_capacity_scaler" {
+  type        = number
+  description = "auto_instance_groups로 생성되는 백엔드의 capacity_scaler 기본값"
+  default     = 1.0
+}
+
+variable "auto_backend_max_utilization" {
+  type        = number
+  description = "auto_instance_groups로 생성되는 백엔드의 max_utilization 기본값"
+  default     = 0.8
+}
+
 variable "session_affinity" {
   type        = string
   description = "세션 친화성"
