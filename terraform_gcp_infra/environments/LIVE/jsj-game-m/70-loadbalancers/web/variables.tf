@@ -84,6 +84,12 @@ variable "backend_timeout" {
   default     = 30
 }
 
+variable "backend_service_name" {
+  type        = string
+  description = "백엔드 서비스 이름 override"
+  default     = ""
+}
+
 variable "backends" {
   type = list(object({
     group           = string
@@ -333,6 +339,12 @@ variable "target_http_proxy_name" {
 variable "target_https_proxy_name" {
   type        = string
   description = "HTTPS 프록시 이름"
+  default     = ""
+}
+
+variable "forwarding_rule_name" {
+  type        = string
+  description = "포워딩 규칙 이름 override"
   default     = ""
 }
 

@@ -65,7 +65,7 @@ module "load_balancer" {
   subnetwork = local.subnetwork
 
   # Backend Service
-  backend_service_name = module.naming.backend_service_name
+  backend_service_name = length(trimspace(var.backend_service_name)) > 0 ? var.backend_service_name : module.naming.backend_service_name
   backend_protocol     = var.backend_protocol
   backend_port_name    = var.backend_port_name
   backend_timeout      = var.backend_timeout
@@ -123,7 +123,7 @@ module "load_balancer" {
   target_https_proxy_name = local.target_https_proxy_name
 
   # Forwarding Rule
-  forwarding_rule_name      = module.naming.forwarding_rule_name
+  forwarding_rule_name      = length(trimspace(var.forwarding_rule_name)) > 0 ? var.forwarding_rule_name : module.naming.forwarding_rule_name
   forwarding_rule_ports     = var.forwarding_rule_ports
   forwarding_rule_all_ports = var.forwarding_rule_all_ports
 
