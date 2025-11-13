@@ -81,7 +81,9 @@ remote_state {
 | 50-workloads | VM 갯수/머신타입/시작 스크립트, 네트워크 태그 | `terraform.tfvars` |
 | 60-database | Cloud SQL Tier/지역/백업/로그 정책 | `terraform.tfvars` |
 | 65-cache | Memorystore 메모리, 대체 존, 유지보수 창 | `terraform.tfvars` |
-| 70-loadbalancer | LB 타입, 백엔드, Health Check, SSL/IAP | `terraform.tfvars` |
+| 70-loadbalancers/* | 서비스별 Load Balancer 설정 (예: lobby, web) | 각 하위 디렉터리의 `terraform.tfvars` |
+
+> ⚠️ Load Balancer 디렉터리가 여러 개일 경우, 각 `terraform.tfvars`에서 `backend_service_name`, `url_map_name`, `forwarding_rule_name`, `static_ip_name` 등을 서로 다른 값으로 지정해 이름 충돌을 방지하세요.
 
 > 모든 레이어는 `terraform.tfvars.example`를 복사한 뒤 필수 항목을 채우면 됩니다.
 

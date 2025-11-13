@@ -209,25 +209,30 @@ terragrunt apply
 - Standard HA 구성
 - Private IP 연결
 
-### 9. 로드밸런서 배포 (70-loadbalancer)
+### 9. 로드밸런서 배포 (70-loadbalancers/\<서비스\>)
+
+| 예시 경로 | 설명 |
+|-----------|------|
+| `70-loadbalancers/lobby` | 로비/인증 등 별도 롤의 LB 전용 |
+| `70-loadbalancers/web`   | 웹 트래픽 전용 LB |
 
 ```bash
-cd ../70-loadbalancer
+cd ../70-loadbalancers/lobby   # 또는 필요한 서비스 디렉터리
 
-# LB 타입 선택
+# LB 타입/이름 선택 (각 디렉터리의 terraform.tfvars에서 override 가능)
 cat terraform.tfvars
-# lb_type = "https"
+# backend_service_name = "game-m-lobby-backend" 등
 
 terragrunt init --non-interactive
 terragrunt plan
 terragrunt apply
 ```
 
-**생성되는 리소스**:
-- HTTP(S) Load Balancer
+**생성되는 리소스 (레이어별)**:
+- HTTP(S)/Internal Load Balancer
 - Health Check
-- Backend Service
-- Forwarding Rule
+- Backend Service (Terragrunt dependency를 통해 자동 연결)
+- Forwarding Rule + Static IP (필요 시)
 
 ## 옵션 2: 일괄 배포 (스크립트)
 
