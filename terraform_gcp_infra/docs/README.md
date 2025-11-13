@@ -76,11 +76,11 @@
 | 문서 | 내용 |
 |------|------|
 | [CHANGELOG](./changelog/CHANGELOG.md) | 버전별 변경 내역 및 마이그레이션 가이드 |
-| [작업 이력 인덱스](./changelog/WORK_HISTORY_INDEX.md) | 날짜별 작업 요약 및 마일스톤 |
+| [작업 이력](./changelog/work_history/README.md) | 날짜별 작업 요약 및 마일스톤 |
 | [2025-11-12](./changelog/work_history/2025-11-12.md) | 최신: 문서 재구성 |
 | [2025-11-11](./changelog/work_history/2025-11-11.md) | Terragrunt 0.93 CLI 적용 |
 | [2025-11-10](./changelog/work_history/2025-11-10.md) | jsj-game-k 환경 생성 |
-| [전체 이력](./changelog/WORK_HISTORY_INDEX.md) | 전체 작업 이력 조회 |
+| [전체 이력](./changelog/work_history/README.md) | 전체 작업 이력 조회 |
 
 ---
 
@@ -140,7 +140,7 @@
 
 문서 관련 문의사항이 있을 경우:
 1. 해당 카테고리 문서 확인
-2. [CHANGELOG](./changelog/CHANGELOG.md) 및 [작업 이력](./changelog/WORK_HISTORY_INDEX.md) 검토
+2. [CHANGELOG](./changelog/CHANGELOG.md) 및 [작업 이력](./changelog/work_history/README.md) 검토
 3. GitHub Issues 등록
 
 ---

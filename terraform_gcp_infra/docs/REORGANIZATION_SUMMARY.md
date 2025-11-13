@@ -55,7 +55,8 @@ terraform_gcp_infra/
     │   └── network-issues.md          # 네트워크 문제
     ├── changelog/                     # 📜 변경 이력
     │   ├── CHANGELOG.md
-    │   ├── WORK_HISTORY_INDEX.md
+    │   ├── work_history/
+    │   │   ├── README.md
     │   └── work-history/              # 날짜별 상세 이력
     └── archive/                       # 🗂️ 이전 버전
         ├── 00_README_OLD.md
@@ -131,7 +132,7 @@ terraform_gcp_infra/
 ### 아카이브됨 (docs/archive/)
 - `00_README.md` → `docs/archive/00_README_OLD.md`
 - `03_QUICK_REFERENCE.md` → `docs/archive/03_QUICK_REFERENCE_OLD.md`
-- `04_WORK_HISTORY.md` → `docs/changelog/WORK_HISTORY_INDEX.md`
+- `04_WORK_HISTORY.md` → `docs/changelog/work_history/README.md`
 
 ### 대체됨
 - `00_README.md` → 새로운 간결한 `README.md` (200줄)
