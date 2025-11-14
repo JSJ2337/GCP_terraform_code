@@ -40,7 +40,7 @@ inputs = merge(
     auto_instance_groups = {
       for name, link in try(dependency.workloads.outputs.instance_groups, {}) :
       name => link
-      if contains(lower(name), "web")
+      if length(regexall("web", lower(name))) > 0
     }
   }
 )
