@@ -15,6 +15,10 @@ resource "google_compute_health_check" "default" {
   name    = var.health_check_name
   project = var.project_id
 
+  lifecycle {
+    create_before_destroy = true
+  }
+
   timeout_sec         = var.health_check_timeout
   check_interval_sec  = var.health_check_interval
   healthy_threshold   = var.health_check_healthy_threshold
@@ -60,6 +64,10 @@ resource "google_compute_region_health_check" "internal" {
   name    = var.health_check_name
   project = var.project_id
   region  = var.region
+
+  lifecycle {
+    create_before_destroy = true
+  }
 
   timeout_sec         = var.health_check_timeout
   check_interval_sec  = var.health_check_interval
