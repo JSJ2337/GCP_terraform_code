@@ -71,12 +71,25 @@ cp .jenkins/Jenkinsfile.template environments/LIVE/my-project/Jenkinsfile
    ↓
 4. Terragrunt Plan
    ↓
-5. Review Plan (apply/destroy 시)
+5. GCP Project Guard (00-project/all 시)
    ↓
-6. 🛑 Manual Approval 🛑 (30분 타임아웃)
+6. Review Plan (apply/destroy 시)
    ↓
-7. Terragrunt Apply/Destroy
+7. 🛑 Manual Approval 🛑 (30분 타임아웃)
+   ↓
+8. Terragrunt Apply/Destroy
 ```
+
+### GCP Project Guard Stage
+
+- 실행 조건: `TARGET_LAYER`가 `00-project` 또는 `all`이고 ACTION이 `plan/apply`인 경우
+- 스크립트: `terraform_gcp_infra/scripts/gcp_project_guard.sh ensure <env-dir>`
+- 기능:
+  - `common.naming.tfvars`/`root.hcl` 값을 읽어 GCP 프로젝트 ID·이름 확인
+  - 미존재 시 프로젝트 생성 및 지정 폴더(`folder_structure`)로 이동
+  - Billing Account 링크 및 필수 API(`terraform.tfvars`의 `apis` 리스트) 활성화
+  - Jenkins SA(`jenkins_service_account_email`)에 org/billing/project IAM 권한 부여
+- Destroy 시에는 같은 스크립트의 `cleanup` 모드가 실행되어 lien 등을 사전에 제거합니다.
 
 ## GCP 인증 설정
 

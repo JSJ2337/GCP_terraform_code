@@ -128,6 +128,32 @@ pipeline {
             }
         }
 
+        stage('GCP Project Guard') {
+            when {
+                expression {
+                    (params.TARGET_LAYER == 'all' || params.TARGET_LAYER == '00-project') &&
+                    (params.ACTION == 'plan' || params.ACTION == 'apply')
+                }
+            }
+            steps {
+                echo '🛡️  Ensuring GCP project prerequisites...'
+                sh "bash terraform_gcp_infra/scripts/gcp_project_guard.sh ensure '${TG_WORKING_DIR}'"
+            }
+        }
+
+        stage('GCP Project Cleanup Prep') {
+            when {
+                expression {
+                    (params.TARGET_LAYER == 'all' || params.TARGET_LAYER == '00-project') &&
+                    params.ACTION == 'destroy'
+                }
+            }
+            steps {
+                echo '🧹 Preparing GCP project for destroy...'
+                sh "bash terraform_gcp_infra/scripts/gcp_project_guard.sh cleanup '${TG_WORKING_DIR}'"
+            }
+        }
+
         stage('Review Plan') {
             when {
                 expression { params.ACTION == 'apply' || params.ACTION == 'destroy' }
