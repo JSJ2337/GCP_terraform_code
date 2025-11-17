@@ -227,17 +227,14 @@ variable "read_replicas" {
 
     availability_type               = optional(string)
     disk_size                       = optional(number)
-    disk_type                       = optional(string)
-    disk_autoresize                 = optional(bool)
-    ipv4_enabled                    = optional(bool)
-    private_network                 = optional(string)
-    database_flags                  = optional(list(object({ name = string, value = string })))
-    maintenance_window_day          = optional(number)
-    maintenance_window_hour         = optional(number)
-    maintenance_window_update_track = optional(string)
-    labels                          = optional(map(string))
+    disk_type       = optional(string)
+    disk_autoresize = optional(bool)
+    ipv4_enabled    = optional(bool)
+    private_network = optional(string)
+    database_flags  = optional(list(object({ name = string, value = string })))
+    labels          = optional(map(string))
   }))
-  description = "읽기 복제본 설정 (지역/머신 타입/여분 설정 포함)"
+  description = "읽기 복제본 설정 (지역/머신 타입/여분 설정 포함). 참고: maintenance_window는 마스터에서 자동 상속되므로 설정 불가"
   default     = {}
 }
 

@@ -165,9 +165,11 @@ module "mysql_with_replicas" {
 
 - 필수: `name`, `region`, `tier`
 - 선택: `failover_target`, `availability_type`(기본 ZONAL), `disk_size`, `disk_type`, `disk_autoresize`,
-  `ipv4_enabled`, `private_network`, `database_flags`, `maintenance_window_*`, `labels`
+  `ipv4_enabled`, `private_network`, `database_flags`, `labels`
 
-이를 통해 리전/머신 타입 뿐 아니라 복제본별 디스크, 네트워크, 유지보수 창을 세밀하게 재정의할 수 있습니다.
+이를 통해 리전/머신 타입 뿐 아니라 복제본별 디스크, 네트워크를 세밀하게 재정의할 수 있습니다.
+
+> **참고**: 읽기 복제본의 유지보수 창(maintenance_window)은 마스터 인스턴스의 설정을 자동으로 상속받으며, 복제본별로 개별 설정할 수 없습니다.
 
 ### 로깅 및 모니터링 설정
 
