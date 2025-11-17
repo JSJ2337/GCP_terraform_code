@@ -54,22 +54,23 @@ databases = []
 users = []
 
 # Read replicas (optional)
-# read_replicas = {
-#   replica1 = {
-#     name   = "default-templet-mysql-read-1"
-#     region = "us-central1"
-#     tier   = "db-n1-standard-1"
-#     # Optional overrides per replica:
-#     # availability_type = "ZONAL"
-#     # disk_size         = 50
-#     # disk_type         = "PD_SSD"
-#     # private_network   = "projects/host/global/networks/shared-vpc"
-#     # maintenance_window_day  = 1
-#     # maintenance_window_hour = 4
-#     # labels = { role = "read" }
-#   }
-# }
-read_replicas = {}
+read_replicas = {
+  replica1 = {
+    name   = "default-templet-mysql-read-1"
+    region = "us-central1"
+    tier   = "db-n1-standard-1"
+    # Optional overrides per replica:
+    # availability_type = "ZONAL"
+    # disk_size         = 50
+    # disk_type         = "PD_SSD"
+    # private_network   = "projects/host/global/networks/shared-vpc"
+    # maintenance_window_day  = 1
+    # maintenance_window_hour = 4
+    labels = {
+      role = "read"
+    }
+  }
+}
 
 # Labels (will be merged with common_labels from modules/naming)
 labels = {
