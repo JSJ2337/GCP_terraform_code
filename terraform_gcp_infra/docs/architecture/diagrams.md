@@ -25,20 +25,20 @@ graph TB
         B_PROJ --> B_BUCKET
     end
 
-    subgraph "재사용 가능한 모듈 (modules/)"
-        M1[gcs-root<br/>다중 버킷]
-        M2[gcs-bucket<br/>단일 버킷]
-        M3[project-base<br/>프로젝트 생성]
-        M4[network-dedicated-vpc<br/>VPC 네트워킹]
-        M5[iam<br/>IAM 관리]
-        M6[observability<br/>모니터링/로깅]
-        M7[gce-vmset<br/>VM 인스턴스]
-        M8[cloudsql-mysql<br/>MySQL DB]
-        M9[load-balancer<br/>로드 밸런서]
-        M10[memorystore-redis<br/>Redis 캐시]
+    subgraph "재사용 가능한 모듈"
+        M1[gcs-root]
+        M2[gcs-bucket]
+        M3[project-base]
+        M4[network-dedicated-vpc]
+        M5[iam]
+        M6[observability]
+        M7[gce-vmset]
+        M8[cloudsql-mysql]
+        M9[load-balancer]
+        M10[memorystore-redis]
     end
 
-    subgraph "환경별 배포 (environments/prod/proj-default-templet/)"
+    subgraph "환경별 배포 레이어"
         E0[00-project<br/>프로젝트]
         E1[10-network<br/>네트워크]
         E2[20-storage<br/>스토리지]
@@ -46,7 +46,7 @@ graph TB
         E4[40-observability<br/>관찰성]
         E5[50-workloads<br/>워크로드]
         E6[60-database<br/>데이터베이스]
-        E7[65-cache<br/>Redis 캐시]
+        E7[65-cache<br/>캐시]
         E8[70-loadbalancer<br/>로드밸런서]
     end
 
@@ -483,27 +483,27 @@ sequenceDiagram
 
 ```mermaid
 graph TB
-    subgraph "모듈 정의 (modules/cloudsql-mysql/)"
-        MODULE[main.tf<br/>variables.tf<br/>outputs.tf]
+    subgraph MODULE_DEF["모듈 정의"]
+        MODULE[cloudsql-mysql<br/>main.tf, variables.tf, outputs.tf]
     end
 
-    subgraph "환경 1: Production"
+    subgraph PROD["환경 1: Production"]
         P_LAYER[60-database/]
-        P_VARS[terraform.tfvars<br/>tier=db-n1-standard-2<br/>HA enabled]
+        P_VARS["terraform.tfvars:<br/>tier=db-n1-standard-2<br/>HA enabled"]
         P_LAYER --> MODULE
         P_VARS -.설정.-> P_LAYER
     end
 
-    subgraph "환경 2: Development"
+    subgraph DEV["환경 2: Development"]
         D_LAYER[60-database/]
-        D_VARS[terraform.tfvars<br/>tier=db-f1-micro<br/>HA disabled]
+        D_VARS["terraform.tfvars:<br/>tier=db-f1-micro<br/>HA disabled"]
         D_LAYER --> MODULE
         D_VARS -.설정.-> D_LAYER
     end
 
-    subgraph "환경 3: Staging"
+    subgraph STAGE["환경 3: Staging"]
         S_LAYER[60-database/]
-        S_VARS[terraform.tfvars<br/>tier=db-n1-standard-1<br/>HA enabled]
+        S_VARS["terraform.tfvars:<br/>tier=db-n1-standard-1<br/>HA enabled"]
         S_LAYER --> MODULE
         S_VARS -.설정.-> S_LAYER
     end
