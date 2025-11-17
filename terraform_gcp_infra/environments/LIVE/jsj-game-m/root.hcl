@@ -7,7 +7,7 @@ locals {
 
   google_provider_version      = "7.11.0"
   google_beta_provider_version = "7.11.0"
-  time_provider_version        = "0.11.1"
+  time_provider_version        = "0.13.1"
 }
 
 # Terragrunt 원격 상태 구성: 각 레이어별로 고유 prefix를 자동 부여한다.
