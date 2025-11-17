@@ -7,4 +7,5 @@ crash.*.log
 override.tf
 *_override.tf
 .terraform.tfstate.lock.info
+.claude
 
