@@ -10,6 +10,7 @@
 
 ### 2025년 11월
 
+- **[2025-11-17](./2025-11-17.md)** - Memorystore Enterprise/PSC 자동화 및 Cloud SQL 읽기 복제본 개선
 - **[2025-11-13](./2025-11-13.md)** - LB 자동 백엔드 복구 및 jsj-game-k 환경 정리
 - **[2025-11-12 (최신)](./2025-11-12.md)** - 템플릿·환경 재동기화 및 VM 디스크 영속화
 - **[2025-11-12 문서 재구성]** - 📚 문서 구조 전면 재구성 (docs/ 디렉터리, 17개 신규 문서)
@@ -35,6 +36,13 @@
 ---
 
 ## 📋 최근 작업 요약
+
+### 2025-11-17: Memorystore Enterprise & Cloud SQL 개선
+- ✅ `modules/memorystore-redis`가 Enterprise/Enterprise Plus tiers를 지원하도록 재작성 (google_redis_cluster + PSC 출력)
+- ✅ `proj-default-templet` 및 jsj-game-m의 65-cache tfvars/README가 Enterprise 구성을 기본값으로 사용
+- ✅ `modules/cloudsql-mysql` 읽기 복제본 로직을 손봐 failover target/네트워크 옵션 없이도 안정적으로 생성
+- ✅ 10-network 레이어에서 Memorystore Enterprise용 Service Connection Policy를 자동으로 생성하고 관련 변수를 추가
+- 🔗 커밋: `chore: Redis Enterprise 구성 적용`, `feat: Memorystore Enterprise 지원`, `feat: Memorystore PSC Service Connection Policy`, `fix: Cloud SQL replica private network fallback` 외
 
 ### 2025-11-11: Terragrunt 0.93 CLI 적용
 - ✅ Terragrunt `run --all`/`--working-dir` 패턴으로 Jenkins 템플릿·환경별 Jenkinsfile 전면 교체

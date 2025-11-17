@@ -9,6 +9,15 @@
 
 ## [미배포] - 2025-11-12
 
+### 추가 (Added)
+
+- **Memorystore Enterprise 지원**: `modules/memorystore-redis`가 STANDARD/BASIC 경로와 별도로 `google_redis_cluster` 기반 Enterprise·Enterprise Plus 구성을 지원
+  - `replica_count`, `shard_count`, `enterprise_*` 입력을 통해 PSC 연결, 노드 타입, 암호화, Redis 설정을 제어
+  - modules README 및 템플릿/jsj-game-m 65-cache tfvars/예제/가이드에 Enterprise 사용법을 문서화
+- **Memorystore PSC 자동 구성**: 10-network 레이어가 `google_network_connectivity_service_connection_policy` 리소스를 제공해 Enterprise 배포 전 PSC 정책을 자동 생성
+  - 새 변수(`enable_memorystore_psc_policy`, `memorystore_psc_region`, `memorystore_psc_subnet_name`, `memorystore_psc_connection_limit` 등)로 정책을 제어
+  - 템플릿 및 jsj-game-m tfvars에서 기본적으로 활성화하고 README에 선행 조건을 명시
+
 ### 수정 (Fixed)
 
 - **Jenkinsfile 단일 레이어 실행 시 경로 문제 해결**: `--working-dir` 플래그를 사용하여 terragrunt.hcl 파일을 찾지 못하는 문제 수정
@@ -24,6 +33,8 @@
   - 기존에는 `dependencies { paths = [...] }`만 선언되어 실행 순서만 보장되고 outputs는 전달되지 않았음
   - `dependency "workloads"` 블록을 추가해 `instance_groups` output을 실제 입력으로 주입하고, plan/validate 시 사용 가능한 mock output을 정의
   - 템플릿 및 운영 환경(`proj-default-templet`, `jsj-game-k`, `jsj-game-l`)의 `70-loadbalancer/terragrunt.hcl`에 동일하게 적용
+- **Cloud SQL 읽기 복제본 생성 안정화**: `modules/cloudsql-mysql`에서 `replica_configuration`/`ip_configuration` 블록을 조건부로 생성하고 기본 네트워크/IPv4 옵션을 자동 상속해 불필요한 required argument 오류를 제거
+  - 템플릿 및 jsj-game-m tfvars 예시에 기본 읽기 노드 구성을 추가해 Jenkins/Terragrunt 실행 시 바로 활용 가능
 
 ## [미배포] - 2025-11-11
 
