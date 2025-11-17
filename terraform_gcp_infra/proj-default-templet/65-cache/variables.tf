@@ -68,6 +68,18 @@ variable "tier" {
   default     = "STANDARD_HA"
 }
 
+variable "replica_count" {
+  type        = number
+  description = "Enterprise/Enterprise Plus 티어에서 읽기 복제본 수 (>=1일 때 Read Endpoint 제공)"
+  default     = null
+}
+
+variable "shard_count" {
+  type        = number
+  description = "Enterprise Sharded 티어용 샤드 수"
+  default     = null
+}
+
 variable "memory_size_gb" {
   type        = number
   description = "메모리 크기 (GB)"

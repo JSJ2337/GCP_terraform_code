@@ -9,6 +9,8 @@ alternative_location_suffix = "b"
 memory_size_gb              = 1
 redis_version               = "REDIS_6_X"
 tier                        = "STANDARD_HA"
+replica_count               = null # Enterprise tier 전용 (STANDARD_HA 시 null 유지)
+shard_count                 = null # Enterprise Sharded 구성 시 설정
 
 # Networking (비워두면 naming 모듈 VPC 사용)
 authorized_network = ""

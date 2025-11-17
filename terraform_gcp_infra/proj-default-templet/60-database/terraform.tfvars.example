@@ -82,6 +82,20 @@ users = [
 #     name   = "default-templet-mysql-read-1"
 #     region = "us-central1"
 #     tier   = "db-n1-standard-1"
+#     # 선택 필드: 복제본마다 별도 설정 가능
+#     # availability_type = "ZONAL"
+#     # disk_size         = 50
+#     # disk_type         = "PD_HDD"
+#     # disk_autoresize   = true
+#     # ipv4_enabled      = false
+#     # private_network   = "projects/host/global/networks/shared-vpc"
+#     # maintenance_window_day  = 1
+#     # maintenance_window_hour = 4
+#     # maintenance_window_update_track = "stable"
+#     # database_flags = [
+#     #   { name = "max_connections", value = "500" }
+#     # ]
+#     # labels = { role = "read" }
 #   }
 # }
 

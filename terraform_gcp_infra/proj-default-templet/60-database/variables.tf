@@ -235,8 +235,20 @@ variable "read_replicas" {
     region          = string
     tier            = string
     failover_target = optional(bool)
+
+    availability_type               = optional(string)
+    disk_size                       = optional(number)
+    disk_type                       = optional(string)
+    disk_autoresize                 = optional(bool)
+    ipv4_enabled                    = optional(bool)
+    private_network                 = optional(string)
+    database_flags                  = optional(list(object({ name = string, value = string })))
+    maintenance_window_day          = optional(number)
+    maintenance_window_hour         = optional(number)
+    maintenance_window_update_track = optional(string)
+    labels                          = optional(map(string))
   }))
-  description = "읽기 복제본 설정"
+  description = "읽기 복제본 설정 (지역/머신 타입/디스크/네트워크/유지보수 개별 지정 지원)"
   default     = {}
 }
 

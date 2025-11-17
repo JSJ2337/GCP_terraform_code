@@ -28,8 +28,8 @@ module "naming" {
 
 locals {
   # Memorystore requires a ZONE for location_id; use default_zone when region is not explicitly set
-  region_effective   = length(trimspace(var.region)) > 0 ? trimspace(var.region) : module.naming.default_zone
-  region_base        = (
+  region_effective = length(trimspace(var.region)) > 0 ? trimspace(var.region) : module.naming.default_zone
+  region_base = (
     length(local.region_effective) > 2
     ? substr(local.region_effective, 0, length(local.region_effective) - 2)
     : local.region_effective
@@ -56,6 +56,8 @@ module "cache" {
   region                          = local.region_effective
   alternative_location_id         = local.alternative_location
   tier                            = var.tier
+  replica_count                   = var.replica_count
+  shard_count                     = var.shard_count
   memory_size_gb                  = var.memory_size_gb
   redis_version                   = var.redis_version
   authorized_network              = local.authorized_network

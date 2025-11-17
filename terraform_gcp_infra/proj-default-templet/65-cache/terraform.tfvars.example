@@ -22,6 +22,8 @@ alternative_location_suffix = "b"            # 결과: us-central1-b
 memory_size_gb          = 2
 redis_version           = "REDIS_6_X"
 tier                    = "STANDARD_HA"
+replica_count           = null              # Enterprise tier용 읽기 복제본 수 (STANDARD_HA는 null)
+shard_count             = null              # Enterprise Sharded tier에서만 사용
 
 # 네트워크 (비워두면 템플릿 VPC 자동 사용)
 authorized_network = ""
