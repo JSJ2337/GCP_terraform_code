@@ -38,3 +38,4 @@ terragrunt apply  --non-interactive
 - 기본 `terraform.tfvars`는 삭제 보호를 `false`로 둡니다. 프로덕션 환경에서 보호가 필요하면 `deletion_protection = true`로 명시한 뒤 `apply`를 수행하세요.
 - Query Insights나 일반 쿼리 로그는 비용에 영향을 줄 수 있으니 운영 환경에 맞게 조정하세요.
 - 멀티 리전에 읽기 복제본을 둘 경우 `read_replicas`에서 각 복제본의 디스크/네트워크/유지보수 창을 개별 설정할 수 있습니다.
+- 읽기 복제본의 유지보수 창(maintenance_window)은 명시하지 않으면 마스터 인스턴스의 설정을 자동으로 상속합니다.
