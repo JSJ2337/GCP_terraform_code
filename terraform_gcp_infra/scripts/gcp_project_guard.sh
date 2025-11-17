@@ -50,35 +50,83 @@ read_kv() {
   local file="$1"
   local key="$2"
   [[ -f "${file}" ]] || return 1
-  python3 - "$file" "$key" <<'PY'
-import re, sys
-path, key = sys.argv[1], sys.argv[2]
-text = open(path, encoding="utf-8").read()
-pattern = re.compile(r'^\s*%s\s*=\s*(?:"([^"]+)"|([^\s#]+))' % re.escape(key), re.MULTILINE)
-match = pattern.search(text)
-if match:
-    value = match.group(1) or match.group(2)
-    print(value)
-PY
+  awk -v key="${key}" '
+    function trim(s) { sub(/^[[:space:]]+/, "", s); sub(/[[:space:]]+$/, "", s); return s }
+    $0 ~ "^[[:space:]]*" key "[[:space:]]*=" {
+      line = $0
+      sub(/^[[:space:]]*/, "", line)
+      sub(key "[[:space:]]*=[[:space:]]*", "", line)
+      sub(/#.*/, "", line)
+      line = trim(line)
+      if (line ~ /^"/) {
+        sub(/^"/, "", line)
+        sub(/"$/, "", line)
+      }
+      print line
+      exit
+    }
+  ' "${file}"
 }
 
 read_list() {
   local file="$1"
   local key="$2"
   [[ -f "${file}" ]] || return 1
-  python3 - "$file" "$key" <<'PY'
-import re, sys
-path, key = sys.argv[1], sys.argv[2]
-text = open(path, encoding="utf-8").read()
-pattern = re.compile(r'^\s*%s\s*=\s*\[(.*?)\]' % re.escape(key), re.S | re.M)
-match = pattern.search(text)
-if not match:
-    sys.exit(0)
-raw_list = "[" + match.group(1) + "]"
-items = re.findall(r'"([^"]+)"', raw_list)
-for item in items:
-    print(item)
-PY
+  awk -v key="${key}" '
+    function extract(line) {
+      while (match(line, /"([^"]+)"/, m)) {
+        print m[1]
+        line = substr(line, RSTART + RLENGTH)
+      }
+    }
+    $0 ~ "^[[:space:]]*" key "[[:space:]]*=" {
+      inlist = 1
+      line = $0
+      sub(/^[[:space:]]*/, "", line)
+      sub(key "[[:space:]]*=[[:space:]]*", "", line)
+      if (line ~ /\[/) {
+        sub(/^[^\[]*\[/, "", line)
+      }
+      extract(line)
+      if (line ~ /\]/) {
+        inlist = 0
+      }
+      next
+    }
+    inlist {
+      line = $0
+      extract(line)
+      if (line ~ /\]/) {
+        inlist = 0
+      }
+    }
+  ' "${file}"
+}
+
+lookup_folder_from_bootstrap() {
+  local product="$1"
+  local region="$2"
+  local env="$3"
+  local bootstrap_dir="${REPO_ROOT}/bootstrap"
+  [[ -d "${bootstrap_dir}" ]] || return 1
+  [[ -f "${bootstrap_dir}/terraform.tfstate" ]] || return 1
+  require_cmd "terraform"
+
+  local expr result trimmed
+  expr="output.folder_structure.value[\"${product}\"][\"${region}\"][\"${env}\"]"
+  if result="$(TF_IN_AUTOMATION=1 terraform -chdir="${bootstrap_dir}" console <<EOF
+${expr}
+exit
+EOF
+)"; then
+    trimmed="$(printf '%s\n' "${result}" | head -n1 | tr -d '"' | tr -d '\r')"
+    trimmed="$(echo "${trimmed}" | xargs)"
+    if [[ -n "${trimmed}" ]]; then
+      echo "${trimmed}"
+      return 0
+    fi
+  fi
+  return 1
 }
 
 ENV_DIR="$(cd "${env_dir_arg}" 2>/dev/null && pwd || true)"
@@ -91,7 +139,6 @@ COMMON_FILE="${ENV_DIR}/common.naming.tfvars"
 ROOT_FILE="${ENV_DIR}/root.hcl"
 PROJECT_TFVARS="${ENV_DIR}/00-project/terraform.tfvars"
 
-require_cmd "python3"
 require_cmd "gcloud"
 
 export CLOUDSDK_CORE_DISABLE_PROMPTS=1
@@ -118,22 +165,9 @@ ensure_metadata_loaded() {
     region="$(read_kv "${ROOT_FILE}" "folder_region" || read_kv "${PROJECT_TFVARS}" "folder_region" || echo "kr-region")"
     env="$(read_kv "${ROOT_FILE}" "folder_env" || read_kv "${PROJECT_TFVARS}" "folder_env" || echo "LIVE")"
 
-    if [[ -f "${REPO_ROOT}/bootstrap/terraform.tfstate" ]]; then
-      require_cmd "terraform"
-      local folder_json
-      if folder_json="$(terraform -chdir="${REPO_ROOT}/bootstrap" output -json folder_structure 2>/dev/null)"; then
-        FOLDER_ID="$(python3 - "$prod" "$region" "$env" <<'PY'
-import json, sys
-raw_json = json.load(sys.stdin)
-data = raw_json.get("value", raw_json)
-prod, region, env = sys.argv[1], sys.argv[2], sys.argv[3]
-try:
-    print(data[prod][region][env])
-except KeyError:
-    sys.exit(1)
-PY
-<<<"${folder_json}")" || true
-      fi
+    local folder_lookup
+    if folder_lookup="$(lookup_folder_from_bootstrap "${prod}" "${region}" "${env}")"; then
+      FOLDER_ID="${folder_lookup}"
     fi
   fi
 
