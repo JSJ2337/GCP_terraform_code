@@ -6,7 +6,7 @@ Bootstrap 프로젝트는 **중앙 집중식 Terraform State 관리**를 위한 
 
 ## Bootstrap이 생성하는 리소스
 
-```
+```text
 jsj-system-mgmt (관리용 프로젝트)
 ├── jsj-terraform-state-prod (GCS 버킷)
 │   ├── Versioning 활성화
@@ -24,6 +24,7 @@ cat terraform.tfvars
 ```
 
 **주요 설정 항목**:
+
 ```hcl
 # 관리용 프로젝트
 management_project_id   = "jsj-system-mgmt"
@@ -56,7 +57,8 @@ terraform apply
 ```
 
 **예상 출력**:
-```
+
+```text
 Apply complete! Resources: 8 added, 0 changed, 0 destroyed.
 
 Outputs:
@@ -77,8 +79,10 @@ cp terraform.tfstate ~/backup/bootstrap-$(date +%Y%m%d).tfstate
 # GCS 백업 (권장)
 gsutil cp terraform.tfstate gs://jsj-terraform-state-prod/bootstrap/default.tfstate
 
-# 정기 백업 (Cron)
-0 0 * * 0 cd /path/to/bootstrap && cp terraform.tfstate ~/backup/bootstrap-$(date +\%Y\%m\%d).tfstate
+# 정기 백업 (Cron) - 실제 crontab에는 한 줄로 입력
+0 0 * * 0 cd /path/to/bootstrap && \
+    cp terraform.tfstate \
+    ~/backup/bootstrap-$(date +\%Y\%m\%d).tfstate
 ```
 
 ## Step 4: 인증 설정
@@ -105,43 +109,49 @@ cd bootstrap
 terraform output jenkins_key_creation_command
 
 # 또는 직접 실행
+SA_EMAIL="jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com"
 gcloud iam service-accounts keys create jenkins-sa-key.json \
-    --iam-account=jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com \
+    --iam-account="${SA_EMAIL}" \
     --project=jsj-system-mgmt
 ```
 
 ### 5-2. 필수 권한 부여
 
 **State 버킷 접근** (jsj-system-mgmt 프로젝트):
+
 ```bash
+SA_MEMBER="serviceAccount:${SA_EMAIL}"
 gcloud projects add-iam-policy-binding jsj-system-mgmt \
-    --member="serviceAccount:jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com" \
+    --member="${SA_MEMBER}" \
     --role="roles/storage.admin"
 ```
 
 **Billing Account 권한**:
+
 ```bash
 gcloud beta billing accounts add-iam-policy-binding 01076D-327AD5-FC8922 \
-    --member="serviceAccount:jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com" \
+    --member="${SA_MEMBER}" \
     --role="roles/billing.user"
 ```
 
 **조직 레벨 권한** (조직이 있는 경우):
+
 ```bash
 # 프로젝트 생성 권한
 gcloud organizations add-iam-policy-binding YOUR_ORG_ID \
-    --member="serviceAccount:jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com" \
+    --member="${SA_MEMBER}" \
     --role="roles/resourcemanager.projectCreator"
 
 # 리소스 관리 권한
 gcloud organizations add-iam-policy-binding YOUR_ORG_ID \
-    --member="serviceAccount:jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com" \
+    --member="${SA_MEMBER}" \
     --role="roles/editor"
 ```
 
 ## 검증
 
 ### State 버킷 확인
+
 ```bash
 gsutil ls -L gs://jsj-terraform-state-prod/
 
@@ -150,6 +160,7 @@ gsutil ls -L gs://jsj-terraform-state-prod/
 ```
 
 ### Service Account 확인
+
 ```bash
 gcloud iam service-accounts describe \
     jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com \
@@ -159,25 +170,30 @@ gcloud iam service-accounts describe \
 ## 다음 단계
 
 ✅ Bootstrap 설정이 완료되었다면:
+
 - [첫 번째 프로젝트 배포하기](./first-deployment.md)
 
 ## 트러블슈팅
 
 ### "storage: bucket doesn't exist"
+
 - **원인**: Quota Project가 설정되지 않음
 - **해결**: `gcloud auth application-default set-quota-project jsj-system-mgmt`
 
 ### "billing account binding failed"
+
 - **원인**: Billing User 권한 없음
 - **해결**: Billing Account에 `roles/billing.user` 권한 부여
 
 ### "project already exists"
+
 - **원인**: 프로젝트 ID 충돌
 - **해결**: `terraform.tfvars`에서 다른 프로젝트 ID 사용
 
 ---
 
 **관련 문서**:
+
 - [사전 요구사항](./prerequisites.md)
 - [첫 배포](./first-deployment.md)
 - [State 관리](../architecture/state-management.md)

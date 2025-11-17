@@ -4,7 +4,7 @@
 
 ## 시스템 구성
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │                    Bootstrap Layer                          │
 │  jsj-system-mgmt + jsj-terraform-state-prod                 │
@@ -29,20 +29,24 @@
 ## 3-Tier 구조
 
 ### 1. Bootstrap Layer (관리 계층)
+
 **목적**: 중앙 집중식 인프라 관리
 
 **구성 요소**:
+
 - `jsj-system-mgmt` 프로젝트
 - `jsj-terraform-state-prod` GCS 버킷
 - `jenkins-terraform-admin` Service Account
 - 조직/폴더 구조 (optional)
 
 **특징**:
+
 - ✅ 로컬 State 사용 (의도적 설계)
 - ✅ 삭제 방지 (deletion_policy = PREVENT)
 - ✅ 모든 프로젝트의 State 중앙 관리
 
 ### 2. Module Layer (재사용 계층)
+
 **목적**: 재사용 가능한 인프라 컴포넌트
 
 **모듈 목록**:
@@ -62,17 +66,19 @@
 | **load-balancer** | HTTP(S)/Internal LB | 로드밸런싱 |
 
 **설계 원칙**:
+
 - ✅ Provider 블록 없음 (재사용성 향상)
 - ✅ Optional 변수 지원 (Terraform 1.6+)
 - ✅ 완전한 입력 검증
 - ✅ 포괄적인 Output
 
 ### 3. Environment Layer (배포 계층)
+
 **목적**: 실제 워크로드 배포
 
 **레이어 구조**:
 
-```
+```text
 environments/LIVE/jsj-game-k/
 ├── common.naming.tfvars    # 공통 네이밍 변수
 ├── root.hcl                # Terragrunt 루트 설정
@@ -89,6 +95,7 @@ environments/LIVE/jsj-game-k/
 ```
 
 **배포 순서**:
+
 1. **00-project** - 프로젝트 생성, API 활성화
 2. **10-network** - VPC, 서브넷, 방화벽, PSC
 3. **20-storage, 30-security, 40-observability** - 병렬 배포 가능
@@ -101,7 +108,7 @@ environments/LIVE/jsj-game-k/
 
 ### DMZ / Private / DB 서브넷 구조
 
-```
+```text
 ┌──────────────────────────────────────────────────────────┐
 │                      Internet                            │
 └────────────┬─────────────────────────────────────────────┘
@@ -142,6 +149,7 @@ environments/LIVE/jsj-game-k/
 ```
 
 **보안 계층**:
+
 - **DMZ**: 외부 접근 가능 (LB 경유), NAT로 Outbound만 허용
 - **Private**: 내부 통신만 (No public IP)
 - **DB**: 완전 격리 (Private IP only, PSC 연결)
@@ -153,6 +161,7 @@ environments/LIVE/jsj-game-k/
 모든 리소스 이름과 라벨은 `modules/naming` 모듈에서 일관되게 생성됩니다.
 
 **입력** (`common.naming.tfvars`):
+
 ```hcl
 project_id     = "jsj-game-k"
 project_name   = "game-k"
@@ -163,6 +172,7 @@ region_backup  = "asia-northeast1"
 ```
 
 **출력** (자동 생성):
+
 ```hcl
 vpc_name                = "delabs-prod-game-k-vpc"
 bucket_name_prefix      = "delabs-prod-game-k"
@@ -180,6 +190,7 @@ common_labels = {
 ```
 
 **장점**:
+
 - ✅ 전체 인프라에서 일관된 네이밍
 - ✅ `common.naming.tfvars` 한 곳만 수정
 - ✅ 자동 라벨 적용으로 비용 추적 용이
@@ -188,7 +199,7 @@ common_labels = {
 
 ### 중앙 집중식 + 레이어별 분리
 
-```
+```text
 gs://jsj-terraform-state-prod/
 ├── jsj-game-k/
 │   ├── 00-project/default.tfstate
@@ -207,6 +218,7 @@ gs://jsj-terraform-state-prod/
 ```
 
 **특징**:
+
 - ✅ 중앙 버킷에 모든 State 저장
 - ✅ 프로젝트별 prefix로 격리
 - ✅ 레이어별 독립 State (빠른 Plan/Apply)
@@ -216,6 +228,7 @@ gs://jsj-terraform-state-prod/
 ### Terragrunt 자동화
 
 **root.hcl** (환경 루트):
+
 ```hcl
 remote_state {
   backend = "gcs"
@@ -233,6 +246,7 @@ remote_state {
 ```
 
 **결과**:
+
 - Terragrunt가 각 레이어에 `backend.tf` 자동 생성
 - Terraform 코드에 backend 블록 불필요
 - State 경로 수동 관리 불필요
@@ -265,6 +279,7 @@ remote_state {
 ### Shielded VM
 
 모든 VM 인스턴스는 Shielded VM 기능 활성화:
+
 - Secure Boot
 - vTPM
 - Integrity Monitoring
@@ -273,7 +288,7 @@ remote_state {
 
 ### 수평 확장 (Scale Out)
 
-```
+```text
 proj-default-templet/  (템플릿)
 ├── common.naming.tfvars
 ├── root.hcl
@@ -289,6 +304,7 @@ environments/LIVE/
 ```
 
 **새 환경 추가 시**:
+
 1. 템플릿 복사
 2. `common.naming.tfvars` 수정 (프로젝트 ID, 리전 등)
 3. `root.hcl` prefix 변경
@@ -297,6 +313,7 @@ environments/LIVE/
 ### 수직 확장 (Scale Up)
 
 각 레이어의 `terraform.tfvars`에서 스펙 조정:
+
 - VM: `machine_type`
 - DB: `tier`, `disk_size`
 - Redis: `memory_size_gb`
@@ -307,6 +324,7 @@ environments/LIVE/
 ### 리전별 배포
 
 `common.naming.tfvars`에서 리전 설정:
+
 ```hcl
 region_primary = "asia-northeast3"  # 서울
 region_backup  = "asia-northeast1"  # 도쿄
@@ -324,6 +342,7 @@ region_backup  = "asia-northeast1"  # 도쿄
 ### 라벨 기반 비용 추적
 
 `common_labels`가 모든 리소스에 자동 적용:
+
 ```hcl
 common_labels = {
   environment   = "prod"
@@ -351,5 +370,6 @@ Cloud Console에서 라벨별 비용 분석 가능.
 ---
 
 **관련 문서**:
+
 - [첫 배포](../getting-started/first-deployment.md)
 - [모듈 가이드](../guides/)

@@ -6,9 +6,11 @@ Google Cloud Platform 인프라를 위한 프로덕션 레디 Terraform 모듈 �
 
 이 저장소는 GCP 및 Terraform 베스트 프랙티스를 따르는 재사용 가능한 Terraform 모듈과 환경별 구성을 포함합니다.
 
+<!-- markdownlint-disable MD013 -->
+
 ## 저장소 구조
 
-```
+```text
 terraform_gcp_infra/
 ├── bootstrap/                  # ⭐ State 관리용 프로젝트 (최우선 배포)
 │   ├── main.tf                # 관리용 프로젝트 및 State 버킷
@@ -60,12 +62,14 @@ terraform_gcp_infra/
 ## 주요 기능
 
 ### 모듈
+
 - **모듈화 설계**: 작고 집중적이며 재사용 가능한 모듈
 - **보안 우선**: Uniform bucket-level access, 공개 액세스 방지, Shielded VM
 - **베스트 프랙티스**: Non-authoritative IAM 바인딩, 모듈 내 provider 블록 없음
 - **포괄적**: 수명 주기 규칙, 버전 관리, 암호화, 모니터링
 
 ### 인프라 레이어
+
 - **bootstrap**: 중앙 집중식 Terraform State 관리 프로젝트
 - **00-project**: GCP 프로젝트 생성, API 활성화, 예산 알림
 - **10-network**: VPC, DMZ/Private/DB 전용 서브넷, DMZ 한정 Cloud NAT, Private Service Connect, 방화벽 규칙
@@ -78,6 +82,7 @@ terraform_gcp_infra/
 - **70-loadbalancer**: HTTP(S) 및 Internal Load Balancer
 
 ### modules/naming을 통한 중앙 집중식 Naming
+
 각 레이어는 `modules/naming` 모듈을 호출해 일관된 리소스 이름과 공통 라벨을 계산합니다. 입력 값은 각 환경의 `common.naming.tfvars` 한 곳에서 관리합니다 (예: `proj-default-templet/common.naming.tfvars`, `environments/LIVE/jsj-game-k/common.naming.tfvars`):
 
 ```hcl
@@ -93,6 +98,7 @@ region_backup  = "us-east1"
 `modules/naming`은 위 값을 이용해 `vpc_name`, `bucket_name_prefix`, `db_instance_name`, `sa_name_prefix`, `forwarding_rule_name` 등을 자동으로 만들어 주며, 공통 라벨(`common_labels`)과 태그(`common_tags`)도 함께 제공합니다. 리소스 이름을 변경하고 싶다면 `common.naming.tfvars`만 수정하면 모든 레이어가 동일하게 업데이트됩니다.
 
 ### Terragrunt 기반 실행
+
 - 전체 레이어를 순서대로 실행하려면 `./run_terragrunt_stack.sh <plan|apply|destroy>` 스크립트를 사용하세요. Terragrunt 0.93 CLI의 `run --all`을 감싸며 추가 인자는 그대로 전달됩니다.
 - 각 레이어에는 `terragrunt.hcl`이 존재하며, 공통 입력(`common.naming.tfvars`)과 레이어 전용 `terraform.tfvars`를 자동 병합합니다.
 - 원격 상태(GCS)는 Terragrunt가 관리하며 루트 `root.hcl`이 각 레이어에 `backend.tf`를 자동 생성합니다. Terraform 코드에 별도의 backend 블록을 둘 필요가 없습니다.
@@ -102,6 +108,7 @@ region_backup  = "us-east1"
 - `common.naming.tfvars`를 직접 `-var-file`로 넘길 필요가 없으며, Terragrunt가 자동으로 주입합니다.
 
 ### 레이어별 변수 예시 템플릿
+
 - 모든 레이어에는 한글 주석이 포함된 `terraform.tfvars.example` 파일이 제공됩니다.
 - 필요한 레이어 디렉터리에서 `cp terraform.tfvars.example terraform.tfvars`로 복사 후 값을 수정하세요.
 - 주요 예시:
@@ -109,10 +116,11 @@ region_backup  = "us-east1"
   - `10-network/terraform.tfvars.example`: 서브넷 CIDR, 방화벽, Private Service Connect 예약
   - `30-security/terraform.tfvars.example`: IAM 바인딩, 서비스 계정 자동 생성 토글
   - `40-observability/terraform.tfvars.example`: 중앙 로그 싱크 및 대시보드 정의
-  - `50-workloads/terraform.tfvars.example`: VM 수량, 역할별 instances map, startup_script_file, per-instance OS/서브넷
+- `50-workloads/terraform.tfvars.example`: VM 수량, 역할별 instances map, startup_script_file, per-instance OS/서브넷
   - `60-database/terraform.tfvars.example`: Cloud SQL Private IP, 백업/로깅 세부 설정
   - `65-cache/terraform.tfvars.example`: Memorystore Redis 메모리 크기, 대체 존, 유지보수 창
   - `70-loadbalancer/terraform.tfvars.example`: LB 타입, CDN, IAP, 헬스 체크
+
 - 템플릿에는 Private Service Connect, 라벨, 로그 정책 등 자주 묻는 항목에 대한 주석이 포함되어 있어 표준 구성을 빠르게 적용할 수 있습니다.
 
 ## 시작하기
@@ -166,6 +174,7 @@ cp terraform.tfstate ~/backup/bootstrap-$(date +%Y%m%d).tfstate
 ```
 
 **Bootstrap이 생성하는 것:**
+
 - 관리용 GCP 프로젝트 (`jsj-system-mgmt`)
 - 중앙 State 저장소 버킷 (`jsj-terraform-state-prod`)
 - Versioning 및 Lifecycle 정책 자동 설정
@@ -273,6 +282,7 @@ terragrunt apply
 ```
 
 **배포 순서가 중요한 이유:**
+
 - 각 레이어는 이전 레이어의 리소스에 의존
 - State는 `jsj-terraform-state-prod` 버킷에 중앙 관리됨
 - 각 레이어별로 독립적인 State 파일 유지
@@ -280,6 +290,7 @@ terragrunt apply
 ## 적용된 베스트 프랙티스
 
 ### State 관리 (⭐ 핵심)
+
 - ✅ **중앙 집중식 State 관리**: 모든 프로젝트의 State를 단일 버킷에서 관리
 - ✅ **Bootstrap 패턴**: 관리 인프라와 워크로드 인프라 분리
 - ✅ **Versioning**: State 파일 버전 관리 (최근 10개 버전 보관)
@@ -289,6 +300,7 @@ terragrunt apply
 - ⚠️ **Bootstrap State는 로컬**: bootstrap은 의도적으로 local backend를 사용하므로 `terraform_gcp_infra/bootstrap/terraform.tfstate`를 백업하고, 파이프라인/다른 환경에서 참조할 수 있도록 GCS 복사본(예: `gs://jsj-terraform-state-prod/bootstrap/default.tfstate`)을 유지해야 합니다. Terraform 코드에서는 이 GCS 복사본을 `data "terraform_remote_state"`로 읽습니다.
 
 ### 보안
+
 - ✅ Uniform bucket-level access 기본 활성화
 - ✅ 공개 액세스 방지 강제 적용
 - ✅ Secure boot가 적용된 Shielded VM 인스턴스
@@ -298,6 +310,7 @@ terragrunt apply
 - ✅ Bootstrap 프로젝트 삭제 방지 (deletion_policy = PREVENT)
 
 ### 운영
+
 - ✅ 프로젝트 삭제 시에도 State 보존
 - ✅ 10개 이상 프로젝트 확장 가능한 구조
 - ✅ 예산 알림 구성
@@ -306,6 +319,7 @@ terragrunt apply
 - ✅ Terragrunt 도입 완료 (WSL에서 provider 소켓 제약이 있는 경우 Linux/컨테이너 환경에서 실행 권장)
 
 ### 코드 품질
+
 - ✅ 모듈 내 provider 블록 없음
 - ✅ optional 속성을 지원하는 Terraform >= 1.6
 - ✅ 적용 가능한 곳에 입력 검증
@@ -315,6 +329,7 @@ terragrunt apply
 ## 모듈 문서
 
 각 모듈은 상세한 문서를 제공합니다:
+
 - [Bootstrap](bootstrap/README.md) - State 관리용 프로젝트 (⭐ 필독)
 - [gcs-root](modules/gcs-root/README.md) - 다중 버킷 관리
 - [gcs-bucket](modules/gcs-bucket/README.md) - 단일 버킷 구성
@@ -330,7 +345,7 @@ terragrunt apply
 
 ### 구조
 
-```
+```text
 jsj-system-mgmt (관리용 프로젝트)
 └── jsj-terraform-state-prod (GCS 버킷)
     ├── proj-default-templet/
@@ -348,7 +363,7 @@ jsj-system-mgmt (관리용 프로젝트)
 
 ### 새 프로젝트 추가하기
 
-**Step 1: 템플릿 복사**
+### Step 1: 템플릿 복사
 
 ```bash
 # 템플릿을 LIVE 환경으로 복사
@@ -356,7 +371,7 @@ cp -r proj-default-templet environments/LIVE/your-new-project
 cd environments/LIVE/your-new-project
 ```
 
-**Step 2: 공통 네이밍 입력 수정**
+### Step 2: 공통 네이밍 입력 수정
 
 `common.naming.tfvars` 파일에서 프로젝트/환경/조직 정보를 새 값으로 변경합니다.
 
@@ -369,15 +384,17 @@ region_primary = "us-central1"
 region_backup  = "us-east1"
 ```
 
-**Step 3: Terragrunt prefix 업데이트**
+### Step 3: Terragrunt prefix 업데이트
+
 - `environments/LIVE/your-new-project/terragrunt.hcl`의 `project_state_prefix` 값을 새 프로젝트 이름으로 변경합니다.
 - 각 레이어의 `terragrunt.hcl`은 상대 경로를 사용하므로 별도 수정이 필요 없습니다.
 
-**Step 4: 레이어별 terraform.tfvars 세부 값만 조정**
+### Step 4: 레이어별 terraform.tfvars 세부 값만 조정
+
 - 네트워크 CIDR, 버킷 정책, VM 스펙 등 환경별 값만 필요에 따라 조정합니다.
 - 이름과 라벨은 Step 2에서 입력한 값에 맞춰 `modules/naming`이 자동 생성합니다.
 
-**Step 5: Jenkinsfile 복사 (CI/CD 사용 시)**
+### Step 5: Jenkinsfile 복사 (CI/CD 사용 시)
 
 ```bash
 # Jenkinsfile 템플릿 복사
@@ -387,7 +404,7 @@ cp .jenkins/Jenkinsfile.template environments/LIVE/your-new-project/Jenkinsfile
 # Script Path: environments/LIVE/your-new-project/Jenkinsfile
 ```
 
-**Step 6: Terragrunt로 배포**
+### Step 6: Terragrunt로 배포
 
 ```bash
 # 순서대로 배포
@@ -426,11 +443,13 @@ gsutil cp terraform.tfstate gs://your-backup-bucket/bootstrap/
 ### Jenkins 설정
 
 **Jenkins Docker 설정**: `../jenkins_docker/` 디렉터리 참조
+
 - Jenkins LTS + Terraform 1.9.8 + Terragrunt 0.68.15 + Git 사전 설치
 - GitHub Webhook 자동 빌드 지원
 - ngrok을 통한 외부 접속 (선택)
 
 **상세 가이드**:
+
 - [Jenkins 초기 설정](../jenkins_docker/JENKINS_SETUP.md)
 - [GitHub 연동](../jenkins_docker/GITHUB_INTEGRATION.md)
 - [Terragrunt CI/CD Pipeline](../jenkins_docker/TERRAGRUNT_PIPELINE.md)
@@ -442,6 +461,7 @@ gsutil cp terraform.tfstate gs://your-backup-bucket/bootstrap/
 **템플릿**: `.jenkins/Jenkinsfile.template` (새 프로젝트 생성 시 복사)
 
 **주요 기능**:
+
 - ✅ Plan/Apply/Destroy 파라미터 선택
 - ✅ 전체 스택 또는 개별 레이어 실행
 - ✅ **수동 승인 단계** (Apply/Destroy 전 필수)
@@ -449,7 +469,8 @@ gsutil cp terraform.tfstate gs://your-backup-bucket/bootstrap/
 - ✅ Admin 사용자만 승인 가능
 
 **Pipeline 단계**:
-```
+
+```text
 1. Checkout → 2. Environment Check → 3. Terragrunt Init
    ↓
 4. Terragrunt Plan
@@ -475,6 +496,7 @@ terraform apply  # Service Account 자동 생성
 ```
 
 **생성되는 리소스**:
+
 - Service Account: `jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com`
 - 조직 레벨 권한 (조직이 있는 경우):
   - `roles/resourcemanager.projectCreator` (프로젝트 생성)
@@ -486,6 +508,7 @@ terraform apply  # Service Account 자동 생성
 **조직이 있는 경우**: Jenkins가 자동으로 프로젝트 생성 가능
 
 **조직이 없는 경우**: 프로젝트를 수동으로 생성하고 권한 부여
+
 ```bash
 # 1. 프로젝트 수동 생성
 gcloud projects create YOUR-PROJECT-ID --name="Your Project Name"
@@ -531,11 +554,13 @@ environment {
 ```
 
 **⚠️ 중요**:
+
 - Credential ID는 반드시 `gcp-jenkins-service-account`로 설정 (Jenkinsfile과 일치 필요)
 - `TG_WORKING_DIR`은 workspace root 기준 절대 경로 사용 (`.` 사용 불가)
 - 템플릿 복사 시 `YOUR-PROJECT-NAME`을 실제 프로젝트 이름으로 변경
 
 **장점**:
+
 - Infrastructure as Code로 Service Account 관리
 - 하나의 SA로 모든 프로젝트 관리
 - Key 교체 시 Jenkins에서 한 번만 변경
@@ -544,6 +569,7 @@ environment {
 **상세 내용**: `bootstrap/README.md` 및 [Terragrunt Pipeline 가이드](../jenkins_docker/TERRAGRUNT_PIPELINE.md) 참조
 
 #### 5. Jenkins Service Account 권한 체크리스트
+
 Jenkins가 Terragrunt를 통해 새 프로젝트를 만들고 청구 계정에 연결하려면 아래 권한이 모두 필요합니다.
 
 - `jsj-system-mgmt` 프로젝트  
@@ -570,6 +596,7 @@ gcloud projects add-iam-policy-binding jsj-system-mgmt \
 ```
 
 > ✅ `cloudbilling.googleapis.com`과 `serviceusage.googleapis.com`이 `jsj-system-mgmt` 프로젝트에서 활성화되어 있어야 합니다. bootstrap을 다시 적용하거나 아래 명령으로 확인하세요.
+>
 > ```bash
 > gcloud services enable cloudbilling.googleapis.com serviceusage.googleapis.com --project=jsj-system-mgmt
 > ```
@@ -625,16 +652,19 @@ lifecycle_rules = [
 ## 유지 관리
 
 ### 포맷팅
+
 ```bash
 terraform fmt -recursive
 ```
 
 ### 검증
+
 ```bash
 terraform validate
 ```
 
 ### 보안 스캔
+
 ```bash
 # tfsec 설치
 brew install tfsec
@@ -644,6 +674,7 @@ tfsec .
 ```
 
 ### 비용 추정
+
 ```bash
 # infracost 설치
 brew install infracost
@@ -657,11 +688,13 @@ infracost breakdown --path .
 ### 문제 1: "storage: bucket doesn't exist"
 
 **증상:**
-```
+
+```text
 Error: Failed to get existing workspaces: querying Cloud Storage failed: storage: bucket doesn't exist
 ```
 
 **해결:**
+
 ```bash
 # 중앙 State 버킷이 있는 프로젝트로 변경
 gcloud config set project jsj-system-mgmt
@@ -674,13 +707,15 @@ terraform init -reconfigure
 ### 문제 2: State Lock 걸림
 
 **증상:**
-```
+
+```text
 Error: Error acquiring the state lock
 Lock Info:
   ID: 1761705035859250
 ```
 
 **해결:**
+
 ```bash
 # Lock 강제 해제 (Lock ID는 에러 메시지에서 확인)
 terraform force-unlock -force 1761705035859250
@@ -689,7 +724,8 @@ terraform force-unlock -force 1761705035859250
 ### 문제 3: Budget API 권한 오류
 
 **증상:**
-```
+
+```text
 Error creating Budget: googleapi: Error 403
 billingbudgets.googleapis.com API requires a quota project
 ```
@@ -698,23 +734,27 @@ billingbudgets.googleapis.com API requires a quota project
 이것은 알려진 문제이며, Budget 리소스만 영향을 받습니다 (다른 모든 리소스는 정상 생성됨).
 
 **옵션 1:** terraform.tfvars에서 비활성화 (권장)
+
 ```hcl
 enable_budget = false
 ```
 
 **옵션 2:** GCP Console에서 수동 설정
+
 - GCP Console → Billing → Budgets & alerts에서 예산 알림 생성
 
 ### 문제 4: 프로젝트 삭제 실패 (Lien)
 
 **증상:**
-```
+
+```text
 Error: Cannot destroy project as deletion_policy is set to PREVENT
 또는
 Error: A lien to prevent deletion was placed on the project
 ```
 
 **해결:**
+
 ```bash
 # Lien 확인
 gcloud alpha resource-manager liens list --project=PROJECT_ID
@@ -739,6 +779,7 @@ gcloud alpha resource-manager liens delete LIEN_ID
 ## 지원
 
 문제 또는 질문이 있는 경우:
+
 1. 모듈 README 파일 확인
 2. Terraform 및 GCP 문서 검토
 3. 저장소에 이슈 등록
@@ -746,3 +787,5 @@ gcloud alpha resource-manager liens delete LIEN_ID
 ## 라이센스
 
 [라이센스 정보]
+
+<!-- markdownlint-enable MD013 -->

@@ -5,6 +5,7 @@
 ## VPC 문제
 
 ### VPC 생성 실패
+
 ```bash
 # 기존 VPC 확인
 gcloud compute networks list --project=jsj-game-k
@@ -15,6 +16,7 @@ terragrunt import google_compute_network.main \
 ```
 
 ### 서브넷 중복
+
 ```bash
 # 기존 서브넷 확인
 gcloud compute networks subnets list \
@@ -27,6 +29,7 @@ gcloud compute networks subnets list \
 ## 방화벽 규칙
 
 ### 규칙 충돌
+
 ```bash
 # 기존 규칙 확인
 gcloud compute firewall-rules list --project=jsj-game-k
@@ -40,13 +43,16 @@ terragrunt import google_compute_firewall.rule \
 ```
 
 ### 우선순위 문제
+
 방화벽 규칙은 우선순위(숫자가 낮을수록 우선) 순으로 적용됩니다.
+
 - 기본값: 1000
 - 범위: 0-65535
 
 ## Private Service Connect
 
 ### PSC 연결 실패
+
 ```bash
 # 기존 연결 확인
 gcloud services vpc-peerings list \
@@ -55,11 +61,13 @@ gcloud services vpc-peerings list \
 ```
 
 ### IP 범위 중복
-```
+
+```text
 Error: IP address range is already allocated
 ```
 
 **해결**:
+
 ```bash
 # 기존 연결 삭제 (주의!)
 gcloud services vpc-peerings delete \
@@ -74,6 +82,7 @@ gcloud services vpc-peerings delete \
 ## Cloud NAT
 
 ### NAT IP 고갈
+
 ```bash
 # NAT IP 할당 확인
 gcloud compute routers nats describe NAT_NAME \
@@ -83,6 +92,7 @@ gcloud compute routers nats describe NAT_NAME \
 ```
 
 ### NAT 로그 확인
+
 ```bash
 # Cloud Logging에서 NAT 로그 확인
 gcloud logging read \
@@ -94,6 +104,7 @@ gcloud logging read \
 ## 연결 테스트
 
 ### VM 간 연결 확인
+
 ```bash
 # SSH 접속
 gcloud compute ssh VM_NAME \
@@ -109,6 +120,7 @@ curl https://www.google.com
 ```
 
 ### Cloud SQL 연결 확인
+
 ```bash
 # Private IP 확인
 gcloud sql instances describe INSTANCE_NAME \
@@ -121,12 +133,14 @@ mysql -h PRIVATE_IP -u USER -p
 ## 디버깅
 
 ### VPC Flow Logs 활성화
+
 ```hcl
 # terraform.tfvars
 enable_flow_logs = true
 ```
 
 ### Cloud Logging 확인
+
 ```bash
 # VPC Flow Logs
 gcloud logging read \
@@ -147,6 +161,7 @@ gcloud logging read \
 ---
 
 **관련 문서**:
+
 - [일반적인 오류](./common-errors.md)
 - [네트워크 아키텍처](../architecture/network-design.md)
 - [network-dedicated-vpc 모듈](../../modules/network-dedicated-vpc/README.md)

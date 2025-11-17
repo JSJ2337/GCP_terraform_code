@@ -4,7 +4,7 @@ Bootstrap 설정이 완료되었다면 이제 실제 워크로드 프로젝트�
 
 ## 배포 순서 개요
 
-```
+```text
 00-project → 10-network → 20-storage → 30-security → 40-observability
                                    ↓
                             50-workloads → 60-database → 65-cache → 70-loadbalancer
@@ -81,6 +81,7 @@ terragrunt apply
 ```
 
 **생성되는 리소스**:
+
 - GCP 프로젝트
 - 필수 API 활성화
 - 예산 알림 (optional)
@@ -100,6 +101,7 @@ terragrunt apply
 ```
 
 **생성되는 리소스**:
+
 - VPC 네트워크
 - 3개 서브넷 (DMZ, Private, DB)
 - 방화벽 규칙
@@ -117,6 +119,7 @@ terragrunt apply
 ```
 
 **생성되는 리소스**:
+
 - GCS 버킷 (assets, logs, backups)
 - Lifecycle 정책
 - Versioning 설정
@@ -136,6 +139,7 @@ terragrunt apply
 ```
 
 **생성되는 리소스**:
+
 - IAM 바인딩
 - 서비스 계정 (web, app, db)
 
@@ -150,6 +154,7 @@ terragrunt apply
 ```
 
 **생성되는 리소스**:
+
 - Cloud Logging 싱크
 - 모니터링 알림
 
@@ -167,6 +172,7 @@ terragrunt apply
 ```
 
 **생성되는 리소스**:
+
 - VM 인스턴스 (역할별)
 - 인스턴스 그룹
 - Startup scripts
@@ -186,6 +192,7 @@ terragrunt apply
 ```
 
 **생성되는 리소스**:
+
 - Cloud SQL MySQL
 - Private IP 연결
 - 백업 정책
@@ -205,6 +212,7 @@ terragrunt apply
 ```
 
 **생성되는 리소스**:
+
 - Memorystore Redis
 - Standard HA 구성
 - Private IP 연결
@@ -229,6 +237,7 @@ terragrunt apply
 ```
 
 **생성되는 리소스 (레이어별)**:
+
 - HTTP(S)/Internal Load Balancer
 - Health Check
 - Backend Service (Terragrunt dependency를 통해 자동 연결)
@@ -249,6 +258,7 @@ terragrunt run --all apply
 ## 배포 확인
 
 ### State 확인
+
 ```bash
 # State 버킷 확인
 gsutil ls gs://jsj-terraform-state-prod/my-new-project/
@@ -260,6 +270,7 @@ gsutil ls gs://jsj-terraform-state-prod/my-new-project/
 ```
 
 ### 리소스 확인
+
 ```bash
 # 프로젝트 확인
 gcloud projects describe my-project-id
@@ -274,6 +285,7 @@ gcloud compute instances list --project=my-project-id
 ## 다음 단계
 
 ✅ 첫 배포가 완료되었다면:
+
 - [Jenkins CI/CD 설정](../guides/jenkins-cicd.md)
 - [새 프로젝트 추가하기](../guides/adding-new-project.md)
 - [자주 쓰는 명령어](./quick-commands.md)
@@ -281,12 +293,15 @@ gcloud compute instances list --project=my-project-id
 ## 트러블슈팅
 
 ### "resource not found" 오류
+
 - **원인**: 이전 레이어가 완료되지 않음
 - **해결**: 순서대로 배포했는지 확인
 
 ### "API not enabled" 오류
+
 - **원인**: 필수 API가 활성화되지 않음
 - **해결**:
+
   ```bash
   gcloud services enable compute.googleapis.com \
       servicenetworking.googleapis.com \
@@ -294,12 +309,14 @@ gcloud compute instances list --project=my-project-id
   ```
 
 ### "dependency lock" 오류
+
 - **원인**: .terraform.lock.hcl 파일 문제
 - **해결**: `terragrunt init -reconfigure`
 
 ---
 
 **관련 문서**:
+
 - [Terragrunt 사용법](../guides/terragrunt-usage.md)
 - [배포 순서 상세](../architecture/overview.md)
 - [트러블슈팅](../troubleshooting/common-errors.md)

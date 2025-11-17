@@ -5,9 +5,12 @@
 형식: [Keep a Changelog](https://keepachangelog.com/ko/1.0.0/) 기반
 버저닝: [Semantic Versioning](https://semver.org/lang/ko/) 준수
 
+<!-- markdownlint-disable MD005 MD007 MD013 MD024 -->
+
 ## [미배포] - 2025-11-12
 
 ### 수정 (Fixed)
+
 - **Jenkinsfile 단일 레이어 실행 시 경로 문제 해결**: `--working-dir` 플래그를 사용하여 terragrunt.hcl 파일을 찾지 못하는 문제 수정
   - 단일 레이어 실행 시 `dir()` 블록 안에서 직접 `terragrunt init`을 실행하면 terragrunt.hcl 파일 인식 실패
   - 모든 terragrunt 명령(`init`, `plan`, `apply`, `destroy`)에 `--working-dir` 플래그를 사용하도록 변경
@@ -25,6 +28,7 @@
 ## [미배포] - 2025-11-11
 
 ### 수정 (Fixed)
+
 - Memorystore Redis: `REDIS_7_X` 값이 GCP API에서 아직 허용되지 않아 apply가 실패하던 문제를 `REDIS_6_X` 기본값 및 허용 버전(validation) 추가로 해결
   - 모듈(`modules/memorystore-redis`)과 각 레이어/예제(tfvars/variables, jsj-game-k 포함)에서 기본 버전을 `REDIS_6_X`로 통일
   - README/가이드에 지원 버전 목록을 명시하고 Jenkins/Quick Setup 흐름과 일치하도록 문구 업데이트
@@ -33,6 +37,7 @@
   - Quick Setup/README/Jenkins 가이드 등 문서에서도 새 파일명을 반영
 
 ### 변경 (Changed)
+
 - 네트워크 레이어(10-network)
   - `additional_subnets` + `dmz/private/db_subnet_name` 조합으로 DMZ/Private/DB 전용 서브넷을 선언하도록 템플릿·환경 tfvars/README 갱신
   - `nat_subnet_self_links`를 이용해 Cloud NAT 적용 대상을 DMZ 서브넷으로 제한하는 패턴 문서화
@@ -49,6 +54,7 @@
 ## [미배포] - 2025-11-10
 
 ### 변경 (Changed)
+
 - 템플릿 코드 최신화(동기화)
   - 00-project: bootstrap remote state 기반 동적 폴더 참조 추가 (`folder_product/region/env` 입력 사용, `folder_id` 미설정 시 자동)
   - 65-cache: Redis 위치를 zone(default_zone) 기반으로 계산, provider region을 `region_primary`로 통일
@@ -61,23 +67,27 @@
   - Jenkins 파이프라인: clean checkout, 캐시(.terragrunt-cache/.terraform/tfplan) 정리, `terragrunt run --queue-include-dir '00-project' --all plan`으로 선 검증, 전체 Apply는 `run --all apply` 기반 최신 코드/상태 기준 의존 순서대로 적용
 
 ### 추가 (Added)
+
 - 신규 환경 `jsj-game-k` 생성 (LIVE)
   - `common.naming.tfvars`, `terragrunt.hcl`, `Jenkinsfile`에 jsj-game-k 식별자 반영
- - Bootstrap 실제 적용 완료: folder_structure 출력 확인(games/kr-region, us-region)
- - 00-project/10-network에 초기 전파 지연을 흡수하기 위한 대기 로직(time_sleep) 도입
+- Bootstrap 실제 적용 완료: folder_structure 출력 확인(games/kr-region, us-region)
+- 00-project/10-network에 초기 전파 지연을 흡수하기 위한 대기 로직(time_sleep) 도입
 
 ### 제거 (Removed)
+
 - 기존 `jsj-game-j` 환경 디렉터리 제거 (템플릿 최신화 반영된 `jsj-game-k`로 이관)
 
 ## [미배포] - 2025-11-09
 
 ### 추가 (Added)
+
 - **GCP 폴더 구조 자동화**: 게임별로 다른 리전 조합을 지원하는 유연한 폴더 구조
   - Bootstrap에 3차원 for_each 구조 추가 (게임 × 리전 × 환경)
   - `product_regions` 맵에서 게임별 사용 리전 정의 가능
     - games: kr-region, us-region
     - games2 추가 예시: jp-region, uk-region
     - games3 추가 예시: kr-region만
+
   - 환경(LIVE/Staging/GQ-dev)은 모든 조합에 자동 생성
   - 생성된 폴더:
     - games/kr-region/LIVE (folders/587862617074)
@@ -98,6 +108,7 @@
   - terraform.tfvars에서 folder_id 수동 입력 제거
   - 새 프로젝트 생성 시 수동 작업 최소화
   - 사용 예시:
+
     ```hcl
     data "terraform_remote_state" "bootstrap" {
       backend = "gcs"
@@ -108,11 +119,13 @@
     }
     folder_id = data.terraform_remote_state.bootstrap.outputs.folder_structure["games"]["kr-region"]["LIVE"]
     ```
+
   - 관련 커밋: `f6fdda8`, `353aa10`
 
 ### 수정 (Fixed)
- - project-base HCL 표현 오류 수정: 필수 API(core)와 사용자 API 목록을 `setunion`으로 병합하고 `locals` 위치 정리(초기화 실패 방지)
- - 00-project → 모듈에 `manage_default_logging_bucket`/`logging_api_wait_duration` 전달 누락 보완, env tfvars에서 초기 1차 적용 시 로그 버킷 스킵 가능하도록 문서/예제 반영
+
+- project-base HCL 표현 오류 수정: 필수 API(core)와 사용자 API 목록을 `setunion`으로 병합하고 `locals` 위치 정리(초기화 실패 방지)
+- 00-project → 모듈에 `manage_default_logging_bucket`/`logging_api_wait_duration` 전달 누락 보완, env tfvars에서 초기 1차 적용 시 로그 버킷 스킵 가능하도록 문서/예제 반영
 - **Cloud Logging API 활성화 타이밍 이슈 해결**: 명시적 depends_on으로 API 대기 보장
   - 문제: google_logging_project_bucket_config가 logging API 활성화 전에 실행
   - 에러: `Error 403: Cloud Logging API has not been used in project 110061486541`
@@ -123,6 +136,7 @@
   - 관련 커밋: `effe94a`
 
 ### 변경 (Changed)
+
 - **Bootstrap 폴더 리소스 구조 변경**: 정적 리소스 → for_each 동적 생성
   - State 이동:
     - `google_folder.games` → `google_folder.products["games"]`
@@ -135,6 +149,7 @@
 ## [미배포] - 2025-11-07
 
 ### 추가 (Added)
+
 - **jsj-game-j 환경 생성**: 신규 프로젝트 환경 완전 구성
   - 9개 인프라 레이어 전체 설정 완료 (00-project ~ 70-loadbalancer)
   - `common.naming.tfvars` 생성 (project_id: jsj-game-j, region: asia-northeast3)
@@ -147,6 +162,7 @@
   - 날짜별 파일 링크 및 작업 가이드 추가
 
 ### 수정 (Fixed)
+
 - **65-cache 레이어 zone 설정 이슈 해결**: Redis는 zone 필요, region만 제공되던 문제 수정
   - 1차 시도: `terraform.tfvars`에 region 직접 지정 → 중앙 관리 원칙 위반
   - 2차 수정: `main.tf`에서 `module.naming.default_zone` 사용 → zone 자동 생성
@@ -170,6 +186,7 @@
   - Jenkins에서 `terraform init` 재실행 시 더 이상 `backend.tf` 수동 관리가 필요 없음
 
 ### 변경 (Changed)
+
 - **실제 배포 환경 ID 교체**: 기존 `jsj-game-g` 프로젝트 ID가 전역에서 사용 중이라 `jsj-game-h`로 교체하고 Terragrunt remote_state prefix 및 naming 입력을 모두 갱신 (추가로 실험용 `jsj-game-i` 환경을 동일 템플릿으로 준비)
 - **문서 업데이트**: `05_quick setup guide.md`의 terragrunt.hcl 예제를 최신 구조로 갱신
   - 올바른 remote_state 설정 구조 반영
@@ -178,6 +195,7 @@
 ## [미배포] - 2025-11-06
 
 ### 추가 (Added)
+
 - **Bootstrap Service Account 생성**: Jenkins CI/CD 자동화를 위한 Service Account
   - `jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com` 생성
   - Bootstrap Terraform 코드로 관리 (Infrastructure as Code)
@@ -196,6 +214,7 @@
   - 각 워크로드 프로젝트: `roles/editor` (리소스 관리)
 
 ### 변경 (Changed)
+
 - **Jenkinsfile Working Directory 수정**: 절대 경로 사용
   - `TG_WORKING_DIR`을 상대 경로 '.'에서 절대 경로로 변경
   - 예: `terraform_gcp_infra/environments/LIVE/jsj-game-h`
@@ -217,6 +236,7 @@
   - 환경 루트 `terragrunt.hcl`의 `inputs`로 `org_id`, `billing_account` 등 공통 값을 중앙 관리
 
 ### 수정 (Fixed)
+
 - **Jenkinsfile 경로 이슈 해결**: workspace root vs Jenkinsfile 위치
   - Jenkins Pipeline은 항상 workspace root에서 시작
   - Jenkinsfile 위치와 무관하게 절대 경로 필요
@@ -234,6 +254,7 @@
 ## [미배포] - 2025-11-05
 
 ### 추가 (Added)
+
 - **Jenkins CI/CD 통합**: Jenkins를 통한 자동화된 Terragrunt 배포 지원
   - `Jenkinsfile`을 `terraform_gcp_infra/` 루트에 배치
   - Plan/Apply/Destroy 파라미터 선택 가능
@@ -250,6 +271,7 @@
   - Key 관리 포인트 최소화 및 중앙 집중식 권한 관리
 
 ### 변경 (Changed)
+
 - **디렉터리 구조 재정리**: 템플릿과 실제 환경 분리
   - `proj-default-templet`을 `terraform_gcp_infra/` 루트로 이동
   - `environments/LIVE/`는 실제 배포 환경만 포함
@@ -261,12 +283,14 @@
   - Jenkins Job Script Path: `environments/LIVE/{project}/Jenkinsfile`
 
 ### 문서 (Documentation)
+
 - `00_README.md`: Jenkins CI/CD 통합 섹션 추가, 디렉터리 구조 업데이트
 - `03_QUICK_REFERENCE.md`: 세션 12 작업 내역 추가, 경로 업데이트
 - `05_quick setup guide.md`: 템플릿 경로 수정
 - `02_CHANGELOG.md`: 프로젝트 재구성 및 Jenkins 통합 기록
 
 ### 수정 (Fixed)
+
 - **Network 모듈 출력 속성 수정**: `google_service_networking_connection` 리소스의 출력을 `.self_link`에서 `.id`로 변경
   - `.self_link` 속성이 존재하지 않아 destroy 시 에러 발생하던 문제 해결
   - `modules/network-dedicated-vpc/main.tf:148` 및 README 문서 업데이트
@@ -278,16 +302,19 @@
   - `environments/LIVE/proj-default-templet/65-cache/terraform.tfvars`에 경고 주석 추가
 
 ### 추가 (Added)
+
 - **프로젝트 템플릿 API 추가**: `proj-default-templet/00-project/terraform.tfvars`에 필수 API 추가
   - `sqladmin.googleapis.com` (Cloud SQL)
   - `redis.googleapis.com` (Memorystore Redis)
 
 ### 문서 (Documentation)
+
 - `05_quick setup guide.md`에 Terragrunt & Naming 구조 개요 섹션 추가
   - common.naming.tfvars와 레이어별 terraform.tfvars 병합 구조 설명
   - naming 모듈을 통한 리소스 이름/라벨/기본 존 계산 흐름 문서화
 
 ### 운영 (Operations)
+
 - `environments/LIVE/jsj-game-f` 전체 인프라 destroy 완료 (9개 레이어)
   - VPC 피어링 수동 삭제 (redis-peer, servicenetworking-googleapis-com)
   - Storage lien 수동 제거 후 프로젝트 리소스 정리 완료
@@ -295,6 +322,7 @@
 ## [미배포] - 2025-11-04
 
 ### 추가 (Added)
+
 - `environments/prod/proj-default-templet` 전 레이어에 한글 `terraform.tfvars.example` 제공
   - 10-network/30-security/40-observability/50-workloads 레이어 예제 파일 신규 생성
   - 00-project/20-storage/60-database/70-loadbalancer 예제 파일을 한국어 설명으로 갱신
@@ -302,6 +330,7 @@
 - `modules/memorystore-redis` 및 `environments/LIVE/proj-default-templet/65-cache` 레이어 추가로 Redis 캐시 템플릿 제공
 
 ### 변경 (Changed)
+
 - `modules/gce-vmset` 선점형 VM 스케줄링을 Spot 제약에 맞게 자동 재시작 비활성화 및 유지보수 시 종료로 조정하여 배포 실패를 방지
 - `environments/LIVE/proj-default-templet/60-database` 기본 설정을 Cloud SQL 고가용성(REGIONAL) + 삭제 보호 비활성 형태로 조정하고 문서를 업데이트 (필요 시 tfvars에서 true로 전환)
 - `modules/naming`에 `redis_instance_name` 출력을 추가하고 ARCHITECTURE/QUICK_REFERENCE 문서를 Redis 캐시 레이어를 반영하도록 갱신
@@ -314,11 +343,14 @@
 - README / ARCHITECTURE / QUICK_REFERENCE 문서에 Private Service Connect 흐름과 신규 tfvars 예제 복사 절차를 반영
 
 ### 운영 (Operations)
+
 - `environments/prod/jsj-game-e` 네트워크 레이어 destroy 재시도 후 Service Networking 연결이 정상 해제되어 환경 전체 삭제 완료
 - WSL 네트워크 제한으로 gcloud/gsutil 명령이 실패할 수 있음을 문서화하고, 콘솔을 통한 리소스 확인을 안내
+
 ## [미배포] - 2025-11-03
 
 ### 변경 (Changed)
+
 - `environments/prod/proj-default-templet` 전역을 Terragrunt 구조로 전환
   - 루트 및 각 레이어에 `terragrunt.hcl` 추가하고 의존 관계를 선언해 실행 순서 자동화
   - Terraform backend 관리는 Terragrunt가 생성하는 `backend.tf` 파일로 이관되어 코드에 직접 backend 블록을 둘 필요가 없음
@@ -327,6 +359,7 @@
 - Terragrunt 0.92 CLI 기준 명령 예시(`terragrunt init/plan/apply`, `terragrunt state/output`)로 가이드 갱신
 
 ### 운영 (Operations)
+
 - `/root/.bashrc`에 Terragrunt 바이너리 alias(`terragrunt='/mnt/d/jsj_wsl_data/terragrunt_linux_amd64'`)를 등록해 모든 세션에서 동일한 명령 사용
 - WSL에서 Google provider가 소켓 옵션을 설정하지 못하는 이슈를 문서화하고, Linux/컨테이너 등 대안 실행 환경을 안내
 
@@ -345,10 +378,12 @@
   - README에 동작 설명 주석 추가
 
 ### 운영 (Operations)
+
 - 테스트 환경(jsj-game-d) 전체 `terraform destroy` 및 디렉터리 정리
 - GCS 보존 설정으로 생성된 lien(`p861601542676-l299e11ad-124f-42de-92ae-198e8dd6ede6`)을 해제하여 프로젝트 삭제 완료
 
 ### 변경 (Changed)
+
 - `proj-default-templet` 템플릿의 공통 라벨을 하이픈(`cost-center`, `managed-by`) 기준으로 통일하고 예제와 naming 입력 간 키가 일치하도록 정리
 - 20-storage, 30-security, 50-workloads, 60-database, 70-loadbalancer 레이어가 `modules/naming` 기반 기본 이름과 라벨을 자동 사용하도록 정비
   - GCS 버킷/서비스 계정/Load Balancer 이름은 `terraform.tfvars`에서 생략해도 규칙에 맞춰 생성
@@ -361,6 +396,7 @@
 ### 수정 (Fixed) - 세션 7
 
 #### proj-default-templet 템플릿 동기화
+
 - **변수 구조 오류 수정**:
   - 00-project/variables.tf: region 변수가 project_id 블록 안에 잘못 포함되어 있던 문제 수정
   - 30-security/variables.tf: 동일한 변수 구조 오류 수정
@@ -374,6 +410,7 @@
 ### 변경 (Changed) - 세션 7
 
 #### 프로젝트 설정 가능성 개선
+
 - **Region 변수 추가**: 모든 레이어(00-project ~ 70-loadbalancer)에 region 변수 추가
   - Provider 블록의 하드코딩된 "us-central1"을 `var.region`으로 변경
   - 모든 terraform.tfvars에 region 설정 추가
@@ -381,6 +418,7 @@
   - 다중 지역 배포 시 각 레이어별로 region 설정 가능
 
 #### 하드코딩 제거
+
 - **20-storage 레이어**: 하드코딩된 값들을 변수화
   - `logs_enable_versioning`: 로그 버킷 버전 관리 (기본값: false)
   - `logs_cors_rules`: 로그 버킷 CORS 규칙 (기본값: [])
@@ -388,6 +426,7 @@
   - 모든 설정이 terraform.tfvars에서 관리 가능
 
 #### terraform.tfvars 완성
+
 - **60-database, 70-loadbalancer**: 실제 terraform.tfvars 파일 생성
   - 이전에는 .example 파일만 존재
   - 모든 레이어가 이제 실제 terraform.tfvars 포함
@@ -395,6 +434,7 @@
   - 프로젝트 복제 시 수정 용이
 
 #### 문서화
+
 - **00_README.md**: naming 모듈 기반 중앙 집중식 naming 섹션 추가
   - naming 모듈과 공통 입력값의 역할 설명
   - 새 프로젝트 추가 가이드 개선
@@ -407,6 +447,7 @@
 ### 수정 (Fixed)
 
 #### 프로젝트 삭제 방지 설정
+
 - **deletion_policy 제거 및 주석 안내로 변경**:
   - `google_project` 리소스는 `deletion_policy` 속성을 지원하지 않음
   - Terraform의 `lifecycle` 블록은 변수 사용 불가 (메타-인자 제한)
@@ -417,6 +458,7 @@
 ### 추가 (Added)
 
 #### Observability 개선
+
 - **Cloud SQL 로깅**: MySQL 쿼리 로깅 및 Cloud Logging 통합
   - 느린 쿼리 로그 (Slow Query Log) 자동 구성
   - 일반 쿼리 로그 (General Log) 옵션
@@ -427,6 +469,7 @@
 ### 추가 (Added) - 세션 5
 
 #### 새로운 모듈
+
 - **cloudsql-mysql**: Cloud SQL MySQL 데이터베이스 관리 모듈
   - High Availability (REGIONAL/ZONAL) 지원
   - Private IP 네트워킹
@@ -447,6 +490,7 @@
   - URL 라우팅 및 호스트 규칙
 
 #### 새로운 인프라 레이어
+
 - **60-database**: Cloud SQL 배포 레이어
   - MySQL 데이터베이스 구성
   - Private IP 네트워킹 설정
@@ -458,6 +502,7 @@
   - SSL 및 CDN 설정
 
 #### Bootstrap 및 State 관리
+
 - **Bootstrap 프로젝트**: 중앙 집중식 Terraform State 관리
   - 관리용 프로젝트 (`delabs-system-mgmt`)
   - 중앙 State 버킷 (`delabs-terraform-state-prod`)
@@ -467,11 +512,13 @@
 ### 변경 (Changed)
 
 #### 프로젝트 구조
+
 - **프로젝트 템플릿화**: `proj-game-a` → `proj-default-templet`
   - 재사용 가능한 템플릿 구조로 변경
   - 레이블 정보 업데이트 (cost_center, created_by)
 
 #### 모듈 개선
+
 - **project-base 모듈**: `deletion_policy` 변수화
   - 기본값: `DELETE` (자유롭게 삭제 가능)
   - 옵션: `PREVENT` (삭제 방지), `ABANDON` (리소스 유지)
@@ -480,6 +527,7 @@
 ### 수정 (Fixed)
 
 #### Load Balancer 모듈 버그 수정
+
 1. **Static IP 참조 로직**
    - `create_static_ip=true`일 때 생성된 IP 리소스 사용
    - 조건부 참조로 에러 방지
@@ -499,6 +547,7 @@
    - IAP 블록에 `enabled = true` 속성 추가
 
 #### 모듈 오류 수정 (세션 2)
+
 - **project-base**: `google_billing_project` → `google_project`에 통합
 - **network-dedicated-vpc**: 중복 outputs.tf 제거
 - **observability**: 중복 outputs.tf 제거
@@ -594,6 +643,7 @@
 ### 새로운 모듈 사용하기
 
 #### 1. Cloud SQL MySQL 배포
+
 ```bash
 cd environments/prod/proj-default-templet/60-database
 cp terraform.tfvars.example terraform.tfvars
@@ -612,11 +662,13 @@ terraform apply
 ```
 
 **중요 사항**:
+
 - Private IP 사용 시 VPC peering 필요 (10-network 레이어 먼저 배포)
 - 비밀번호는 terraform.tfvars에 직접 저장하지 말고 환경변수 사용 권장
 - 삭제 방지: `deletion_protection = true` 설정 권장
 
 #### 2. Load Balancer 배포
+
 ```bash
 cd environments/prod/proj-default-templet/70-loadbalancer
 cp terraform.tfvars.example terraform.tfvars
@@ -634,6 +686,7 @@ terraform apply
 ```
 
 **LB 타입 선택 가이드**:
+
 - `http`: 외부 웹 트래픽, 글로벌, SSL/CDN 지원
 - `internal`: 내부 HTTP(S) 트래픽, 리전별
 - `internal_classic`: 내부 TCP/UDP 트래픽, 리전별
@@ -645,6 +698,7 @@ terraform apply
 1. **Provider 블록 제거** - State 변경 불필요, 루트 구성만 업데이트
 
 2. **IAM binding에서 member로** - 주의 깊은 마이그레이션 필요:
+
    ```bash
    # 현재 IAM 바인딩 확인
    terraform state list | grep iam_binding
@@ -654,6 +708,7 @@ terraform apply
    ```
 
 3. **15-storage 리팩토링** - State 마이그레이션 필요:
+
    ```bash
    # 개별 모듈에서 gcs-root로 state 이동
    terraform state mv 'module.game_assets_bucket' 'module.game_storage.module.gcs_buckets["assets"]'
@@ -710,6 +765,7 @@ terraform plan
 ## 향후 개선 사항
 
 ### 새로운 모듈 추가
+
 - [ ] **cloudsql-postgresql**: PostgreSQL 데이터베이스 모듈
 - [ ] **cloud-memorystore**: Redis/Memcached 모듈
 - [ ] **gke-cluster**: Google Kubernetes Engine 모듈
@@ -721,6 +777,7 @@ terraform plan
 - [ ] **secret-manager**: Secret Manager 모듈
 
 ### 인프라 개선
+
 - [ ] dev 및 staging 환경 추가
 - [ ] CI/CD에 tfsec 구현
 - [ ] 포맷팅을 위한 pre-commit hook 추가
@@ -730,6 +787,7 @@ terraform plan
 - [ ] Cost optimization 가이드 추가
 
 ### 문서화
+
 - [ ] 아키텍처 다이어그램 추가
 - [ ] 실제 사용 사례 (Use Cases) 문서
 - [ ] 트러블슈팅 가이드 확장
@@ -738,3 +796,5 @@ terraform plan
   - `modules/project-base`에 `manage_default_logging_bucket` 플래그와 `time_sleep` 리소스를 도입해 Logging API 활성화 후 `_Default` 버킷 구성을 시작하기 전에 `logging_api_wait_duration`만큼 대기 (기본 60초)
   - 초기 부트스트랩에서 해당 버킷 구성을 건너뛰고 싶을 때 `manage_default_logging_bucket = false`로 설정 가능
   - 신규 프로젝트에서 API 전파 지연으로 `_Default` 버킷 생성이 반복적으로 403을 내던 문제 완화
+
+<!-- markdownlint-enable MD005 MD007 MD013 MD024 -->

@@ -87,25 +87,30 @@
 ## 작업 시나리오별 참조 문서
 
 ### 시나리오 1: 신규 환경 구축
+
 1. [사전 요구사항](./getting-started/prerequisites.md) 확인
 2. [Bootstrap 구성](./getting-started/bootstrap-setup.md) 수행
 3. [첫 번째 환경 배포](./getting-started/first-deployment.md) 진행
 
 ### 시나리오 2: 기존 환경 복제
+
 1. [신규 프로젝트 추가](./guides/adding-new-project.md) 절차 수행
 2. [Terragrunt 운영](./guides/terragrunt-usage.md) 가이드 참조
 
 ### 시나리오 3: 장애 발생 시
+
 1. [일반 오류 대응](./troubleshooting/common-errors.md)에서 오류 메시지 검색
 2. 해당 카테고리별 상세 문서 참조
    - State 관련: [State 관련 장애](./troubleshooting/state-issues.md)
    - 네트워크 관련: [네트워크 장애](./troubleshooting/network-issues.md)
 
 ### 시나리오 4: CI/CD 자동화 구축
+
 1. [Jenkins CI/CD 구성](./guides/jenkins-cicd.md) 가이드 참조
 2. [Terragrunt 운영](./guides/terragrunt-usage.md) 병행 검토
 
 ### 시나리오 5: 아키텍처 이해
+
 1. [시스템 구조](./architecture/overview.md) 전체 개요 파악
 2. [시스템 다이어그램](./architecture/diagrams.md) 시각 자료 확인
 3. 세부 주제별 문서 참조
@@ -115,12 +120,14 @@
 ## 문서 검색 방법
 
 ### 키워드 검색
+
 - **명령어 참조**: [명령어 참조](./getting-started/quick-commands.md)
 - **오류 메시지**: [일반 오류 대응](./troubleshooting/common-errors.md)에서 Ctrl+F 검색
 - **모듈 사용법**: 상단 모듈 문서 표에서 해당 모듈 선택
 - **배포 순서**: [첫 번째 환경 배포](./getting-started/first-deployment.md)
 
 ### 카테고리별 접근
+
 - **초기 구축**: [getting-started/](./getting-started/)
 - **설계 문서**: [architecture/](./architecture/)
 - **운영 절차**: [guides/](./guides/)
@@ -139,8 +146,10 @@
 ## 기술 지원
 
 문서 관련 문의사항이 있을 경우:
+
 1. 해당 카테고리 문서 확인
-2. [CHANGELOG](./changelog/CHANGELOG.md) 및 [작업 이력](./changelog/work_history/README.md) 검토
+2. [CHANGELOG](./changelog/CHANGELOG.md) 및
+   [작업 이력](./changelog/work_history/README.md) 검토
 3. GitHub Issues 등록
 
 ---

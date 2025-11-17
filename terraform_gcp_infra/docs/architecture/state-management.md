@@ -4,7 +4,7 @@ Terraform State의 중앙 집중식 관리 전략입니다.
 
 ## 아키텍처 개요
 
-```
+```text
 ┌─────────────────────────────────────────┐
 │   Bootstrap Project (jsj-system-mgmt)   │
 │                                          │
@@ -26,25 +26,32 @@ Terraform State의 중앙 집중식 관리 전략입니다.
 ## 핵심 원칙
 
 ### 1. 중앙 집중식 (Centralized)
+
 모든 프로젝트의 State를 단일 버킷에서 관리:
+
 - **장점**: 일관된 관리, 쉬운 백업, 팀 협업
 - **버킷**: `jsj-terraform-state-prod`
 - **프로젝트**: `jsj-system-mgmt`
 
 ### 2. 레이어별 분리 (Layer Isolation)
+
 각 레이어는 독립적인 State 파일 보유:
+
 - **장점**: 빠른 Plan/Apply, 독립적 변경, 충돌 방지
 - **예시**: `00-project`, `10-network`, ... `70-loadbalancer`
 
 ### 3. 환경별 격리 (Environment Isolation)
+
 프로젝트별로 prefix 분리:
+
 - **장점**: 환경 간 간섭 없음, 독립적 관리
 - **예시**: `jsj-game-k/`, `jsj-game-l/`
 
 ## State 구조
 
 ### GCS 버킷 구조
-```
+
+```text
 gs://jsj-terraform-state-prod/
 ├── bootstrap/                        # Bootstrap State (복사본)
 │   └── default.tfstate
@@ -63,6 +70,7 @@ gs://jsj-terraform-state-prod/
 ```
 
 ### 버킷 설정
+
 ```hcl
 resource "google_storage_bucket" "terraform_state" {
   name     = "jsj-terraform-state-prod"
@@ -98,6 +106,7 @@ resource "google_storage_bucket" "terraform_state" {
 ## Terragrunt 자동화
 
 ### root.hcl (환경 루트)
+
 ```hcl
 remote_state {
   backend = "gcs"
@@ -115,11 +124,13 @@ remote_state {
 ```
 
 **효과**:
+
 - 각 레이어에 `backend.tf` 자동 생성
 - Terraform 코드에 backend 블록 불필요
 - State 경로 자동 계산
 
 ### 생성되는 backend.tf
+
 ```hcl
 # 00-project/backend.tf (자동 생성)
 terraform {
@@ -133,11 +144,13 @@ terraform {
 ## State 보호
 
 ### Versioning
+
 - ✅ 모든 변경 사항 버전 관리
 - ✅ 최근 10개 버전 보관
 - ✅ 30일 이상 된 버전 자동 삭제
 
 ### 백업 전략
+
 ```bash
 # 자동 백업 (Versioning으로)
 # → GCS가 자동으로 관리
@@ -149,6 +162,7 @@ gsutil cp \
 ```
 
 ### Lock 메커니즘
+
 - **방법**: GCS 자동 제공
 - **효과**: 동시 실행 방지
 - **파일**: `default.tflock`
@@ -156,7 +170,9 @@ gsutil cp \
 ## Bootstrap State (특별 케이스)
 
 ### 로컬 State
+
 Bootstrap은 의도적으로 로컬 State 사용:
+
 ```hcl
 # bootstrap/main.tf
 terraform {
@@ -165,10 +181,12 @@ terraform {
 ```
 
 **이유**:
+
 - Bootstrap이 State 버킷을 생성함
 - 순환 의존성 방지
 
-### 백업 필수!
+### 백업 필수
+
 ```bash
 # 로컬 백업
 cd bootstrap
@@ -180,7 +198,9 @@ gsutil cp terraform.tfstate \
 ```
 
 ### 참조 방법
+
 다른 레이어에서 Bootstrap State 참조:
+
 ```hcl
 data "terraform_remote_state" "bootstrap" {
   backend = "gcs"
@@ -198,17 +218,20 @@ locals {
 ## State 복구
 
 ### 이전 버전 복원
+
 ```bash
 # 1. 버전 리스트 확인
 gsutil ls -la gs://jsj-terraform-state-prod/jsj-game-k/00-project/
 
 # 2. 특정 버전 복원
+STATE_OBJECT="gs://jsj-terraform-state-prod/jsj-game-k/00-project/default.tfstate#1234567890"
 gsutil cp \
-    gs://jsj-terraform-state-prod/jsj-game-k/00-project/default.tfstate#1234567890 \
+    "${STATE_OBJECT}" \
     gs://jsj-terraform-state-prod/jsj-game-k/00-project/default.tfstate
 ```
 
 ### Bootstrap State 복원
+
 ```bash
 cd bootstrap
 
@@ -223,6 +246,7 @@ gsutil cp gs://jsj-terraform-state-prod/bootstrap/default.tfstate \
 ## State 이동
 
 ### 프로젝트 간 이동
+
 ```bash
 # 1. State Pull
 cd old-project
@@ -237,6 +261,7 @@ terragrunt state push state.json
 ```
 
 ### 리소스 이동
+
 ```bash
 # 레이어 간 리소스 이동
 terragrunt state mv \
@@ -249,17 +274,20 @@ terragrunt state mv \
 ## 모니터링
 
 ### State 크기 확인
+
 ```bash
 gsutil du -sh gs://jsj-terraform-state-prod/jsj-game-k/
 ```
 
 ### 변경 이력
+
 ```bash
 # Versioning 이력
 gsutil ls -la gs://jsj-terraform-state-prod/jsj-game-k/00-project/ | tail -10
 ```
 
 ### Lock 확인
+
 ```bash
 gsutil ls gs://jsj-terraform-state-prod/jsj-game-k/**/*.tflock
 ```
@@ -267,6 +295,7 @@ gsutil ls gs://jsj-terraform-state-prod/jsj-game-k/**/*.tflock
 ## 베스트 프랙티스
 
 ### ✅ Do
+
 1. **Versioning 활성화**: 항상 켜기
 2. **정기 백업**: 중요 변경 전
 3. **Lock 존중**: 강제 해제 최소화
@@ -274,6 +303,7 @@ gsutil ls gs://jsj-terraform-state-prod/jsj-game-k/**/*.tflock
 5. **Terragrunt 사용**: 자동화로 실수 방지
 
 ### ❌ Don't
+
 1. **로컬 State 사용 금지** (Bootstrap 제외)
 2. **State 직접 수정 금지**: `terraform state` 명령 사용
 3. **Lock 무시 금지**: 충돌 위험
@@ -283,17 +313,21 @@ gsutil ls gs://jsj-terraform-state-prod/jsj-game-k/**/*.tflock
 ## 트러블슈팅
 
 ### "bucket doesn't exist"
+
 → [일반적인 오류](../troubleshooting/common-errors.md#1-storage-bucket-doesnt-exist)
 
 ### Lock 걸림
+
 → [State 문제](../troubleshooting/state-issues.md#state-lock-문제)
 
 ### State 손상
+
 → [State 문제](../troubleshooting/state-issues.md#state-손상)
 
 ---
 
 **관련 문서**:
+
 - [전체 아키텍처](./overview.md)
 - [Bootstrap 설정](../getting-started/bootstrap-setup.md)
 - [State 문제 해결](../troubleshooting/state-issues.md)

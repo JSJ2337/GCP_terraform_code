@@ -1,5 +1,7 @@
 # 빠른 참조 가이드
 
+<!-- markdownlint-disable MD013 -->
+
 ## 🚀 다음 세션 시작 시
 
 ```bash
@@ -23,16 +25,18 @@ terragrunt run --all apply -- -auto-approve
 ## 📝 변경된 파일 요약
 
 ### 세션 14: 템플릿 최신화 및 환경 교체 (2025-11-10)
+
 - 템플릿(00-project, 65-cache, terragrunt.hcl) 최신화
   - 00-project: bootstrap remote state 기반 동적 폴더 참조 추가
   - 65-cache: Redis 위치를 zone(default_zone) 기반으로 계산, provider region_primary 적용
   - terragrunt.hcl: GCS remote_state에 project/location 추가
 - 환경 교체: jsj-game-j 제거 → jsj-game-k 신규 생성
   - common.naming.tfvars, terragrunt.hcl, Jenkinsfile 식별자(jsj-game-k) 반영
- - Bootstrap 가이드/명칭 정리: jsj-system-mgmt, jsj-terraform-state-prod 기준으로 문서 업데이트
- - Bootstrap 옵션 토글 추가: manage_folders / manage_org_iam / enable_billing_account_binding
+- Bootstrap 가이드/명칭 정리: jsj-system-mgmt, jsj-terraform-state-prod 기준으로 문서 업데이트
+- Bootstrap 옵션 토글 추가: manage_folders / manage_org_iam / enable_billing_account_binding
 
 ### 세션 13: Bootstrap Service Account 및 GCP 인증 설정 (2025-11-06)
+
 - **Bootstrap Service Account 자동 생성**:
   - `jenkins-terraform-admin@delabs-system-mgmt.iam.gserviceaccount.com` Terraform으로 생성
   - Infrastructure as Code로 관리 (bootstrap/main.tf)
@@ -78,6 +82,7 @@ terragrunt run --all apply -- -auto-approve
   - Terragrunt `remote_state`가 각 레이어 `backend.tf`를 자동 생성하도록 `generate` 블록 추가, Terraform 코드에서는 backend 선언을 제거하여 중복 오류 방지
 
 ### 세션 12: Jenkins CI/CD 통합 및 프로젝트 재구성 (2025-11-05)
+
 - **디렉터리 구조 재정리**:
   - `proj-default-templet`을 `terraform_gcp_infra/` 루트로 이동 (템플릿과 실제 환경 분리)
   - `environments/LIVE/jsj-game-k` 첫 번째 실제 배포 환경 생성 (Project ID: jsj-game-k, Region: asia-northeast3)
@@ -104,6 +109,7 @@ terragrunt run --all apply -- -auto-approve
   - 02_CHANGELOG.md: 프로젝트 재구성 및 Jenkins 통합 기록
 
 ### 세션 10: Private Service Connect 및 템플릿 변수 예시 (2025-11-04)
+
 - 10-network 템플릿에 Private Service Connect 예약 리소스(`google_service_networking_connection`) 추가 및 tfvars 토글 제공
 - 30-security 템플릿이 naming 모듈 출력으로 기본 서비스 계정을 자동 생성하도록 개선
 - 모든 레이어에 한글 `terraform.tfvars.example` 배포 (신규 4개, 갱신 4개) → 복사 후 값만 수정하면 바로 실행 가능
@@ -111,6 +117,7 @@ terragrunt run --all apply -- -auto-approve
 - jsj-game-e 환경 destroy 재시도 → Service Networking 연결 해제 후 완전 삭제 완료
 
 ### 세션 11: Memorystore Redis 템플릿 추가 (2025-11-04)
+
 - `modules/memorystore-redis` 모듈 신설 (STANDARD_HA 구성을 기본값으로 제공)
 - `environments/LIVE/proj-default-templet/65-cache` Terragrunt 레이어 추가 및 예시 tfvars/README 작성
 - `modules/naming`에 `redis_instance_name` 출력 추가로 캐시 네이밍 일관성 확보
@@ -118,6 +125,7 @@ terragrunt run --all apply -- -auto-approve
 - 01_ARCHITECTURE / 03_QUICK_REFERENCE / 02_CHANGELOG 문서를 Redis/Monitoring 흐름을 포함하도록 갱신
 
 ### 세션 1: 초기 베스트 프랙티스 적용 (11개 수정, 9개 신규)
+
 - 모듈 7개: provider 블록 제거
 - 15-storage 3개: gcs-root 사용으로 리팩토링
 - locals.tf: 공통 naming
@@ -125,6 +133,7 @@ terragrunt run --all apply -- -auto-approve
 - 00_README.md, 02_CHANGELOG.md, .gitignore
 
 ### 세션 2: 오류 수정 및 문서화 (3개 수정, 5개 신규)
+
 - **오류 수정 (3개)**:
   - project-base: `google_billing_project` → `google_project`에 통합
   - network-dedicated-vpc: 중복 outputs.tf 제거
@@ -142,17 +151,20 @@ terragrunt run --all apply -- -auto-approve
   - gce-vmset/README.md
 
 ### 세션 3: Bootstrap 및 중앙 State 관리 구현
+
 - Bootstrap 프로젝트 생성 (중앙 State 관리)
 - 모든 레이어의 backend.tf 설정
 - 문서화 업데이트
 
 ### 세션 4: 프로젝트 삭제 정책 및 템플릿화
+
 - JSJ-game-terraform-A 프로젝트 삭제
 - deletion_policy 변수 추가
 - proj-game-a → proj-default-templet 템플릿화
 - locals.tf 레이블 업데이트
 
 ### 세션 5: Cloud SQL 및 Load Balancer 모듈 추가 (18개 신규)
+
 - **새 모듈 (8개 파일)**:
   - cloudsql-mysql: MySQL 데이터베이스 관리
   - load-balancer: HTTP(S)/Internal LB 관리
@@ -165,6 +177,7 @@ terragrunt run --all apply -- -auto-approve
   - 00_README.md, 04_WORK_HISTORY.md 업데이트
 
 ### 세션 6: Cloud SQL 로깅 기능 추가 및 버그 수정
+
 - **Observability 개선**:
   - Cloud SQL 느린 쿼리 로깅 (기본 2초)
   - 일반 쿼리 로깅 옵션 (디버깅용)
@@ -179,6 +192,7 @@ terragrunt run --all apply -- -auto-approve
   - 최종: prevent_destroy 제거, 주석 안내로 변경
 
 ### 세션 7: 프로젝트 리뷰 및 변수화 개선
+
 - **Region 변수 추가**:
   - 모든 레이어(00-project ~ 70-loadbalancer)에 region 변수 추가
   - Provider 블록의 하드코딩된 "us-central1"을 var.region으로 변경
@@ -201,6 +215,7 @@ terragrunt run --all apply -- -auto-approve
   - 새 프로젝트 추가 가이드 개선
 
 ### 세션 8: 네트워크/DB 모듈 안정화 및 환경 정리
+
 - **네트워크 모듈**:
   - 방화벽 규칙 입력 정규화, `name = each.key` 수정
   - EGRESS 기본 목적지를 `0.0.0.0/0`으로 설정
@@ -221,6 +236,7 @@ terragrunt run --all apply -- -auto-approve
   - 자세한 destroy 절차는 [Terraform Destroy Guide](./06_destroy_guide.md)를 참고
 
 ### 세션 9: Terragrunt 기반 실행 전환 (2025-11-03)
+
 - **구조 변경**:
   - `environments/prod/proj-default-templet` 루트 및 모든 레이어에 `terragrunt.hcl` 도입
   - (2025-11-07) 이후에는 Terragrunt `generate` 기능이 `backend.tf`를 자동으로 작성하므로 Terraform 코드에 backend 블록이 필요 없음
@@ -250,6 +266,7 @@ terragrunt state mv 'module.game_backups_bucket' 'module.game_storage.module.gcs
 ## 🎯 핵심 변경 내용
 
 ### 완료됨 ✅
+
 1. ✅ Provider 블록 제거 → 모듈 재사용성 ↑
 2. ✅ IAM binding → member → 충돌 방지
 3. ✅ 15-storage gcs-root 사용 → 코드 간소화
@@ -344,6 +361,7 @@ terraform init && terraform apply
 ## ⏭️ 다음 작업 (우선순위)
 
 ### 즉시 작업 가능
+
 1. [ ] 60-database 레이어 배포 (Cloud SQL MySQL)
    - terraform.tfvars 작성 (프로젝트 ID, 네트워크 설정)
    - Private IP 설정 확인
@@ -359,20 +377,23 @@ terraform init && terraform apply
 4. [ ] tfsec 보안 스캔 (새 모듈 포함)
 5. [ ] 실제 프로젝트에 배포 (terragrunt plan/apply)
 6. [ ] State 마이그레이션 (기존 인프라가 있다면)
-7. [ ] (필요 시) 10-network 단독 실행 시 사전 API 활성화: 
+7. [ ] (필요 시) 10-network 단독 실행 시 사전 API 활성화:
    - `gcloud services enable cloudresourcemanager.googleapis.com serviceusage.googleapis.com servicenetworking.googleapis.com --project=<PROJECT>`
    - 1–2분 대기 후 재실행
 
 ### 향후 개선 사항
-6. [ ] PostgreSQL 모듈 추가 (cloudsql-postgresql)
-7. [ ] GKE (Kubernetes) 모듈 추가
-8. [ ] Dev/Staging 환경 추가
-9. [ ] CI/CD 파이프라인 구축 (GitHub Actions)
-10. [ ] Pre-commit hooks 설정
-11. [ ] Cost estimation (infracost)
-12. [ ] Monitoring 대시보드 자동 생성
-13. [ ] Terragrunt stack 실행 자동화(스크립트/CI) 및 WSL 대안 환경 마련
+
+1. [ ] PostgreSQL 모듈 추가 (cloudsql-postgresql)
+2. [ ] GKE (Kubernetes) 모듈 추가
+3. [ ] Dev/Staging 환경 추가
+4. [ ] CI/CD 파이프라인 구축 (GitHub Actions)
+5. [ ] Pre-commit hooks 설정
+6. [ ] Cost estimation (infracost)
+7. [ ] Monitoring 대시보드 자동 생성
+8. [ ] Terragrunt stack 실행 자동화(스크립트/CI) 및 WSL 대안 환경 마련
 
 ---
 
 **상세 내용**: 04_WORK_HISTORY.md 참조
+
+<!-- markdownlint-enable MD013 -->

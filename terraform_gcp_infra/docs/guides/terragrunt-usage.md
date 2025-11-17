@@ -41,7 +41,7 @@ inputs = {
 
 ## 디렉터리 구조
 
-```
+```text
 environments/LIVE/jsj-game-k/
 ├── root.hcl                    # 루트 설정 (remote_state, inputs)
 ├── common.naming.tfvars        # 공통 네이밍 변수
@@ -89,6 +89,7 @@ inputs = {
 ```
 
 **결과**: 각 레이어에 `backend.tf` 자동 생성
+
 ```hcl
 # 00-project/backend.tf (자동 생성됨)
 terraform {
@@ -182,7 +183,7 @@ terragrunt run \
 
 Terragrunt는 다음 순서로 변수를 병합합니다:
 
-```
+```text
 1. root.hcl inputs
    ↓
 2. common.naming.tfvars (auto-loaded)
@@ -232,6 +233,7 @@ dependencies {
 ```
 
 **효과**:
+
 - `terragrunt run --all apply` 실행 시 00-project 먼저 실행
 - 00-project 실패 시 10-network 실행 안 됨
 
@@ -255,6 +257,7 @@ inputs = {
 ```
 
 **효과**:
+
 - 다른 레이어의 Output을 변수로 전달
 - Type-safe (Output이 없으면 오류)
 
@@ -313,7 +316,8 @@ inputs = {
 ## 베스트 프랙티스
 
 ### 1. 환경별 root.hcl 사용
-```
+
+```text
 environments/
 ├── LIVE/
 │   ├── jsj-game-k/
@@ -323,6 +327,7 @@ environments/
 ```
 
 ### 2. 공통 설정은 상위에
+
 ```hcl
 # environments/root.hcl
 inputs = {
@@ -341,6 +346,7 @@ inputs = {
 ```
 
 ### 3. 민감한 정보는 환경변수
+
 ```hcl
 inputs = {
   db_password = get_env("DB_PASSWORD", "")
@@ -348,6 +354,7 @@ inputs = {
 ```
 
 ### 4. State Lock 주의
+
 ```bash
 # 동일 레이어를 여러 곳에서 동시 실행 금지
 # CI/CD에서 Queue 사용
@@ -356,12 +363,14 @@ inputs = {
 ## 디버깅
 
 ### 상세 로그
+
 ```bash
 export TERRAGRUNT_LOG_LEVEL=debug
 terragrunt plan
 ```
 
 ### 설정 검증
+
 ```bash
 # 병합된 입력 확인
 terragrunt output-all
@@ -371,6 +380,7 @@ terragrunt graph-dependencies
 ```
 
 ### 캐시 정리
+
 ```bash
 # .terragrunt-cache 삭제
 find . -type d -name ".terragrunt-cache" -prune -exec rm -rf {} \;
@@ -379,6 +389,7 @@ find . -type d -name ".terragrunt-cache" -prune -exec rm -rf {} \;
 ## 마이그레이션 (Terraform → Terragrunt)
 
 ### 1. 기존 Backend 제거
+
 ```hcl
 # main.tf에서 삭제
 # terraform {
@@ -387,6 +398,7 @@ find . -type d -name ".terragrunt-cache" -prune -exec rm -rf {} \;
 ```
 
 ### 2. terragrunt.hcl 생성
+
 ```hcl
 include "root" {
   path = find_in_parent_folders("root.hcl")
@@ -394,6 +406,7 @@ include "root" {
 ```
 
 ### 3. State 확인
+
 ```bash
 # 기존 State 그대로 사용됨
 terragrunt init

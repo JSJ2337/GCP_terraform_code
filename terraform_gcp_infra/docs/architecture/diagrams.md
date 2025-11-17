@@ -84,6 +84,7 @@ graph TB
 ```
 
 **설명**:
+
 - **Bootstrap**: 최우선 배포. 중앙 State 관리 인프라
 - **Modules**: 재사용 가능한 Terraform 모듈 (9개)
 - **Environments**: 실제 배포 레이어 (8개)
@@ -133,6 +134,7 @@ graph LR
 ```
 
 **특징**:
+
 - ✅ **중앙 집중식**: 모든 State가 한 곳에서 관리
 - ✅ **버전 관리**: 최근 10개 버전 보관
 - ✅ **레이어별 분리**: 각 레이어는 독립적인 State 파일
@@ -181,6 +183,7 @@ graph TD
 ```
 
 **의존성 설명**:
+
 1. **Bootstrap**: 반드시 최우선 배포
 2. **00-project**: 다른 모든 리소스의 기반
 3. **10-network**: 데이터베이스 Private IP, VM 네트워킹에 필요
@@ -222,6 +225,7 @@ graph LR
 
 **모듈 목록 및 주요 기능**:
 
+<!-- markdownlint-disable MD013 -->
 | 모듈 | 주요 기능 | 카테고리 |
 |------|----------|---------|
 | **project-base** | 프로젝트 생성, API 활성화, 예산 알림, 삭제 정책 | 프로젝트 관리 |
@@ -234,8 +238,10 @@ graph LR
 | **cloudsql-mysql** | MySQL 인스턴스, HA, Private IP, 백업, 복제본 | 데이터베이스 |
 | **memorystore-redis** | Redis 캐시, Standard HA/Enterprise 구성, 유지보수 창 | 캐시 |
 | **load-balancer** | HTTP(S) LB, Internal LB, Health Check, SSL, CDN | 로드 밸런싱 |
+<!-- markdownlint-enable MD013 -->
 
 **모듈 설계 원칙**:
+
 - ✅ **Provider 블록 없음**: 모듈 재사용성 향상
 - ✅ **포괄적인 변수**: 유연한 구성
 - ✅ **Optional 속성**: Terraform 1.6+ 활용
@@ -340,6 +346,7 @@ graph TB
 ```
 
 **리소스 계층**:
+
 1. **Network**: 모든 리소스의 기반
 2. **Storage**: 독립적으로 관리
 3. **Compute**: 네트워크에 의존
@@ -416,6 +423,7 @@ graph LR
 ```
 
 **네트워크 흐름**:
+
 1. **외부 → LB**: 사용자가 Public IP로 접근
 2. **LB → Web**: Health Check 후 트래픽 분산
 3. **Web → App**: 내부 통신
@@ -424,10 +432,11 @@ graph LR
 6. **Internal → NAT**: 외부 API 호출 시 NAT 게이트웨이 사용
 
 **보안**:
+
 - ✅ Redis/DB는 Private IP만 사용 (외부 노출 없음)
 - ✅ 방화벽 규칙으로 트래픽 제어
-- ✅ VPC에는 Cloud SQL Private IP를 위한 Service Networking(Private Service Connect) 피어링이 예약되어
-      데이터베이스 레이어가 별도 수동 작업 없이 바로 연결됩니다.
+- ✅ VPC에는 Cloud SQL Private IP를 위한 Service Networking(Private Service Connect) 피어링이
+      예약되어 데이터베이스 레이어가 별도 수동 작업 없이 바로 연결됩니다.
 - ✅ Cloud NAT로 안전한 외부 통신
 
 ---
@@ -462,6 +471,7 @@ sequenceDiagram
 ```
 
 **실행 단계**:
+
 1. **terragrunt init**: Backend 초기화, State 로드
 2. **terragrunt plan**: 현재 상태와 목표 상태 비교
 3. **terragrunt apply**: 실제 리소스 생성/수정
@@ -505,6 +515,7 @@ graph TB
 ```
 
 **재사용 패턴**:
+
 - 하나의 모듈을 여러 환경에서 사용
 - 환경별로 다른 변수 값 적용
 - 코드 중복 없이 일관된 인프라 관리
@@ -514,21 +525,25 @@ graph TB
 ## 9. 주요 설계 결정
 
 ### ✅ 중앙 State 관리
+
 - **문제**: State 파일을 로컬에 보관하면 협업 어려움
 - **해결**: GCS 버킷에 중앙 집중식 관리
 - **장점**: 팀 협업, 버전 관리, 자동 백업
 
 ### ✅ 레이어 분리
+
 - **문제**: 하나의 거대한 Terraform 구성은 관리 어려움
 - **해결**: 8개 레이어로 분리 (00-70)
 - **장점**: 독립적 배포, 빠른 Plan/Apply, 명확한 책임
 
 ### ✅ 모듈화
+
 - **문제**: 환경마다 동일한 코드 반복
 - **해결**: 재사용 가능한 모듈 9개 생성
 - **장점**: 코드 재사용, 일관성, 유지보수 용이
 
 ### ✅ Provider 블록 제거
+
 - **문제**: 모듈에 Provider 있으면 버전 충돌
 - **해결**: 모듈에서 Provider 제거, 루트만 정의
 - **장점**: 모듈 재사용성 향상, 버전 관리 단순화
@@ -537,6 +552,7 @@ graph TB
 
 ## 10. 확장 로드맵
 
+<!-- markdownlint-disable MD013 -->
 ```mermaid
 graph LR
     CURRENT[현재: 9개 모듈<br/>8개 레이어] --> PHASE1[Phase 1<br/>PostgreSQL<br/>Redis<br/>Secret Manager]
@@ -553,6 +569,7 @@ graph LR
     style PHASE3 fill:#fab1a0
     style PHASE4 fill:#a29bfe
 ```
+<!-- markdownlint-enable MD013 -->
 
 ---
 
@@ -564,6 +581,7 @@ graph LR
 - [QUICK_REFERENCE](03_QUICK_REFERENCE.md)
 
 각 모듈의 상세 아키텍처는 해당 모듈의 README.md를 참조하세요:
+
 - [cloudsql-mysql/README.md](modules/cloudsql-mysql/README.md)
 - [gce-vmset/README.md](modules/gce-vmset/README.md)
 - [gcs-bucket/README.md](modules/gcs-bucket/README.md)
