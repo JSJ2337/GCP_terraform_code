@@ -166,10 +166,17 @@ resource "google_sql_database_instance" "read_replicas" {
     disk_type         = try(each.value.disk_type, var.disk_type)
     disk_size         = try(each.value.disk_size, var.disk_size)
 
-    ip_configuration {
-      ipv4_enabled    = try(each.value.ipv4_enabled, var.ipv4_enabled)
-      private_network = try(each.value.private_network, var.private_network)
-      # require_ssl is deprecated in Google provider 7.x+
+    dynamic "ip_configuration" {
+      for_each = [
+        {
+          ipv4_enabled    = coalesce(try(each.value.ipv4_enabled, var.ipv4_enabled), false)
+          private_network = coalesce(try(each.value.private_network, var.private_network), "")
+        }
+      ]
+      content {
+        ipv4_enabled    = ip_configuration.value.ipv4_enabled
+        private_network = length(trimspace(ip_configuration.value.private_network)) > 0 ? ip_configuration.value.private_network : null
+      }
     }
 
     dynamic "database_flags" {
