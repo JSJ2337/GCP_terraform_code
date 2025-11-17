@@ -54,17 +54,17 @@ databases = []
 users = []
 
 # Read replicas (optional)
-#read_replicas = {
-#  replica1 = {
-#    name   = "jsj-game-m-mysql-read-1"
-#    region = "asia-northeast3"
-#    tier   = "db-n1-standard-1"
-#    availability_type = "ZONAL"
-#    labels = {
-#      role = "read"
-#    }
-#  }
-#}
+read_replicas = {
+  replica1 = {
+    name   = "jsj-game-m-mysql-read-1"
+    region = "asia-northeast3"
+    tier   = "db-n1-standard-1"
+    availability_type = "ZONAL"
+    labels = {
+      role = "read"
+    }
+  }
+}
 
 # Labels (will be merged with common_labels from modules/naming)
 labels = {
