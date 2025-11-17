@@ -82,16 +82,16 @@ PY
 }
 
 lookup_folder_from_bootstrap() {
-  local product="$1"
-  local region="$2"
-  local env="$3"
+  local product="\$1"
+  local region="\$2"
+  local env="\$3"
   local bootstrap_dir="${REPO_ROOT}/bootstrap"
   [[ -d "${bootstrap_dir}" ]] || return 1
   local state_file="${bootstrap_dir}/terraform.tfstate"
   [[ -f "${state_file}" ]] || return 1
 
   local value
-  value="$("${PYTHON_BIN}" - "$state_file" "$product" "$region" "$env" <<'PY'
+  value="$(${PYTHON_BIN} - "$state_file" "$product" "$region" "$env" <<'PY'
 import json, sys
 state_path, product, region, env = sys.argv[1:5]
 try:
@@ -111,6 +111,7 @@ PY
     return 0
   fi
   return 1
+}
 }
 
 ensure_gcloud_auth() {
@@ -235,7 +236,9 @@ ensure_project_parent() {
   fi
 
   log INFO "Moving project ${PROJECT_ID} to folder ${FOLDER_ID}"
-  gcloud beta resource-manager projects move "${PROJECT_ID}" --folder="${FOLDER_ID}"
+  if ! gcloud beta resource-manager projects move "${PROJECT_ID}" --folder="${FOLDER_ID}"; then
+    log WARN "Failed to move ${PROJECT_ID} into folder ${FOLDER_ID}. Please adjust manually if needed."
+  fi
 }
 
 ensure_billing() {
@@ -276,9 +279,11 @@ ensure_org_binding() {
     return
   fi
   log INFO "Adding org binding ${role} for ${SA_EMAIL}"
-  gcloud organizations add-iam-policy-binding "${ORG_ID}" \
+  if ! gcloud organizations add-iam-policy-binding "${ORG_ID}" \
     --member="${member}" \
-    --role="${role}"
+    --role="${role}"; then
+    log WARN "Failed to add org binding ${role} for ${SA_EMAIL}. Check permissions or apply manually."
+  fi
 }
 
 ensure_billing_binding() {
@@ -295,9 +300,11 @@ ensure_billing_binding() {
     return
   fi
   log INFO "Adding billing binding ${role} for ${SA_EMAIL}"
-  gcloud beta billing accounts add-iam-policy-binding "${BILLING_ACCOUNT}" \
+  if ! gcloud beta billing accounts add-iam-policy-binding "${BILLING_ACCOUNT}" \
     --member="${member}" \
-    --role="${role}"
+    --role="${role}"; then
+    log WARN "Failed to add billing binding for ${SA_EMAIL}. Check permissions or apply manually."
+  fi
 }
 
 ensure_project_binding() {
@@ -314,9 +321,11 @@ ensure_project_binding() {
     return
   fi
   log INFO "Adding project binding ${role} for ${SA_EMAIL}"
-  gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
+  if ! gcloud projects add-iam-policy-binding "${PROJECT_ID}" \
     --member="${member}" \
-    --role="${role}"
+    --role="${role}"; then
+    log WARN "Failed to add project binding for ${SA_EMAIL}. Check permissions or apply manually."
+  fi
 }
 
 enable_apis() {
