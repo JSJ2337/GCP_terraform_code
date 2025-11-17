@@ -125,6 +125,7 @@ Terragrunt 자동화 Pipeline 사용 방법:
 - Terraform 1.13.5
 - Terragrunt 0.93.3
 - Git 2.47.3
+- Google Cloud SDK (gcloud 547.0.0)
 
 **실행**:
 ```bash
