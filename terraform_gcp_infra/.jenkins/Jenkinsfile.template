@@ -99,7 +99,7 @@ pipeline {
                                 '''
                             }
                             dir("${env.WORKSPACE}") {
-                                sh "terragrunt --working-dir ${TG_WORKING_DIR} run --all init -- -upgrade"
+                                sh "terragrunt --working-dir ${TG_WORKING_DIR} run --all init"
                             }
                         } else {
                             dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
@@ -109,7 +109,7 @@ pipeline {
                                 '''
                             }
                             dir("${env.WORKSPACE}") {
-                                sh "terragrunt --working-dir '${TG_WORKING_DIR}/${params.TARGET_LAYER}' init -upgrade"
+                                sh "terragrunt --working-dir '${TG_WORKING_DIR}/${params.TARGET_LAYER}' init"
                             }
                         }
                 }
