@@ -13,7 +13,8 @@ locals {
   alternative_location_id = length(trimspace(var.alternative_location_id)) > 0 ? trimspace(var.alternative_location_id) : ""
   maintenance_enabled     = var.maintenance_window_day != "" && var.maintenance_window_start_hour != null && var.maintenance_window_start_minute != null
   is_enterprise_tier      = contains(["ENTERPRISE", "ENTERPRISE_PLUS"], var.tier)
-  enterprise_region       = can(regex("^(.+)-[a-z]$", var.region)) ? regexreplace(var.region, "-[a-z]$", "") : var.region
+  split_region            = split("-", var.region)
+  enterprise_region       = length(local.split_region) > 2 ? join("-", slice(local.split_region, 0, length(local.split_region) - 1)) : var.region
 }
 
 resource "google_redis_instance" "standard" {

@@ -153,7 +153,7 @@ resource "google_sql_database_instance" "read_replicas" {
   deletion_protection = var.deletion_protection
 
   dynamic "replica_configuration" {
-    for_each = lookup(each.value, "failover_target", false) ? [1] : []
+    for_each = coalesce(lookup(each.value, "failover_target", false), false) ? [1] : []
     content {
       failover_target = true
     }
