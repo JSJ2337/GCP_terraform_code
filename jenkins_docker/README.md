@@ -126,6 +126,7 @@ Terragrunt 자동화 Pipeline 사용 방법:
 - Terragrunt 0.93.3
 - Git 2.47.3
 - Google Cloud SDK (gcloud 547.0.0)
+- Python 3.11
 
 **실행**:
 ```bash

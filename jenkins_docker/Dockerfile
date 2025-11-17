@@ -10,6 +10,7 @@ RUN apt-get update \
         curl \
         gnupg \
         apt-transport-https \
+        python3 \
         unzip \
         wget \
         git \

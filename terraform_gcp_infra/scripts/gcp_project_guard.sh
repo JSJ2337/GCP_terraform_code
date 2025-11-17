@@ -50,57 +50,35 @@ read_kv() {
   local file="$1"
   local key="$2"
   [[ -f "${file}" ]] || return 1
-  awk -v key="${key}" '
-    function trim(s) { sub(/^[[:space:]]+/, "", s); sub(/[[:space:]]+$/, "", s); return s }
-    $0 ~ "^[[:space:]]*" key "[[:space:]]*=" {
-      line = $0
-      sub(/^[[:space:]]*/, "", line)
-      sub(key "[[:space:]]*=[[:space:]]*", "", line)
-      sub(/#.*/, "", line)
-      line = trim(line)
-      if (line ~ /^"/) {
-        sub(/^"/, "", line)
-        sub(/"$/, "", line)
-      }
-      print line
-      exit
-    }
-  ' "${file}"
+  "${PYTHON_BIN}" - "$file" "$key" <<'PY'
+import re, sys
+path, key = sys.argv[1], sys.argv[2]
+text = open(path, encoding="utf-8").read()
+pattern = re.compile(r'^\s*%s\s*=\s*(?:"([^"]+)"|([^\s#]+))' % re.escape(key), re.MULTILINE)
+match = pattern.search(text)
+if match:
+    value = match.group(1) or match.group(2)
+    print(value)
+PY
 }
 
 read_list() {
   local file="$1"
   local key="$2"
   [[ -f "${file}" ]] || return 1
-  awk -v key="${key}" '
-    function extract(line) {
-      while (match(line, /"([^"]+)"/, m)) {
-        print m[1]
-        line = substr(line, RSTART + RLENGTH)
-      }
-    }
-    $0 ~ "^[[:space:]]*" key "[[:space:]]*=" {
-      inlist = 1
-      line = $0
-      sub(/^[[:space:]]*/, "", line)
-      sub(key "[[:space:]]*=[[:space:]]*", "", line)
-      if (line ~ /\[/) {
-        sub(/^[^\[]*\[/, "", line)
-      }
-      extract(line)
-      if (line ~ /\]/) {
-        inlist = 0
-      }
-      next
-    }
-    inlist {
-      line = $0
-      extract(line)
-      if (line ~ /\]/) {
-        inlist = 0
-      }
-    }
-  ' "${file}"
+  "${PYTHON_BIN}" - "$file" "$key" <<'PY'
+import re, sys
+path, key = sys.argv[1], sys.argv[2]
+text = open(path, encoding="utf-8").read()
+pattern = re.compile(r'^\s*%s\s*=\s*\[(.*?)\]' % re.escape(key), re.S | re.M)
+match = pattern.search(text)
+if not match:
+    sys.exit(0)
+raw_list = "[" + match.group(1) + "]"
+items = re.findall(r'"([^"]+)"', raw_list)
+for item in items:
+    print(item)
+PY
 }
 
 lookup_folder_from_bootstrap() {
@@ -129,6 +107,19 @@ EOF
   return 1
 }
 
+ensure_gcloud_auth() {
+  if [[ -n "${GCLOUD_AUTHENTICATED:-}" ]]; then
+    return
+  fi
+  if [[ -n "${GOOGLE_APPLICATION_CREDENTIALS:-}" && -f "${GOOGLE_APPLICATION_CREDENTIALS}" ]]; then
+    log INFO "Activating service account from GOOGLE_APPLICATION_CREDENTIALS"
+    gcloud auth activate-service-account --key-file="${GOOGLE_APPLICATION_CREDENTIALS}" --quiet
+    GCLOUD_AUTHENTICATED="true"
+  else
+    log WARN "GOOGLE_APPLICATION_CREDENTIALS not set; using default gcloud account."
+  fi
+}
+
 ENV_DIR="$(cd "${env_dir_arg}" 2>/dev/null && pwd || true)"
 if [[ -z "${ENV_DIR}" || ! -d "${ENV_DIR}" ]]; then
   echo "[ERROR] Environment directory '${env_dir_arg}' not found." >&2
@@ -139,6 +130,11 @@ COMMON_FILE="${ENV_DIR}/common.naming.tfvars"
 ROOT_FILE="${ENV_DIR}/root.hcl"
 PROJECT_TFVARS="${ENV_DIR}/00-project/terraform.tfvars"
 
+PYTHON_BIN="$(command -v python3 || command -v python || true)"
+if [[ -z "${PYTHON_BIN}" ]]; then
+  echo "[ERROR] python3 (or python) not found on PATH." >&2
+  exit 1
+fi
 require_cmd "gcloud"
 
 export CLOUDSDK_CORE_DISABLE_PROMPTS=1
@@ -325,6 +321,7 @@ enable_apis() {
 
 ensure_phase() {
   ensure_metadata_loaded
+  ensure_gcloud_auth
   ensure_project_creation
   ensure_project_parent
   ensure_billing
@@ -354,6 +351,7 @@ cleanup_liens() {
 
 cleanup_phase() {
   ensure_metadata_loaded
+  ensure_gcloud_auth
   if ! project_exists; then
     log INFO "Project ${PROJECT_ID} does not exist. Nothing to cleanup."
     return
