@@ -29,8 +29,38 @@ variable "dashboard_json_files" {
 
 variable "notification_channels" {
   type        = list(string)
-  description = "Alert 정책에 연결할 Notification Channel 리소스 이름 목록"
+  description = "Alert 정책에 연결할 Notification Channel 리소스 이름 목록 (수동 생성된 채널)"
   default     = []
+}
+
+variable "enable_slack_notifications" {
+  type        = bool
+  description = "Slack Notification Channel 자동 생성 여부"
+  default     = false
+}
+
+variable "slack_webhook_secret_name" {
+  type        = string
+  description = "Slack Webhook URL이 저장된 Secret Manager secret 이름"
+  default     = "slack-webhook-url"
+}
+
+variable "slack_webhook_secret_project" {
+  type        = string
+  description = "Slack Webhook Secret이 저장된 프로젝트 ID (비어있으면 현재 프로젝트 사용)"
+  default     = ""
+}
+
+variable "slack_channel_name" {
+  type        = string
+  description = "Slack 채널 이름 (예: #alerts, #monitoring)"
+  default     = "#alerts"
+}
+
+variable "slack_channel_display_name" {
+  type        = string
+  description = "GCP Console에 표시될 Slack Notification Channel 이름"
+  default     = "Slack Alerts"
 }
 
 variable "enable_vm_cpu_alert" {

@@ -13,6 +13,38 @@ locals {
   cloudsql_instance_regex_escaped    = replace(var.cloudsql_instance_regex, "\\", "\\\\")
   memorystore_instance_regex_escaped = replace(var.memorystore_instance_regex, "\\", "\\\\")
   lb_target_proxy_regex_escaped      = replace(var.lb_target_proxy_regex, "\\", "\\\\")
+
+  # Notification channels 통합 (자동 생성 + 수동 제공)
+  all_notification_channels = concat(
+    var.notification_channels,
+    var.enable_slack_notifications ? [google_monitoring_notification_channel.slack[0].id] : []
+  )
+}
+
+# Slack Webhook URL을 Secret Manager에서 가져오기
+data "google_secret_manager_secret_version" "slack_webhook" {
+  count   = var.enable_slack_notifications ? 1 : 0
+  secret  = var.slack_webhook_secret_name
+  project = var.slack_webhook_secret_project != "" ? var.slack_webhook_secret_project : var.project_id
+}
+
+# Slack Notification Channel 생성
+resource "google_monitoring_notification_channel" "slack" {
+  count = var.enable_slack_notifications ? 1 : 0
+
+  display_name = var.slack_channel_display_name
+  type         = "slack"
+  project      = var.project_id
+
+  labels = {
+    channel_name = var.slack_channel_name
+  }
+
+  sensitive_labels {
+    auth_token = data.google_secret_manager_secret_version.slack_webhook[0].secret_data
+  }
+
+  enabled = true
 }
 
 resource "google_logging_project_sink" "to_central" {
@@ -61,7 +93,7 @@ AND metric.label.instance_name=monitoring.regex.full_match("${local.vm_instance_
     }
   }
 
-  notification_channels = var.notification_channels
+  notification_channels = local.all_notification_channels
 }
 
 resource "google_monitoring_alert_policy" "cloudsql_cpu_high" {
@@ -97,7 +129,7 @@ AND resource.label.database_id=monitoring.regex.full_match("${local.cloudsql_ins
     }
   }
 
-  notification_channels = var.notification_channels
+  notification_channels = local.all_notification_channels
 }
 
 resource "google_monitoring_alert_policy" "memorystore_memory_high" {
@@ -133,7 +165,7 @@ AND resource.label.instance_id=monitoring.regex.full_match("${local.memorystore_
     }
   }
 
-  notification_channels = var.notification_channels
+  notification_channels = local.all_notification_channels
 }
 
 resource "google_monitoring_alert_policy" "lb_5xx_rate" {
@@ -170,5 +202,5 @@ AND resource.label.target_proxy_name=monitoring.regex.full_match("${local.lb_tar
     }
   }
 
-  notification_channels = var.notification_channels
+  notification_channels = local.all_notification_channels
 }
