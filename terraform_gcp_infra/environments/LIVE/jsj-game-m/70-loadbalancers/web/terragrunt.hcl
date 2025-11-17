@@ -2,9 +2,10 @@ include "root" {
   path = find_in_parent_folders("root.hcl")
 }
 
-
-# terraform.source를 제거하여 in-place 실행
-# 이렇게 하면 .terragrunt-cache 없이 현재 디렉토리에서 직접 실행됩니다
+# 공통 Load Balancer 코드 참조
+terraform {
+  source = "../_common"
+}
 
 dependencies {
   paths = [
@@ -37,6 +38,7 @@ inputs = merge(
   local.common_inputs,
   local.layer_inputs,
   {
+    # Workloads에서 "web"이 포함된 Instance Group만 자동으로 Backend로 추가
     auto_instance_groups = {
       for name, link in try(dependency.workloads.outputs.instance_groups, {}) :
       name => link
