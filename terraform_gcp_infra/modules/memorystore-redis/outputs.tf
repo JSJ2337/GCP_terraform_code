@@ -1,49 +1,54 @@
 output "instance_name" {
-  description = "Redis instance name"
-  value       = google_redis_instance.this.name
+  description = "Redis resource name"
+  value       = try(google_redis_instance.standard[0].name, google_redis_cluster.enterprise[0].name)
 }
 
 output "host" {
-  description = "Primary endpoint hostname"
-  value       = google_redis_instance.this.host
+  description = "Primary endpoint hostname (STANDARD tiers only)"
+  value       = try(google_redis_instance.standard[0].host, null)
 }
 
 output "read_endpoint" {
-  description = "Read endpoint hostname (Enterprise tiers with replica_count >= 1)"
-  value       = google_redis_instance.this.read_endpoint
+  description = "Read endpoint hostname (STANDARD tiers or Memorystore instances that expose one)"
+  value       = try(google_redis_instance.standard[0].read_endpoint, null)
 }
 
 output "port" {
   description = "Port number"
-  value       = google_redis_instance.this.port
+  value       = try(google_redis_instance.standard[0].port, 6379)
 }
 
 output "read_endpoint_port" {
   description = "Port used by the read endpoint"
-  value       = google_redis_instance.this.read_endpoint_port
+  value       = try(google_redis_instance.standard[0].read_endpoint_port, null)
 }
 
 output "region" {
-  description = "Region where the instance is deployed"
-  value       = google_redis_instance.this.location_id
+  description = "Deployment region/zone"
+  value       = try(google_redis_instance.standard[0].location_id, google_redis_cluster.enterprise[0].region)
 }
 
 output "alternative_location_id" {
   description = "Secondary zone for STANDARD_HA tier"
-  value       = google_redis_instance.this.alternative_location_id
+  value       = try(google_redis_instance.standard[0].alternative_location_id, null)
 }
 
 output "authorized_network" {
-  description = "Authorized network self link"
-  value       = google_redis_instance.this.authorized_network
+  description = "Authorized network self link / PSC network"
+  value       = var.authorized_network
 }
 
 output "tier" {
-  description = "Tier of the Redis instance"
-  value       = google_redis_instance.this.tier
+  description = "Requested tier"
+  value       = var.tier
 }
 
 output "replica_count" {
   description = "Configured replica count (Enterprise tiers only)"
-  value       = google_redis_instance.this.replica_count
+  value       = try(google_redis_cluster.enterprise[0].replica_count, null)
+}
+
+output "psc_connections" {
+  description = "PSC connection metadata for Enterprise tiers"
+  value       = try(google_redis_cluster.enterprise[0].psc_connections, [])
 }

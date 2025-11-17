@@ -10,14 +10,14 @@ memory_size_gb              = 1
 redis_version               = "REDIS_6_X"
 tier                        = "ENTERPRISE"
 replica_count               = 1
-shard_count                 = null # Enterprise Sharded 구성 시 설정
+shard_count                 = 1
 
 # Networking (비워두면 naming 모듈 VPC 사용)
 authorized_network = ""
 
 # Connection/Display
-connect_mode            = "PRIVATE_SERVICE_CONNECT"
-display_name            = "default-templet prod redis"
+connect_mode = "PRIVATE_SERVICE_CONNECT"
+display_name = "default-templet prod redis"
 
 # Maintenance window (옵션)
 maintenance_window_day          = "SUNDAY"

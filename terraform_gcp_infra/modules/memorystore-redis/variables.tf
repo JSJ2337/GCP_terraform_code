@@ -137,3 +137,27 @@ variable "maintenance_window_start_minute" {
   description = "Minute (0-59) for maintenance window. Required if maintenance_window_day is set."
   default     = null
 }
+
+variable "enterprise_node_type" {
+  type        = string
+  description = "Node type for Enterprise tiers (e.g., REDIS_STANDARD_SMALL, REDIS_HIGHMEM_MEDIUM)"
+  default     = "REDIS_STANDARD_SMALL"
+}
+
+variable "enterprise_authorization_mode" {
+  type        = string
+  description = "Authorization mode for Enterprise tiers (AUTH_MODE_IAM_AUTH, AUTH_MODE_DISABLED)"
+  default     = "AUTH_MODE_DISABLED"
+}
+
+variable "enterprise_transit_encryption_mode" {
+  type        = string
+  description = "Transit encryption mode for Enterprise tiers (TRANSIT_ENCRYPTION_MODE_DISABLED or TRANSIT_ENCRYPTION_MODE_SERVER_AUTHENTICATION)"
+  default     = "TRANSIT_ENCRYPTION_MODE_SERVER_AUTHENTICATION"
+}
+
+variable "enterprise_redis_configs" {
+  type        = map(string)
+  description = "Optional Redis configuration map applied to Enterprise clusters"
+  default     = {}
+}
