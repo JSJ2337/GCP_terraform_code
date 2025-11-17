@@ -112,7 +112,6 @@ PY
   fi
   return 1
 }
-}
 
 ensure_gcloud_auth() {
   if [[ -n "${GCLOUD_AUTHENTICATED:-}" ]]; then
