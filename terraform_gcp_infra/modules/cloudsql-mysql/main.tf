@@ -175,7 +175,7 @@ resource "google_sql_database_instance" "read_replicas" {
       content {
         ipv4_enabled = ip_configuration.value.ipv4_enabled
         private_network = (
-          length(trimspace(lookup(each.value, "private_network", ""))) > 0 ? lookup(each.value, "private_network", "") :
+          try(length(trimspace(each.value.private_network)) > 0, false) ? each.value.private_network :
           (length(trimspace(var.private_network)) > 0 ? var.private_network : null)
         )
       }
