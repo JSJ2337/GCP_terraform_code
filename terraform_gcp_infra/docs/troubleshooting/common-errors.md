@@ -70,9 +70,48 @@ terragrunt init -reconfigure
 terragrunt init -migrate-state
 ```
 
+## 스크립트 관련 오류
+
+### 4. gcp_project_guard.sh exit code 1
+
+**증상**:
+
+```text
+🛡️  Ensuring GCP project prerequisites...
+bash terraform_gcp_infra/scripts/gcp_project_guard.sh ensure 'terraform_gcp_infra/environments/LIVE/jsj-game-m'
+[INFO] Project jsj-game-m already exists.
+script returned exit code 1
+```
+
+**원인**:
+- 스크립트가 `set -euo pipefail`로 실행되는데, early return 패턴 `|| return`이 exit code 1을 반환
+- `FOLDER_ID`가 비어있거나 조건이 충족되지 않을 때 함수가 실패 상태로 반환
+
+**해결**:
+
+이 문제는 2025-11-17에 수정되었습니다. 최신 코드를 pull하세요:
+
+```bash
+git pull origin main
+```
+
+수정 내용:
+- `ensure_project_parent()`: `return` → `return 0`
+- `ensure_org_binding()`: `return` → `return 0`
+- `ensure_billing_binding()`: `return` → `return 0`
+- `ensure_project_binding()`: `return` → `return 0`
+- `enable_apis()`: `return` → `return 0`
+
+수동으로 수정하려면:
+
+```bash
+# 스크립트에서 모든 early return을 명시적으로 0 반환하도록 수정
+sed -i 's/\] || return$/\] || return 0/g' terraform_gcp_infra/scripts/gcp_project_guard.sh
+```
+
 ## 권한 관련 오류
 
-### 4. "Permission denied"
+### 5. "Permission denied"
 
 **증상**:
 
@@ -108,7 +147,7 @@ gcloud projects add-iam-policy-binding jsj-game-k \
     --role="roles/editor"
 ```
 
-### 5. Billing Account 권한 오류
+### 6. Billing Account 권한 오류
 
 **증상**:
 
@@ -138,7 +177,7 @@ gcloud beta billing accounts add-iam-policy-binding 01076D-327AD5-FC8922 \
 
 ## API 활성화 오류
 
-### 6. "API not enabled"
+### 7. "API not enabled"
 
 **증상**:
 
@@ -169,7 +208,7 @@ sleep 120
 terragrunt apply
 ```
 
-### 7. "Service Networking API" 타이밍 이슈
+### 8. "Service Networking API" 타이밍 이슈
 
 **증상**:
 
@@ -204,7 +243,7 @@ resource "google_service_networking_connection" "private_vpc_connection" {
 
 ## 리소스 관련 오류
 
-### 8. "resource not found"
+### 9. "resource not found"
 
 **증상**:
 
@@ -228,7 +267,7 @@ terragrunt state list
 # 3. 올바른 순서로 재배포
 ```
 
-### 9. "already exists"
+### 10. "already exists"
 
 **증상**:
 
@@ -262,7 +301,7 @@ terragrunt apply -refresh-only
 
 ## Terragrunt 관련 오류
 
-### 10. "Unreadable module directory"
+### 11. "Unreadable module directory"
 
 **증상**:
 
@@ -282,7 +321,7 @@ Module directory .terragrunt-cache/... does not exist
 # }
 ```
 
-### 11. "Missing required GCS remote state configuration"
+### 12. "Missing required GCS remote state configuration"
 
 **증상**:
 
@@ -306,7 +345,7 @@ remote_state {
 }
 ```
 
-### 12. WSL "setsockopt: operation not permitted"
+### 13. WSL "setsockopt: operation not permitted"
 
 **증상**:
 
@@ -337,7 +376,7 @@ wsl --shutdown
 
 ## 네트워크 관련 오류
 
-### 13. Private Service Connect 실패
+### 14. Private Service Connect 실패
 
 **증상**:
 
@@ -363,7 +402,7 @@ gcloud services vpc-peerings delete \
     --project=jsj-game-k
 ```
 
-### 14. 방화벽 규칙 충돌
+### 15. 방화벽 규칙 충돌
 
 **증상**:
 
@@ -388,7 +427,7 @@ terragrunt import google_compute_firewall.rule_name \
 
 ## Validation 오류
 
-### 15. 변수 타입 불일치
+### 16. 변수 타입 불일치
 
 **증상**:
 

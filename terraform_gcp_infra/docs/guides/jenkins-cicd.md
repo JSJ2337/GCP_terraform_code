@@ -91,6 +91,11 @@ cp .jenkins/Jenkinsfile.template environments/LIVE/my-project/Jenkinsfile
   - Jenkins SA(`jenkins_service_account_email`)에 org/billing/project IAM 권한 부여
 - Destroy 시에는 같은 스크립트의 `cleanup` 모드가 실행되어 lien 등을 사전에 제거합니다.
 
+**주의사항**:
+- 스크립트는 `set -euo pipefail`로 실행되어 에러 발생 시 즉시 중단됩니다
+- 모든 early return 패턴은 `return 0`을 명시하여 조건 미충족 시에도 정상 종료합니다
+- FOLDER_ID가 비어있거나 SA_EMAIL을 찾지 못한 경우 해당 단계를 건너뛰고 계속 진행합니다
+
 ## GCP 인증 설정
 
 ### Service Account 생성

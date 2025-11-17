@@ -82,9 +82,9 @@ PY
 }
 
 lookup_folder_from_bootstrap() {
-  local product="\$1"
-  local region="\$2"
-  local env="\$3"
+  local product="$1"
+  local region="$2"
+  local env="$3"
   local bootstrap_dir="${REPO_ROOT}/bootstrap"
   [[ -d "${bootstrap_dir}" ]] || return 1
   local state_file="${bootstrap_dir}/terraform.tfstate"
@@ -225,7 +225,7 @@ ensure_project_creation() {
 }
 
 ensure_project_parent() {
-  [[ -n "${FOLDER_ID:-}" ]] || return
+  [[ -n "${FOLDER_ID:-}" ]] || return 0
   local expected="folder/${FOLDER_ID##*/}"
   local parent
   parent="$(current_parent)"
@@ -266,7 +266,7 @@ discover_sa_email() {
 
 ensure_org_binding() {
   local role="$1"
-  [[ -n "${ORG_ID:-}" && -n "${SA_EMAIL:-}" ]] || return
+  [[ -n "${ORG_ID:-}" && -n "${SA_EMAIL:-}" ]] || return 0
   local member="serviceAccount:${SA_EMAIL}"
   local has_binding
   has_binding="$(gcloud organizations get-iam-policy "${ORG_ID}" \
@@ -286,7 +286,7 @@ ensure_org_binding() {
 }
 
 ensure_billing_binding() {
-  [[ -n "${BILLING_ACCOUNT:-}" && -n "${SA_EMAIL:-}" ]] || return
+  [[ -n "${BILLING_ACCOUNT:-}" && -n "${SA_EMAIL:-}" ]] || return 0
   local member="serviceAccount:${SA_EMAIL}"
   local role="roles/billing.user"
   local has_binding
@@ -307,7 +307,7 @@ ensure_billing_binding() {
 }
 
 ensure_project_binding() {
-  [[ -n "${SA_EMAIL:-}" ]] || return
+  [[ -n "${SA_EMAIL:-}" ]] || return 0
   local member="serviceAccount:${SA_EMAIL}"
   local role="roles/editor"
   local has_binding
@@ -328,7 +328,7 @@ ensure_project_binding() {
 }
 
 enable_apis() {
-  [[ "${#REQUIRED_APIS[@]}" -gt 0 ]] || return
+  [[ "${#REQUIRED_APIS[@]}" -gt 0 ]] || return 0
   log INFO "Enabling ${#REQUIRED_APIS[@]} APIs for ${PROJECT_ID}"
   gcloud services enable "${REQUIRED_APIS[@]}" --project="${PROJECT_ID}"
 }
