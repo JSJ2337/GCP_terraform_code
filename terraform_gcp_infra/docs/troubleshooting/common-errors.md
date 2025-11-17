@@ -208,7 +208,60 @@ sleep 120
 terragrunt apply
 ```
 
-### 8. "Service Networking API" 타이밍 이슈
+### 8. "Required plugins are not installed" - Provider Lock 파일
+
+**증상**:
+
+```text
+Error: Required plugins are not installed
+
+The installed provider plugins are not consistent with the packages
+selected in the dependency lock file:
+  - registry.terraform.io/hashicorp/google-beta: the cached package for
+    registry.terraform.io/hashicorp/google-beta 7.11.0 (in .terraform/providers)
+    does not match any of the checksums recorded in the dependency lock file
+```
+
+**원인**:
+- `root.hcl`에서 모든 레이어에 google-beta provider를 generate
+- 일부 레이어의 `.terraform.lock.hcl`에 google-beta checksum 누락
+- 다른 플랫폼에서 lock 파일 생성 시 checksum 불일치
+
+**해결**:
+
+이 문제는 2025-11-17에 수정되었습니다. 최신 코드를 pull하세요:
+
+```bash
+git pull origin main
+```
+
+수동으로 수정하려면:
+
+**옵션 1**: 정상 레이어에서 lock 파일 복사
+
+```bash
+# 00-project의 lock 파일을 다른 레이어에 복사
+cd terraform_gcp_infra/environments/LIVE/jsj-game-m
+cp 00-project/.terraform.lock.hcl 40-observability/.terraform.lock.hcl
+cp 00-project/.terraform.lock.hcl 70-loadbalancers/web/.terraform.lock.hcl
+```
+
+**옵션 2**: terraform init -upgrade로 재생성
+
+```bash
+cd terraform_gcp_infra/environments/LIVE/jsj-game-m/40-observability
+terraform init -upgrade
+```
+
+**옵션 3**: Jenkins 파이프라인 수정 (미래 예방)
+
+Jenkinsfile의 init 단계에 `-upgrade` 추가:
+
+```groovy
+sh 'terraform init -upgrade -reconfigure'
+```
+
+### 9. "Service Networking API" 타이밍 이슈
 
 **증상**:
 
@@ -243,7 +296,7 @@ resource "google_service_networking_connection" "private_vpc_connection" {
 
 ## 리소스 관련 오류
 
-### 9. "resource not found"
+### 10. "resource not found"
 
 **증상**:
 
@@ -267,7 +320,7 @@ terragrunt state list
 # 3. 올바른 순서로 재배포
 ```
 
-### 10. "already exists"
+### 11. "already exists"
 
 **증상**:
 
@@ -301,7 +354,7 @@ terragrunt apply -refresh-only
 
 ## Terragrunt 관련 오류
 
-### 11. "Unreadable module directory"
+### 12. "Unreadable module directory"
 
 **증상**:
 
@@ -321,7 +374,7 @@ Module directory .terragrunt-cache/... does not exist
 # }
 ```
 
-### 12. "Missing required GCS remote state configuration"
+### 13. "Missing required GCS remote state configuration"
 
 **증상**:
 
@@ -345,7 +398,7 @@ remote_state {
 }
 ```
 
-### 13. WSL "setsockopt: operation not permitted"
+### 14. WSL "setsockopt: operation not permitted"
 
 **증상**:
 
@@ -376,7 +429,7 @@ wsl --shutdown
 
 ## 네트워크 관련 오류
 
-### 14. Private Service Connect 실패
+### 15. Private Service Connect 실패
 
 **증상**:
 
@@ -402,7 +455,7 @@ gcloud services vpc-peerings delete \
     --project=jsj-game-k
 ```
 
-### 15. 방화벽 규칙 충돌
+### 16. 방화벽 규칙 충돌
 
 **증상**:
 
@@ -427,7 +480,7 @@ terragrunt import google_compute_firewall.rule_name \
 
 ## Validation 오류
 
-### 16. 변수 타입 불일치
+### 17. 변수 타입 불일치
 
 **증상**:
 
