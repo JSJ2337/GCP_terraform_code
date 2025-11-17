@@ -73,7 +73,6 @@ resource "google_redis_cluster" "enterprise" {
   authorization_mode      = var.enterprise_authorization_mode
   transit_encryption_mode = var.enterprise_transit_encryption_mode
   node_type               = var.enterprise_node_type
-  labels                  = var.labels
 
   redis_configs = var.enterprise_redis_configs
 
