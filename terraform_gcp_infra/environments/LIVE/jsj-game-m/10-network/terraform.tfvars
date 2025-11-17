@@ -59,3 +59,9 @@ firewall_rules = [
     description    = "Allow health checks from Google Load Balancer"
   }
 ]
+
+# Memorystore Enterprise용 PSC 자동 구성
+enable_memorystore_psc_policy    = true
+memorystore_psc_region           = "asia-northeast3"
+memorystore_psc_subnet_name      = "game-m-subnet-private"
+memorystore_psc_connection_limit = 8

@@ -18,13 +18,15 @@ VPC 네트워크, 서브넷, 방화벽, Cloud NAT, Private Service Connect(PSC)�
    ```
 2. 주요 항목 설명:
    - `additional_subnets`: DMZ/Private/DB 등 역할별 서브넷 리스트 (name/region/cidr)
-   - `dmz_subnet_name`, `private_subnet_name`, `db_subnet_name`: `additional_subnets`에서 사용할 서브넷 이름
-   - `firewall_rules`: IAP, 헬스 체크, 내부 통신 등 필요한 규칙 정의
-   - `enable_private_service_connection`: Cloud SQL Private IP를 사용할 경우 `true`
-   - `private_service_connection_prefix_length`: PSC용 예약 CIDR 크기 (기본 /24)
-   - `private_service_connection_name`: 비워두면 naming 규칙으로 자동 생성
+- `dmz_subnet_name`, `private_subnet_name`, `db_subnet_name`: `additional_subnets`에서 사용할 서브넷 이름
+- `firewall_rules`: IAP, 헬스 체크, 내부 통신 등 필요한 규칙 정의
+- `enable_private_service_connection`: Cloud SQL Private IP를 사용할 경우 `true`
+- `private_service_connection_prefix_length`: PSC용 예약 CIDR 크기 (기본 /24)
+- `private_service_connection_name`: 비워두면 naming 규칙으로 자동 생성
+- `enable_memorystore_psc_policy`, `memorystore_psc_*`: Memorystore Enterprise(PSC)용 Service Connection Policy 자동 생성 설정
 
 > ⚠️ PSC를 비활성화하려면 `enable_private_service_connection = false`로 설정하세요.
+> ⚠️ Memorystore Enterprise를 사용할 경우 `enable_memorystore_psc_policy = true`로 설정하고, PSC가 사용할 서브넷/리전을 정확히 지정해야 합니다.
 
 ## Terragrunt 실행 절차
 ```bash

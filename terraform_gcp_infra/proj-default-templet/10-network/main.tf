@@ -44,6 +44,12 @@ locals {
   dmz_subnet_self_link     = local.dmz_subnet != null ? "projects/${var.project_id}/regions/${local.dmz_subnet.region}/subnetworks/${var.dmz_subnet_name}" : null
   private_subnet_self_link = local.private_subnet != null ? "projects/${var.project_id}/regions/${local.private_subnet.region}/subnetworks/${var.private_subnet_name}" : null
   db_subnet_self_link      = local.db_subnet != null ? "projects/${var.project_id}/regions/${local.db_subnet.region}/subnetworks/${var.db_subnet_name}" : null
+
+  memorystore_psc_subnet_name      = length(trimspace(var.memorystore_psc_subnet_name)) > 0 ? var.memorystore_psc_subnet_name : var.private_subnet_name
+  memorystore_psc_subnet           = try(local.requested_subnets[local.memorystore_psc_subnet_name], null)
+  memorystore_psc_subnet_self_link = local.memorystore_psc_subnet != null ? "projects/${var.project_id}/regions/${local.memorystore_psc_subnet.region}/subnetworks/${local.memorystore_psc_subnet_name}" : ""
+  memorystore_psc_region           = length(trimspace(var.memorystore_psc_region)) > 0 ? var.memorystore_psc_region : module.naming.region_primary
+  memorystore_psc_policy_name      = length(trimspace(var.memorystore_psc_policy_name)) > 0 ? var.memorystore_psc_policy_name : "${module.naming.vpc_name}-${local.memorystore_psc_region}-redis-psc"
 }
 
 module "net" {
@@ -101,4 +107,42 @@ resource "google_project_service" "servicenetworking" {
 resource "time_sleep" "wait_servicenetworking_api" {
   depends_on      = [google_project_service.servicenetworking]
   create_duration = "90s"
+}
+
+resource "google_project_service" "networkconnectivity" {
+  project            = var.project_id
+  service            = "networkconnectivity.googleapis.com"
+  disable_on_destroy = false
+  depends_on         = [time_sleep.wait_core_apis]
+}
+
+resource "time_sleep" "wait_networkconnectivity_api" {
+  depends_on      = [google_project_service.networkconnectivity]
+  create_duration = "60s"
+}
+
+resource "google_network_connectivity_service_connection_policy" "memorystore_psc" {
+  count         = var.enable_memorystore_psc_policy ? 1 : 0
+  project       = var.project_id
+  location      = local.memorystore_psc_region
+  name          = local.memorystore_psc_policy_name
+  service_class = "gcp-memorystore-redis"
+  network       = "projects/${var.project_id}/global/networks/${module.naming.vpc_name}"
+
+  psc_config {
+    subnetworks = [local.memorystore_psc_subnet_self_link]
+    limit       = var.memorystore_psc_connection_limit
+  }
+
+  depends_on = [
+    module.net,
+    time_sleep.wait_networkconnectivity_api
+  ]
+
+  lifecycle {
+    precondition {
+      condition     = local.memorystore_psc_subnet_self_link != ""
+      error_message = "memorystore_psc_subnet_name must reference an existing subnet in additional_subnets."
+    }
+  }
 }

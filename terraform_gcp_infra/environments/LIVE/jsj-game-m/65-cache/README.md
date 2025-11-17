@@ -40,3 +40,4 @@ terragrunt apply  --non-interactive
 - Memorystore는 기본적으로 백업 기능이 없으니, 데이터 보존이 필요한 경우 애플리케이션 레벨 스냅샷/복제 전략을 함께 마련하세요.
 - `alternative_location_suffix`를 사용하면 리전 값만으로 이중화 존을 자동 산출할 수 있습니다. 직접 존을 지정하고 싶다면 `alternative_location_id`를 입력하세요.
 - Enterprise 티어 기능(암호화, 자동 백업 등)이 필요하면 모듈 입력값(`tier`, `transit_encryption_mode`, `replica_count`, `shard_count`)을 조정하세요.
+- Enterprise tier를 사용하려면 10-network 레이어에서 `enable_memorystore_psc_policy = true`로 설정해 Service Connection Policy를 먼저 만들어야 합니다.

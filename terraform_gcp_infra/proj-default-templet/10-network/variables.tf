@@ -115,3 +115,33 @@ variable "db_subnet_name" {
   description = "additional_subnets에 선언된 DB 서브넷 이름"
   default     = ""
 }
+
+variable "enable_memorystore_psc_policy" {
+  type        = bool
+  description = "Memorystore Enterprise용 Service Connection Policy 생성 여부"
+  default     = false
+}
+
+variable "memorystore_psc_region" {
+  type        = string
+  description = "PSC 정책을 생성할 리전 (비워두면 region_primary 사용)"
+  default     = ""
+}
+
+variable "memorystore_psc_subnet_name" {
+  type        = string
+  description = "PSC에서 IP를 할당할 서브넷 이름 (기본: private_subnet_name)"
+  default     = ""
+}
+
+variable "memorystore_psc_policy_name" {
+  type        = string
+  description = "Service Connection Policy 이름 (비워두면 자동 생성)"
+  default     = ""
+}
+
+variable "memorystore_psc_connection_limit" {
+  type        = number
+  description = "PSC 서비스 연결 정책에서 허용할 최대 연결 수"
+  default     = 4
+}
