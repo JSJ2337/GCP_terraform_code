@@ -87,22 +87,28 @@ lookup_folder_from_bootstrap() {
   local env="$3"
   local bootstrap_dir="${REPO_ROOT}/bootstrap"
   [[ -d "${bootstrap_dir}" ]] || return 1
-  [[ -f "${bootstrap_dir}/terraform.tfstate" ]] || return 1
-  require_cmd "terraform"
+  local state_file="${bootstrap_dir}/terraform.tfstate"
+  [[ -f "${state_file}" ]] || return 1
 
-  local expr result trimmed
-  expr="output.folder_structure.value[\"${product}\"][\"${region}\"][\"${env}\"]"
-  if result="$(TF_IN_AUTOMATION=1 terraform -chdir="${bootstrap_dir}" console <<EOF
-${expr}
-exit
-EOF
-)"; then
-    trimmed="$(printf '%s\n' "${result}" | head -n1 | tr -d '"' | tr -d '\r')"
-    trimmed="$(echo "${trimmed}" | xargs)"
-    if [[ -n "${trimmed}" ]]; then
-      echo "${trimmed}"
-      return 0
-    fi
+  local value
+  value="$("${PYTHON_BIN}" - "$state_file" "$product" "$region" "$env" <<'PY'
+import json, sys
+state_path, product, region, env = sys.argv[1:5]
+try:
+    with open(state_path, encoding="utf-8") as fp:
+        data = json.load(fp)
+    outputs = data.get("outputs", {})
+    folder = outputs.get("folder_structure", {}).get("value", {})
+    result = folder.get(product, {}).get(region, {}).get(env, "")
+    if result:
+        print(result)
+except Exception:
+    pass
+PY
+)"
+  if [[ -n "${value}" ]]; then
+    echo "${value}"
+    return 0
   fi
   return 1
 }
