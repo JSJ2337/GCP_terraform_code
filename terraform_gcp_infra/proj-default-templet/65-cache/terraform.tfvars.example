@@ -21,15 +21,15 @@ alternative_location_id     = ""
 alternative_location_suffix = "b"            # 결과: us-central1-b
 memory_size_gb          = 2
 redis_version           = "REDIS_6_X"
-tier                    = "STANDARD_HA"
-replica_count           = null              # Enterprise tier용 읽기 복제본 수 (STANDARD_HA는 null)
+tier                    = "ENTERPRISE"
+replica_count           = 1                 # Enterprise tier용 읽기 복제본 수 (STANDARD_HA는 null)
 shard_count             = null              # Enterprise Sharded tier에서만 사용
 
 # 네트워크 (비워두면 템플릿 VPC 자동 사용)
 authorized_network = ""
 
 # 연결 모드/암호화 (Enterprise 티어 사용 시 조정)
-connect_mode            = "DIRECT_PEERING"
+connect_mode            = "PRIVATE_SERVICE_CONNECT"
 transit_encryption_mode = "DISABLED"
 
 # 콘솔 표시 이름
