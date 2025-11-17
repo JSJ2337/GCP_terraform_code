@@ -169,13 +169,15 @@ resource "google_sql_database_instance" "read_replicas" {
     dynamic "ip_configuration" {
       for_each = [
         {
-          ipv4_enabled    = coalesce(try(each.value.ipv4_enabled, var.ipv4_enabled), false)
-          private_network = coalesce(try(each.value.private_network, var.private_network), "")
+          ipv4_enabled = coalesce(try(each.value.ipv4_enabled, var.ipv4_enabled), false)
         }
       ]
       content {
-        ipv4_enabled    = ip_configuration.value.ipv4_enabled
-        private_network = length(trimspace(ip_configuration.value.private_network)) > 0 ? ip_configuration.value.private_network : null
+        ipv4_enabled = ip_configuration.value.ipv4_enabled
+        private_network = (
+          length(trimspace(lookup(each.value, "private_network", ""))) > 0 ? lookup(each.value, "private_network", "") :
+          (length(trimspace(var.private_network)) > 0 ? var.private_network : null)
+        )
       }
     }
 
