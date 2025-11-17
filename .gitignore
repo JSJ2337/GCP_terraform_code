@@ -7,5 +7,17 @@ crash.*.log
 override.tf
 *_override.tf
 .terraform.tfstate.lock.info
-.claude
+.claude/
+
+# terraform_gcp_infra와 jenkins_docker만 푸시
+.DS_Store
+.markdownlintignore
+AGENTS.md
+AWS_script/
+LGTM/
+README.md
+ec2menu_script/
+terraform_training/
+terragrunt
+webhook-test.txt
 
