@@ -189,15 +189,6 @@ resource "google_sql_database_instance" "read_replicas" {
       }
     }
 
-    dynamic "maintenance_window" {
-      for_each = [1]
-      content {
-        day          = lookup(each.value, "maintenance_window_day", var.maintenance_window_day)
-        hour         = lookup(each.value, "maintenance_window_hour", var.maintenance_window_hour)
-        update_track = lookup(each.value, "maintenance_window_update_track", var.maintenance_window_update_track)
-      }
-    }
-
     user_labels = try(each.value.labels, var.labels)
   }
 }
