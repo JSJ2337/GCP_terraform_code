@@ -28,6 +28,35 @@ variable "tier" {
   type        = string
   description = "Redis tier (STANDARD_HA, BASIC, ENTERPRISE, ENTERPRISE_PLUS)"
   default     = "STANDARD_HA"
+  validation {
+    condition = contains([
+      "BASIC",
+      "STANDARD_HA",
+      "ENTERPRISE",
+      "ENTERPRISE_PLUS"
+    ], var.tier)
+    error_message = "tier must be one of BASIC, STANDARD_HA, ENTERPRISE, ENTERPRISE_PLUS."
+  }
+}
+
+variable "replica_count" {
+  type        = number
+  description = "Number of read replicas for Enterprise tiers (>= 1 enables read endpoint)"
+  default     = null
+  validation {
+    condition     = var.replica_count == null || var.replica_count >= 1
+    error_message = "replica_count must be null or a value greater than or equal to 1."
+  }
+}
+
+variable "shard_count" {
+  type        = number
+  description = "Number of shards for Enterprise tiers (set to >= 1 when using Sharded Enterprise)"
+  default     = null
+  validation {
+    condition     = var.shard_count == null || var.shard_count >= 1
+    error_message = "shard_count must be null or a value greater than or equal to 1."
+  }
 }
 
 variable "memory_size_gb" {

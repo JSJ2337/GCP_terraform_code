@@ -12,6 +12,7 @@ terraform {
 locals {
   alternative_location_id = length(trimspace(var.alternative_location_id)) > 0 ? trimspace(var.alternative_location_id) : ""
   maintenance_enabled     = var.maintenance_window_day != "" && var.maintenance_window_start_hour != null && var.maintenance_window_start_minute != null
+  is_enterprise_tier      = contains(["ENTERPRISE", "ENTERPRISE_PLUS"], var.tier)
 }
 
 resource "google_redis_instance" "this" {
@@ -26,6 +27,8 @@ resource "google_redis_instance" "this" {
   labels                  = var.labels
   authorized_network      = var.authorized_network
   transit_encryption_mode = var.transit_encryption_mode
+  replica_count           = var.replica_count
+  shard_count             = var.shard_count
 
   display_name = length(trimspace(var.display_name)) > 0 ? var.display_name : null
 
@@ -48,6 +51,11 @@ resource "google_redis_instance" "this" {
     precondition {
       condition     = var.tier != "STANDARD_HA" || length(local.alternative_location_id) > 0
       error_message = "STANDARD_HA tier requires alternative_location_id (e.g., us-central1-b)."
+    }
+
+    precondition {
+      condition     = local.is_enterprise_tier || (var.replica_count == null && var.shard_count == null)
+      error_message = "replica_count or shard_count can only be set for ENTERPRISE/ENTERPRISE_PLUS tiers."
     }
   }
 }

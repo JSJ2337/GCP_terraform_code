@@ -5,6 +5,7 @@ Google Cloud Memorystore for Redis 인스턴스를 일관된 규칙으로 생성
 ## 주요 기능
 - Redis 6.x 기반 Memorystore 인스턴스 생성
 - 고가용성(Standard HA) 및 대체 존 설정
+- Enterprise 티어에서는 Replica/Read Endpoint 및 Shard 구성 지원
 - VPC 프라이빗 연결 및 라벨 일괄 적용
 - 주간 유지보수 창 지정 옵션
 
@@ -28,6 +29,35 @@ module "cache" {
 }
 ```
 
+### Enterprise + Read Replica 구성
+
+```hcl
+module "cache_enterprise" {
+  source = "../../modules/memorystore-redis"
+
+  project_id        = "my-project"
+  instance_name     = "myproj-prod-redis-ent"
+  region            = "asia-northeast3-a"
+  tier              = "ENTERPRISE"
+  memory_size_gb    = 12
+  authorized_network = "projects/my-project/global/networks/myproj-prod-vpc"
+
+  # 읽기 복제본 2개 → Read Endpoint 주소 자동 제공
+  replica_count = 2
+
+  # Enterprise Sharded 구성 시 사용
+  shard_count = 1
+
+  connect_mode            = "PRIVATE_SERVICE_CONNECT"
+  transit_encryption_mode = "SERVER_AUTHENTICATION"
+
+  labels = {
+    environment = "prod"
+    workload    = "ranking-service"
+  }
+}
+```
+
 ## 입력 변수
 
 | 이름 | 설명 | 타입 | 기본값 | 필수 |
@@ -37,6 +67,8 @@ module "cache" {
 | `region` | **기본 존** (예: `us-central1-a`) ⚠️ **ZONE 필수, region 아님** | `string` | n/a | ✅ |
 | `alternative_location_id` | Standard HA용 대체 존 (예: `us-central1-b`) | `string` | `""` | ➖ |
 | `tier` | Memorystore 티어 (`STANDARD_HA`, `BASIC`, `ENTERPRISE`, `ENTERPRISE_PLUS`) | `string` | `"STANDARD_HA"` | ➖ |
+| `replica_count` | Enterprise 티어 전용 읽기 복제본 수 (설정 시 Read Endpoint 노출) | `number` | `null` | ➖ |
+| `shard_count` | Enterprise 티어 전용 샤드 수 (Sharded Enterprise 사용 시) | `number` | `null` | ➖ |
 | `memory_size_gb` | 메모리 크기(GB) | `number` | `1` | ➖ |
 | `redis_version` | Redis 버전 (`REDIS_3_2`, `REDIS_4_0`, `REDIS_5_0`, `REDIS_6_X`) | `string` | `"REDIS_6_X"` | ➖ |
 | `authorized_network` | 접근 허용 VPC self link | `string` | n/a | ✅ |
@@ -56,10 +88,14 @@ module "cache" {
 |------|------|
 | `instance_name` | 생성된 Redis 인스턴스 이름 |
 | `host` | 연결용 호스트명 |
+| `read_endpoint` | Enterprise 티어에서 replica_count ≥ 1일 때 제공되는 읽기 엔드포인트 |
 | `port` | 연결 포트 (기본 6379) |
+| `read_endpoint_port` | 읽기 엔드포인트 포트 |
 | `region` | 배포 리전 |
 | `alternative_location_id` | 대체 존 |
 | `authorized_network` | 연결된 VPC self link |
+| `tier` | 구성된 Memorystore 티어 |
+| `replica_count` | Enterprise 티어에서 설정된 읽기 복제본 수 |
 
 ## 요구 사항
 - Terraform >= 1.6

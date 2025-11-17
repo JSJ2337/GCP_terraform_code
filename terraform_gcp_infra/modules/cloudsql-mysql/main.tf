@@ -158,15 +158,31 @@ resource "google_sql_database_instance" "read_replicas" {
 
   settings {
     tier              = each.value.tier
-    availability_type = "ZONAL"
-    disk_autoresize   = var.disk_autoresize
+    availability_type = try(each.value.availability_type, "ZONAL")
+    disk_autoresize   = try(each.value.disk_autoresize, var.disk_autoresize)
+    disk_type         = try(each.value.disk_type, var.disk_type)
+    disk_size         = try(each.value.disk_size, var.disk_size)
 
     ip_configuration {
-      ipv4_enabled    = var.ipv4_enabled
-      private_network = var.private_network
+      ipv4_enabled    = try(each.value.ipv4_enabled, var.ipv4_enabled)
+      private_network = try(each.value.private_network, var.private_network)
       # require_ssl is deprecated in Google provider 7.x+
     }
 
-    user_labels = var.labels
+    dynamic "database_flags" {
+      for_each = coalesce(try(each.value.database_flags, null), local.all_database_flags)
+      content {
+        name  = database_flags.value.name
+        value = database_flags.value.value
+      }
+    }
+
+    maintenance_window {
+      day          = try(each.value.maintenance_window_day, var.maintenance_window_day)
+      hour         = try(each.value.maintenance_window_hour, var.maintenance_window_hour)
+      update_track = try(each.value.maintenance_window_update_track, var.maintenance_window_update_track)
+    }
+
+    user_labels = try(each.value.labels, var.labels)
   }
 }

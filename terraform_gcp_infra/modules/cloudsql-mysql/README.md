@@ -161,6 +161,14 @@ module "mysql_with_replicas" {
 
 > **참고**: `database_flags`에 `log_output`을 직접 지정하면 모듈이 동일 플래그를 다시 추가하지 않아 중복 오류를 방지합니다.
 
+**읽기 복제본 입력 필드**
+
+- 필수: `name`, `region`, `tier`
+- 선택: `failover_target`, `availability_type`(기본 ZONAL), `disk_size`, `disk_type`, `disk_autoresize`,
+  `ipv4_enabled`, `private_network`, `database_flags`, `maintenance_window_*`, `labels`
+
+이를 통해 리전/머신 타입 뿐 아니라 복제본별 디스크, 네트워크, 유지보수 창을 세밀하게 재정의할 수 있습니다.
+
 ### 로깅 및 모니터링 설정
 
 ```hcl
@@ -286,7 +294,7 @@ module "mysql_public" {
 | log_output | 로그 출력 방식 (FILE/TABLE) | `string` | `"FILE"` | no |
 | databases | 생성할 데이터베이스 목록 | `list(object)` | `[]` | no |
 | users | 생성할 사용자 목록 | `list(object)` | `[]` | no |
-| read_replicas | 읽기 복제본 설정 | `map(object)` | `{}` | no |
+| read_replicas | 읽기 복제본 설정 (`name`, `region`, `tier` + 선택 필드로 디스크/네트워크/유지보수/플래그 지정) | `map(object)` | `{}` | no |
 | labels | 리소스 레이블 | `map(string)` | `{}` | no |
 
 ## 출력 값
@@ -300,6 +308,7 @@ module "mysql_public" {
 | database_names | 생성된 데이터베이스 이름 목록 |
 | user_names | 생성된 사용자 이름 목록 |
 | read_replica_connection_names | 읽기 복제본 연결 이름 |
+| read_replica_ip_addresses | 읽기 복제본 IP 주소 (private/public) |
 
 ## 머신 타입 (Tier)
 
