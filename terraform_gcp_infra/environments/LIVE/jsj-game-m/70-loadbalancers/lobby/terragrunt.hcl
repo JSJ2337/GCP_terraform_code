@@ -20,8 +20,8 @@ dependency "workloads" {
     instance_groups = {}
   }
 
-  mock_outputs_allowed_terraform_commands = ["validate", "plan", "destroy"]
-  skip_outputs                            = get_terraform_command() == "destroy"
+  mock_outputs_allowed_terraform_commands = ["validate", "plan", "init", "destroy"]
+  skip_outputs                            = contains(["init", "destroy"], get_terraform_command())
 }
 
 locals {
