@@ -236,23 +236,49 @@ terragrunt plan
 terragrunt apply
 ```
 
-**생성되는 리소스 (레이어별)**:
+**생성되는 리소스**:
 
 - HTTP(S)/Internal Load Balancer
 - Health Check
-- Backend Service (Terragrunt dependency를 통해 자동 연결)
+- Backend Service
 - Forwarding Rule + Static IP (필요 시)
 
-## 옵션 2: 일괄 배포 (스크립트)
+**자동 Instance Groups 매핑**:
+
+70-loadbalancers는 `50-workloads`의 instance groups를 자동으로 읽어서 백엔드에 연결합니다.
+
+```hcl
+# 70-loadbalancers/lobby/terragrunt.hcl
+dependency "workloads" {
+  config_path = "../../50-workloads"
+  skip_outputs = get_env("SKIP_WORKLOADS_DEPENDENCY", "false") == "true"
+}
+
+inputs = {
+  auto_instance_groups = {
+    # "lobby"가 포함된 instance groups만 자동 필터링
+    for name, link in try(dependency.workloads.outputs.instance_groups, {}) :
+    name => link
+    if length(regexall("lobby", lower(name))) > 0
+  }
+}
+```
+
+**장점**: VM 추가/제거 시 Load Balancer 설정 자동 업데이트
+
+## 옵션 2: 일괄 배포
 
 ```bash
 cd environments/LIVE/my-new-project
 
 # 전체 스택 Plan
-terragrunt run --all plan
+terragrunt run-all plan
 
 # 전체 스택 Apply
-terragrunt run --all apply
+terragrunt run-all apply
+
+# 비대화식 실행 (CI/CD)
+terragrunt run-all apply --terragrunt-non-interactive
 ```
 
 ## 배포 확인

@@ -1,14 +1,30 @@
 # Terraform Destroy Guide
 
-이 문서는 jsj-game-* 환경과 템플릿을 안전하게 삭제하는 방법을 정리합니다. Cloud SQL 삭제 보호,
-Service Networking 연결, GCS lien 때문에 destroy가 중단되는 사례가 많으므로 아래 순서를 반드시
-지켜주세요.
+이 문서는 jsj-game-* 환경과 템플릿을 안전하게 삭제하는 방법을 정리합니다.
 
-## 1. Destroy 실행 순서
+## 1. Destroy 실행 방법
 
-Terragrunt 기준 권장 순서 (역 dependency):
+### 옵션 1: 전체 스택 일괄 Destroy (권장)
 
-1. `70-loadbalancer`
+**환경변수를 설정하여 `run-all destroy` 사용**:
+
+```bash
+cd environments/LIVE/jsj-game-m
+
+# 환경변수 설정 후 실행
+SKIP_WORKLOADS_DEPENDENCY=true terragrunt run-all destroy --terragrunt-non-interactive
+```
+
+**장점**:
+- 자동으로 역순 실행 (70 → 65 → ... → 00)
+- dependency 에러 없음
+- 빠르고 안전
+
+### 옵션 2: 개별 레이어 Destroy
+
+권장 순서 (역 dependency):
+
+1. `70-loadbalancers/*`
 2. `65-cache`
 3. `60-database`
 4. `50-workloads`
@@ -18,8 +34,15 @@ Terragrunt 기준 권장 순서 (역 dependency):
 8. `10-network`
 9. `00-project`
 
-> `terragrunt run --all destroy`를 쓰지 말고 위 순서대로 개별 레이어에서 `terragrunt destroy`를
-> 실행하세요. Service Networking 연결과 lien 문제를 선제적으로 처리할 수 있습니다.
+```bash
+cd 70-loadbalancers/lobby
+terragrunt destroy
+
+cd ../web
+terragrunt destroy
+
+# 이후 순서대로...
+```
 
 ## 2. Cloud SQL 삭제 보호 해제
 
@@ -32,13 +55,19 @@ Cloud SQL(MySQL) 인스턴스는 `deletion_protection`이 true이면 destroy가 
 
 ## 3. Service Networking 연결 삭제
 
-10-network 레이어는 `servicenetworking.googleapis.com` 연결을 관리합니다. Cloud SQL/Redis 같은
-리소스가 남아 있으면 연결 삭제가 거부됩니다.
+**이미 해결됨** (2025-11-18 적용):
 
-- 반드시 `60-database`, `65-cache` 등 Private Service Connect를 사용하는 리소스를 먼저 삭제
-- 해당 리소스가 모두 제거된 뒤 `10-network` destroy 실행
-- 만약 여전히 실패하면 GCP 콘솔 → VPC 네트워크 → VPC 네트워크 피어링에서
-  `servicenetworking-googleapis-com` 항목이 남아 있는지 확인 후 수동 삭제
+`modules/network-dedicated-vpc`에 `deletion_policy = "ABANDON"` 설정되어 있어 자동으로 처리됩니다.
+
+- Terraform destroy 시: State에서만 제거, GCP에서는 유지
+- VPC 삭제 시: Service Networking Connection도 자동 정리
+- **수동 삭제 불필요**
+
+만약 이전 버전을 사용 중이라면:
+```bash
+cd 10-network
+terragrunt state rm 'module.network.google_service_networking_connection.private_vpc_connection[0]'
+```
 
 ## 4. GCS Lien 제거
 

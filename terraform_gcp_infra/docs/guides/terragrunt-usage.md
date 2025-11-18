@@ -152,31 +152,33 @@ terragrunt destroy
 cd environments/LIVE/jsj-game-k
 
 # 모든 레이어 Plan (의존 순서대로)
-terragrunt run --all plan
+terragrunt run-all plan
 
 # 모든 레이어 Apply
-terragrunt run --all apply
+terragrunt run-all apply
+
+# 모든 레이어 Destroy (역순)
+terragrunt run-all destroy
 
 # 특정 레이어만 Plan
-terragrunt run --queue-include-dir '00-project' --all plan
+terragrunt run-all plan --terragrunt-include-dir 00-project
 
 # 여러 레이어 선택
-terragrunt run \
-  --queue-include-dir '00-project' \
-  --queue-include-dir '10-network' \
-  --all apply
+terragrunt run-all apply \
+  --terragrunt-include-dir 00-project \
+  --terragrunt-include-dir 10-network
 ```
 
 ### 비대화식 실행 (CI/CD용)
 
 ```bash
-# 환경변수 설정
-export TG_NON_INTERACTIVE=true
+# 비대화식 플래그 사용
+terragrunt run-all apply --terragrunt-non-interactive
 
 # Working Directory 지정
-terragrunt run \
-  --working-dir terraform_gcp_infra/environments/LIVE/jsj-game-k \
-  --all plan
+terragrunt run-all plan \
+  --terragrunt-working-dir terraform_gcp_infra/environments/LIVE/jsj-game-k \
+  --terragrunt-non-interactive
 ```
 
 ## 변수 병합 순서
@@ -279,6 +281,52 @@ dependency "network" {
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
 ```
+
+### 환경변수 기반 Dependency 제어
+
+**문제**: `run-all destroy` 시 dependency가 먼저 삭제되어 outputs를 읽을 수 없음
+
+**해결**: 환경변수로 `skip_outputs` 동적 제어
+
+```hcl
+# 70-loadbalancers/lobby/terragrunt.hcl
+dependency "workloads" {
+  config_path = "../../50-workloads"
+
+  # 환경변수로 outputs 읽기 제어
+  skip_outputs = get_env("SKIP_WORKLOADS_DEPENDENCY", "false") == "true"
+
+  mock_outputs = {
+    instance_groups = {}
+  }
+
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+}
+
+inputs = {
+  # try()로 안전하게 처리
+  auto_instance_groups = {
+    for name, link in try(dependency.workloads.outputs.instance_groups, {}) :
+    name => link
+    if length(regexall("lobby", lower(name))) > 0
+  }
+}
+```
+
+**사용법**:
+
+```bash
+# 일반 사용 (자동 매핑)
+terragrunt apply
+
+# run-all destroy (환경변수 설정)
+SKIP_WORKLOADS_DEPENDENCY=true terragrunt run-all destroy --terragrunt-non-interactive
+```
+
+**효과**:
+- 일반 사용: dependency outputs 자동 읽기
+- Destroy: 환경변수 설정으로 outputs 건너뛰기
+- 유연성: 필요할 때만 환경변수 사용
 
 ### 조건부 실행
 
