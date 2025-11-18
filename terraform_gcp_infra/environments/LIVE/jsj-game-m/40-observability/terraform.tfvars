@@ -17,17 +17,17 @@ dashboard_json_files = []
 notification_channels = []
 
 # Slack Notifications (자동 생성)
-enable_slack_notifications    = true
-slack_webhook_secret_name     = "slack-webhook-url"
-slack_webhook_secret_project  = "jsj-system-mgmt"  # Secret이 저장된 프로젝트
-slack_channel_name            = "#game-alerts"
-slack_channel_display_name    = "Game-M Alerts"
+#enable_slack_notifications    = true
+#slack_webhook_secret_name     = "slack-webhook-url"
+#slack_webhook_secret_project  = "jsj-system-mgmt"  # Secret이 저장된 프로젝트
+#slack_channel_name            = "#game-alerts"
+#slack_channel_display_name    = "Game-M Alerts"
 
 # VM CPU Alert
 enable_vm_cpu_alert       = true
 vm_cpu_threshold          = 0.85  # 85% CPU 사용 시 알림
 vm_cpu_duration           = "300s"  # 5분 지속 시
-vm_instance_filter_regex  = "^jsj-game-m-.*"  # jsj-game-m으로 시작하는 모든 VM
+#vm_instance_filter_regex  = "^jsj-game-m-.*"  # jsj-game-m으로 시작하는 모든 VM
 
 # Cloud SQL CPU Alert
 enable_cloudsql_cpu_alert  = true
