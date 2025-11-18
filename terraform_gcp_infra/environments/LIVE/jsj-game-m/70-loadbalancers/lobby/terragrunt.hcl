@@ -13,6 +13,19 @@ dependencies {
   ]
 }
 
+dependency "workloads" {
+  config_path = "../../50-workloads"
+
+  # SKIP_WORKLOADS_DEPENDENCY=true 환경변수 설정 시 outputs 건너뛰기
+  skip_outputs = get_env("SKIP_WORKLOADS_DEPENDENCY", "false") == "true"
+
+  mock_outputs = {
+    instance_groups = {}
+  }
+
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+}
+
 locals {
   parent_dir        = abspath("${get_terragrunt_dir()}/../..")
   raw_common_inputs = read_tfvars_file("${local.parent_dir}/common.naming.tfvars")
@@ -24,5 +37,12 @@ locals {
 
 inputs = merge(
   local.common_inputs,
-  local.layer_inputs
+  local.layer_inputs,
+  {
+    auto_instance_groups = {
+      for name, link in try(dependency.workloads.outputs.instance_groups, {}) :
+      name => link
+      if length(regexall("lobby", lower(name))) > 0
+    }
+  }
 )

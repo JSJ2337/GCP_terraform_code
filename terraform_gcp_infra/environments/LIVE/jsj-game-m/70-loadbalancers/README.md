@@ -1,10 +1,44 @@
-# 70-loadbalancers 그룹
+# 70-loadbalancers
 
-이 디렉터리는 여러 종류의 Load Balancer 레이어를 모아둔 그룹입니다. Terragrunt 실행 시에는 아래 하위 디렉터리(각 레이어)를 지정해 사용하세요.
+## 자동 Instance Groups 매핑
 
-| 서브 디렉터리 | 설명 | 자동 연결되는 인스턴스 그룹 |
-|---------------|------|--------------------------------|
-| `lobby/` | 외부 로비 트래픽용 HTTP(S) Load Balancer | `jsj-lobby-*` IG만 필터링하여 auto_instance_groups로 주입 |
-| `web/`   | 웹 서비스용 HTTP(S) Load Balancer | `jsj-web-*` IG만 자동 주입 |
+이 레이어는 `50-workloads`에서 생성된 instance groups를 자동으로 읽어서 load balancer backend에 연결합니다.
 
-새로운 로드밸런서가 필요하다면 이 폴더 아래에 디렉터리를 추가하고, 해당 `terragrunt.hcl`에서 `dependency "workloads"` 출력값을 원하는 규칙으로 필터링해 `auto_instance_groups`에 전달하면 됩니다.
+### 일반 사용 (Apply/Plan)
+
+```bash
+cd 70-loadbalancers/lobby
+terragrunt apply
+```
+
+자동으로 `50-workloads`의 outputs에서 "lobby"가 포함된 instance groups를 찾아서 매핑합니다.
+
+### Run-all Destroy 시
+
+`50-workloads`가 먼저 destroy되면 outputs를 읽을 수 없어 에러가 발생합니다. 
+이 경우 환경변수를 설정하여 dependency를 건너뜁니다:
+
+```bash
+cd terraform_gcp_infra/environments/LIVE/jsj-game-m
+
+# 환경변수 설정 후 destroy
+export SKIP_WORKLOADS_DEPENDENCY=true
+terragrunt run-all destroy --terragrunt-non-interactive
+
+# 또는 한 줄로
+SKIP_WORKLOADS_DEPENDENCY=true terragrunt run-all destroy --terragrunt-non-interactive
+```
+
+### 개별 Destroy
+
+개별 모듈을 destroy할 때는 환경변수가 필요 없습니다:
+
+```bash
+cd 70-loadbalancers/lobby
+terragrunt destroy
+```
+
+## 동작 원리
+
+- **SKIP_WORKLOADS_DEPENDENCY=false** (기본값): dependency outputs 읽어서 자동 매핑
+- **SKIP_WORKLOADS_DEPENDENCY=true**: dependency outputs 건너뛰기, auto_instance_groups = {}
