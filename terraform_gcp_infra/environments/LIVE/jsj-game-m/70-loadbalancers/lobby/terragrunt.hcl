@@ -13,18 +13,6 @@ dependencies {
   ]
 }
 
-dependency "workloads" {
-  config_path = "../../50-workloads"
-
-  mock_outputs = {
-    instance_groups = {}
-  }
-
-  # destroy 실행 시에만 mock outputs 사용하도록 설정
-  mock_outputs_allowed_terraform_commands = ["destroy"]
-  mock_outputs_merge_strategy_with_state  = "shallow"
-}
-
 locals {
   parent_dir        = abspath("${get_terragrunt_dir()}/../..")
   raw_common_inputs = read_tfvars_file("${local.parent_dir}/common.naming.tfvars")
@@ -36,12 +24,5 @@ locals {
 
 inputs = merge(
   local.common_inputs,
-  local.layer_inputs,
-  {
-    auto_instance_groups = {
-      for name, link in try(dependency.workloads.outputs.instance_groups, {}) :
-      name => link
-      if length(regexall("lobby", lower(name))) > 0
-    }
-  }
+  local.layer_inputs
 )
