@@ -547,6 +547,112 @@ find . -type d -name ".terraform" -prune -exec rm -rf {} \;
 find . -name ".terraform.lock.hcl" -delete
 ```
 
+## Terragrunt 관련 오류
+
+### "Unreadable module directory" (Source 경로 문제)
+
+**증상**:
+
+```text
+Error: Unreadable module directory
+
+Unable to evaluate directory symlink: lstat ../../../../../modules: no such
+file or directory
+
+The directory could not be read for module "naming" at main.tf:8.
+```
+
+**원인**:
+
+Terragrunt의 `source` 메커니즘 제약:
+1. `source`로 지정된 **단일 폴더만** `.terragrunt-cache`로 복사
+2. 복사된 폴더 내부에서 상대 경로로 모듈 참조 시 경로 깨짐
+3. 인접 폴더 (예: `modules/naming`, `modules/load-balancer`)는 복사되지 않음
+
+**잘못된 패턴**:
+
+```hcl
+# terragrunt.hcl
+terraform {
+  source = "../_common"  # 또는 "../../../../../modules/some-module"
+}
+
+# _common/main.tf (source로 복사된 폴더)
+module "naming" {
+  source = "../../../../../modules/naming"  # ❌ .terragrunt-cache에서는 경로 없음
+}
+```
+
+**해결 방법**:
+
+**방법 1: In-place 실행 (권장)**
+
+`source` 블록을 제거하고 현재 디렉토리에서 직접 실행:
+
+```hcl
+# terragrunt.hcl
+include "root" {
+  path = find_in_parent_folders("root.hcl")
+}
+
+# source 블록 없음 → in-place 실행
+
+locals {
+  # 설정...
+}
+
+inputs = merge(...)
+```
+
+이 방식은 10-network, 20-storage 등 대부분의 레이어에서 사용합니다.
+
+**방법 2: 중복 코드 허용**
+
+레이어 수가 적고 변경이 드문 경우, 중복을 허용:
+
+```
+70-loadbalancers/
+├── lobby/
+│   ├── main.tf         # 각 폴더에 파일 존재
+│   ├── variables.tf
+│   ├── outputs.tf
+│   └── terragrunt.hcl  # source 없음
+└── web/
+    ├── main.tf         # lobby와 동일 (중복)
+    ├── variables.tf
+    ├── outputs.tf
+    └── terragrunt.hcl  # source 없음
+```
+
+**방법 3: 정식 모듈화 (특별한 경우)**
+
+모듈이 완전히 독립적이고 외부 모듈 참조가 없는 경우에만 사용:
+
+```
+modules/
+└── my-module/
+    ├── main.tf    # 외부 모듈 참조 없음
+    ├── variables.tf
+    └── outputs.tf
+
+# terragrunt.hcl
+terraform {
+  source = "../../../../../modules/my-module"  # ✅ 단독으로 동작
+}
+```
+
+**주의사항**:
+
+- `//` 프리픽스는 **terragrunt.hcl 전용** (Terraform .tf 파일에서 사용 불가)
+- 모듈 간 의존성이 있으면 공통화가 어려움
+- 안정성 > 중복 제거 우선 고려
+
+**관련 문서**:
+- [작업 이력 (2025-11-18)](../changelog/work_history/2025-11-18.md) - 실제 문제 해결 과정
+- [Terragrunt Source 문법](https://terragrunt.gruntwork.io/docs/reference/config-blocks-and-attributes/#terraform)
+
+---
+
 ## 긴급 복구
 
 ### State 복원
