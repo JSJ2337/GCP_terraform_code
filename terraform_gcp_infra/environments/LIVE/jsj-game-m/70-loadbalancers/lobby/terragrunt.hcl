@@ -2,9 +2,9 @@ include "root" {
   path = find_in_parent_folders("root.hcl")
 }
 
-# 공통 Load Balancer 코드 참조
+# Load Balancer Layer 모듈 참조
 terraform {
-  source = "${get_terragrunt_dir()}/../_common"
+  source = "../../../../../modules/load-balancer-layer"
 }
 
 dependencies {
