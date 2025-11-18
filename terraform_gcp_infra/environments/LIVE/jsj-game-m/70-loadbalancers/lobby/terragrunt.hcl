@@ -32,16 +32,12 @@ locals {
 
   raw_layer_inputs = try(read_tfvars_file("${get_terragrunt_dir()}/terraform.tfvars"), tomap({}))
   layer_inputs     = try(jsondecode(local.raw_layer_inputs), local.raw_layer_inputs)
-
-  # destroy 명령어인지 확인
-  is_destroy = get_terraform_command() == "destroy"
 }
 
 inputs = merge(
   local.common_inputs,
   local.layer_inputs,
-  # destroy가 아닐 때만 auto_instance_groups 추가
-  local.is_destroy ? {} : {
+  {
     auto_instance_groups = {
       for name, link in try(dependency.workloads.outputs.instance_groups, {}) :
       name => link
