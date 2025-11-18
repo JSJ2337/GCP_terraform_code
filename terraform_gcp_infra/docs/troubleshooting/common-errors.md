@@ -547,6 +547,189 @@ find . -type d -name ".terraform" -prune -exec rm -rf {} \;
 find . -name ".terraform.lock.hcl" -delete
 ```
 
+## Destroy 관련 오류
+
+### 18. Terragrunt Dependency Outputs 에러 (Destroy 시)
+
+**증상**:
+
+```text
+Run failed: 2 errors occurred:
+
+* ./50-workloads/terragrunt.hcl is a dependency of ./70-loadbalancers/lobby/terragrunt.hcl
+  but detected no outputs. Either the target module has not been applied yet,
+  or the module has no outputs.
+```
+
+**원인**:
+- Destroy 실행 순서상 50-workloads가 먼저 삭제됨
+- 70-loadbalancers가 `dependency.workloads.outputs.instance_groups`를 읽으려고 시도
+- 이미 삭제된 모듈의 outputs가 없어서 에러 발생
+
+**해결** (2025-11-18 적용):
+
+`get_terraform_command()` 함수로 조건부 처리:
+
+```hcl
+# 70-loadbalancers/lobby/terragrunt.hcl
+dependency "workloads" {
+  config_path = "../../50-workloads"
+
+  mock_outputs = {
+    instance_groups = {}
+  }
+
+  mock_outputs_allowed_terraform_commands = ["validate", "plan", "destroy"]
+}
+
+locals {
+  # destroy 명령어인지 확인
+  is_destroy = get_terraform_command() == "destroy"
+}
+
+inputs = merge(
+  local.common_inputs,
+  local.layer_inputs,
+  # destroy가 아닐 때만 auto_instance_groups 추가
+  local.is_destroy ? {} : {
+    auto_instance_groups = {
+      for name, link in try(dependency.workloads.outputs.instance_groups, {}) :
+      name => link
+      if length(regexall("lobby", lower(name))) > 0
+    }
+  }
+)
+```
+
+**효과**:
+- Apply/Plan: 자동 instance_groups 매핑 (기능 유지)
+- Destroy: dependency outputs를 읽지 않음 (에러 없음)
+
+**참고**: `mock_outputs_merge_with_state`와 `mock_outputs_merge_strategy_with_state`는 작동하지 않음 (deprecated 또는 버그)
+
+### 19. Service Networking Connection Destroy 실패
+
+**증상**:
+
+```text
+Error: Unable to remove Service Networking Connection, err: Error waiting for Delete Service Networking Connection: Error code 9, message: Failed to delete connection; Producer services (e.g. CloudSQL, Cloud Memstore, etc.) are still using this connection.
+Help Token: REDACTED_HELP_TOKEN
+```
+
+**원인**:
+- Terraform Provider Google 5.x의 알려진 버그
+- Provider 4.x: `removePeering` 메서드 사용 (정상 작동)
+- Provider 5.x: `deleteConnection` 메서드로 변경 (regression)
+- CloudSQL/Redis가 이미 삭제되었어도 에러 발생
+
+**해결** (2025-11-18 적용):
+
+`deletion_policy = "ABANDON"` 추가:
+
+```hcl
+# modules/network-dedicated-vpc/main.tf
+resource "google_service_networking_connection" "private_vpc_connection" {
+  count   = var.enable_private_service_connection ? 1 : 0
+  network = google_compute_network.vpc.self_link
+  service = var.private_service_connection_service
+
+  reserved_peering_ranges = local.private_service_connection_reserved_ranges
+
+  # Terraform Provider Google 5.x 버그 우회
+  deletion_policy = "ABANDON"
+
+  depends_on = [google_compute_global_address.private_service_connect]
+}
+```
+
+**ABANDON의 의미**:
+- Destroy 시 GCP에서 실제로 삭제하지 않음
+- Terraform state에서만 제거
+- VPC 또는 프로젝트 삭제 시 자동으로 정리됨
+
+**장점**:
+- ✅ 슬립타임 불필요
+- ✅ 항상 성공
+- ✅ 완전 자동화 가능
+- ✅ 안전 (VPC 삭제 시 함께 정리)
+
+**기존 환경 처리**:
+
+이미 생성된 Service Networking Connection이 있는 경우:
+
+```bash
+# 옵션 1: State에서 제거 (추천)
+cd terraform_gcp_infra/environments/LIVE/jsj-game-m/10-network
+terragrunt state rm module.network.google_service_networking_connection.private_vpc_connection[0]
+
+# 옵션 2: 콘솔에서 수동 삭제
+# GCP 콘솔 → VPC Network → VPC network peering → 삭제
+
+# 다시 destroy
+cd ..
+terragrunt run-all destroy --terragrunt-non-interactive
+```
+
+**참고**:
+- GitHub Issue #16275, #19908
+- [Terraform Registry - google_service_networking_connection](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_networking_connection)
+
+### 20. Redis Cluster Deletion Protection
+
+**증상**:
+
+```text
+Error: Error when reading or editing Cluster: googleapi: Error 400:
+The cluster is deletion protected. Please disable deletion protection to delete the cluster.
+```
+
+**원인**: Redis Cluster의 `deletion_protection_enabled = true`
+
+**해결**:
+
+**방법 1**: Terraform 변수로 제어 (2025-11-18 적용)
+
+```hcl
+# terraform.tfvars
+deletion_protection = false  # 개발/테스트 환경
+```
+
+**방법 2**: gcloud로 즉시 해제
+
+```bash
+# Cluster 확인
+gcloud redis clusters list --region=asia-northeast3 --project=jsj-game-m
+
+# Deletion protection 해제
+gcloud redis clusters update CLUSTER_NAME \
+  --region=asia-northeast3 \
+  --no-deletion-protection \
+  --project=jsj-game-m
+
+# 확인
+gcloud redis clusters describe CLUSTER_NAME \
+  --region=asia-northeast3 \
+  --project=jsj-game-m \
+  --format="value(deletionProtectionEnabled)"
+```
+
+**모듈 업데이트** (이미 적용됨):
+
+```hcl
+# modules/memorystore-redis/variables.tf
+variable "deletion_protection" {
+  type        = bool
+  description = "Deletion protection 활성화 여부 (true: 삭제 방지, false: 삭제 허용)"
+  default     = true
+}
+
+# modules/memorystore-redis/main.tf
+resource "google_redis_cluster" "enterprise" {
+  deletion_protection_enabled = var.deletion_protection
+  # ...
+}
+```
+
 ## Terragrunt 관련 오류
 
 ### "Unreadable module directory" (Source 경로 문제)

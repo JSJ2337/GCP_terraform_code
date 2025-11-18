@@ -20,16 +20,41 @@
 
 ### 수정 (Fixed)
 
-- **Terragrunt destroy 시 dependency 에러 해결**: 70-loadbalancers destroy 중 50-workloads outputs 참조 실패 문제 수정
+- **Terragrunt destroy 시 dependency 에러 해결**: `get_terraform_command()` 함수로 조건부 처리
   - 문제: destroy 실행 순서상 50-workloads가 먼저 삭제되어 outputs가 없는데, 70-loadbalancers가 `dependency.workloads.outputs.instance_groups`를 읽으려고 해서 에러 발생
-  - 시도 1: `mock_outputs_merge_with_state = true` 추가 → 작동하지 않음 (deprecated 속성)
-  - 최종 해결: `mock_outputs_merge_strategy_with_state = "shallow"` 사용
-  - shallow 전략: state에 outputs가 있으면 실제 값 사용, 없으면 mock_outputs 사용
+  - 시도 1: `mock_outputs_merge_with_state = true` → 작동하지 않음 (deprecated)
+  - 시도 2: `mock_outputs_merge_strategy_with_state = "shallow"` → 작동하지 않음
+  - 최종 해결: `get_terraform_command()` 함수로 명령어 감지 후 조건부 처리
+  - 동작 방식:
+    - Apply/Plan 시: `dependency.workloads.outputs.instance_groups` 읽어서 자동 매핑
+    - Destroy 시: dependency outputs를 읽지 않고 빈 객체 사용
   - 영향받는 파일:
     - `environments/LIVE/jsj-game-m/70-loadbalancers/lobby/terragrunt.hcl`
     - `environments/LIVE/jsj-game-m/70-loadbalancers/web/terragrunt.hcl`
-  - Terragrunt 공식 문서 참고: `mock_outputs_merge_with_state`는 deprecated, 새로운 `mock_outputs_merge_strategy_with_state` 사용 필요
-  - 전략 옵션: `no_merge` (기본값), `shallow`, `deep_map_only`
+  - 핵심 코드:
+    ```hcl
+    locals {
+      is_destroy = get_terraform_command() == "destroy"
+    }
+    inputs = merge(
+      local.common_inputs,
+      local.layer_inputs,
+      local.is_destroy ? {} : { auto_instance_groups = {...} }
+    )
+    ```
+  - 장점: 자동 instance_groups 연결 기능 유지 + destroy 에러 해결
+
+- **Service Networking Connection destroy 에러 해결**: `deletion_policy = "ABANDON"` 추가
+  - 문제: Terraform Provider Google 5.x에서 Service Networking Connection 삭제 실패
+    - 에러: "Failed to delete connection; Producer services (e.g. CloudSQL, Cloud Memstore, etc.) are still using this connection."
+    - CloudSQL/Redis가 이미 삭제되었는데도 발생
+    - Provider 4.x에서는 문제없었으나 5.x에서 `removePeering` → `deleteConnection` 메서드 변경으로 regression
+  - 해결: `modules/network-dedicated-vpc/main.tf`에 `deletion_policy = "ABANDON"` 추가
+  - 동작 방식: destroy 시 GCP에서 실제로 삭제하지 않고 Terraform state에서만 제거
+  - 안전성: VPC나 프로젝트 삭제 시 Service Networking Connection도 자동으로 정리됨
+  - 장점: 슬립타임 불필요, 항상 성공, 완전 자동화 가능
+  - 참고: GitHub Issue #16275, #19908
+  - modules/network-dedicated-vpc/main.tf:142
 
 ### 운영 (Operations)
 
