@@ -4,7 +4,7 @@ include "root" {
 
 # 공통 Load Balancer 코드 참조
 terraform {
-  source = "../_common"
+  source = "//terraform_gcp_infra/environments/LIVE/jsj-game-m/70-loadbalancers/_common"
 }
 
 dependencies {
