@@ -7,6 +7,37 @@
 
 <!-- markdownlint-disable MD005 MD007 MD013 MD024 -->
 
+## [미배포] - 2025-11-18
+
+### 추가 (Added)
+
+- **Redis Cluster deletion protection 설정**: `modules/memorystore-redis`에 `deletion_protection` 변수 추가
+  - Enterprise Tier(`google_redis_cluster`)의 `deletion_protection_enabled` 속성을 변수로 제어
+  - 기본값: `true` (프로덕션 보호)
+  - 개발/테스트 환경에서는 `false`로 설정하여 자유로운 삭제 가능
+  - `proj-default-templet/65-cache` 및 `jsj-game-m/65-cache`에 `deletion_protection = false` 설정 추가
+  - modules/memorystore-redis/variables.tf:165-169, main.tf:78
+
+### 수정 (Fixed)
+
+- **Terragrunt destroy 시 dependency 에러 해결**: 70-loadbalancers destroy 중 50-workloads outputs 참조 실패 문제 수정
+  - 문제: destroy 실행 순서상 50-workloads가 먼저 삭제되어 outputs가 없는데, 70-loadbalancers가 `dependency.workloads.outputs.instance_groups`를 읽으려고 해서 에러 발생
+  - 시도 1: `mock_outputs_merge_with_state = true` 추가 → 작동하지 않음 (deprecated 속성)
+  - 최종 해결: `mock_outputs_merge_strategy_with_state = "shallow"` 사용
+  - shallow 전략: state에 outputs가 있으면 실제 값 사용, 없으면 mock_outputs 사용
+  - 영향받는 파일:
+    - `environments/LIVE/jsj-game-m/70-loadbalancers/lobby/terragrunt.hcl`
+    - `environments/LIVE/jsj-game-m/70-loadbalancers/web/terragrunt.hcl`
+  - Terragrunt 공식 문서 참고: `mock_outputs_merge_with_state`는 deprecated, 새로운 `mock_outputs_merge_strategy_with_state` 사용 필요
+  - 전략 옵션: `no_merge` (기본값), `shallow`, `deep_map_only`
+
+### 운영 (Operations)
+
+- **기존 Redis Cluster deletion protection 해제**: gcloud 명령으로 jsj-game-m 프로젝트의 Redis Cluster 삭제 보호 비활성화
+  - 명령어: `gcloud redis clusters update game-m-prod-redis --region=asia-northeast3 --no-deletion-protection --project=jsj-game-m`
+  - 결과: `deletionProtectionEnabled: false` 확인
+  - 이후 Terraform destroy 가능 상태로 전환
+
 ## [미배포] - 2025-11-12
 
 ### 추가 (Added)
