@@ -20,8 +20,9 @@ dependency "workloads" {
     instance_groups = {}
   }
 
-  mock_outputs_allowed_terraform_commands = ["validate", "plan", "init", "destroy"]
-  skip_outputs                            = contains(["init", "destroy"], get_terraform_command())
+  # destroy 실행 시에만 mock outputs 사용하도록 설정
+  mock_outputs_allowed_terraform_commands = ["destroy"]
+  mock_outputs_merge_strategy_with_state  = "shallow"
 }
 
 locals {
