@@ -21,7 +21,8 @@ dependency "workloads" {
     instance_groups = {}
   }
 
-  mock_outputs_allowed_terraform_commands = ["validate", "plan", "destroy"]
+  mock_outputs_allowed_terraform_commands      = ["validate", "plan", "destroy"]
+  mock_outputs_merge_strategy_with_state       = "shallow"
 }
 
 locals {
