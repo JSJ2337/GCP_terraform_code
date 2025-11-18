@@ -14,16 +14,12 @@ dependencies {
   ]
 }
 
-dependency "workloads" {
-  config_path = "../../50-workloads"
-
-  mock_outputs = {
-    instance_groups = {}
-  }
-
-  mock_outputs_allowed_terraform_commands      = ["validate", "plan", "destroy"]
-  mock_outputs_merge_strategy_with_state       = "shallow"
-}
+# dependency 블록 제거: destroy 시 outputs 참조 에러 방지
+# instance_groups는 terraform.tfvars에 수동으로 지정 필요
+# 예시:
+# instance_groups = {
+#   "lobby-ig-name" = "projects/.../instanceGroups/lobby-ig-name"
+# }
 
 locals {
   parent_dir        = abspath("${get_terragrunt_dir()}/../..")
@@ -36,12 +32,5 @@ locals {
 
 inputs = merge(
   local.common_inputs,
-  local.layer_inputs,
-  {
-    auto_instance_groups = {
-      for name, link in try(dependency.workloads.outputs.instance_groups, {}) :
-      name => link
-      if length(regexall("lobby", lower(name))) > 0
-    }
-  }
+  local.layer_inputs
 )
