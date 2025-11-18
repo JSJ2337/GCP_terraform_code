@@ -21,6 +21,7 @@ dependency "workloads" {
   }
 
   mock_outputs_allowed_terraform_commands = ["validate", "plan", "destroy"]
+  skip_outputs                            = get_terraform_command() == "destroy"
 }
 
 locals {
