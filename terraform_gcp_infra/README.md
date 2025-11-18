@@ -51,7 +51,7 @@ terraform_gcp_infra/
 | `10-network` | VPC, 서브넷, 방화벽 | 00-project |
 | `20-storage` | GCS 버킷 | 10-network |
 | `30-security` | IAM, Service Account | 10-network |
-| `40-observability` | Logging, Monitoring | 10-network |
+| `40-observability` | Logging, Monitoring, Slack 알림 | 10-network |
 | `50-workloads` | VM 인스턴스 | 10-network, 30-security |
 | `60-database` | Cloud SQL MySQL | 10-network |
 | `65-cache` | Memorystore Redis | 10-network |
@@ -76,6 +76,9 @@ terraform_gcp_infra/
 - [Jenkins CI/CD](./docs/guides/jenkins-cicd.md)
 - [Terragrunt 사용법](./docs/guides/terragrunt-usage.md)
 - [리소스 삭제 가이드](./docs/guides/destroy-guide.md)
+
+### 운영
+- [모니터링 설정 (Slack)](./docs/operations/monitoring-setup.md)
 
 ### 트러블슈팅
 - [일반적인 오류](./docs/troubleshooting/common-errors.md)
