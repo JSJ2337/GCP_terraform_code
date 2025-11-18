@@ -2,8 +2,29 @@ include "root" {
   path = find_in_parent_folders("root.hcl")
 }
 
+
 # terraform.source를 제거하여 in-place 실행
 # 이렇게 하면 .terragrunt-cache 없이 현재 디렉토리에서 직접 실행됩니다
+
+dependencies {
+  paths = [
+    "../../00-project",
+    "../../10-network"
+  ]
+}
+
+dependency "workloads" {
+  config_path = "../../50-workloads"
+
+  # SKIP_WORKLOADS_DEPENDENCY=true 환경변수 설정 시 outputs 건너뛰기
+  skip_outputs = get_env("SKIP_WORKLOADS_DEPENDENCY", "false") == "true"
+
+  mock_outputs = {
+    instance_groups = {}
+  }
+
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+}
 
 locals {
   parent_dir        = abspath("${get_terragrunt_dir()}/../..")
@@ -14,35 +35,16 @@ locals {
   layer_inputs     = try(jsondecode(local.raw_layer_inputs), local.raw_layer_inputs)
 }
 
-dependencies {
-  paths = [
-    "../../00-project",
-    "../../10-network",
-    "../../50-workloads"
-  ]
-}
-
-dependency "workloads" {
-  config_path = "../../50-workloads"
-
-  mock_outputs = {
-    instance_groups = {}
-  }
-
-  mock_outputs_allowed_terraform_commands = ["validate", "plan", "destroy"]
-}
-
 inputs = merge(
   local.common_inputs,
   local.layer_inputs,
   {
-    # Example: 모든 Instance Group을 Backend로 추가
-    # 실제 사용 시 필터링 패턴 추가 (예: web, api, admin 등)
-    # auto_instance_groups = {
-    #   for name, link in try(dependency.workloads.outputs.instance_groups, {}) :
-    #   name => link
-    #   if length(regexall("web", lower(name))) > 0
-    # }
-    auto_instance_groups = try(dependency.workloads.outputs.instance_groups, {})
+    # Example: 특정 패턴의 Instance Group만 필터링
+    # 실제 사용 시 필터링 패턴 수정 (예: web, api, lobby, admin 등)
+    auto_instance_groups = {
+      for name, link in try(dependency.workloads.outputs.instance_groups, {}) :
+      name => link
+      if length(regexall("web", lower(name))) > 0  # 패턴 수정 필요
+    }
   }
 )
