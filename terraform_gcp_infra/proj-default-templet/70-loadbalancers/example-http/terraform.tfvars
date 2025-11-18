@@ -11,7 +11,7 @@ lb_type = "http"
 # Set region only for regional/internal load balancers.
 # region = "asia-northeast3"
 # 내부 LB를 사용할 경우 반드시 Private/WAS 서브넷 self-link를 입력하세요.
-# internal_subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-private"
+# internal_subnetwork_self_link = "projects/my-project/regions/asia-northeast3/subnetworks/my-project-subnet-private"
 
 # Backend service configuration
 backend_protocol  = "HTTP"

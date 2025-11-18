@@ -34,7 +34,7 @@ instances = {
       tier = "frontend"
     }
     startup_script_file  = "scripts/lobby.sh"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
+    subnetwork_self_link = "projects/my-project-prod/regions/asia-northeast3/subnetworks/my-project-subnet-dmz"
   }
   "jsj-lobby-02" = {
     zone     = "asia-northeast3-b"
@@ -44,7 +44,7 @@ instances = {
       tier = "frontend"
     }
     startup_script_file  = "scripts/lobby.sh"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
+    subnetwork_self_link = "projects/my-project-prod/regions/asia-northeast3/subnetworks/my-project-subnet-dmz"
   }
   "jsj-lobby-03" = {
     zone     = "asia-northeast3-c"
@@ -54,7 +54,7 @@ instances = {
       tier = "frontend"
     }
     startup_script_file  = "scripts/lobby.sh"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
+    subnetwork_self_link = "projects/my-project-prod/regions/asia-northeast3/subnetworks/my-project-subnet-dmz"
   }
 
   # web tier (3대)
@@ -67,7 +67,7 @@ instances = {
       tier = "frontend"
     }
     startup_script_file  = "scripts/lobby.sh"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
+    subnetwork_self_link = "projects/my-project-prod/regions/asia-northeast3/subnetworks/my-project-subnet-dmz"
   }
   "jsj-web-02" = {
     zone         = "asia-northeast3-b"
@@ -78,7 +78,7 @@ instances = {
       tier = "frontend"
     }
     startup_script_file  = "scripts/lobby.sh"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
+    subnetwork_self_link = "projects/my-project-prod/regions/asia-northeast3/subnetworks/my-project-subnet-dmz"
   }
   "jsj-web-03" = {
     zone         = "asia-northeast3-c"
@@ -89,7 +89,7 @@ instances = {
       tier = "frontend"
     }
     startup_script_file  = "scripts/lobby.sh"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
+    subnetwork_self_link = "projects/my-project-prod/regions/asia-northeast3/subnetworks/my-project-subnet-dmz"
   }
 
   # WAS tier (2대)
@@ -102,7 +102,7 @@ instances = {
       tier = "backend"
     }
     startup_script_file  = "scripts/was.sh"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-private"
+    subnetwork_self_link = "projects/my-project-prod/regions/asia-northeast3/subnetworks/my-project-subnet-private"
   }
   "jsj-was-02" = {
     zone         = "asia-northeast3-b"
@@ -115,7 +115,7 @@ instances = {
     startup_script_file  = "scripts/was.sh"
     image_family         = "rocky-linux-9"
     image_project        = "rocky-linux-cloud"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-private"
+    subnetwork_self_link = "projects/my-project-prod/regions/asia-northeast3/subnetworks/my-project-subnet-private"
   }
 }
 

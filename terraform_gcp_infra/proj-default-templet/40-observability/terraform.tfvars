@@ -19,7 +19,7 @@ notification_channels = []
 # Slack Notifications (자동 생성) - 사용 시 주석 해제
 # enable_slack_notifications    = true
 # slack_webhook_secret_name     = "slack-webhook-url"
-# slack_webhook_secret_project  = "jsj-system-mgmt"  # Secret이 저장된 프로젝트
+# slack_webhook_secret_project  = "my-system-mgmt"  # Secret이 저장된 프로젝트 (비어있으면 현재 프로젝트 사용)
 # slack_channel_name            = "#alerts"
 # slack_channel_display_name    = "Project Alerts"
 

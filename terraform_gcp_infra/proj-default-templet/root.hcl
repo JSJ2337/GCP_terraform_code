@@ -1,9 +1,9 @@
 locals {
   # 모든 레이어에서 공유하는 원격 상태 버킷과 prefix 기본값
-  remote_state_bucket   = "jsj-terraform-state-prod"
-  remote_state_project  = "jsj-system-mgmt"
+  remote_state_bucket   = "my-terraform-state-prod"
+  remote_state_project  = "my-system-mgmt"
   remote_state_location = "US"
-  project_state_prefix  = "jsj-game-l"
+  project_state_prefix  = "my-project-prod"
 }
 
 # Terragrunt 원격 상태 구성: 각 레이어별로 고유 prefix를 자동 부여한다.
@@ -24,6 +24,6 @@ remote_state {
 
 # 환경별 공통 입력
 inputs = {
-  org_id          = "REDACTED_ORG_ID"  # jsj-dev.com
-  billing_account = "REDACTED_BILLING_ACCOUNT"
+  org_id          = "YOUR_ORG_ID"  # GCP Organization ID
+  billing_account = "YOUR_BILLING_ACCOUNT_ID"
 }

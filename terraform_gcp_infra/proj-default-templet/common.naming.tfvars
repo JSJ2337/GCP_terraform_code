@@ -1,10 +1,10 @@
 # 공통 네이밍 입력 (모든 레이어에서 공유)
 # 주의: organization은 리소스 네이밍 접두어로 사용되므로 소문자/숫자/하이픈 권장
-# 도메인이 있다면 슬러그 형태로: 예) jsj-dev.com → jsj-dev
-project_id     = "jsj-game-l"
-project_name   = "game-l"
+# 도메인이 있다면 슬러그 형태로: 예) mycompany.com → mycompany
+project_id     = "my-project-prod"
+project_name   = "my-project"
 environment    = "prod"
-organization   = "jsj-dev"  # 실제 도메인: jsj-dev.com
+organization   = "myorg"  # 조직명 또는 도메인 슬러그
 region_primary = "asia-northeast3"
 region_backup  = "asia-northeast1"
 
