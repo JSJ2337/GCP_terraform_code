@@ -566,32 +566,29 @@ Run failed: 2 errors occurred:
 - 70-loadbalancers가 `dependency.workloads.outputs.instance_groups`를 읽으려고 시도
 - 이미 삭제된 모듈의 outputs가 없어서 에러 발생
 
-**해결** (2025-11-18 적용):
+**해결** (2025-11-18 최종):
 
-`get_terraform_command()` 함수로 조건부 처리:
+환경변수 기반 `skip_outputs` 제어:
 
 ```hcl
 # 70-loadbalancers/lobby/terragrunt.hcl
 dependency "workloads" {
   config_path = "../../50-workloads"
 
+  # SKIP_WORKLOADS_DEPENDENCY=true 환경변수 설정 시 outputs 건너뛰기
+  skip_outputs = get_env("SKIP_WORKLOADS_DEPENDENCY", "false") == "true"
+
   mock_outputs = {
     instance_groups = {}
   }
 
-  mock_outputs_allowed_terraform_commands = ["validate", "plan", "destroy"]
-}
-
-locals {
-  # destroy 명령어인지 확인
-  is_destroy = get_terraform_command() == "destroy"
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
 
 inputs = merge(
   local.common_inputs,
   local.layer_inputs,
-  # destroy가 아닐 때만 auto_instance_groups 추가
-  local.is_destroy ? {} : {
+  {
     auto_instance_groups = {
       for name, link in try(dependency.workloads.outputs.instance_groups, {}) :
       name => link
@@ -601,11 +598,27 @@ inputs = merge(
 )
 ```
 
-**효과**:
-- Apply/Plan: 자동 instance_groups 매핑 (기능 유지)
-- Destroy: dependency outputs를 읽지 않음 (에러 없음)
+**사용법**:
 
-**참고**: `mock_outputs_merge_with_state`와 `mock_outputs_merge_strategy_with_state`는 작동하지 않음 (deprecated 또는 버그)
+```bash
+# 일반 사용 (자동 매핑 ✅)
+cd 70-loadbalancers/lobby
+terragrunt apply
+
+# run-all destroy (환경변수 설정)
+cd environments/LIVE/jsj-game-m
+SKIP_WORKLOADS_DEPENDENCY=true terragrunt run-all destroy --terragrunt-non-interactive
+```
+
+**효과**:
+- 일반 apply/plan: 자동 instance_groups 매핑 유지
+- run-all destroy: 환경변수 설정으로 dependency 건너뛰기
+- 유연한 제어: 필요할 때만 환경변수 사용
+
+**작동하지 않는 방법들**:
+- `mock_outputs_merge_with_state = true` - deprecated
+- `mock_outputs_merge_strategy_with_state = "shallow"` - 작동 안 함
+- `get_terraform_command()` 조건 분기 - dependency 평가 시점에 이미 에러
 
 ### 19. Service Networking Connection Destroy 실패
 

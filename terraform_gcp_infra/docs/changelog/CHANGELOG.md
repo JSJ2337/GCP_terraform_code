@@ -20,29 +20,35 @@
 
 ### 수정 (Fixed)
 
-- **Terragrunt destroy 시 dependency 에러 해결**: `get_terraform_command()` 함수로 조건부 처리
-  - 문제: destroy 실행 순서상 50-workloads가 먼저 삭제되어 outputs가 없는데, 70-loadbalancers가 `dependency.workloads.outputs.instance_groups`를 읽으려고 해서 에러 발생
-  - 시도 1: `mock_outputs_merge_with_state = true` → 작동하지 않음 (deprecated)
-  - 시도 2: `mock_outputs_merge_strategy_with_state = "shallow"` → 작동하지 않음
-  - 최종 해결: `get_terraform_command()` 함수로 명령어 감지 후 조건부 처리
-  - 동작 방식:
-    - Apply/Plan 시: `dependency.workloads.outputs.instance_groups` 읽어서 자동 매핑
-    - Destroy 시: dependency outputs를 읽지 않고 빈 객체 사용
-  - 영향받는 파일:
-    - `environments/LIVE/jsj-game-m/70-loadbalancers/lobby/terragrunt.hcl`
-    - `environments/LIVE/jsj-game-m/70-loadbalancers/web/terragrunt.hcl`
+- **Terragrunt destroy 시 dependency 에러 해결**: 환경변수 기반 `skip_outputs` 제어
+  - 문제: `terragrunt run-all destroy` 실행 시 50-workloads가 먼저 삭제되어 outputs가 없는데, 70-loadbalancers가 `dependency.workloads.outputs.instance_groups`를 읽으려고 해서 에러 발생
+  - 시도한 방법들:
+    - `mock_outputs_merge_with_state = true` → deprecated로 작동 안 함
+    - `mock_outputs_merge_strategy_with_state = "shallow"` → 작동 안 함
+    - `get_terraform_command()` 조건 분기 → dependency 평가 시점에 이미 에러 발생
+    - dependency 블록 완전 제거 → destroy는 성공하지만 자동 매핑 기능 상실
+  - 최종 해결: `get_env()` 함수로 환경변수 기반 동적 제어
   - 핵심 코드:
     ```hcl
-    locals {
-      is_destroy = get_terraform_command() == "destroy"
+    dependency "workloads" {
+      config_path = "../../50-workloads"
+      skip_outputs = get_env("SKIP_WORKLOADS_DEPENDENCY", "false") == "true"
+      mock_outputs = { instance_groups = {} }
     }
     inputs = merge(
       local.common_inputs,
       local.layer_inputs,
-      local.is_destroy ? {} : { auto_instance_groups = {...} }
+      { auto_instance_groups = {...} }  # 항상 정의, try()로 안전 처리
     )
     ```
-  - 장점: 자동 instance_groups 연결 기능 유지 + destroy 에러 해결
+  - 사용법:
+    - 일반 apply/plan: `terragrunt apply` (자동 매핑 ✅)
+    - run-all destroy: `SKIP_WORKLOADS_DEPENDENCY=true terragrunt run-all destroy`
+  - 영향받는 파일:
+    - `environments/LIVE/jsj-game-m/70-loadbalancers/{lobby,web}/terragrunt.hcl`
+    - `proj-default-templet/70-loadbalancers/example-http/terragrunt.hcl`
+  - 장점: 자동 instance_groups 연결 기능 유지 + destroy 안정성 확보 + 유연한 제어
+  - README 추가: 사용법 및 설정 가이드 문서화
 
 - **Service Networking Connection destroy 에러 해결**: `deletion_policy = "ABANDON"` 추가
   - 문제: Terraform Provider Google 5.x에서 Service Networking Connection 삭제 실패
