@@ -161,3 +161,9 @@ variable "enterprise_redis_configs" {
   description = "Optional Redis configuration map applied to Enterprise clusters"
   default     = {}
 }
+
+variable "deletion_protection" {
+  type        = bool
+  description = "Deletion protection 활성화 여부 (true: 삭제 방지, false: 삭제 허용)"
+  default     = true
+}

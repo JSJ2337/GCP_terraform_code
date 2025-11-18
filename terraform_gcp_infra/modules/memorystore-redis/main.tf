@@ -75,6 +75,8 @@ resource "google_redis_cluster" "enterprise" {
   transit_encryption_mode = var.enterprise_transit_encryption_mode
   node_type               = var.enterprise_node_type
 
+  deletion_protection_enabled = var.deletion_protection
+
   redis_configs = var.enterprise_redis_configs
 
   psc_configs {
