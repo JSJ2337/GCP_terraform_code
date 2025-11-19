@@ -66,6 +66,14 @@ pipeline {
                     echo "✅ Repository checked out"
                     echo "Branch: ${env.BRANCH_NAME ?: env.GIT_BRANCH}"
                     echo "Commit: ${shortCommit}"
+
+                    // detached HEAD 상태를 433_code 브랜치로 전환
+                    sh """
+                        git checkout 433_code || git checkout -b 433_code
+                        git pull origin 433_code || true
+                    """
+
+                    echo "✅ 433_code 브랜치로 전환 완료"
                 }
             }
         }
