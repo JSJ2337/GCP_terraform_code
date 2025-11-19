@@ -179,6 +179,28 @@ pipeline {
             }
         }
 
+        stage('Push to Remote') {
+            steps {
+                script {
+                    echo '📤 Git 브랜치 푸시 중...'
+
+                    // 현재 브랜치 확인
+                    def currentBranch = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim()
+                    echo "현재 브랜치: ${currentBranch}"
+
+                    withCredentials([string(credentialsId: 'github-pat', variable: 'GITHUB_TOKEN')]) {
+                        sh """
+                            # GitHub Personal Access Token을 사용하여 푸시
+                            git remote set-url origin https://\${GITHUB_TOKEN}@github.com/JSJ2337/JSJ_engineering_Diary.git
+                            git push origin ${currentBranch}
+                        """
+                    }
+
+                    echo "✅ 브랜치 푸시 완료: ${currentBranch}"
+                }
+            }
+        }
+
     }
 
     post {
