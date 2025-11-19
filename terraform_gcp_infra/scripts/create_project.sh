@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -eu
 
 # =============================================================================
 # Terraform GCP Infrastructure - 신규 프로젝트 생성 스크립트
