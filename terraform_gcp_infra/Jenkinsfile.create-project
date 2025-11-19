@@ -24,6 +24,15 @@ pipeline {
             defaultValue: 'jsj'
         )
         choice(
+            name: 'ENVIRONMENT',
+            choices: [
+                'LIVE',
+                'QA',
+                'STG'
+            ],
+            description: '배포 환경 선택'
+        )
+        choice(
             name: 'REGION_PRIMARY',
             choices: [
                 'asia-northeast3',  // 서울
@@ -93,6 +102,7 @@ pipeline {
                     echo "  PROJECT_ID     : ${params.PROJECT_ID}"
                     echo "  PROJECT_NAME   : ${params.PROJECT_NAME}"
                     echo "  ORGANIZATION   : ${params.ORGANIZATION}"
+                    echo "  ENVIRONMENT    : ${params.ENVIRONMENT}"
                     echo "  REGION_PRIMARY : ${params.REGION_PRIMARY}"
                     echo "  REGION_BACKUP  : ${params.REGION_BACKUP}"
                     echo "  CREATE_PR      : ${params.CREATE_PR}"
@@ -106,7 +116,7 @@ pipeline {
                 script {
                     echo '🔍 프로젝트 중복 확인 중...'
 
-                    def targetDir = "terraform_gcp_infra/environments/LIVE/${params.PROJECT_ID}"
+                    def targetDir = "terraform_gcp_infra/environments/${params.ENVIRONMENT}/${params.PROJECT_ID}"
 
                     if (fileExists(targetDir)) {
                         error("프로젝트가 이미 존재합니다: ${targetDir}")
@@ -167,6 +177,7 @@ pipeline {
                             "${params.PROJECT_ID}" \\
                             "${params.PROJECT_NAME}" \\
                             "${params.ORGANIZATION}" \\
+                            "${params.ENVIRONMENT}" \\
                             "${params.REGION_PRIMARY}" \\
                             "${params.REGION_BACKUP}"
                     """
@@ -222,6 +233,7 @@ pipeline {
 - **PROJECT_ID**: `${params.PROJECT_ID}`
 - **PROJECT_NAME**: `${params.PROJECT_NAME}`
 - **ORGANIZATION**: `${params.ORGANIZATION}`
+- **ENVIRONMENT**: `${params.ENVIRONMENT}`
 - **REGION_PRIMARY**: `${params.REGION_PRIMARY}`
 - **REGION_BACKUP**: `${params.REGION_BACKUP}`
 

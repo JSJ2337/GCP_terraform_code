@@ -4,9 +4,9 @@ set -eu
 # =============================================================================
 # Terraform GCP Infrastructure - 신규 프로젝트 생성 스크립트
 # =============================================================================
-# 사용법: ./create_project.sh <project_id> <project_name> <organization> <region_primary>
+# 사용법: ./create_project.sh <project_id> <project_name> <organization> <environment> <region_primary>
 #
-# 예시: ./create_project.sh jsj-game-n game-n jsj asia-northeast3
+# 예시: ./create_project.sh jsj-game-n game-n jsj LIVE asia-northeast3
 #
 # 이 스크립트는:
 # 1. proj-default-templet을 복사
@@ -43,23 +43,32 @@ log_error() {
 # 파라미터 검증
 # =============================================================================
 
-if [ $# -lt 4 ]; then
-    log_error "사용법: $0 <project_id> <project_name> <organization> <region_primary>"
-    log_info "예시: $0 jsj-game-n game-n jsj asia-northeast3"
+if [ $# -lt 5 ]; then
+    log_error "사용법: $0 <project_id> <project_name> <organization> <environment> <region_primary>"
+    log_info "예시: $0 jsj-game-n game-n jsj LIVE asia-northeast3"
+    log_info "환경: LIVE, QA, STG"
     exit 1
 fi
 
 PROJECT_ID="$1"
 PROJECT_NAME="$2"
 ORGANIZATION="$3"
-REGION_PRIMARY="$4"
-REGION_BACKUP="${5:-asia-northeast1}"  # 기본값: 도쿄
+ENVIRONMENT="$4"
+REGION_PRIMARY="$5"
+REGION_BACKUP="${6:-asia-northeast1}"  # 기본값: 도쿄
+
+# 환경 검증
+if [[ ! "$ENVIRONMENT" =~ ^(LIVE|QA|STG)$ ]]; then
+    log_error "환경은 LIVE, QA, STG 중 하나여야 합니다: $ENVIRONMENT"
+    exit 1
+fi
 
 log_info "신규 프로젝트 생성 시작"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  PROJECT_ID     : ${PROJECT_ID}"
 echo "  PROJECT_NAME   : ${PROJECT_NAME}"
 echo "  ORGANIZATION   : ${ORGANIZATION}"
+echo "  ENVIRONMENT    : ${ENVIRONMENT}"
 echo "  REGION_PRIMARY : ${REGION_PRIMARY}"
 echo "  REGION_BACKUP  : ${REGION_BACKUP}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -72,9 +81,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 CONFIG_FILE="${REPO_ROOT}/configs/defaults.yaml"
 SOURCE_TEMPLATE="${REPO_ROOT}/proj-default-templet"
-TARGET_DIR="${REPO_ROOT}/environments/LIVE/${PROJECT_ID}"
+TARGET_DIR="${REPO_ROOT}/environments/${ENVIRONMENT}/${PROJECT_ID}"
 
 log_info "작업 디렉토리: ${REPO_ROOT}"
+log_info "생성 위치: environments/${ENVIRONMENT}/${PROJECT_ID}"
 
 # =============================================================================
 # defaults.yaml 로드 (yq 필요)
@@ -174,7 +184,7 @@ log_success "common.naming.tfvars 치환 완료"
 log_info "[3/5] Jenkinsfile 치환 중..."
 JENKINSFILE="${TARGET_DIR}/Jenkinsfile"
 
-sed -i "s|TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/[^']*'|TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/${PROJECT_ID}'|g" "${JENKINSFILE}"
+sed -i "s|TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/[^']*'|TG_WORKING_DIR = 'terraform_gcp_infra/environments/${ENVIRONMENT}/${PROJECT_ID}'|g" "${JENKINSFILE}"
 
 log_success "Jenkinsfile 치환 완료"
 
