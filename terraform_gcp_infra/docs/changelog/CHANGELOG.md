@@ -7,6 +7,31 @@
 
 <!-- markdownlint-disable MD005 MD007 MD013 MD024 -->
 
+## [미배포] - 2025-11-19
+
+### 수정 (Fixed)
+
+- **Jenkins 프로젝트 생성 워크플로우 간소화**
+  - 문제: Jenkins에서 신규 브랜치를 생성하고 PR을 만드는 복잡한 프로세스
+  - 해결: 433_code 브랜치에 직접 커밋하고 GitHub에 푸시하는 방식으로 단순화
+  - 변경 사항:
+    - `Jenkinsfile.create-project`: 브랜치 생성/PR 생성 stage 제거, 433_code 브랜치로 직접 전환
+    - `scripts/create_project.sh`: 브랜치 생성 로직 제거, 현재 브랜치에 커밋만 수행
+    - CREATE_PR 파라미터 제거
+  - detached HEAD 문제 해결: checkout 후 명시적으로 `git checkout 433_code` 실행
+  - 파일: `Jenkinsfile.create-project`, `scripts/create_project.sh`
+
+### 개선 (Improved)
+
+- **문서 업데이트**
+  - `docs/CREATE_NEW_PROJECT.md`: 신규 프로젝트 생성 가이드 전면 개편
+    - PR 생성 관련 내용 제거
+    - 433_code 브랜치 직접 사용 방식으로 업데이트
+    - detached HEAD 트러블슈팅 추가
+  - 로컬 PC에서 `git pull origin 433_code`로 바로 받는 방식으로 간소화
+
+---
+
 ## [미배포] - 2025-11-18
 
 ### 추가 (Added)

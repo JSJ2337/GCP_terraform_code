@@ -24,8 +24,8 @@
    - `Jenkinsfile`: TG_WORKING_DIR 경로
    - `10-network/terraform.tfvars`: 서브넷 이름
    - `50-workloads/terraform.tfvars`: 서브넷 self-link 경로
-3. ✅ Git 브랜치 생성 및 커밋
-4. ✅ Pull Request 자동 생성 (선택)
+3. ✅ 현재 브랜치(433_code)에 커밋
+4. ✅ GitHub에 자동 푸시
 
 ---
 
@@ -59,7 +59,7 @@
 
 1. ✅ **GitHub Personal Access Token** 생성
 2. ✅ **Jenkins Credential** 등록 (ID: `github-pat`)
-3. ⚠️ **gh CLI** 설치 (PR 자동 생성 시 필요, 선택사항)
+3. ✅ Jenkins Job이 **433_code 브랜치**를 checkout하도록 설정
 
 **상세 설정 방법:**
 - 📖 [Jenkins GitHub Credential 설정 가이드](./JENKINS_GITHUB_SETUP.md) 참고
@@ -93,7 +93,6 @@ Jenkins에 `create-terraform-project` Job을 생성합니다:
    ENVIRONMENT: LIVE (드롭다운)
    REGION_PRIMARY: asia-northeast3 (드롭다운)
    REGION_BACKUP: asia-northeast1 (드롭다운)
-   CREATE_PR: ✅ (체크)
    ```
 
 4. **Build** 클릭
@@ -103,16 +102,24 @@ Jenkins에 `create-terraform-project` Job을 생성합니다:
 Jenkins Pipeline이 다음 단계를 순차적으로 수행합니다:
 
 ```
-✅ Checkout
+✅ Checkout (433_code 브랜치로 전환)
 ✅ Validate Parameters
 ✅ Check Duplicate
 ✅ Install Dependencies
-✅ Create Project
-✅ Push to Remote
-✅ Create Pull Request
+✅ Create Project (프로젝트 생성 및 커밋)
+✅ Push to Remote (GitHub에 푸시)
 ```
 
-성공 시 자동으로 Pull Request가 생성됩니다.
+성공 시 `terraform_gcp_infra/environments/{ENVIRONMENT}/{PROJECT_ID}` 폴더가 433_code 브랜치에 생성되고 GitHub에 푸시됩니다.
+
+### 4. 로컬 PC에서 받기
+
+```bash
+git checkout 433_code
+git pull origin 433_code
+```
+
+이제 로컬에서 생성된 프로젝트 폴더를 확인할 수 있습니다.
 
 ---
 
@@ -144,52 +151,39 @@ bash scripts/create_project.sh \
 - `QA`: QA 환경 (environments/QA)
 - `STG`: 스테이징 환경 (environments/STG)
 
-### 2. PR 생성 여부 확인
+### 2. 완료 확인
 
-스크립트 실행 중 다음 메시지가 나타납니다:
+스크립트가 완료되면 다음 메시지가 출력됩니다:
 
 ```
-Pull Request 생성 여부를 확인합니다...
-PR을 생성하시겠습니까? (y/N):
+✓ 프로젝트 생성 완료!
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  프로젝트 위치: /path/to/environments/LIVE/jsj-game-n
+  Git 브랜치: 433_code
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
-- **y**: gh CLI를 사용하여 자동으로 PR 생성
-- **N**: 수동으로 브랜치 푸시 및 PR 생성
-
-### 3. 수동 PR 생성 (선택)
-
-PR을 자동 생성하지 않은 경우:
-
-```bash
-# 브랜치 푸시
-git push -u origin feature/create-project-jsj-game-n
-
-# GitHub에서 수동으로 PR 생성
-# 또는 gh CLI 사용
-gh pr create \
-    --title "[Infra] jsj-game-n 프로젝트 생성" \
-    --body "신규 프로젝트 생성" \
-    --base main
-```
+생성된 프로젝트는 현재 브랜치(433_code)에 커밋되어 있습니다.
 
 ---
 
 ## 생성 후 작업
 
-### 1. Pull Request 리뷰 및 머지
+### 1. 생성된 프로젝트 확인
 
-1. GitHub에서 생성된 PR 확인
-2. 변경 내역 검토:
+433_code 브랜치에서 다음 파일들을 확인하세요:
+
+1. 필수 설정 파일:
    - `root.hcl`
    - `common.naming.tfvars`
    - `Jenkinsfile`
    - `10-network/terraform.tfvars`
    - `50-workloads/terraform.tfvars`
-3. 필요 시 추가 수정 (선택사항):
+
+2. 필요 시 추가 수정 (선택사항):
    - VM 인스턴스 이름 변경
    - Instance Group 이름 변경
    - Database/Cache 설정 조정
-4. PR 승인 및 `main` 브랜치에 머지
 
 ### 2. Jenkins 배포 Job 생성
 
@@ -280,23 +274,19 @@ brew install yq
 
 **또는**: 스크립트는 `yq` 없이도 기본값으로 동작합니다.
 
-### 문제 3: "gh CLI가 설치되어 있지 않습니다"
+### 문제 3: Jenkins에서 detached HEAD 상태
 
-**원인:** GitHub CLI가 설치되지 않아 PR 자동 생성 불가
+**원인:** Jenkins가 특정 커밋을 checkout하여 detached HEAD 상태가 됨
 
-**해결:**
-```bash
-# Ubuntu/Debian
-sudo apt install gh
-
-# macOS
-brew install gh
-
-# 인증
-gh auth login
+**증상:**
+```
+ℹ 현재 브랜치: HEAD
+[detached HEAD 6606944] feat: jsj-game-n 프로젝트 생성
 ```
 
-**또는**: 수동으로 브랜치를 푸시하고 GitHub에서 PR 생성
+**해결:**
+- 이미 Jenkinsfile에서 자동으로 433_code 브랜치로 전환하도록 수정됨
+- Jenkins Job 설정에서 "Branch Specifier"를 `*/433_code`로 설정 확인
 
 ### 문제 4: Git 푸시 실패 (권한 없음)
 
