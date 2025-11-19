@@ -190,7 +190,8 @@ pipeline {
                 script {
                     echo '📤 Git 브랜치 푸시 중...'
 
-                    def branchName = "feature/create-project-${params.PROJECT_ID}"
+                    // 빌드 번호를 추가하여 브랜치 이름 중복 방지
+                    def branchName = "feature/create-project-${params.PROJECT_ID}-build${env.BUILD_NUMBER}"
 
                     withCredentials([string(credentialsId: 'github-pat', variable: 'GITHUB_TOKEN')]) {
                         sh """
