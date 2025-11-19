@@ -40,6 +40,7 @@
 | **PROJECT_ID** | GCP 프로젝트 ID (6-30자, 소문자/숫자/하이픈) | `jsj-game-n` |
 | **PROJECT_NAME** | 프로젝트 이름 (리소스 네이밍용) | `game-n` |
 | **ORGANIZATION** | 조직명 (리소스 접두어) | `jsj` |
+| **ENVIRONMENT** | 배포 환경 (LIVE/QA/STG) | `LIVE` |
 | **REGION_PRIMARY** | 주 리전 | `asia-northeast3` (서울) |
 | **REGION_BACKUP** | 백업 리전 | `asia-northeast1` (도쿄) |
 
@@ -89,8 +90,9 @@ Jenkins에 `create-terraform-project` Job을 생성합니다:
    PROJECT_ID: jsj-game-n
    PROJECT_NAME: game-n
    ORGANIZATION: jsj
-   REGION_PRIMARY: asia-northeast3
-   REGION_BACKUP: asia-northeast1
+   ENVIRONMENT: LIVE (드롭다운)
+   REGION_PRIMARY: asia-northeast3 (드롭다운)
+   REGION_BACKUP: asia-northeast1 (드롭다운)
    CREATE_PR: ✅ (체크)
    ```
 
@@ -127,14 +129,20 @@ bash scripts/create_project.sh \
     jsj-game-n \
     game-n \
     jsj \
+    LIVE \
     asia-northeast3 \
     asia-northeast1
 ```
 
 **사용법:**
 ```bash
-./scripts/create_project.sh <PROJECT_ID> <PROJECT_NAME> <ORGANIZATION> <REGION_PRIMARY> [REGION_BACKUP]
+./scripts/create_project.sh <PROJECT_ID> <PROJECT_NAME> <ORGANIZATION> <ENVIRONMENT> <REGION_PRIMARY> [REGION_BACKUP]
 ```
+
+**환경 옵션:**
+- `LIVE`: 운영 환경 (environments/LIVE)
+- `QA`: QA 환경 (environments/QA)
+- `STG`: 스테이징 환경 (environments/STG)
 
 ### 2. PR 생성 여부 확인
 
