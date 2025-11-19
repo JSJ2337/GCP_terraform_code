@@ -1,0 +1,25 @@
+# =============================================================================
+# Terraform GCP Infrastructure - 기본 설정
+# =============================================================================
+# 신규 프로젝트 생성 시 공통으로 사용되는 고정값 정의
+# 프로젝트별로 변경되는 값(project_id, environment 등)은 Jenkins 파라미터로 입력
+
+# GCP 조직 설정
+gcp:
+  org_id: "REDACTED_ORG_ID"                      # GCP Organization ID
+  billing_account: "REDACTED_BILLING_ACCOUNT"     # GCP Billing Account ID
+
+# Terraform Remote State 설정
+terraform:
+  remote_state:
+    bucket: "jsj-terraform-state-prod"        # Terraform 상태 저장 GCS 버킷
+    project: "jsj-system-mgmt"                # State 버킷이 있는 GCP 프로젝트
+    location: "US"                            # 버킷 위치
+
+# 프로젝트 생성 옵션
+options:
+  source_template: "proj-default-templet"     # 복사할 템플릿 디렉토리
+  target_base_path: "environments/LIVE"       # 생성될 위치
+  create_git_branch: true                     # Git branch 자동 생성
+  create_pull_request: true                   # Pull Request 자동 생성 (gh cli 필요)
+  git_base_branch: "main"                     # PR의 base branch
