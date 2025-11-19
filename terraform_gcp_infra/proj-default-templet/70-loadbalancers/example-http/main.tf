@@ -18,7 +18,7 @@ provider "google" {
 }
 
 module "naming" {
-  source         = "../../../../modules/naming"
+  source         = "../../../modules/naming"
   project_name   = var.project_name
   environment    = var.environment
   organization   = var.organization
@@ -54,7 +54,7 @@ locals {
 }
 
 module "load_balancer" {
-  source = "../../../../modules/load-balancer"
+  source = "../../../modules/load-balancer"
 
   project_id = var.project_id
   lb_type    = var.lb_type
