@@ -190,8 +190,7 @@ pipeline {
                 script {
                     echo '📤 Git 브랜치 푸시 중...'
 
-                    // 빌드 번호를 추가하여 브랜치 이름 중복 방지
-                    def branchName = "feature/create-project-${params.PROJECT_ID}-build${env.BUILD_NUMBER}"
+                    def branchName = "feature/create-project-${params.PROJECT_ID}"
 
                     withCredentials([string(credentialsId: 'github-pat', variable: 'GITHUB_TOKEN')]) {
                         sh """
@@ -282,7 +281,7 @@ pipeline {
                 echo '✅ 프로젝트 생성 완료!'
                 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
                 echo "  프로젝트 ID: ${params.PROJECT_ID}"
-                echo "  위치: terraform_gcp_infra/environments/LIVE/${params.PROJECT_ID}"
+                echo "  위치: terraform_gcp_infra/environments/${params.ENVIRONMENT}/${params.PROJECT_ID}"
                 echo "  브랜치: feature/create-project-${params.PROJECT_ID}"
                 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
                 echo ""
