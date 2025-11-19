@@ -181,7 +181,7 @@ pipeline {
 
                     def branchName = "feature/create-project-${params.PROJECT_ID}"
 
-                    withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+                    withCredentials([string(credentialsId: 'github-pat', variable: 'GITHUB_TOKEN')]) {
                         sh """
                             # GitHub Personal Access Token을 사용하여 푸시
                             git remote set-url origin https://\${GITHUB_TOKEN}@github.com/JSJ2337/JSJ_engineering_Diary.git
@@ -241,7 +241,7 @@ pipeline {
 🤖 자동 생성됨 (Jenkins Build #${env.BUILD_NUMBER})
 """
 
-                    withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+                    withCredentials([string(credentialsId: 'github-pat', variable: 'GITHUB_TOKEN')]) {
                         sh """
                             # gh CLI에 GitHub Token 전달
                             export GH_TOKEN=\${GITHUB_TOKEN}
