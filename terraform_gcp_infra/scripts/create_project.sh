@@ -219,18 +219,13 @@ log_success "50-workloads/terraform.tfvars 치환 완료"
 # Git 작업
 # =============================================================================
 
-log_info "Git 브랜치 생성 및 커밋 중..."
-
-BRANCH_NAME="feature/create-project-${PROJECT_ID}"
+log_info "Git 커밋 중..."
 
 cd "${REPO_ROOT}"
 
-# 현재 브랜치 저장 (PR base로 사용)
-BASE_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-log_info "현재 브랜치: ${BASE_BRANCH}"
-
-# 브랜치 생성
-git checkout -b "${BRANCH_NAME}"
+# 현재 브랜치 확인
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+log_info "현재 브랜치: ${CURRENT_BRANCH}"
 
 # 파일 추가
 git add "environments/${ENVIRONMENT}/${PROJECT_ID}"
@@ -246,61 +241,7 @@ git commit -m "feat: ${PROJECT_ID} 프로젝트 생성
 
 🤖 Generated with create_project.sh"
 
-log_success "Git 커밋 완료 (브랜치: ${BRANCH_NAME})"
-
-# =============================================================================
-# Pull Request 생성 (선택사항)
-# =============================================================================
-
-if command -v gh &> /dev/null; then
-    log_info "Pull Request 생성 여부를 확인합니다..."
-    read -p "PR을 생성하시겠습니까? (y/N): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        log_info "Pull Request 생성 중..."
-        log_info "Base 브랜치: ${BASE_BRANCH}"
-
-        PR_TITLE="[Infra] ${PROJECT_ID} 프로젝트 생성"
-        PR_BODY="## 📋 신규 프로젝트 생성
-
-### 프로젝트 정보
-- **PROJECT_ID**: \`${PROJECT_ID}\`
-- **PROJECT_NAME**: \`${PROJECT_NAME}\`
-- **ORGANIZATION**: \`${ORGANIZATION}\`
-- **ENVIRONMENT**: \`${ENVIRONMENT}\`
-- **REGION_PRIMARY**: \`${REGION_PRIMARY}\`
-- **REGION_BACKUP**: \`${REGION_BACKUP}\`
-
-### 변경 내역
-- [x] proj-default-templet 복사
-- [x] root.hcl 설정 치환
-- [x] common.naming.tfvars 설정 치환
-- [x] Jenkinsfile TG_WORKING_DIR 업데이트
-- [x] 네트워크 서브넷 이름 업데이트
-- [x] Workload subnetwork_self_link 업데이트
-
-### 다음 단계
-1. PR 리뷰 및 머지
-2. Jenkins Job 생성 (terraform-deploy-${PROJECT_ID})
-3. 초기 인프라 배포 (00-project부터 순차적으로)
-
-🤖 자동 생성됨: create_project.sh"
-
-        gh pr create \
-            --title "${PR_TITLE}" \
-            --body "${PR_BODY}" \
-            --base "${BASE_BRANCH}" \
-            --head "${BRANCH_NAME}"
-
-        log_success "Pull Request 생성 완료!"
-    else
-        log_info "PR 생성을 건너뜁니다."
-        log_info "수동으로 생성하려면: git push -u origin ${BRANCH_NAME}"
-    fi
-else
-    log_warn "gh CLI가 설치되어 있지 않습니다. PR을 수동으로 생성하세요."
-    log_info "브랜치 푸시: git push -u origin ${BRANCH_NAME}"
-fi
+log_success "Git 커밋 완료"
 
 # =============================================================================
 # 완료
@@ -310,12 +251,10 @@ echo ""
 log_success "프로젝트 생성 완료!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  프로젝트 위치: ${TARGET_DIR}"
-echo "  Git 브랜치: ${BRANCH_NAME}"
+echo "  Git 브랜치: ${CURRENT_BRANCH}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 log_info "다음 단계:"
-echo "  1. git push -u origin ${BRANCH_NAME}  # (PR 생성하지 않은 경우)"
-echo "  2. PR 리뷰 및 머지"
-echo "  3. Jenkins에서 terraform-deploy-${PROJECT_ID} Job 생성"
-echo "  4. 초기 배포: 00-project → 10-network → ... 순서로 apply"
+echo "  1. Jenkins에서 terraform-deploy-${PROJECT_ID} Job 생성"
+echo "  2. 초기 배포: 00-project → 10-network → ... 순서로 apply"
 echo ""

@@ -54,11 +54,6 @@ pipeline {
             ],
             description: '백업 리전 선택'
         )
-        booleanParam(
-            name: 'CREATE_PR',
-            description: 'Pull Request 자동 생성 여부 (gh CLI 필요)',
-            defaultValue: true
-        )
     }
 
     stages {
@@ -105,7 +100,6 @@ pipeline {
                     echo "  ENVIRONMENT    : ${params.ENVIRONMENT}"
                     echo "  REGION_PRIMARY : ${params.REGION_PRIMARY}"
                     echo "  REGION_BACKUP  : ${params.REGION_BACKUP}"
-                    echo "  CREATE_PR      : ${params.CREATE_PR}"
                     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
                 }
             }
@@ -185,94 +179,6 @@ pipeline {
             }
         }
 
-        stage('Push to Remote') {
-            steps {
-                script {
-                    echo '📤 Git 브랜치 푸시 중...'
-
-                    def branchName = "feature/create-project-${params.PROJECT_ID}"
-
-                    withCredentials([string(credentialsId: 'github-pat', variable: 'GITHUB_TOKEN')]) {
-                        sh """
-                            # GitHub Personal Access Token을 사용하여 푸시
-                            git remote set-url origin https://\${GITHUB_TOKEN}@github.com/JSJ2337/JSJ_engineering_Diary.git
-                            git push -u origin ${branchName}
-                        """
-                    }
-
-                    echo "✅ 브랜치 푸시 완료: ${branchName}"
-                }
-            }
-        }
-
-        stage('Create Pull Request') {
-            when {
-                expression { params.CREATE_PR == true }
-            }
-            steps {
-                script {
-                    echo '📝 Pull Request 생성 중...'
-
-                    // gh CLI 설치 확인
-                    def ghInstalled = sh(
-                        script: 'command -v gh',
-                        returnStatus: true
-                    ) == 0
-
-                    if (!ghInstalled) {
-                        echo "⚠️  gh CLI가 설치되어 있지 않습니다. PR을 수동으로 생성하세요."
-                        return
-                    }
-
-                    def branchName = "feature/create-project-${params.PROJECT_ID}"
-
-                    def prTitle = "[Infra] ${params.PROJECT_ID} 프로젝트 생성"
-                    def prBody = """## 📋 신규 프로젝트 생성
-
-### 프로젝트 정보
-- **PROJECT_ID**: `${params.PROJECT_ID}`
-- **PROJECT_NAME**: `${params.PROJECT_NAME}`
-- **ORGANIZATION**: `${params.ORGANIZATION}`
-- **ENVIRONMENT**: `${params.ENVIRONMENT}`
-- **REGION_PRIMARY**: `${params.REGION_PRIMARY}`
-- **REGION_BACKUP**: `${params.REGION_BACKUP}`
-
-### 변경 내역
-- [x] proj-default-templet 복사
-- [x] root.hcl 설정 치환
-- [x] common.naming.tfvars 설정 치환
-- [x] Jenkinsfile TG_WORKING_DIR 업데이트
-- [x] 네트워크 서브넷 이름 업데이트
-- [x] Workload subnetwork_self_link 업데이트
-
-### 다음 단계
-1. PR 리뷰 및 머지
-2. Jenkins Job 생성 (terraform-deploy-${params.PROJECT_ID})
-3. 초기 인프라 배포 (00-project부터 순차적으로)
-
-🤖 자동 생성됨 (Jenkins Build #${env.BUILD_NUMBER})
-"""
-
-                    // 현재 브랜치를 base로 사용 (Jenkins가 checkout한 브랜치)
-                    def baseBranch = env.GIT_BRANCH?.replaceAll('origin/', '') ?: '433_code'
-
-                    withCredentials([string(credentialsId: 'github-pat', variable: 'GITHUB_TOKEN')]) {
-                        sh """
-                            # gh CLI에 GitHub Token 전달
-                            export GH_TOKEN=\${GITHUB_TOKEN}
-
-                            gh pr create \\
-                                --title "${prTitle}" \\
-                                --body "${prBody}" \\
-                                --base ${baseBranch} \\
-                                --head "${branchName}"
-                        """
-                    }
-
-                    echo "✅ Pull Request 생성 완료!"
-                }
-            }
-        }
     }
 
     post {
@@ -282,14 +188,11 @@ pipeline {
                 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
                 echo "  프로젝트 ID: ${params.PROJECT_ID}"
                 echo "  위치: terraform_gcp_infra/environments/${params.ENVIRONMENT}/${params.PROJECT_ID}"
-                echo "  브랜치: feature/create-project-${params.PROJECT_ID}"
                 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
                 echo ""
                 echo "다음 단계:"
-                echo "  1. Pull Request 리뷰 및 승인"
-                echo "  2. main 브랜치에 머지"
-                echo "  3. Jenkins에서 terraform-deploy-${params.PROJECT_ID} Job 생성"
-                echo "  4. 초기 배포 실행 (00-project부터 순차적으로)"
+                echo "  1. Jenkins에서 terraform-deploy-${params.PROJECT_ID} Job 생성"
+                echo "  2. 초기 배포 실행 (00-project부터 순차적으로)"
             }
         }
         failure {
