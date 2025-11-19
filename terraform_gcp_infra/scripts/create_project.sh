@@ -239,21 +239,6 @@ sed -i "s|projects/[^/]*/regions/[^/]*/subnetworks/[^\"]*-subnet-db|projects/${P
 
 log_success "50-workloads/terraform.tfvars 치환 완료"
 
-# -----------------------------------------------------------------------------
-# 6. 70-loadbalancers/*/main.tf - modules 경로 수정
-# -----------------------------------------------------------------------------
-log_info "[6/6] 70-loadbalancers/*/main.tf modules 경로 수정 중..."
-
-# proj-default-templet: ../../../modules (3단계)
-# environments/LIVE/project: ../../../../../modules (6단계)
-# 차이: ../ 3개 추가
-
-find "${TARGET_DIR}/70-loadbalancers" -name "main.tf" -type f 2>/dev/null | while read -r mainfile; do
-  sed -i 's|source\s*=\s*"../../../modules/|source = "../../../../../modules/|g' "${mainfile}"
-done
-
-log_success "70-loadbalancers/*/main.tf modules 경로 수정 완료"
-
 # =============================================================================
 # Git 작업
 # =============================================================================
