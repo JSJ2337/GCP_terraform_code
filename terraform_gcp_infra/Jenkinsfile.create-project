@@ -253,6 +253,9 @@ pipeline {
 🤖 자동 생성됨 (Jenkins Build #${env.BUILD_NUMBER})
 """
 
+                    // 현재 브랜치를 base로 사용 (Jenkins가 checkout한 브랜치)
+                    def baseBranch = env.GIT_BRANCH?.replaceAll('origin/', '') ?: '433_code'
+
                     withCredentials([string(credentialsId: 'github-pat', variable: 'GITHUB_TOKEN')]) {
                         sh """
                             # gh CLI에 GitHub Token 전달
@@ -261,7 +264,7 @@ pipeline {
                             gh pr create \\
                                 --title "${prTitle}" \\
                                 --body "${prBody}" \\
-                                --base main \\
+                                --base ${baseBranch} \\
                                 --head "${branchName}"
                         """
                     }

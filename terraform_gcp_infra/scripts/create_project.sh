@@ -225,11 +225,15 @@ BRANCH_NAME="feature/create-project-${PROJECT_ID}"
 
 cd "${REPO_ROOT}"
 
+# 현재 브랜치 저장 (PR base로 사용)
+BASE_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+log_info "현재 브랜치: ${BASE_BRANCH}"
+
 # 브랜치 생성
 git checkout -b "${BRANCH_NAME}"
 
 # 파일 추가
-git add "environments/LIVE/${PROJECT_ID}"
+git add "environments/${ENVIRONMENT}/${PROJECT_ID}"
 
 # 커밋
 git commit -m "feat: ${PROJECT_ID} 프로젝트 생성
@@ -254,6 +258,7 @@ if command -v gh &> /dev/null; then
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         log_info "Pull Request 생성 중..."
+        log_info "Base 브랜치: ${BASE_BRANCH}"
 
         PR_TITLE="[Infra] ${PROJECT_ID} 프로젝트 생성"
         PR_BODY="## 📋 신규 프로젝트 생성
@@ -262,6 +267,7 @@ if command -v gh &> /dev/null; then
 - **PROJECT_ID**: \`${PROJECT_ID}\`
 - **PROJECT_NAME**: \`${PROJECT_NAME}\`
 - **ORGANIZATION**: \`${ORGANIZATION}\`
+- **ENVIRONMENT**: \`${ENVIRONMENT}\`
 - **REGION_PRIMARY**: \`${REGION_PRIMARY}\`
 - **REGION_BACKUP**: \`${REGION_BACKUP}\`
 
@@ -283,7 +289,7 @@ if command -v gh &> /dev/null; then
         gh pr create \
             --title "${PR_TITLE}" \
             --body "${PR_BODY}" \
-            --base main \
+            --base "${BASE_BRANCH}" \
             --head "${BRANCH_NAME}"
 
         log_success "Pull Request 생성 완료!"
