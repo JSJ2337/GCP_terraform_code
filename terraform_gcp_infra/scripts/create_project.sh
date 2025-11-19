@@ -11,11 +11,35 @@ set -eu
 # 이 스크립트는:
 # 1. proj-default-templet을 복사
 # 2. 필수 설정 파일들의 값을 치환
-# 3. Git branch 생성 및 commit
-# 4. (선택) Pull Request 생성
+# 3. 현재 브랜치에 commit
+# 4. GitHub에 push
 # =============================================================================
 
+# =============================================================================
+# 설정값 (Configuration)
+# =============================================================================
+# 이 섹션의 값들을 수정하여 환경에 맞게 조정할 수 있습니다.
+
+# 기본 리전 설정
+DEFAULT_REGION_BACKUP="asia-northeast1"  # 도쿄
+
+# Terraform Remote State 설정 (yq 없을 때 사용될 기본값)
+DEFAULT_REMOTE_STATE_BUCKET="jsj-terraform-state-prod"
+DEFAULT_REMOTE_STATE_PROJECT="jsj-system-mgmt"
+DEFAULT_REMOTE_STATE_LOCATION="US"
+
+# GCP 조직 및 빌링 설정 (yq 없을 때 사용될 기본값)
+DEFAULT_ORG_ID="REDACTED_ORG_ID"
+DEFAULT_BILLING_ACCOUNT="REDACTED_BILLING_ACCOUNT"
+
+# 디렉토리 및 파일명 설정
+CONFIG_FILE_NAME="configs/defaults.yaml"
+TEMPLATE_DIR_NAME="proj-default-templet"
+ENVIRONMENTS_DIR_NAME="environments"
+
+# =============================================================================
 # 색상 정의
+# =============================================================================
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -55,7 +79,7 @@ PROJECT_NAME="$2"
 ORGANIZATION="$3"
 ENVIRONMENT="$4"
 REGION_PRIMARY="$5"
-REGION_BACKUP="${6:-asia-northeast1}"  # 기본값: 도쿄
+REGION_BACKUP="${6:-${DEFAULT_REGION_BACKUP}}"  # 기본값: 설정 섹션 참조
 
 # 환경 검증
 if [[ ! "$ENVIRONMENT" =~ ^(LIVE|QA|STG)$ ]]; then
@@ -79,12 +103,12 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-CONFIG_FILE="${REPO_ROOT}/configs/defaults.yaml"
-SOURCE_TEMPLATE="${REPO_ROOT}/proj-default-templet"
-TARGET_DIR="${REPO_ROOT}/environments/${ENVIRONMENT}/${PROJECT_ID}"
+CONFIG_FILE="${REPO_ROOT}/${CONFIG_FILE_NAME}"
+SOURCE_TEMPLATE="${REPO_ROOT}/${TEMPLATE_DIR_NAME}"
+TARGET_DIR="${REPO_ROOT}/${ENVIRONMENTS_DIR_NAME}/${ENVIRONMENT}/${PROJECT_ID}"
 
 log_info "작업 디렉토리: ${REPO_ROOT}"
-log_info "생성 위치: environments/${ENVIRONMENT}/${PROJECT_ID}"
+log_info "생성 위치: ${ENVIRONMENTS_DIR_NAME}/${ENVIRONMENT}/${PROJECT_ID}"
 
 # =============================================================================
 # defaults.yaml 로드 (yq 필요)
@@ -92,11 +116,11 @@ log_info "생성 위치: environments/${ENVIRONMENT}/${PROJECT_ID}"
 
 if ! command -v yq &> /dev/null; then
     log_warn "yq가 설치되어 있지 않습니다. 기본값을 사용합니다."
-    REMOTE_STATE_BUCKET="jsj-terraform-state-prod"
-    REMOTE_STATE_PROJECT="jsj-system-mgmt"
-    REMOTE_STATE_LOCATION="US"
-    ORG_ID="REDACTED_ORG_ID"
-    BILLING_ACCOUNT="REDACTED_BILLING_ACCOUNT"
+    REMOTE_STATE_BUCKET="${DEFAULT_REMOTE_STATE_BUCKET}"
+    REMOTE_STATE_PROJECT="${DEFAULT_REMOTE_STATE_PROJECT}"
+    REMOTE_STATE_LOCATION="${DEFAULT_REMOTE_STATE_LOCATION}"
+    ORG_ID="${DEFAULT_ORG_ID}"
+    BILLING_ACCOUNT="${DEFAULT_BILLING_ACCOUNT}"
 else
     log_info "defaults.yaml에서 설정값 로드 중..."
     REMOTE_STATE_BUCKET=$(yq eval '.terraform.remote_state.bucket' "${CONFIG_FILE}")
@@ -228,7 +252,7 @@ CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 log_info "현재 브랜치: ${CURRENT_BRANCH}"
 
 # 파일 추가
-git add "environments/${ENVIRONMENT}/${PROJECT_ID}"
+git add "${ENVIRONMENTS_DIR_NAME}/${ENVIRONMENT}/${PROJECT_ID}"
 
 # 커밋
 git commit -m "feat: ${PROJECT_ID} 프로젝트 생성
