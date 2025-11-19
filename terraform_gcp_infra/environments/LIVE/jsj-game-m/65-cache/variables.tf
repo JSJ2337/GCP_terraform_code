@@ -133,3 +133,33 @@ variable "labels" {
   description = "추가 라벨 (naming 모듈 공통 라벨과 병합됨)"
   default     = {}
 }
+
+variable "deletion_protection" {
+  type        = bool
+  description = "삭제 방지 활성화 (true: 삭제 방지, false: 삭제 허용)"
+  default     = true
+}
+
+variable "enterprise_node_type" {
+  type        = string
+  description = "Enterprise 티어용 노드 타입 (예: REDIS_STANDARD_SMALL, REDIS_HIGHMEM_MEDIUM)"
+  default     = "REDIS_STANDARD_SMALL"
+}
+
+variable "enterprise_authorization_mode" {
+  type        = string
+  description = "Enterprise 티어 인증 모드 (AUTH_MODE_IAM_AUTH, AUTH_MODE_DISABLED)"
+  default     = "AUTH_MODE_DISABLED"
+}
+
+variable "enterprise_transit_encryption_mode" {
+  type        = string
+  description = "Enterprise 티어 전송 암호화 모드"
+  default     = "TRANSIT_ENCRYPTION_MODE_SERVER_AUTHENTICATION"
+}
+
+variable "enterprise_redis_configs" {
+  type        = map(string)
+  description = "Enterprise 클러스터용 추가 Redis 설정"
+  default     = {}
+}
