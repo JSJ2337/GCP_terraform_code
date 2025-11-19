@@ -1,0 +1,48 @@
+# Terragrunt entrypoint: environments/LIVE/proj-default-templet/65-cache/terragrunt.hcl
+# Memorystore Redis 배포 예시
+# 1) terraform.tfvars로 복사 후 값 수정
+# 2) alternative_location_id 또는 alternative_location_suffix로 대체 존을 지정하세요.
+
+project_id = "your-project-id"
+
+# 리전/환경 설정 (Terragrunt가 region_primary를 기본으로 주입합니다)
+project_name   = "default-templet"
+environment    = "prod"
+organization   = "myorg"
+region_primary = "us-central1"
+region_backup  = "us-east1"
+# region을 직접 지정하려면 아래 라인을 주석 해제하세요.
+# region         = "us-central1-a"
+
+# Memorystore 설정
+instance_name = "" # 비워두면 naming 모듈 기준으로 자동 생성
+# alternative_location_id를 직접 지정하거나, 아래 suffix를 사용하세요.
+alternative_location_id     = ""
+alternative_location_suffix = "b"            # 결과: us-central1-b
+memory_size_gb          = 2
+redis_version           = "REDIS_6_X"
+tier                    = "ENTERPRISE"
+replica_count           = 1                 # Enterprise tier용 읽기 복제본 수 (STANDARD_HA는 null)
+shard_count             = null              # Enterprise Sharded tier에서만 사용
+
+# 네트워크 (비워두면 템플릿 VPC 자동 사용)
+authorized_network = ""
+
+# 연결 모드/암호화 (Enterprise 티어 사용 시 조정)
+connect_mode            = "PRIVATE_SERVICE_CONNECT"
+transit_encryption_mode = "DISABLED"
+
+# 콘솔 표시 이름
+display_name = "myproj prod redis"
+
+# 유지보수 창 (옵션)
+maintenance_window_day          = "SUNDAY"
+maintenance_window_start_hour   = 2
+maintenance_window_start_minute = 0
+
+# 추가 라벨
+labels = {
+  environment = "prod"
+  service     = "game"
+  tier        = "cache"
+}
