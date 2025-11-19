@@ -21,7 +21,53 @@
   - detached HEAD 문제 해결: checkout 후 명시적으로 `git checkout 433_code` 실행
   - 파일: `Jenkinsfile.create-project`, `scripts/create_project.sh`
 
+- **70-loadbalancers 모듈 경로 오류 수정**
+  - 문제: proj-default-templet과 environments 간 디렉토리 깊이 차이로 모듈 참조 실패
+  - 원인: 템플릿 위치 `proj-default-templet/70-loadbalancers/example-http`는 3단계 상위로 modules 접근, 배포 위치 `environments/LIVE/project/70-loadbalancers/example-http`는 6단계 상위 필요
+  - 1차 시도: create_project.sh에서 sed로 3단계→6단계 변환 추가
+  - 최종 해결: 템플릿을 처음부터 6단계 경로로 설정, sed 변환 로직 제거
+  - 변경 내용:
+    - `proj-default-templet/70-loadbalancers/example-http/main.tf`: `../../../../modules` → `../../../../../modules`
+    - `scripts/create_project.sh`: 불필요한 step 6/6 제거 (15줄 코드 삭제)
+  - 결과: 템플릿을 그대로 복사하면 올바른 경로가 되도록 단순화
+  - 커밋: 0c83758
+
+- **create_project.sh Jenkinsfile 치환 로직 개선**
+  - 문제: Jenkinsfile TG_WORKING_DIR에 'LIVE'가 하드코딩되어 QA/STG 환경 생성 불가
+  - 해결: 환경변수 기반 동적 치환으로 LIVE/QA/STG 모두 대응
+  - 변경 내용:
+    - `terraform_gcp_infra` 경로를 Configuration 섹션으로 이동
+    - sed 패턴: `environments/LIVE/[^']*'` → `environments/[^/]*/[^']*'`
+  - 파일: `scripts/create_project.sh`
+  - 커밋: 089c10b
+
+- **65-cache variables.tf 누락 변수 추가**
+  - 문제: terraform.tfvars에 `deletion_protection = false` 있지만 variables.tf에 선언 없어서 "undeclared variable" 경고 발생
+  - 원인: 65-cache는 in-place 실행 방식이라 레이어 자체의 variables.tf에도 변수 선언 필요 (모듈에만 있으면 부족)
+  - 해결: 레이어 variables.tf에 필요한 변수들 추가
+    - `deletion_protection` (bool, default: true)
+    - `enterprise_node_type` (string)
+    - `enterprise_authorization_mode` (string)
+    - `enterprise_transit_encryption_mode` (string)
+    - `enterprise_redis_configs` (map)
+  - 영향: proj-default-templet, jsj-game-m, jsj-game-n
+  - 결과: Terraform Warning 완전 해결
+  - 커밋: de00df3
+
 ### 개선 (Improved)
+
+- **스크립트 유지보수성 향상**
+  - `scripts/create_project.sh`: 하드코딩된 값을 Configuration 섹션으로 이동
+    - `DEFAULT_REGION_BACKUP`, `DEFAULT_REMOTE_STATE_*`, `DEFAULT_ORG_ID`, `DEFAULT_BILLING_ACCOUNT`
+    - `CONFIG_FILE_NAME`, `TEMPLATE_DIR_NAME`, `ENVIRONMENTS_DIR_NAME`, `TF_GCP_INFRA_DIR_NAME`
+  - `scripts/gcp_project_guard.sh`: Configuration 섹션 추가 + 전체 한글 주석
+  - `scripts/setup_slack_webhook.sh`: Configuration 섹션 추가 + 한글 메시지
+
+- **Terragrunt mock_outputs 개선**
+  - 70-loadbalancers의 mock_outputs_allowed_terraform_commands에 "init" 추가
+  - 기존: `["validate", "plan"]` → 수정: `["init", "validate", "plan"]`
+  - terragrunt init 시 "detected no outputs" 에러 방지
+  - 영향: proj-default-templet, jsj-game-m (lobby, web), jsj-game-n (example-http)
 
 - **문서 업데이트**
   - `docs/CREATE_NEW_PROJECT.md`: 신규 프로젝트 생성 가이드 전면 개편
