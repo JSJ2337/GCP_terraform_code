@@ -52,6 +52,19 @@
 - Remote State Bucket: `jsj-terraform-state-prod`
 - Remote State Project: `jsj-system-mgmt`
 
+### Jenkins 사용 시 추가 요구사항
+
+**방법 1 (Jenkins)을 사용하려면 다음이 필요합니다:**
+
+1. ✅ **GitHub Personal Access Token** 생성
+2. ✅ **Jenkins Credential** 등록 (ID: `github-token`)
+3. ⚠️ **gh CLI** 설치 (PR 자동 생성 시 필요, 선택사항)
+
+**상세 설정 방법:**
+- 📖 [Jenkins GitHub Credential 설정 가이드](./JENKINS_GITHUB_SETUP.md) 참고
+
+> **참고**: 로컬 스크립트 사용 시 (방법 2)는 Credential 설정 불필요
+
 ---
 
 ## 방법 1: Jenkins를 통한 생성 (권장)

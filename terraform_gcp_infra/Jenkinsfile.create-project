@@ -181,9 +181,13 @@ pipeline {
 
                     def branchName = "feature/create-project-${params.PROJECT_ID}"
 
-                    sh """
-                        git push -u origin ${branchName}
-                    """
+                    withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+                        sh """
+                            # GitHub Personal Access Token을 사용하여 푸시
+                            git remote set-url origin https://\${GITHUB_TOKEN}@github.com/JSJ2337/JSJ_engineering_Diary.git
+                            git push -u origin ${branchName}
+                        """
+                    }
 
                     echo "✅ 브랜치 푸시 완료: ${branchName}"
                 }
@@ -237,13 +241,18 @@ pipeline {
 🤖 자동 생성됨 (Jenkins Build #${env.BUILD_NUMBER})
 """
 
-                    sh """
-                        gh pr create \\
-                            --title "${prTitle}" \\
-                            --body "${prBody}" \\
-                            --base main \\
-                            --head "${branchName}"
-                    """
+                    withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+                        sh """
+                            # gh CLI에 GitHub Token 전달
+                            export GH_TOKEN=\${GITHUB_TOKEN}
+
+                            gh pr create \\
+                                --title "${prTitle}" \\
+                                --body "${prBody}" \\
+                                --base main \\
+                                --head "${branchName}"
+                        """
+                    }
 
                     echo "✅ Pull Request 생성 완료!"
                 }
