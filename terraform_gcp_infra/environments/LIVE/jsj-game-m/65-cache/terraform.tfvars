@@ -12,9 +12,6 @@ tier                        = "ENTERPRISE"
 replica_count               = 1
 shard_count                 = 1
 
-# Deletion protection (false로 설정 시 삭제 가능)
-deletion_protection = false
-
 # Networking (비워두면 naming 모듈 VPC 사용)
 authorized_network = ""
 
