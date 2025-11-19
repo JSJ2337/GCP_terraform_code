@@ -81,13 +81,13 @@ ghp_1234567890abcdefghijklmnopqrstuvwxyzABCD
 | **Kind** | `Secret text` | 드롭다운에서 선택 |
 | **Scope** | `Global (Jenkins, nodes, items, all child items, etc)` | 기본값 유지 |
 | **Secret** | `ghp_xxxx...` | 1단계에서 복사한 GitHub Token 붙여넣기 |
-| **ID** | `github-token` | ⚠️  **반드시 이 값 사용!** (Jenkinsfile에서 참조) |
+| **ID** | `github-pat` | ⚠️  **반드시 이 값 사용!** (Jenkinsfile에서 참조) |
 | **Description** | `GitHub Personal Access Token for project creation` | 설명 (선택사항) |
 
 ### 2.3 저장
 
 1. **OK** 또는 **Create** 버튼 클릭
-2. Credential 목록에서 `github-token` 확인
+2. Credential 목록에서 `github-pat` 확인
 
 ---
 
@@ -149,7 +149,7 @@ fatal: unable to access 'https://github.com/...': The requested URL returned err
 **해결:**
 1. GitHub에서 토큰 권한 확인 (`repo` 권한 필요)
 2. 토큰 만료 확인 (Settings → Developer settings → Personal access tokens)
-3. Jenkins Credential ID가 정확히 `github-token`인지 확인
+3. Jenkins Credential ID가 정확히 `github-pat`인지 확인
 
 ---
 
@@ -165,8 +165,8 @@ fatal: could not read Username for 'https://github.com': No such device or addre
 - `withCredentials` 블록 문제
 
 **해결:**
-1. Jenkinsfile의 `credentialsId: 'github-token'` 확인
-2. Jenkins Credential에 `github-token` ID로 등록되었는지 확인
+1. Jenkinsfile의 `credentialsId: 'github-pat'` 확인
+2. Jenkins Credential에 `github-pat` ID로 등록되었는지 확인
 3. Jenkins Job 재실행
 
 ---
