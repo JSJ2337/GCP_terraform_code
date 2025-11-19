@@ -37,6 +37,9 @@ CONFIG_FILE_NAME="configs/defaults.yaml"
 TEMPLATE_DIR_NAME="proj-default-templet"
 ENVIRONMENTS_DIR_NAME="environments"
 
+# Terraform GCP Infra 디렉토리 설정 (Jenkinsfile에서 사용)
+TF_GCP_INFRA_DIR_NAME="terraform_gcp_infra"
+
 # =============================================================================
 # 색상 정의
 # =============================================================================
@@ -208,7 +211,8 @@ log_success "common.naming.tfvars 치환 완료"
 log_info "[3/5] Jenkinsfile 치환 중..."
 JENKINSFILE="${TARGET_DIR}/Jenkinsfile"
 
-sed -i "s|TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/[^']*'|TG_WORKING_DIR = 'terraform_gcp_infra/environments/${ENVIRONMENT}/${PROJECT_ID}'|g" "${JENKINSFILE}"
+# TG_WORKING_DIR 패턴 치환 (LIVE, QA, STG 모두 대응)
+sed -i "s|TG_WORKING_DIR = '${TF_GCP_INFRA_DIR_NAME}/${ENVIRONMENTS_DIR_NAME}/[^/]*/[^']*'|TG_WORKING_DIR = '${TF_GCP_INFRA_DIR_NAME}/${ENVIRONMENTS_DIR_NAME}/${ENVIRONMENT}/${PROJECT_ID}'|g" "${JENKINSFILE}"
 
 log_success "Jenkinsfile 치환 완료"
 
