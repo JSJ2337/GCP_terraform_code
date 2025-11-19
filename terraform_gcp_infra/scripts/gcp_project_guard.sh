@@ -1,9 +1,39 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# GCP project guard for Terragrunt CI pipelines.
-# Ensures projects are created/linked/moved before plan/apply,
-# and removes blocking org/billing/lien settings before destroy.
+# =============================================================================
+# GCP 프로젝트 가드 스크립트 (Terragrunt CI 파이프라인용)
+# =============================================================================
+# Terragrunt plan/apply 전에 프로젝트가 생성/연결/이동되었는지 확인하고,
+# destroy 전에 차단 설정(org/billing/lien)을 제거합니다.
+#
+# 주요 기능:
+# - ensure: 프로젝트 생성, 빌링 활성화, 폴더 배치, API 활성화, IAM 바인딩
+# - cleanup: Lien 제거, 프로젝트 삭제 준비
+# =============================================================================
+
+# =============================================================================
+# 설정값 (Configuration)
+# =============================================================================
+# 이 섹션의 값들을 수정하여 환경에 맞게 조정할 수 있습니다.
+
+# Bootstrap 디렉토리 설정
+BOOTSTRAP_DIR_NAME="bootstrap"
+
+# 폴더 구조 기본값 (bootstrap에서 찾지 못했을 때 사용)
+DEFAULT_FOLDER_PRODUCT="games"      # 제품/서비스 구분
+DEFAULT_FOLDER_REGION="kr-region"   # 리전 구분
+DEFAULT_FOLDER_ENV="LIVE"           # 환경 구분 (LIVE/QA/STG)
+
+# IAM 역할 설정
+ROLE_ORG_PROJECT_CREATOR="roles/resourcemanager.projectCreator"  # 프로젝트 생성 권한
+ROLE_ORG_EDITOR="roles/editor"                                   # 조직 편집 권한
+ROLE_BILLING_USER="roles/billing.user"                           # 빌링 사용자 권한
+ROLE_PROJECT_EDITOR="roles/editor"                               # 프로젝트 편집 권한
+
+# =============================================================================
+# 경로 설정
+# =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
@@ -32,6 +62,11 @@ if [[ -z "${cmd}" || -z "${env_dir_arg}" ]]; then
   exit 1
 fi
 
+# =============================================================================
+# 유틸리티 함수
+# =============================================================================
+
+# 필수 커맨드 확인
 require_cmd() {
   local bin="${1}"
   if ! command -v "${bin}" >/dev/null 2>&1; then
@@ -40,12 +75,14 @@ require_cmd() {
   fi
 }
 
+# 로그 출력
 log() {
   local level="${1}"
   shift
   printf '[%s] %s\n' "${level}" "$*"
 }
 
+# tfvars/hcl 파일에서 key=value 읽기
 read_kv() {
   local file="$1"
   local key="$2"
@@ -62,6 +99,7 @@ if match:
 PY
 }
 
+# tfvars 파일에서 리스트 값 읽기 (예: apis = ["api1", "api2"])
 read_list() {
   local file="$1"
   local key="$2"
@@ -81,11 +119,12 @@ for item in items:
 PY
 }
 
+# Bootstrap terraform state에서 폴더 ID 조회
 lookup_folder_from_bootstrap() {
   local product="$1"
   local region="$2"
   local env="$3"
-  local bootstrap_dir="${REPO_ROOT}/bootstrap"
+  local bootstrap_dir="${REPO_ROOT}/${BOOTSTRAP_DIR_NAME}"
   [[ -d "${bootstrap_dir}" ]] || return 1
   local state_file="${bootstrap_dir}/terraform.tfstate"
   [[ -f "${state_file}" ]] || return 1
@@ -113,6 +152,7 @@ PY
   return 1
 }
 
+# gcloud 인증 확인 (서비스 계정 또는 기본 계정)
 ensure_gcloud_auth() {
   if [[ -n "${GCLOUD_AUTHENTICATED:-}" ]]; then
     return
@@ -145,6 +185,11 @@ require_cmd "gcloud"
 
 export CLOUDSDK_CORE_DISABLE_PROMPTS=1
 
+# =============================================================================
+# 메타데이터 로드
+# =============================================================================
+
+# tfvars/hcl 파일에서 프로젝트 메타데이터 로드
 ensure_metadata_loaded() {
   PROJECT_ID="${PROJECT_ID:-$(read_kv "${COMMON_FILE}" "project_id" || true)}"
   PROJECT_NAME="${PROJECT_NAME:-$(read_kv "${COMMON_FILE}" "project_name" || true)}"
@@ -163,9 +208,9 @@ ensure_metadata_loaded() {
   # Fallback to bootstrap folder structure when folder_id is empty.
   if [[ -z "${FOLDER_ID}" ]]; then
     local prod region env
-    prod="$(read_kv "${ROOT_FILE}" "folder_product" || read_kv "${PROJECT_TFVARS}" "folder_product" || echo "games")"
-    region="$(read_kv "${ROOT_FILE}" "folder_region" || read_kv "${PROJECT_TFVARS}" "folder_region" || echo "kr-region")"
-    env="$(read_kv "${ROOT_FILE}" "folder_env" || read_kv "${PROJECT_TFVARS}" "folder_env" || echo "LIVE")"
+    prod="$(read_kv "${ROOT_FILE}" "folder_product" || read_kv "${PROJECT_TFVARS}" "folder_product" || echo "${DEFAULT_FOLDER_PRODUCT}")"
+    region="$(read_kv "${ROOT_FILE}" "folder_region" || read_kv "${PROJECT_TFVARS}" "folder_region" || echo "${DEFAULT_FOLDER_REGION}")"
+    env="$(read_kv "${ROOT_FILE}" "folder_env" || read_kv "${PROJECT_TFVARS}" "folder_env" || echo "${DEFAULT_FOLDER_ENV}")"
 
     local folder_lookup
     if folder_lookup="$(lookup_folder_from_bootstrap "${prod}" "${region}" "${env}")"; then
@@ -189,6 +234,11 @@ ensure_metadata_loaded() {
   fi
 }
 
+# =============================================================================
+# GCP 프로젝트 관리 함수
+# =============================================================================
+
+# 프로젝트 부모(폴더 또는 조직) 인자 생성
 get_parent_arg() {
   if [[ -n "${FOLDER_ID:-}" ]]; then
     printf -- '--folder=%s' "${FOLDER_ID}"
@@ -199,14 +249,17 @@ get_parent_arg() {
   fi
 }
 
+# 프로젝트 존재 여부 확인
 project_exists() {
   gcloud projects describe "${PROJECT_ID}" --format="value(projectId)" >/dev/null 2>&1
 }
 
+# 현재 프로젝트의 부모(폴더/조직) 조회
 current_parent() {
   gcloud projects describe "${PROJECT_ID}" --format="value(parent.type,parent.id)" 2>/dev/null || true
 }
 
+# 프로젝트 생성 (없을 경우에만)
 ensure_project_creation() {
   if project_exists; then
     log INFO "Project ${PROJECT_ID} already exists."
@@ -224,6 +277,7 @@ ensure_project_creation() {
   fi
 }
 
+# 프로젝트를 지정된 폴더로 이동
 ensure_project_parent() {
   [[ -n "${FOLDER_ID:-}" ]] || return 0
   local expected="folder/${FOLDER_ID##*/}"
@@ -240,6 +294,7 @@ ensure_project_parent() {
   fi
 }
 
+# 프로젝트에 빌링 계정 연결
 ensure_billing() {
   local billing_enabled
   billing_enabled="$(gcloud beta billing projects describe "${PROJECT_ID}" --format="value(billingEnabled)" 2>/dev/null || echo "False")"
@@ -251,6 +306,11 @@ ensure_billing() {
   gcloud beta billing projects link "${PROJECT_ID}" --billing-account="${BILLING_ACCOUNT}"
 }
 
+# =============================================================================
+# IAM 바인딩 함수
+# =============================================================================
+
+# Jenkins 서비스 계정 이메일 자동 검색
 discover_sa_email() {
   if [[ -n "${SA_EMAIL:-}" ]]; then
     return
@@ -259,11 +319,12 @@ discover_sa_email() {
     SA_EMAIL="${JENKINS_SA_EMAIL}"
     return
   fi
-  if command -v terraform >/dev/null 2>&1 && [[ -d "${REPO_ROOT}/bootstrap" ]]; then
-    SA_EMAIL="$(terraform -chdir="${REPO_ROOT}/bootstrap" output -raw jenkins_service_account_email 2>/dev/null || true)"
+  if command -v terraform >/dev/null 2>&1 && [[ -d "${REPO_ROOT}/${BOOTSTRAP_DIR_NAME}" ]]; then
+    SA_EMAIL="$(terraform -chdir="${REPO_ROOT}/${BOOTSTRAP_DIR_NAME}" output -raw jenkins_service_account_email 2>/dev/null || true)"
   fi
 }
 
+# 조직 레벨 IAM 바인딩 추가
 ensure_org_binding() {
   local role="$1"
   [[ -n "${ORG_ID:-}" && -n "${SA_EMAIL:-}" ]] || return 0
@@ -285,10 +346,11 @@ ensure_org_binding() {
   fi
 }
 
+# 빌링 계정 IAM 바인딩 추가
 ensure_billing_binding() {
   [[ -n "${BILLING_ACCOUNT:-}" && -n "${SA_EMAIL:-}" ]] || return 0
   local member="serviceAccount:${SA_EMAIL}"
-  local role="roles/billing.user"
+  local role="${ROLE_BILLING_USER}"
   local has_binding
   has_binding="$(gcloud beta billing accounts get-iam-policy "${BILLING_ACCOUNT}" \
     --flatten="bindings[]" \
@@ -306,10 +368,11 @@ ensure_billing_binding() {
   fi
 }
 
+# 프로젝트 레벨 IAM 바인딩 추가
 ensure_project_binding() {
   [[ -n "${SA_EMAIL:-}" ]] || return 0
   local member="serviceAccount:${SA_EMAIL}"
-  local role="roles/editor"
+  local role="${ROLE_PROJECT_EDITOR}"
   local has_binding
   has_binding="$(gcloud projects get-iam-policy "${PROJECT_ID}" \
     --flatten="bindings[]" \
@@ -327,12 +390,18 @@ ensure_project_binding() {
   fi
 }
 
+# 필수 GCP API 활성화
 enable_apis() {
   [[ "${#REQUIRED_APIS[@]}" -gt 0 ]] || return 0
   log INFO "Enabling ${#REQUIRED_APIS[@]} APIs for ${PROJECT_ID}"
   gcloud services enable "${REQUIRED_APIS[@]}" --project="${PROJECT_ID}"
 }
 
+# =============================================================================
+# 메인 실행 단계
+# =============================================================================
+
+# Ensure 단계: 프로젝트 생성 및 설정
 ensure_phase() {
   ensure_metadata_loaded
   ensure_gcloud_auth
@@ -340,14 +409,15 @@ ensure_phase() {
   ensure_project_parent
   ensure_billing
   discover_sa_email || true
-  ensure_org_binding "roles/resourcemanager.projectCreator" || true
-  ensure_org_binding "roles/editor" || true
+  ensure_org_binding "${ROLE_ORG_PROJECT_CREATOR}" || true
+  ensure_org_binding "${ROLE_ORG_EDITOR}" || true
   ensure_billing_binding || true
   ensure_project_binding || true
   enable_apis || true
   log INFO "Project guard ensure phase completed for ${PROJECT_ID}."
 }
 
+# Lien 제거 (프로젝트 삭제 차단 해제)
 cleanup_liens() {
   log INFO "Checking liens for ${PROJECT_ID}"
   local liens
@@ -363,6 +433,7 @@ cleanup_liens() {
   done <<<"${liens}"
 }
 
+# Cleanup 단계: 프로젝트 삭제 준비
 cleanup_phase() {
   ensure_metadata_loaded
   ensure_gcloud_auth
