@@ -154,7 +154,7 @@ environments/LIVE/jsj-game-k/
 - **Private**: 내부 통신만 (No public IP)
 - **DB**: 완전 격리 (Private IP only, PSC 연결)
 
-## Naming Convention
+## 네이밍 규칙
 
 ### modules/naming을 통한 중앙 집중식 관리
 

@@ -608,7 +608,7 @@
 - **00_README.md**: naming 모듈 기반 중앙 집중식 naming 섹션 추가
   - naming 모듈과 공통 입력값의 역할 설명
   - 새 프로젝트 추가 가이드 개선
-  - Step-by-step 프로젝트 생성 절차
+  - 단계별 프로젝트 생성 절차
 - **03_QUICK_REFERENCE.md**: 세션 7 작업 내용 추가
 - **02_CHANGELOG.md**: 변경 이력 업데이트
 

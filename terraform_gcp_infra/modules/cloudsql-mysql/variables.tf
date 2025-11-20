@@ -55,7 +55,7 @@ variable "deletion_protection" {
   default     = false
 }
 
-# Backup configuration
+# 백업 설정
 variable "backup_enabled" {
   type        = bool
   description = "자동 백업 활성화"
@@ -86,7 +86,7 @@ variable "backup_retained_count" {
   default     = 7
 }
 
-# Network configuration
+# 네트워크 설정
 variable "ipv4_enabled" {
   type        = bool
   description = "공개 IP 활성화"
@@ -99,8 +99,8 @@ variable "private_network" {
   default     = ""
 }
 
-# Note: require_ssl is deprecated in Google provider 7.x+
-# Use SSL certificates and connection policies at client level instead
+# 참고: require_ssl은 Google Provider 7.x+에서 더 이상 지원되지 않습니다.
+# SSL 인증서와 연결 정책은 클라이언트에서 직접 관리하세요.
 # variable "require_ssl" {
 #   type        = bool
 #   description = "SSL 연결 필수"
@@ -116,7 +116,7 @@ variable "authorized_networks" {
   default     = []
 }
 
-# Maintenance window
+# 유지보수 윈도우
 variable "maintenance_window_day" {
   type        = number
   description = "유지보수 요일 (1=월요일, 7=일요일)"
@@ -135,7 +135,7 @@ variable "maintenance_window_update_track" {
   default     = "stable"
 }
 
-# Database flags
+# 데이터베이스 플래그
 variable "database_flags" {
   type = list(object({
     name  = string
@@ -145,7 +145,7 @@ variable "database_flags" {
   default     = []
 }
 
-# Insights
+# Query Insights
 variable "query_insights_enabled" {
   type        = bool
   description = "쿼리 인사이트 활성화"
@@ -164,7 +164,7 @@ variable "record_application_tags" {
   default     = false
 }
 
-# Logging configuration
+# 로깅 설정
 variable "enable_slow_query_log" {
   type        = bool
   description = "느린 쿼리 로깅 활성화 (성능 모니터링용)"
@@ -193,7 +193,7 @@ variable "log_output" {
   }
 }
 
-# Databases
+# 데이터베이스
 variable "databases" {
   type = list(object({
     name      = string
@@ -204,7 +204,7 @@ variable "databases" {
   default     = []
 }
 
-# Users
+# 사용자
 variable "users" {
   type = list(object({
     name     = string
@@ -213,11 +213,11 @@ variable "users" {
   }))
   description = "생성할 사용자 목록"
   default     = []
-  # Note: Cannot use sensitive = true with for_each in Terraform
-  # Passwords will still be marked as sensitive in state file
+  # 참고: Terraform에서 for_each와 sensitive = true를 함께 사용할 수 없습니다.
+  # 비밀번호 값은 state 파일에서는 여전히 민감 정보로 표시됩니다.
 }
 
-# Read replicas
+# 읽기 복제본
 variable "read_replicas" {
   type = map(object({
     name            = string

@@ -30,7 +30,7 @@ variable "subnetwork" {
   default     = ""
 }
 
-# Health Check
+# 헬스 체크
 variable "create_health_check" {
   type        = bool
   description = "헬스 체크 생성 여부"
@@ -109,7 +109,7 @@ variable "health_check_ids" {
   default     = []
 }
 
-# Backend Service
+# 백엔드 서비스
 variable "backend_service_name" {
   type        = string
   description = "백엔드 서비스 이름"
@@ -163,7 +163,7 @@ variable "connection_draining_timeout" {
   default     = 300
 }
 
-# CDN
+# CDN 설정
 variable "enable_cdn" {
   type        = bool
   description = "Cloud CDN 활성화"
@@ -227,7 +227,7 @@ variable "iap_oauth2_client_secret" {
   sensitive   = true
 }
 
-# Logging
+# 로깅
 variable "enable_logging" {
   type        = bool
   description = "로깅 활성화"
@@ -240,7 +240,7 @@ variable "logging_sample_rate" {
   default     = 1.0
 }
 
-# URL Map (HTTP(S) LB)
+# URL 맵 (HTTP(S) LB)
 variable "url_map_name" {
   type        = string
   description = "URL 맵 이름"
@@ -269,7 +269,7 @@ variable "path_matchers" {
   default     = []
 }
 
-# SSL
+# SSL 설정
 variable "use_ssl" {
   type        = bool
   description = "SSL/HTTPS 사용"
@@ -288,7 +288,7 @@ variable "ssl_policy" {
   default     = ""
 }
 
-# Target Proxies
+# 대상 프록시
 variable "target_http_proxy_name" {
   type        = string
   description = "HTTP 프록시 이름"
@@ -301,7 +301,7 @@ variable "target_https_proxy_name" {
   default     = ""
 }
 
-# Forwarding Rule
+# 포워딩 규칙
 variable "forwarding_rule_name" {
   type        = string
   description = "포워딩 규칙 이름"
@@ -319,7 +319,7 @@ variable "forwarding_rule_all_ports" {
   default     = false
 }
 
-# Static IP
+# 고정 IP
 variable "create_static_ip" {
   type        = bool
   description = "고정 IP 생성"

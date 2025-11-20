@@ -7,7 +7,7 @@ terraform {
   }
 }
 
-# Project parent resolution
+# 프로젝트 상위 리소스 계산
 locals {
   trimmed_folder_id = var.folder_id == null ? "" : trimspace(var.folder_id)
   trimmed_org_id    = var.org_id == null ? "" : trimspace(var.org_id)
@@ -25,7 +25,7 @@ resource "google_project" "this" {
   billing_account     = var.billing_account
   labels              = var.labels
   auto_create_network = false
-  deletion_policy     = "DELETE" # Allow terraform destroy
+  deletion_policy     = "DELETE" # terraform destroy 허용
 
   # 참고: 프로덕션 환경에서 삭제 방지가 필요한 경우
   # 아래 lifecycle 블록의 주석을 해제하세요

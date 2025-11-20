@@ -9,7 +9,7 @@ terraform {
   }
 }
 
-# Multiple GCS buckets based on configuration
+# 구성값에 맞춰 여러 GCS 버킷을 한 번에 생성
 module "gcs_buckets" {
   source = "../gcs-bucket"
 

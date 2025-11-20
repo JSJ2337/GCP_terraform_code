@@ -8,7 +8,7 @@ terraform {
   }
 }
 
-# Global Health Check - for HTTP(S) and Internal LB
+# 전역 헬스 체크 (HTTP(S) 및 Internal LB용)
 resource "google_compute_health_check" "default" {
   count = var.create_health_check && var.lb_type != "internal_classic" ? 1 : 0
 
@@ -57,7 +57,7 @@ resource "google_compute_health_check" "default" {
   }
 }
 
-# Regional Health Check - for Internal Classic LB
+# 리전 헬스 체크 (Internal Classic LB용)
 resource "google_compute_region_health_check" "internal" {
   count = var.create_health_check && var.lb_type == "internal_classic" ? 1 : 0
 
@@ -107,7 +107,7 @@ resource "google_compute_region_health_check" "internal" {
   }
 }
 
-# Backend Service - for HTTP(S) and Internal LB
+# 백엔드 서비스 (HTTP(S)/Internal LB)
 resource "google_compute_backend_service" "default" {
   count = var.lb_type == "http" || var.lb_type == "internal" ? 1 : 0
 
@@ -130,14 +130,14 @@ resource "google_compute_backend_service" "default" {
     }
   }
 
-  # Session affinity
+  # 세션 고정 설정
   session_affinity        = var.session_affinity
   affinity_cookie_ttl_sec = var.session_affinity == "GENERATED_COOKIE" ? var.affinity_cookie_ttl : null
 
-  # Connection draining
+  # 연결 드레이닝
   connection_draining_timeout_sec = var.connection_draining_timeout
 
-  # CDN (HTTP(S) only)
+  # CDN 설정 (HTTP(S) 전용)
   dynamic "cdn_policy" {
     for_each = var.lb_type == "http" && var.enable_cdn ? [1] : []
     content {
@@ -150,7 +150,7 @@ resource "google_compute_backend_service" "default" {
     }
   }
 
-  # IAP (HTTP(S) only)
+  # IAP 설정 (HTTP(S) 전용)
   dynamic "iap" {
     for_each = var.lb_type == "http" && var.enable_iap ? [1] : []
     content {
@@ -160,17 +160,17 @@ resource "google_compute_backend_service" "default" {
     }
   }
 
-  # Logging
+  # 로깅
   log_config {
     enable      = var.enable_logging
     sample_rate = var.logging_sample_rate
   }
 
-  # Internal LB specific
+  # Internal LB 전용 설정
   load_balancing_scheme = var.lb_type == "internal" ? "INTERNAL_MANAGED" : "EXTERNAL_MANAGED"
 }
 
-# Regional Backend Service - for Internal Classic LB
+# 리전 백엔드 서비스 (Internal Classic LB)
 resource "google_compute_region_backend_service" "internal" {
   count = var.lb_type == "internal_classic" ? 1 : 0
 
@@ -195,7 +195,7 @@ resource "google_compute_region_backend_service" "internal" {
   load_balancing_scheme = "INTERNAL"
 }
 
-# URL Map - for HTTP(S) LB
+# URL 맵 (HTTP(S) LB)
 resource "google_compute_url_map" "default" {
   count = var.lb_type == "http" ? 1 : 0
 
@@ -228,7 +228,7 @@ resource "google_compute_url_map" "default" {
   }
 }
 
-# Target HTTP Proxy
+# Target HTTP 프록시
 resource "google_compute_target_http_proxy" "default" {
   count = var.lb_type == "http" && !var.use_ssl ? 1 : 0
 
@@ -237,7 +237,7 @@ resource "google_compute_target_http_proxy" "default" {
   url_map = google_compute_url_map.default[0].id
 }
 
-# Target HTTPS Proxy
+# Target HTTPS 프록시
 resource "google_compute_target_https_proxy" "default" {
   count = var.lb_type == "http" && var.use_ssl ? 1 : 0
 
@@ -248,7 +248,7 @@ resource "google_compute_target_https_proxy" "default" {
   ssl_policy       = var.ssl_policy != "" ? var.ssl_policy : null
 }
 
-# Global Forwarding Rule - HTTP
+# 글로벌 포워딩 규칙 - HTTP
 resource "google_compute_global_forwarding_rule" "http" {
   count = var.lb_type == "http" && !var.use_ssl ? 1 : 0
 
@@ -261,7 +261,7 @@ resource "google_compute_global_forwarding_rule" "http" {
   load_balancing_scheme = "EXTERNAL_MANAGED"
 }
 
-# Global Forwarding Rule - HTTPS
+# 글로벌 포워딩 규칙 - HTTPS
 resource "google_compute_global_forwarding_rule" "https" {
   count = var.lb_type == "http" && var.use_ssl ? 1 : 0
 
@@ -274,7 +274,7 @@ resource "google_compute_global_forwarding_rule" "https" {
   load_balancing_scheme = "EXTERNAL_MANAGED"
 }
 
-# Regional Forwarding Rule - Internal LB
+# 리전 포워딩 규칙 - Internal LB
 resource "google_compute_forwarding_rule" "internal" {
   count = var.lb_type == "internal" || var.lb_type == "internal_classic" ? 1 : 0
 
@@ -290,7 +290,7 @@ resource "google_compute_forwarding_rule" "internal" {
   all_ports             = var.forwarding_rule_all_ports
 }
 
-# Static IP Address (optional)
+# 고정 IP 주소 (옵션)
 resource "google_compute_global_address" "default" {
   count = var.create_static_ip && var.lb_type == "http" ? 1 : 0
 
@@ -298,7 +298,7 @@ resource "google_compute_global_address" "default" {
   project = var.project_id
 }
 
-# Regional Static IP Address (Internal LB)
+# 리전 고정 IP 주소 (Internal LB용)
 resource "google_compute_address" "internal" {
   count = var.create_static_ip && (var.lb_type == "internal" || var.lb_type == "internal_classic") ? 1 : 0
 

@@ -12,7 +12,7 @@ terraform {
   }
 }
 
-# Logging flags for Cloud SQL
+# Cloud SQL 로깅 플래그 구성
 locals {
   existing_database_flag_names = toset([for flag in var.database_flags : flag.name])
 
@@ -41,7 +41,7 @@ locals {
   all_database_flags = concat(var.database_flags, local.logging_flags)
 }
 
-# Cloud SQL MySQL Instance
+# Cloud SQL MySQL 인스턴스
 resource "google_sql_database_instance" "instance" {
   name             = var.instance_name
   database_version = var.database_version
@@ -57,7 +57,7 @@ resource "google_sql_database_instance" "instance" {
     disk_type         = var.disk_type
     disk_autoresize   = var.disk_autoresize
 
-    # Backup configuration
+    # 백업 설정
     backup_configuration {
       enabled                        = var.backup_enabled
       start_time                     = var.backup_start_time
@@ -69,12 +69,12 @@ resource "google_sql_database_instance" "instance" {
       }
     }
 
-    # IP configuration
+    # IP 설정
     ip_configuration {
       ipv4_enabled    = var.ipv4_enabled
       private_network = var.private_network
-      # Note: require_ssl is deprecated in newer Google provider versions
-      # Use SSL certificates and connection policies instead
+      # 참고: 최신 Google Provider에서는 require_ssl이 deprecated 상태입니다.
+      # SSL 인증서와 연결 정책을 대신 사용하세요.
 
       dynamic "authorized_networks" {
         for_each = var.authorized_networks
@@ -85,14 +85,14 @@ resource "google_sql_database_instance" "instance" {
       }
     }
 
-    # Maintenance window
+    # 유지보수 윈도우
     maintenance_window {
       day          = var.maintenance_window_day
       hour         = var.maintenance_window_hour
       update_track = var.maintenance_window_update_track
     }
 
-    # Database flags (includes logging configuration)
+    # 데이터베이스 플래그(로깅 설정 포함)
     dynamic "database_flags" {
       for_each = local.all_database_flags
       content {
@@ -101,7 +101,7 @@ resource "google_sql_database_instance" "instance" {
       }
     }
 
-    # Insights config
+    # Query Insights 설정
     insights_config {
       query_insights_enabled  = var.query_insights_enabled
       query_string_length     = var.query_string_length
@@ -113,12 +113,12 @@ resource "google_sql_database_instance" "instance" {
 
   lifecycle {
     ignore_changes = [
-      settings[0].disk_size, # Allow disk autoresize
+      settings[0].disk_size, # 디스크 자동 확장 허용
     ]
   }
 }
 
-# Databases
+# 데이터베이스
 resource "google_sql_database" "databases" {
   for_each = { for db in var.databases : db.name => db }
 
@@ -129,7 +129,7 @@ resource "google_sql_database" "databases" {
   project   = var.project_id
 }
 
-# Users
+# 사용자
 resource "google_sql_user" "users" {
   for_each = { for user in var.users : user.name => user }
 
@@ -140,7 +140,7 @@ resource "google_sql_user" "users" {
   project  = var.project_id
 }
 
-# Read replicas (optional)
+# 읽기 복제본 (옵션)
 resource "google_sql_database_instance" "read_replicas" {
   for_each = var.read_replicas
 

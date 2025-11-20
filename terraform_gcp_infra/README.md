@@ -191,17 +191,17 @@ cd ../10-network && terragrunt apply
 
 ## 🔍 트러블슈팅
 
-### "storage: bucket doesn't exist"
+### "storage: bucket doesn't exist" 오류
 ```bash
 gcloud auth application-default set-quota-project jsj-system-mgmt
 ```
 
-### State Lock 걸림
+### State Lock(잠금) 발생
 ```bash
 terragrunt force-unlock <LOCK_ID>
 ```
 
-### API not enabled
+### API 미활성화 오류
 ```bash
 gcloud services enable compute.googleapis.com \
     servicenetworking.googleapis.com \

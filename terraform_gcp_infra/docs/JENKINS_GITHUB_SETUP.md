@@ -260,18 +260,18 @@ git remote set-url origin https://${GITHUB_TOKEN}@github.com/<YOUR_ORG>/<YOUR_RE
 
 ## 추가 정보
 
-### Fine-grained Personal Access Token (Beta)
+### 세분화된 Personal Access Token (Fine-grained, Beta)
 
 GitHub의 새로운 토큰 유형으로, Repository별로 세밀한 권한 제어 가능:
 
 **설정 방법:**
-1. **Personal access tokens** → **Fine-grained tokens** 클릭
-2. **Generate new token** 클릭
-3. Repository 선택: `JSJ2337/JSJ_engineering_Diary`
+1. GitHub 좌측 메뉴에서 **Personal access tokens** → **Fine-grained tokens** 클릭
+2. **Generate new token** 버튼 선택
+3. 적용할 Repository 지정: `JSJ2337/JSJ_engineering_Diary`
 4. 권한 설정:
-   - **Contents**: Read and write
-   - **Pull requests**: Read and write
-   - **Workflows**: Read and write
+   - **Contents**: 읽기/쓰기
+   - **Pull requests**: 읽기/쓰기
+   - **Workflows**: 읽기/쓰기
 
 **장점:**
 - Repository별 권한 분리

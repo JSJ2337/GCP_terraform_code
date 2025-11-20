@@ -71,7 +71,7 @@ cp .jenkins/Jenkinsfile.template environments/LIVE/my-project/Jenkinsfile
    ↓
 4. Terragrunt Plan
    ↓
-5. GCP Project Guard (00-project/all 시)
+5. GCP Project Guard 단계 (00-project/all 시)
    ↓
 6. Review Plan (apply/destroy 시)
    ↓
@@ -80,7 +80,7 @@ cp .jenkins/Jenkinsfile.template environments/LIVE/my-project/Jenkinsfile
 8. Terragrunt Apply/Destroy
 ```
 
-### GCP Project Guard Stage
+### GCP Project Guard 단계
 
 - 실행 조건: `TARGET_LAYER`가 `00-project` 또는 `all`이고 ACTION이 `plan/apply`인 경우
 - 스크립트: `terraform_gcp_infra/scripts/gcp_project_guard.sh ensure <env-dir>`
@@ -89,12 +89,12 @@ cp .jenkins/Jenkinsfile.template environments/LIVE/my-project/Jenkinsfile
   - 미존재 시 프로젝트 생성 및 지정 폴더(`folder_structure`)로 이동
   - Billing Account 링크 및 필수 API(`terraform.tfvars`의 `apis` 리스트) 활성화
   - Jenkins SA(`jenkins_service_account_email`)에 org/billing/project IAM 권한 부여
-- Destroy 시에는 같은 스크립트의 `cleanup` 모드가 실행되어 lien 등을 사전에 제거합니다.
+- Destroy 실행 시에는 동일 스크립트의 `cleanup` 모드가 동작하여 lien 등을 미리 정리합니다.
 
 **주의사항**:
 - 스크립트는 `set -euo pipefail`로 실행되어 에러 발생 시 즉시 중단됩니다
-- 모든 early return 패턴은 `return 0`을 명시하여 조건 미충족 시에도 정상 종료합니다
-- FOLDER_ID가 비어있거나 SA_EMAIL을 찾지 못한 경우 해당 단계를 건너뛰고 계속 진행합니다
+- 모든 early return(조기 반환) 패턴은 `return 0`을 명시해 조건 불충족 시에도 정상 종료합니다
+- FOLDER_ID가 비어 있거나 SA_EMAIL을 찾지 못하면 해당 단계를 건너뛰고 다음 단계로 진행합니다
 
 ## GCP 인증 설정
 
@@ -125,10 +125,10 @@ gcloud iam service-accounts keys create jenkins-sa-key.json \
 
 ```text
 Jenkins → Manage Jenkins → Credentials → Add Credentials
-- Kind: Secret file
-- File: jenkins-sa-key.json 업로드
+- 종류(Kind): Secret file
+- 파일(File): jenkins-sa-key.json 업로드
 - ID: gcp-jenkins-service-account  ⚠️ 정확히 이 ID로!
-- Description: GCP Service Account for Jenkins Terraform
+- 설명(Description): Jenkins Terraform용 GCP Service Account
 ```
 
 ### 필수 권한

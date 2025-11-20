@@ -16,7 +16,7 @@ jsj-system-mgmt (관리용 프로젝트)
 └── 필수 API 활성화
 ```
 
-## Step 1: 변수 파일 확인
+## 1단계: 변수 파일 확인
 
 ```bash
 cd bootstrap
@@ -41,7 +41,7 @@ billing_account = "01076D-327AD5-FC8922"
 org_id = ""  # 조직 ID 또는 비워두기
 ```
 
-## Step 2: Bootstrap 배포
+## 2단계: Bootstrap 배포
 
 ```bash
 cd bootstrap
@@ -68,7 +68,7 @@ management_project_id = "jsj-system-mgmt"
 state_bucket_name = "jsj-terraform-state-prod"
 ```
 
-## Step 3: Bootstrap State 백업 (중요!)
+## 3단계: Bootstrap State 백업 (중요!)
 
 Bootstrap은 로컬 State를 사용하므로 **반드시 백업**해야 합니다.
 
@@ -85,7 +85,7 @@ gsutil cp terraform.tfstate gs://jsj-terraform-state-prod/bootstrap/default.tfst
     ~/backup/bootstrap-$(date +\%Y\%m\%d).tfstate
 ```
 
-## Step 4: 인증 설정
+## 4단계: 인증 설정
 
 Bootstrap 배포 후 **반드시** 다음을 실행하세요:
 
@@ -99,7 +99,7 @@ gcloud auth application-default set-quota-project jsj-system-mgmt
 
 > ⚠️ 이 단계를 생략하면 "storage: bucket doesn't exist" 오류가 발생합니다!
 
-## Step 5: Service Account 설정 (Jenkins용)
+## 5단계: Service Account 설정 (Jenkins용)
 
 ### 5-1. Key 파일 생성
 

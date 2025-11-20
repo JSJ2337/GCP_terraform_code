@@ -49,7 +49,7 @@ resource "google_storage_bucket" "bucket" {
       var.retention_policy_days > 0 ? [1] : []
     )
     content {
-      retention_period = var.retention_policy_days * 24 * 60 * 60 # Convert days to seconds
+      retention_period = var.retention_policy_days * 24 * 60 * 60 # 일 단위를 초로 변환
       is_locked        = var.retention_policy_locked
     }
   }
@@ -90,7 +90,7 @@ resource "google_storage_bucket" "bucket" {
   public_access_prevention = var.public_access_prevention
 }
 
-# IAM members for the bucket (non-authoritative)
+# 버킷 IAM 멤버 (비권한형 관리)
 resource "google_storage_bucket_iam_member" "members" {
   for_each = {
     for idx, binding in flatten([
@@ -119,7 +119,7 @@ resource "google_storage_bucket_iam_member" "members" {
   }
 }
 
-# Notification configuration
+# 알림 구성
 resource "google_storage_notification" "notifications" {
   for_each = var.notifications != null ? { for idx, notif in var.notifications : idx => notif } : {}
 

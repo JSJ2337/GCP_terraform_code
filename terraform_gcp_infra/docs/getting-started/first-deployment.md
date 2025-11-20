@@ -14,7 +14,7 @@ Bootstrap 설정이 완료되었다면 이제 실제 워크로드 프로젝트�
 
 ## 옵션 1: 템플릿으로 시작 (권장)
 
-### Step 1: 템플릿 복사
+### 1단계: 템플릿 복사
 
 ```bash
 cd terraform_gcp_infra
@@ -24,7 +24,7 @@ cp -r proj-default-templet environments/LIVE/my-new-project
 cd environments/LIVE/my-new-project
 ```
 
-### Step 2: 공통 네이밍 설정
+### 2단계: 공통 네이밍 설정
 
 `common.naming.tfvars` 파일 수정:
 
@@ -37,7 +37,7 @@ region_primary = "asia-northeast3"
 region_backup  = "asia-northeast1"
 ```
 
-### Step 3: Terragrunt 설정 확인
+### 3단계: Terragrunt 설정 확인
 
 `root.hcl` 파일 확인:
 

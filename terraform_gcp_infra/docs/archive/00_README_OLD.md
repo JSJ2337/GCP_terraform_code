@@ -143,7 +143,7 @@ gcloud billing accounts list
 
 ### 초기 설정
 
-#### Step 1: Bootstrap 프로젝트 배포 (최우선!)
+#### 1단계: Bootstrap 프로젝트 배포 (최우선!)
 
 ⚠️ **중요**: 다른 인프라를 배포하기 전에 반드시 Bootstrap 프로젝트를 먼저 배포해야 합니다.
 
@@ -179,7 +179,7 @@ cp terraform.tfstate ~/backup/bootstrap-$(date +%Y%m%d).tfstate
 - 중앙 State 저장소 버킷 (`jsj-terraform-state-prod`)
 - Versioning 및 Lifecycle 정책 자동 설정
 
-#### Step 1.5: 인증 설정 (중요!)
+#### 1.5단계: 인증 설정 (중요!)
 
 Bootstrap 배포 후, 워크로드 프로젝트 배포 전에 인증을 설정해야 합니다:
 
@@ -193,7 +193,7 @@ gcloud auth application-default set-quota-project jsj-system-mgmt
 
 ⚠️ **이 단계를 생략하면 "storage: bucket doesn't exist" 오류가 발생합니다!**
 
-#### Step 2: 워크로드 프로젝트 배포
+#### 2단계: 워크로드 프로젝트 배포
 
 Bootstrap 배포 후, 실제 워크로드 프로젝트를 배포합니다:
 
@@ -363,7 +363,7 @@ jsj-system-mgmt (관리용 프로젝트)
 
 ### 새 프로젝트 추가하기
 
-### Step 1: 템플릿 복사
+### 1단계: 템플릿 복사
 
 ```bash
 # 템플릿을 LIVE 환경으로 복사
@@ -371,7 +371,7 @@ cp -r proj-default-templet environments/LIVE/your-new-project
 cd environments/LIVE/your-new-project
 ```
 
-### Step 2: 공통 네이밍 입력 수정
+### 2단계: 공통 네이밍 입력 수정
 
 `common.naming.tfvars` 파일에서 프로젝트/환경/조직 정보를 새 값으로 변경합니다.
 
@@ -384,17 +384,17 @@ region_primary = "us-central1"
 region_backup  = "us-east1"
 ```
 
-### Step 3: Terragrunt prefix 업데이트
+### 3단계: Terragrunt prefix 업데이트
 
 - `environments/LIVE/your-new-project/terragrunt.hcl`의 `project_state_prefix` 값을 새 프로젝트 이름으로 변경합니다.
 - 각 레이어의 `terragrunt.hcl`은 상대 경로를 사용하므로 별도 수정이 필요 없습니다.
 
-### Step 4: 레이어별 terraform.tfvars 세부 값만 조정
+### 4단계: 레이어별 terraform.tfvars 세부 값만 조정
 
 - 네트워크 CIDR, 버킷 정책, VM 스펙 등 환경별 값만 필요에 따라 조정합니다.
-- 이름과 라벨은 Step 2에서 입력한 값에 맞춰 `modules/naming`이 자동 생성합니다.
+- 이름과 라벨은 2단계에서 입력한 값에 맞춰 `modules/naming`이 자동 생성합니다.
 
-### Step 5: Jenkinsfile 복사 (CI/CD 사용 시)
+### 5단계: Jenkinsfile 복사 (CI/CD 사용 시)
 
 ```bash
 # Jenkinsfile 템플릿 복사
@@ -404,7 +404,7 @@ cp .jenkins/Jenkinsfile.template environments/LIVE/your-new-project/Jenkinsfile
 # Script Path: environments/LIVE/your-new-project/Jenkinsfile
 ```
 
-### Step 6: Terragrunt로 배포
+### 6단계: Terragrunt로 배포
 
 ```bash
 # 순서대로 배포

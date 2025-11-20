@@ -29,22 +29,22 @@ variable "labels" {
 variable "apis" {
   type = list(string)
   default = [
-    # Core
+    # 핵심 API
     "compute.googleapis.com",
     "iam.googleapis.com",
     "cloudresourcemanager.googleapis.com",
     "serviceusage.googleapis.com",
-    # Networking
+    # 네트워킹
     "servicenetworking.googleapis.com",
-    # Observability
+    # 관측/모니터링
     "logging.googleapis.com",
     "monitoring.googleapis.com",
-    # Storage/Secrets/KMS
+    # 스토리지/시크릿/KMS
     "storage.googleapis.com",
     "cloudkms.googleapis.com",
-    # Workloads (옵션: 실제 사용 레이어에서 불필요 시 무시됨)
-    "sqladmin.googleapis.com",      # Cloud SQL
-    "redis.googleapis.com"          # Memorystore
+    # 워크로드 (옵션: 실제 사용 레이어에서 불필요 시 무시됨)
+    "sqladmin.googleapis.com",      # Cloud SQL API
+    "redis.googleapis.com"          # Memorystore API
   ]
 }
 
@@ -69,13 +69,13 @@ variable "log_retention_days" {
 }
 
 variable "manage_default_logging_bucket" {
-  description = "Whether to manage the default Cloud Logging bucket (_Default). Disable for initial project bootstraps if API propagation causes failures."
+  description = "기본 Cloud Logging 버킷(_Default)까지 Terraform으로 관리할지 여부 (API 전파 지연으로 실패하면 false 권장)"
   type        = bool
   default     = true
 }
 
 variable "logging_api_wait_duration" {
-  description = "Duration to wait after enabling logging.googleapis.com before configuring the default logging bucket (e.g., \"60s\")"
+  description = "logging.googleapis.com 활성화 직후 기본 로그 버킷 구성을 시도하기 전에 대기할 시간 (예: \"60s\")"
   type        = string
   default     = "60s"
 }
