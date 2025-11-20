@@ -1,4 +1,4 @@
-# Terragrunt entrypoint: environments/LIVE/proj-default-templet/70-loadbalancer/terragrunt.hcl
+# Terragrunt entrypoint: environments/LIVE/jsj-game-m/70-loadbalancers/web/terragrunt.hcl
 # 로드 밸런서 모듈 설정 예시
 # (terraform.tfvars로 복사 후 값 입력, 원본은 커밋하지 마세요)
 
@@ -13,7 +13,7 @@ region   = "us-central1"
 network  = ""  # 비워두면 naming 모듈의 VPC 사용
 subnetwork = ""
 # Private/WAS 서브넷을 명시하려면 self-link를 지정하세요.
-# internal_subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-private"
+# internal_subnetwork_self_link = "projects/jsj-game-m/regions/asia-northeast3/subnetworks/game-m-subnet-private"
 
 # 백엔드 서비스
 backend_protocol  = "HTTP"
@@ -24,8 +24,8 @@ backend_timeout   = 30
 backends = [
   {
     # 50-workloads에서 생성된 instance_groups 출력 사용 예:
-    # group = module.workloads.instance_groups["jsj-web-ig"]
-    group           = "projects/jsj-game-l/zones/asia-northeast3-a/instanceGroups/jsj-web-ig"
+    # group = module.workloads.instance_groups["jsj-web-ig-a"]
+    group           = "projects/jsj-game-m/zones/asia-northeast3-a/instanceGroups/jsj-web-ig-a"
     balancing_mode  = "UTILIZATION"
     capacity_scaler = 1.0
     description     = "웹 서비스"
@@ -40,6 +40,7 @@ connection_draining_timeout = 300
 
 # 헬스 체크
 create_health_check              = true
+health_check_name                = "game-m-web-health"
 health_check_type                = "http"  # http, https, tcp
 health_check_port                = 80
 health_check_request_path        = "/"

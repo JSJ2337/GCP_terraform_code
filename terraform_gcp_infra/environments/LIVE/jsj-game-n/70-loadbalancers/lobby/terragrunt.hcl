@@ -39,12 +39,10 @@ inputs = merge(
   local.common_inputs,
   local.layer_inputs,
   {
-    # Example: 특정 패턴의 Instance Group만 필터링
-    # 실제 사용 시 필터링 패턴 수정 (예: web, api, lobby, admin 등)
     auto_instance_groups = {
       for name, link in try(dependency.workloads.outputs.instance_groups, {}) :
       name => link
-      if length(regexall("web", lower(name))) > 0  # 패턴 수정 필요
+      if length(regexall("lobby", lower(name))) > 0
     }
   }
 )
