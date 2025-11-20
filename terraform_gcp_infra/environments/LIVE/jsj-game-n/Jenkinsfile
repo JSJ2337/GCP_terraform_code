@@ -37,7 +37,8 @@ pipeline {
                 '50-workloads',
                 '60-database',
                 '65-cache',
-                '70-loadbalancer'
+                '70-loadbalancer',
+                '75-dns'
             ],
             description: '실행할 레이어 (all = 전체 스택)'
         )

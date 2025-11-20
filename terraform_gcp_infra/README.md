@@ -43,7 +43,7 @@ terraform_gcp_infra/
 └── proj-default-templet/   # 새 환경용 템플릿
 ```
 
-### 인프라 레이어 (9단계)
+### 인프라 레이어 (10단계)
 
 | 레이어 | 목적 | 의존성 |
 |--------|------|--------|
@@ -56,6 +56,7 @@ terraform_gcp_infra/
 | `60-database` | Cloud SQL MySQL | 10-network |
 | `65-cache` | Memorystore Redis | 10-network |
 | `70-loadbalancer` | Load Balancer | 50-workloads |
+| `75-dns` | Cloud DNS (Public/Private) | 10-network |
 
 ## 📚 문서
 
@@ -168,6 +169,7 @@ terraform fmt -recursive
 | **cloudsql-mysql** | MySQL DB | [README](./modules/cloudsql-mysql/README.md) |
 | **memorystore-redis** | Redis 캐시 | [README](./modules/memorystore-redis/README.md) |
 | **load-balancer** | Load Balancer | [README](./modules/load-balancer/README.md) |
+| **cloud-dns** | Cloud DNS (Public/Private) | README 참고 |
 
 ## 🆕 새 환경 추가
 
