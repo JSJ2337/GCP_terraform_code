@@ -27,9 +27,28 @@ module "naming" {
 }
 
 locals {
-  requested_subnets = {
+  subnet_types = ["dmz", "private", "db"]
+
+  normalized_subnets = [
     for idx, subnet in var.additional_subnets :
-    coalesce(subnet.name, "subnet-${idx}") => {
+    merge(
+      subnet,
+      {
+        name = coalesce(
+          lookup(subnet, "name", null),
+          try("${var.project_name}-subnet-${local.subnet_types[idx]}", "subnet-${idx}")
+        )
+        region = coalesce(
+          lookup(subnet, "region", null),
+          var.region_primary
+        )
+      }
+    )
+  ]
+
+  requested_subnets = {
+    for subnet in local.normalized_subnets :
+    subnet.name => {
       region                = subnet.region
       cidr                  = subnet.cidr
       private_google_access = lookup(subnet, "private_google_access", true)
@@ -37,15 +56,23 @@ locals {
     }
   }
 
-  dmz_subnet     = try(local.requested_subnets[var.dmz_subnet_name], null)
-  private_subnet = try(local.requested_subnets[var.private_subnet_name], null)
-  db_subnet      = try(local.requested_subnets[var.db_subnet_name], null)
+  default_dmz_subnet_name     = try(local.normalized_subnets[0].name, "")
+  default_private_subnet_name = try(local.normalized_subnets[1].name, "")
+  default_db_subnet_name      = try(local.normalized_subnets[2].name, "")
 
-  dmz_subnet_self_link     = local.dmz_subnet != null ? "projects/${var.project_id}/regions/${local.dmz_subnet.region}/subnetworks/${var.dmz_subnet_name}" : null
-  private_subnet_self_link = local.private_subnet != null ? "projects/${var.project_id}/regions/${local.private_subnet.region}/subnetworks/${var.private_subnet_name}" : null
-  db_subnet_self_link      = local.db_subnet != null ? "projects/${var.project_id}/regions/${local.db_subnet.region}/subnetworks/${var.db_subnet_name}" : null
+  dmz_subnet_name     = length(trimspace(var.dmz_subnet_name)) > 0 ? var.dmz_subnet_name : local.default_dmz_subnet_name
+  private_subnet_name = length(trimspace(var.private_subnet_name)) > 0 ? var.private_subnet_name : local.default_private_subnet_name
+  db_subnet_name      = length(trimspace(var.db_subnet_name)) > 0 ? var.db_subnet_name : local.default_db_subnet_name
 
-  memorystore_psc_subnet_name      = length(trimspace(var.memorystore_psc_subnet_name)) > 0 ? var.memorystore_psc_subnet_name : var.private_subnet_name
+  dmz_subnet     = try(local.requested_subnets[local.dmz_subnet_name], null)
+  private_subnet = try(local.requested_subnets[local.private_subnet_name], null)
+  db_subnet      = try(local.requested_subnets[local.db_subnet_name], null)
+
+  dmz_subnet_self_link     = local.dmz_subnet != null ? "projects/${var.project_id}/regions/${local.dmz_subnet.region}/subnetworks/${local.dmz_subnet_name}" : null
+  private_subnet_self_link = local.private_subnet != null ? "projects/${var.project_id}/regions/${local.private_subnet.region}/subnetworks/${local.private_subnet_name}" : null
+  db_subnet_self_link      = local.db_subnet != null ? "projects/${var.project_id}/regions/${local.db_subnet.region}/subnetworks/${local.db_subnet_name}" : null
+
+  memorystore_psc_subnet_name      = length(trimspace(var.memorystore_psc_subnet_name)) > 0 ? var.memorystore_psc_subnet_name : local.private_subnet_name
   memorystore_psc_subnet           = try(local.requested_subnets[local.memorystore_psc_subnet_name], null)
   memorystore_psc_subnet_self_link = local.memorystore_psc_subnet != null ? "projects/${var.project_id}/regions/${local.memorystore_psc_subnet.region}/subnetworks/${local.memorystore_psc_subnet_name}" : ""
   memorystore_psc_region           = length(trimspace(var.memorystore_psc_region)) > 0 ? var.memorystore_psc_region : module.naming.region_primary
