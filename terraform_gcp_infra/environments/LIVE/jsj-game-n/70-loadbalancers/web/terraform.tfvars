@@ -4,12 +4,6 @@ backend_protocol  = "HTTP"
 backend_port_name = "http"
 backend_timeout   = 30
 
-backend_service_name   = "game-n-web-backend"
-url_map_name           = "game-n-web-url-map"
-target_http_proxy_name = "game-n-web-http-proxy"
-forwarding_rule_name   = "game-n-web-lb"
-static_ip_name         = "game-n-web-ip"
-
 backends = []
 
 auto_backend_balancing_mode  = "UTILIZATION"
@@ -21,7 +15,6 @@ affinity_cookie_ttl         = 0
 connection_draining_timeout = 300
 
 create_health_check              = true
-health_check_name                = "game-n-web-health"
 health_check_type                = "http"
 health_check_port                = 80
 health_check_request_path        = "/"
