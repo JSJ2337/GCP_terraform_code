@@ -18,7 +18,7 @@ provider "google" {
 
 # Naming 모듈로 일관된 이름 생성
 module "naming" {
-  source = "../../../modules/naming"
+  source = "../../../../modules/naming"
 
   project_name   = var.project_name
   environment    = var.environment
@@ -40,7 +40,7 @@ locals {
 
 # Cloud DNS Managed Zone
 module "cloud_dns" {
-  source = "../../../modules/cloud-dns"
+  source = "../../../../modules/cloud-dns"
 
   project_id  = var.project_id
   zone_name   = local.zone_name
