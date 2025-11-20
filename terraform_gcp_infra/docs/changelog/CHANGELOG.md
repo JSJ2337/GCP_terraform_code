@@ -100,6 +100,7 @@
 - **20-storage CORS 도메인 자동화**
   - Terragrunt가 `project_name`을 기반으로 assets 버킷의 기본 CORS origin(`https://{project_name}.example.com`, `https://cdn.{project_name}.example.com`)을 생성
   - tfvars에서 값을 명시하면 그대로 사용하며, 템플릿·jsj-game-n 환경 모두 동일 로직 적용
+  - 커밋: `8c48ec1`
 - **스크립트 유지보수성 향상**
   - `scripts/create_project.sh`: 하드코딩된 값을 Configuration 섹션으로 이동
     - `DEFAULT_REGION_BACKUP`, `DEFAULT_REMOTE_STATE_*`, `DEFAULT_ORG_ID`, `DEFAULT_BILLING_ACCOUNT`
