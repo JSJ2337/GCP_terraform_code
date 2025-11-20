@@ -221,7 +221,7 @@ variable "users" {
 variable "read_replicas" {
   type = map(object({
     name            = string
-    region          = string
+    region          = optional(string)  # Optional: terragrunt.hcl에서 자동 주입
     tier            = string
     failover_target = optional(bool)
 

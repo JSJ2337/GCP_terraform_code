@@ -146,7 +146,7 @@ resource "google_sql_database_instance" "read_replicas" {
 
   name                 = each.value.name
   master_instance_name = google_sql_database_instance.instance.name
-  region               = each.value.region
+  region               = coalesce(each.value.region, var.region)  # region 미지정 시 Master와 동일 리전 사용
   database_version     = var.database_version
   project              = var.project_id
 
