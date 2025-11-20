@@ -1,30 +1,22 @@
 # Network Configuration
-# region overrides the default from common.naming.tfvars when set.
-# region = "asia-northeast3"
+# region은 terragrunt.hcl에서 region_primary 자동 주입
 routing_mode = "GLOBAL"
 
 # Additional dedicated subnets (DMZ/WAS/DB zones)
+# name, region은 terragrunt.hcl에서 project_name, region_primary 기반 자동 생성
 additional_subnets = [
   {
-    name   = "game-m-subnet-dmz"
-    region = "asia-northeast3"
-    cidr   = "10.3.0.0/24"
+    cidr = "10.3.0.0/24"  # DMZ subnet
   },
   {
-    name   = "game-m-subnet-private"
-    region = "asia-northeast3"
-    cidr   = "10.3.1.0/24"
+    cidr = "10.3.1.0/24"  # Private subnet
   },
   {
-    name   = "game-m-subnet-db"
-    region = "asia-northeast3"
-    cidr   = "10.3.2.0/24"
+    cidr = "10.3.2.0/24"  # DB subnet
   }
 ]
 
-dmz_subnet_name     = "game-m-subnet-dmz"
-private_subnet_name = "game-m-subnet-private"
-db_subnet_name      = "game-m-subnet-db"
+# Subnet 이름은 terragrunt.hcl에서 자동 생성
 
 # Cloud NAT configuration
 nat_min_ports_per_vm = 1024
@@ -61,7 +53,6 @@ firewall_rules = [
 ]
 
 # Memorystore Enterprise용 PSC 자동 구성
-enable_memorystore_psc_policy    = true
-memorystore_psc_region           = "asia-northeast3"
-memorystore_psc_subnet_name      = "game-m-subnet-private"
+enable_memorystore_psc_policy = true
+# memorystore_psc_region과 memorystore_psc_subnet_name은 terragrunt.hcl에서 자동 생성
 memorystore_psc_connection_limit = 8
