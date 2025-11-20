@@ -54,18 +54,12 @@ databases = []
 users = []
 
 # Read replicas (optional)
+# region은 terragrunt.hcl에서 자동으로 region_primary 사용
 read_replicas = {
   replica1 = {
-    name   = "default-templet-mysql-read-1"
-    region = "us-central1"
+    name   = "game-n-mysql-read-1"
     tier   = "db-n1-standard-1"
-    # Optional overrides per replica:
-    # availability_type = "ZONAL"
-    # disk_size         = 50
-    # disk_type         = "PD_SSD"
-    # private_network   = "projects/host/global/networks/shared-vpc"
-    # maintenance_window_day  = 1
-    # maintenance_window_hour = 4
+    availability_type = "ZONAL"  # REGIONAL은 Master만
     labels = {
       role = "read"
     }
