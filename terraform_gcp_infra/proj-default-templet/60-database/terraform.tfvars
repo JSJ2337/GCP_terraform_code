@@ -54,13 +54,16 @@ databases = []
 users = []
 
 # Read replicas (optional)
+# region은 terragrunt.hcl에서 자동으로 region_primary 사용
+# 필요시 개별 replica에 다른 region 명시 가능 (예: DR용)
 read_replicas = {
   replica1 = {
     name   = "default-templet-mysql-read-1"
-    region = "us-central1"
+    # region 미지정 시 Master와 같은 리전(region_primary) 자동 사용
     tier   = "db-n1-standard-1"
+    availability_type = "ZONAL"  # Read Replica는 ZONAL만 가능
     # Optional overrides per replica:
-    # availability_type = "ZONAL"
+    # region = "asia-northeast1"  # DR용 다른 리전 지정 시
     # disk_size         = 50
     # disk_type         = "PD_SSD"
     # private_network   = "projects/host/global/networks/shared-vpc"

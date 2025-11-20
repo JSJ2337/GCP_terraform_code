@@ -54,10 +54,10 @@ databases = []
 users = []
 
 # Read replicas (optional)
+# region은 terragrunt.hcl에서 자동으로 region_primary 사용
 read_replicas = {
   replica1 = {
     name   = "jsj-game-m-mysql-read-1"
-    region = "asia-northeast3"
     tier   = "db-n1-standard-1"
     availability_type = "ZONAL"
     labels = {

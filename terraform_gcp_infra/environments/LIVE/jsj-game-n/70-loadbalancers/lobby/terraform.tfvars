@@ -1,5 +1,5 @@
 lb_type           = "http"
-region            = "asia-northeast3"
+# region은 terragrunt.hcl에서 자동으로 region_primary 주입
 backend_protocol  = "HTTP"
 backend_port_name = "http"
 backend_timeout   = 30

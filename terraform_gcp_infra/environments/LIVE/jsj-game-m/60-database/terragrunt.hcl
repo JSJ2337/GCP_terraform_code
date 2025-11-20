@@ -13,11 +13,22 @@ locals {
 
   raw_layer_inputs = try(read_tfvars_file("${get_terragrunt_dir()}/terraform.tfvars"), tomap({}))
   layer_inputs     = try(jsondecode(local.raw_layer_inputs), local.raw_layer_inputs)
+
+  # Read Replicas에 자동으로 region 주입
+  read_replicas_with_region = {
+    for k, v in try(local.layer_inputs.read_replicas, {}) :
+    k => merge(v, {
+      region = try(v.region, local.common_inputs.region_primary)
+    })
+  }
 }
 
 inputs = merge(
   local.common_inputs,
-  local.layer_inputs
+  local.layer_inputs,
+  {
+    read_replicas = local.read_replicas_with_region
+  }
 )
 
 dependencies {
