@@ -38,11 +38,14 @@ locals {
   # Memorystore PSC 설정
   memorystore_psc_region      = local.region_primary
   memorystore_psc_subnet_name = local.private_subnet_name
+
+  # layer_inputs에서 additional_subnets 제외 (terragrunt에서 처리한 버전을 사용)
+  layer_inputs_without_subnets = { for k, v in local.layer_inputs : k => v if k != "additional_subnets" }
 }
 
 inputs = merge(
   local.common_inputs,
-  local.layer_inputs,
+  local.layer_inputs_without_subnets,
   {
     additional_subnets          = local.additional_subnets_with_metadata
     dmz_subnet_name             = local.dmz_subnet_name
