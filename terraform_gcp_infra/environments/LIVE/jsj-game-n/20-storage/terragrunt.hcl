@@ -13,11 +13,32 @@ locals {
 
   raw_layer_inputs = try(read_tfvars_file("${get_terragrunt_dir()}/terraform.tfvars"), tomap({}))
   layer_inputs     = try(jsondecode(local.raw_layer_inputs), local.raw_layer_inputs)
+
+  default_assets_cors_rules = [
+    {
+      origin          = [
+        "https://${local.common_inputs.project_name}.example.com",
+        "https://cdn.${local.common_inputs.project_name}.example.com"
+      ]
+      method          = ["GET", "HEAD"]
+      response_header = ["Content-Type", "Cache-Control"]
+      max_age_seconds = 3600
+    }
+  ]
+
+  layer_inputs_without_cors = { for k, v in local.layer_inputs : k => v if k != "assets_cors_rules" }
+  assets_cors_rules_effective = try(local.layer_inputs.assets_cors_rules, null)
+  assets_cors_rules_final = (
+    assets_cors_rules_effective == null || length(assets_cors_rules_effective) == 0
+  ) ? local.default_assets_cors_rules : assets_cors_rules_effective
 }
 
 inputs = merge(
   local.common_inputs,
-  local.layer_inputs
+  local.layer_inputs_without_cors,
+  {
+    assets_cors_rules = local.assets_cors_rules_final
+  }
 )
 
 dependencies {

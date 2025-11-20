@@ -40,16 +40,6 @@ assets_lifecycle_rules = [
   }
 ]
 
-# CORS for web game access
-assets_cors_rules = [
-  {
-    origin          = ["https://default-templet.example.com", "https://cdn.default-templet.example.com"]
-    method          = ["GET", "HEAD"]
-    response_header = ["Content-Type", "Cache-Control"]
-    max_age_seconds = 3600
-  }
-]
-
 assets_iam_bindings = []
 
 # Logs bucket - for application and system logs

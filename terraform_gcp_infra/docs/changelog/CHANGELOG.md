@@ -7,10 +7,15 @@
 
 <!-- markdownlint-disable MD005 MD007 MD013 MD024 -->
 
-## [미배포] - 2025-11-19
+## [미배포] - 2025-11-20
 
 ### 추가 (Added)
 
+- **로드밸런서 템플릿 레이어(web/app/lobby)**
+  - `proj-default-templet/70-loadbalancers/`에 jsj-game-n에서 검증된 web/app/lobby 구성을 그대로 추가
+  - 각 디렉터리는 Terragrunt, main/variables/outputs, 예제 tfvars를 포함하여 즉시 배포 가능
+  - Jenkins/Terragrunt 의존성(`auto_instance_groups`)까지 포함되어 신규 프로젝트 생성 시 별도 수작업 불필요
+  - 커밋: `777c1e4`, `140da48`
 - **Cloud DNS 모듈 및 레이어 추가**
   - 새로운 모듈: `modules/cloud-dns`
     - Public/Private DNS Managed Zone 지원
@@ -37,6 +42,11 @@
 
 ### 수정 (Fixed)
 
+- **Cloud SQL 읽기 복제본 기본값/Null 처리 보강**
+  - Terragrunt가 region/name 입력을 주입하기 전에 Jenkins에서 `terraform apply`를 실행하면 `trimspace(null)` 오류가 발생하던 문제 해결
+  - `proj-default-templet` 및 `environments/LIVE/jsj-game-n`의 60-database 레이어에서 읽기 복제본 map을 재가공하여 region/name이 비어 있으면 기본값(`master region`, `{db_instance_name}-read-XX`)을 자동 채움
+  - variables.tf에서 `name`, `region`을 optional로 선언해 Terraform validation 단계에서 실패하지 않도록 조정
+  - 커밋: `b7fee4a`, `7c02390`, `aeb8bc9`, `013d499`, `ca68cd8`
 - **Jenkins 프로젝트 생성 워크플로우 간소화**
   - 문제: Jenkins에서 신규 브랜치를 생성하고 PR을 만드는 복잡한 프로세스
   - 해결: 433_code 브랜치에 직접 커밋하고 GitHub에 푸시하는 방식으로 단순화
@@ -82,6 +92,14 @@
 
 ### 개선 (Improved)
 
+- **로드밸런서 네이밍 자동화**
+  - Terragrunt locals가 `project_name`과 디렉터리명(web/app/lobby)을 이용해 backend/url-map/http-proxy/forwarding-rule/static-ip/health-check 이름을 자동 생성
+  - 템플릿과 `jsj-game-n` 환경 모두 tfvars에서 이름을 제거하고 필요 시에만 override하도록 정리
+  - Jenkins나 Terragrunt 이외 실행에서도 일관된 네이밍 가능
+  - 커밋: `249552d`, `292f933`
+- **20-storage CORS 도메인 자동화**
+  - Terragrunt가 `project_name`을 기반으로 assets 버킷의 기본 CORS origin(`https://{project_name}.example.com`, `https://cdn.{project_name}.example.com`)을 생성
+  - tfvars에서 값을 명시하면 그대로 사용하며, 템플릿·jsj-game-n 환경 모두 동일 로직 적용
 - **스크립트 유지보수성 향상**
   - `scripts/create_project.sh`: 하드코딩된 값을 Configuration 섹션으로 이동
     - `DEFAULT_REGION_BACKUP`, `DEFAULT_REMOTE_STATE_*`, `DEFAULT_ORG_ID`, `DEFAULT_BILLING_ACCOUNT`
