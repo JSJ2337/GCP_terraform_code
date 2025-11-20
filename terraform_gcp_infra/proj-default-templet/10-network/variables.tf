@@ -86,8 +86,8 @@ variable "private_service_connection_name" {
 variable "additional_subnets" {
   description = "추가로 생성할 서브넷 목록 (DMZ, Private/WAS, DB 등 역할 기반 서브넷)"
   type = list(object({
-    name                  = string
-    region                = string
+    name                  = optional(string)
+    region                = optional(string)
     cidr                  = string
     private_google_access = optional(bool, true)
     secondary_ranges = optional(list(object({
