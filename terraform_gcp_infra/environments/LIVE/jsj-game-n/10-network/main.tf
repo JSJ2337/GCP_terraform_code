@@ -28,8 +28,8 @@ module "naming" {
 
 locals {
   requested_subnets = {
-    for subnet in var.additional_subnets :
-    subnet.name => {
+    for idx, subnet in var.additional_subnets :
+    coalesce(subnet.name, "subnet-${idx}") => {
       region                = subnet.region
       cidr                  = subnet.cidr
       private_google_access = lookup(subnet, "private_google_access", true)
