@@ -40,27 +40,148 @@ db_subnet_name      = "game-l-subnet-db"
 # Cloud NAT 동시 연결 수(포트)
 nat_min_ports_per_vm = 1024
 
-# 방화벽 규칙 예시
+# ============================================================================
+# 방화벽 규칙 - 프로덕션 권장 설정
+# ============================================================================
+#
+# ⚠️ 현재 모듈 제한사항:
+# - 현재 network-dedicated-vpc 모듈은 ALLOW 규칙만 지원합니다
+# - DENY 규칙, destination, enable_logging은 모듈 업데이트 필요
+# - GCP는 기본적으로 명시적 allow가 없으면 차단하므로,
+#   아래 규칙만으로도 기본 보안은 확보됩니다
+#
+# 보안 원칙:
+# 1. 필요한 트래픽만 명시적 허용
+# 2. IAP를 통한 SSH 접근 (직접 SSH 차단)
+# 3. 로드밸런서 Health Check만 허용
+# 4. 내부 통신은 최소한으로 제한
+#
+# ⚠️ 주의: 실제 프로젝트 요구사항에 맞게 수정 필요!
+
 firewall_rules = [
+  # -------------------------------------------------------------------------
+  # 인바운드 규칙 (INGRESS)
+  # -------------------------------------------------------------------------
+
+  # 1. SSH 접근 - IAP(Identity-Aware Proxy)를 통해서만 허용
   {
-    name           = "allow-ssh-from-iap"
+    name           = "allow-iap-ssh"
+    description    = "SSH access only via Google IAP (secure tunnel)"
     direction      = "INGRESS"
-    ranges         = ["35.235.240.0/20"]          # IAP 고정 IP
+    priority       = 1000
+    ranges         = ["35.235.240.0/20"]  # Google IAP IP range
     allow_protocol = "tcp"
     allow_ports    = ["22"]
-    target_tags    = ["ssh-allowed"]
-    description    = "IAP를 통한 SSH 허용"
+    target_tags    = ["ssh"]              # ssh 태그가 있는 인스턴스만 허용
   },
+
+  # 2. 로드밸런서 Health Check 허용
   {
-    name           = "allow-health-check"
+    name           = "allow-lb-health-check"
+    description    = "Google Cloud Load Balancer health checks"
     direction      = "INGRESS"
-    ranges         = ["130.211.0.0/22", "35.191.0.0/16"]
+    priority       = 1001
+    ranges         = ["130.211.0.0/22", "35.191.0.0/16"]  # GCP LB health check IP ranges
     allow_protocol = "tcp"
-    allow_ports    = ["8080"]
-    target_tags    = ["lb-health-check"]
-    description    = "Google 로드밸런서 헬스체크 허용"
-  }
+    allow_ports    = ["80", "443", "8080"]  # 프로젝트에 맞게 조정
+    target_tags    = ["lb-backend"]
+  },
+
+  # 3. 내부 서비스 간 통신 (선택적 - 필요 시 활성화)
+  # {
+  #   name           = "allow-internal-services"
+  #   description    = "Allow communication between internal services"
+  #   direction      = "INGRESS"
+  #   priority       = 1100
+  #   ranges         = ["10.3.0.0/16"]  # VPC CIDR (프로젝트에 맞게 조정)
+  #   allow_protocol = "tcp"
+  #   allow_ports    = ["3000", "8080", "9000"]  # 애플리케이션 포트
+  #   target_tags    = ["app-backend"]
+  # },
+
+  # -------------------------------------------------------------------------
+  # 아웃바운드 규칙 (EGRESS) - 현재 모듈은 EGRESS 미지원
+  # -------------------------------------------------------------------------
+  # GCP 기본 정책: 모든 EGRESS 허용
+  #
+  # 강화가 필요한 경우 다음을 수동으로 gcloud 명령어로 생성:
+  #
+  # 1. 필수 트래픽만 허용:
+  #    gcloud compute firewall-rules create allow-essential-egress \
+  #      --network=<VPC_NAME> --direction=EGRESS --priority=1000 \
+  #      --action=ALLOW --rules=tcp:443,udp:53,udp:123 \
+  #      --destination-ranges=0.0.0.0/0
+  #
+  # 2. Private Google Access:
+  #    gcloud compute firewall-rules create allow-google-apis \
+  #      --network=<VPC_NAME> --direction=EGRESS --priority=1001 \
+  #      --action=ALLOW --rules=tcp:443 \
+  #      --destination-ranges=199.36.153.8/30
+  #
+  # 3. Deny all other egress:
+  #    gcloud compute firewall-rules create deny-all-egress \
+  #      --network=<VPC_NAME> --direction=EGRESS --priority=65534 \
+  #      --action=DENY --rules=all \
+  #      --destination-ranges=0.0.0.0/0 --enable-logging
 ]
+
+# ============================================================================
+# TODO: 모듈 업데이트 필요 (modules/network-dedicated-vpc)
+# ============================================================================
+#
+# Deny-by-default 정책을 완전히 구현하려면 모듈에 다음 추가 필요:
+#
+# 1. variables.tf에 추가:
+#    - deny_protocol (optional string)
+#    - destination (optional list(string)) for EGRESS
+#    - enable_logging (optional bool)
+#
+# 2. main.tf에 추가:
+#    - direction == "EGRESS" 처리 (destination_ranges 사용)
+#    - deny_protocol이 있으면 deny {} 블록 생성
+#    - enable_logging 지원 (log_config 블록)
+#
+# 3. 예시:
+#    dynamic "deny" {
+#      for_each = can(rule.deny_protocol) ? [1] : []
+#      content {
+#        protocol = rule.deny_protocol
+#        ports    = lookup(rule, "deny_ports", null)
+#      }
+#    }
+#
+# 모듈 업데이트 후 위의 gcloud 명령어를 Terraform으로 대체 가능
+
+# ============================================================================
+# 참고사항
+# ============================================================================
+#
+# 1. 방화벽 태그 사용법:
+#    - GCE 인스턴스 생성 시 tags = ["ssh", "lb-backend"] 형태로 지정
+#    - 태그를 통해 선택적으로 방화벽 규칙 적용
+#    - 태그가 없는 인스턴스는 규칙이 적용되지 않음
+#
+# 2. GCP 기본 동작:
+#    - 명시적 ALLOW가 없으면 INGRESS는 기본 차단
+#    - EGRESS는 기본 허용 (제한하려면 gcloud 사용)
+#    - Implied rules: VPC 내부 통신, Google Health Check 허용
+#
+# 3. 우선순위 (priority):
+#    - 낮은 숫자 = 높은 우선순위 (먼저 평가)
+#    - 일반 allow: 1000-2000
+#    - Catch-all deny: 65534
+#    - 0 (최고 우선순위) ~ 65535 (최저 우선순위)
+#
+# 4. 보안 강화 팁:
+#    - 운영 환경: ssh 태그 제거하고 Bastion Host 사용
+#    - Service Account 기반 방화벽 규칙 사용 고려
+#    - VPC Service Controls 추가 적용 권장
+#    - Firewall Insights로 미사용 규칙 정기 검토
+#
+# 5. 로깅 (모듈 업데이트 후):
+#    - Deny 규칙과 중요 Allow 규칙에만 로깅 권장
+#    - 로깅 비용 고려 (Cloud Logging 요금)
+#
 
 # Cloud SQL Private IP 등을 사용하려면 true 유지
 enable_private_service_connection          = true
