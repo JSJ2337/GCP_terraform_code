@@ -47,6 +47,10 @@
   - `proj-default-templet` 및 `environments/LIVE/jsj-game-n`의 60-database 레이어에서 읽기 복제본 map을 재가공하여 region/name이 비어 있으면 기본값(`master region`, `{db_instance_name}-read-XX`)을 자동 채움
   - variables.tf에서 `name`, `region`을 optional로 선언해 Terraform validation 단계에서 실패하지 않도록 조정
   - 커밋: `b7fee4a`, `7c02390`, `aeb8bc9`, `013d499`, `ca68cd8`
+- **20-storage Terragrunt locals 오류 수정**
+  - CORS 자동화 도입 직후 Terragrunt locals 간 참조에서 `local.` 접두사가 누락되어 Jenkins 실행이 실패하던 문제 해결
+  - 템플릿과 `jsj-game-n` 환경 모두 locals 가독성을 유지하면서도 안전하게 평가되도록 수정
+  - 커밋: `3946d90`
 - **Jenkins 프로젝트 생성 워크플로우 간소화**
   - 문제: Jenkins에서 신규 브랜치를 생성하고 PR을 만드는 복잡한 프로세스
   - 해결: 433_code 브랜치에 직접 커밋하고 GitHub에 푸시하는 방식으로 단순화
