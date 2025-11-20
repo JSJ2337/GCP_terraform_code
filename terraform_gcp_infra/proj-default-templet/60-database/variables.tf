@@ -231,8 +231,8 @@ variable "users" {
 
 variable "read_replicas" {
   type = map(object({
-    name            = string
-    region          = string
+    name            = optional(string)
+    region          = optional(string)
     tier            = string
     failover_target = optional(bool)
 
@@ -248,7 +248,7 @@ variable "read_replicas" {
     maintenance_window_update_track = optional(string)
     labels                          = optional(map(string))
   }))
-  description = "읽기 복제본 설정 (지역/머신 타입/디스크/네트워크/유지보수 개별 지정 지원)"
+  description = "읽기 복제본 설정 (이름/리전 미입력 시 자동으로 기본값 적용)"
   default     = {}
 }
 

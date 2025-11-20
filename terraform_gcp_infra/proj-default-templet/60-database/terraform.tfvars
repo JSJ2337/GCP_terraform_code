@@ -58,10 +58,9 @@ users = []
 # 필요시 개별 replica에 다른 region 명시 가능 (예: DR용)
 read_replicas = {
   replica1 = {
-    name   = "default-templet-mysql-read-1"
     # region 미지정 시 Master와 같은 리전(region_primary) 자동 사용
-    tier   = "db-n1-standard-1"
-    availability_type = "ZONAL"  # Read Replica는 ZONAL만 가능
+    tier              = "db-n1-standard-1"
+    availability_type = "ZONAL" # Read Replica는 ZONAL만 가능
     # Optional overrides per replica:
     # region = "asia-northeast1"  # DR용 다른 리전 지정 시
     # disk_size         = 50

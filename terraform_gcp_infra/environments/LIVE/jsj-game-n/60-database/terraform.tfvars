@@ -55,11 +55,11 @@ users = []
 
 # Read replicas (optional)
 # region은 terragrunt.hcl에서 자동으로 region_primary 사용
+# 필요 시 replica별 다른 region 지정 가능
 read_replicas = {
   replica1 = {
-    name   = "game-n-mysql-read-1"
-    tier   = "db-n1-standard-1"
-    availability_type = "ZONAL"  # REGIONAL은 Master만
+    tier              = "db-n1-standard-1"
+    availability_type = "ZONAL" # REGIONAL은 Master만
     labels = {
       role = "read"
     }

@@ -24,10 +24,20 @@ module "naming" {
 }
 
 locals {
-  region_effective = length(trimspace(var.region)) > 0 ? trimspace(var.region) : module.naming.region_primary
-  private_network  = length(trimspace(var.private_network)) > 0 ? var.private_network : "projects/${var.project_id}/global/networks/${module.naming.vpc_name}"
-  labels           = merge(module.naming.common_labels, var.labels)
-
+  region_effective         = length(trimspace(var.region)) > 0 ? trimspace(var.region) : module.naming.region_primary
+  private_network          = length(trimspace(var.private_network)) > 0 ? var.private_network : "projects/${var.project_id}/global/networks/${module.naming.vpc_name}"
+  labels                   = merge(module.naming.common_labels, var.labels)
+  read_replica_keys_sorted = sort(keys(var.read_replicas))
+  read_replicas_with_defaults = {
+    for idx, key in local.read_replica_keys_sorted :
+    key => merge(
+      var.read_replicas[key],
+      {
+        region = length(trimspace(try(var.read_replicas[key].region, ""))) > 0 ? trimspace(var.read_replicas[key].region) : local.region_effective
+        name   = length(trimspace(try(var.read_replicas[key].name, ""))) > 0 ? trimspace(var.read_replicas[key].name) : format("%s-read-%02d", module.naming.db_instance_name, idx + 1)
+      }
+    )
+  }
 }
 
 provider "google" {
@@ -100,7 +110,7 @@ module "mysql" {
   users = var.users
 
   # Read replicas
-  read_replicas = var.read_replicas
+  read_replicas = local.read_replicas_with_defaults
 
   labels = local.labels
 }
