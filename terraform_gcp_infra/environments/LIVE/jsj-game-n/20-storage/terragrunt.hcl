@@ -29,8 +29,8 @@ locals {
   layer_inputs_without_cors = { for k, v in local.layer_inputs : k => v if k != "assets_cors_rules" }
   assets_cors_rules_effective = try(local.layer_inputs.assets_cors_rules, null)
   assets_cors_rules_final = (
-    assets_cors_rules_effective == null || length(assets_cors_rules_effective) == 0
-  ) ? local.default_assets_cors_rules : assets_cors_rules_effective
+    local.assets_cors_rules_effective == null || length(local.assets_cors_rules_effective) == 0
+  ) ? local.default_assets_cors_rules : local.assets_cors_rules_effective
 }
 
 inputs = merge(
