@@ -33,8 +33,8 @@ locals {
     key => merge(
       var.read_replicas[key],
       {
-        region = length(trimspace(try(var.read_replicas[key].region, ""))) > 0 ? trimspace(try(var.read_replicas[key].region, "")) : local.region_effective
-        name   = length(trimspace(try(var.read_replicas[key].name, ""))) > 0 ? trimspace(try(var.read_replicas[key].name, "")) : format("%s-read-%02d", module.naming.db_instance_name, idx + 1)
+        region = length(trimspace(tostring(try(var.read_replicas[key].region, "")))) > 0 ? trimspace(tostring(try(var.read_replicas[key].region, ""))) : local.region_effective
+        name   = length(trimspace(tostring(try(var.read_replicas[key].name, "")))) > 0 ? trimspace(tostring(try(var.read_replicas[key].name, ""))) : format("%s-read-%02d", module.naming.db_instance_name, idx + 1)
       }
     )
   }
