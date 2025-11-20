@@ -55,7 +55,6 @@ module "cloud_dns" {
 
   target_name_servers = var.target_name_servers
   peering_network     = var.peering_network
-  reverse_lookup      = var.reverse_lookup
 
   labels = local.common_labels
 

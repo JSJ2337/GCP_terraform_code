@@ -88,12 +88,6 @@ variable "peering_network" {
   default     = ""
 }
 
-variable "reverse_lookup" {
-  type        = bool
-  description = "Reverse lookup (PTR records) 활성화 여부"
-  default     = false
-}
-
 variable "labels" {
   type        = map(string)
   description = "Managed Zone에 적용할 라벨"

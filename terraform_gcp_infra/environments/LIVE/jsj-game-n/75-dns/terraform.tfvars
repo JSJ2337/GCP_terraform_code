@@ -29,9 +29,6 @@ target_name_servers = []
 # DNS Peering 설정 (다른 VPC의 DNS Zone과 연결)
 peering_network = ""
 
-# Reverse Lookup (PTR records) 활성화
-reverse_lookup = false
-
 # DNS 레코드 목록
 dns_records = [
   # 애플리케이션 서버

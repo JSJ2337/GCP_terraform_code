@@ -103,12 +103,6 @@ variable "peering_network" {
   default     = ""
 }
 
-variable "reverse_lookup" {
-  type        = bool
-  description = "Reverse lookup (PTR records) 활성화 여부"
-  default     = false
-}
-
 variable "labels" {
   type        = map(string)
   description = "추가 라벨 (naming 모듈 공통 라벨과 병합됨)"

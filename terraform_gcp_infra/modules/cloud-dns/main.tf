@@ -74,9 +74,6 @@ resource "google_dns_managed_zone" "zone" {
     }
   }
 
-  # Reverse Lookup (PTR records용)
-  reverse_lookup = var.reverse_lookup
-
   labels = var.labels
 }
 
