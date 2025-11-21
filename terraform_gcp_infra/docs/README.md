@@ -77,9 +77,10 @@
 |------|------|
 | [CHANGELOG](./changelog/CHANGELOG.md) | 버전별 변경 내역 및 마이그레이션 가이드 |
 | [작업 이력](./changelog/work_history/README.md) | 날짜별 작업 요약 및 마일스톤 |
-| [2025-11-12](./changelog/work_history/2025-11-12.md) | 최신: 문서 재구성 |
-| [2025-11-11](./changelog/work_history/2025-11-11.md) | Terragrunt 0.93 CLI 적용 |
-| [2025-11-10](./changelog/work_history/2025-11-10.md) | jsj-game-k 환경 생성 |
+| [2025-11-21](./changelog/work_history/2025-11-21.md) | 최신: Jenkinsfile Phase 기반 구조 전환 + 서브넷/스토리지 자동화 |
+| [2025-11-20](./changelog/work_history/2025-11-20.md) | 10-network 서브넷 이름/리전 동적 생성 |
+| [2025-11-19](./changelog/work_history/2025-11-19.md) | jsj-game-n 환경 생성 및 State 관리 안정화 |
+| [2025-11-18](./changelog/work_history/2025-11-18.md) | Memorystore PSC 구성 완료 |
 | [전체 이력](./changelog/work_history/README.md) | 전체 작업 이력 조회 |
 
 ---
