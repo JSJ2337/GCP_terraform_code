@@ -88,7 +88,7 @@ pipeline {
                                 '''
                             }
                             dir("${TG_WORKING_DIR}") {
-                                sh "terragrunt run-all init"
+                                sh "terragrunt run --all init"
                             }
                         } else {
                             dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
@@ -120,7 +120,7 @@ pipeline {
                         '''
                     }
                     dir("${TG_WORKING_DIR}/00-project") {
-                        sh "terragrunt run-all plan -out=tfplan-00-project"
+                        sh "terragrunt run --all plan -out=tfplan-00-project"
                     }
                     // Plan 파일을 Jenkins Artifact로 저장
                     archiveArtifacts artifacts: "**/00-project/**/tfplan-00-project", allowEmptyArchive: true
@@ -171,7 +171,7 @@ pipeline {
                 script {
                     echo '🚀 [Phase 1/2] Applying Bootstrap Layer...'
                     dir("${TG_WORKING_DIR}/00-project") {
-                        sh "terragrunt run-all apply tfplan-00-project"
+                        sh "terragrunt run --all apply tfplan-00-project"
                     }
                 }
             }
@@ -210,7 +210,7 @@ pipeline {
                     }
                     dir("${TG_WORKING_DIR}") {
                         // 00-project를 제외한 모든 레이어 Plan
-                        sh "terragrunt run-all plan --terragrunt-exclude-dir ${TG_WORKING_DIR}/00-project -out=tfplan-rest"
+                        sh "terragrunt run --all plan --terragrunt-exclude-dir ${TG_WORKING_DIR}/00-project -out=tfplan-rest"
                     }
                     // Plan 파일을 Jenkins Artifact로 저장
                     archiveArtifacts artifacts: "**/tfplan-rest", allowEmptyArchive: true
@@ -262,7 +262,7 @@ pipeline {
                     echo '🚀 [Phase 2/2] Applying Remaining Layers...'
                     dir("${TG_WORKING_DIR}") {
                         // Plan 파일을 사용하여 Apply (변경사항이 Plan과 동일함을 보장)
-                        sh "terragrunt run-all apply --terragrunt-exclude-dir ${TG_WORKING_DIR}/00-project tfplan-rest"
+                        sh "terragrunt run --all apply --terragrunt-exclude-dir ${TG_WORKING_DIR}/00-project tfplan-rest"
                     }
                 }
             }
@@ -367,7 +367,7 @@ pipeline {
                     echo '🗑️  Destroying All Layers (역순)...'
                     dir("${TG_WORKING_DIR}") {
                         // 역순으로 destroy (의존성 고려)
-                        sh "terragrunt run-all destroy -auto-approve"
+                        sh "terragrunt run --all destroy -auto-approve"
                     }
                 }
             }
