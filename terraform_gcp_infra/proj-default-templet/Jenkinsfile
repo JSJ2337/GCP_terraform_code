@@ -87,8 +87,8 @@ pipeline {
                                     find . -name "tfplan" -type f -delete || true
                                 '''
                             }
-                            dir("${env.WORKSPACE}") {
-                                sh "terragrunt run-all init --terragrunt-working-dir ${TG_WORKING_DIR}"
+                            dir("${TG_WORKING_DIR}") {
+                                sh "terragrunt run-all init"
                             }
                         } else {
                             dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
@@ -97,8 +97,8 @@ pipeline {
                                     rm -f tfplan || true
                                 '''
                             }
-                            dir("${env.WORKSPACE}") {
-                                sh "terragrunt init --terragrunt-working-dir '${TG_WORKING_DIR}/${params.TARGET_LAYER}'"
+                            dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
+                                sh "terragrunt init"
                             }
                         }
                     }
@@ -119,8 +119,8 @@ pipeline {
                             rm -f tfplan-00-project || true
                         '''
                     }
-                    dir("${env.WORKSPACE}") {
-                        sh "terragrunt run-all plan --terragrunt-working-dir ${TG_WORKING_DIR}/00-project -out=tfplan-00-project"
+                    dir("${TG_WORKING_DIR}/00-project") {
+                        sh "terragrunt run-all plan -out=tfplan-00-project"
                     }
                     // Plan 파일을 Jenkins Artifact로 저장
                     archiveArtifacts artifacts: "**/00-project/**/tfplan-00-project", allowEmptyArchive: true
@@ -170,8 +170,8 @@ pipeline {
             steps {
                 script {
                     echo '🚀 [Phase 1/2] Applying Bootstrap Layer...'
-                    dir("${env.WORKSPACE}") {
-                        sh "terragrunt run-all apply --terragrunt-working-dir ${TG_WORKING_DIR}/00-project tfplan-00-project"
+                    dir("${TG_WORKING_DIR}/00-project") {
+                        sh "terragrunt run-all apply tfplan-00-project"
                     }
                 }
             }
@@ -208,9 +208,9 @@ pipeline {
                             find . -name "tfplan-rest" -type f -delete || true
                         '''
                     }
-                    dir("${env.WORKSPACE}") {
+                    dir("${TG_WORKING_DIR}") {
                         // 00-project를 제외한 모든 레이어 Plan
-                        sh "terragrunt run-all plan --terragrunt-working-dir ${TG_WORKING_DIR} --terragrunt-exclude-dir '${TG_WORKING_DIR}/00-project' -out=tfplan-rest"
+                        sh "terragrunt run-all plan --terragrunt-exclude-dir ${TG_WORKING_DIR}/00-project -out=tfplan-rest"
                     }
                     // Plan 파일을 Jenkins Artifact로 저장
                     archiveArtifacts artifacts: "**/tfplan-rest", allowEmptyArchive: true
@@ -260,9 +260,9 @@ pipeline {
             steps {
                 script {
                     echo '🚀 [Phase 2/2] Applying Remaining Layers...'
-                    dir("${env.WORKSPACE}") {
+                    dir("${TG_WORKING_DIR}") {
                         // Plan 파일을 사용하여 Apply (변경사항이 Plan과 동일함을 보장)
-                        sh "terragrunt run-all apply --terragrunt-working-dir ${TG_WORKING_DIR} --terragrunt-exclude-dir '${TG_WORKING_DIR}/00-project' tfplan-rest"
+                        sh "terragrunt run-all apply --terragrunt-exclude-dir ${TG_WORKING_DIR}/00-project tfplan-rest"
                     }
                 }
             }
@@ -275,8 +275,8 @@ pipeline {
             steps {
                 script {
                     echo '📋 Running Terragrunt Plan...'
-                    dir("${env.WORKSPACE}") {
-                        sh "terragrunt plan --terragrunt-working-dir '${TG_WORKING_DIR}/${params.TARGET_LAYER}' -out=tfplan"
+                    dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
+                        sh "terragrunt plan -out=tfplan"
                     }
                     archiveArtifacts artifacts: "**/${params.TARGET_LAYER}/**/tfplan", allowEmptyArchive: true
                 }
@@ -342,13 +342,13 @@ pipeline {
                 script {
                     if (params.ACTION == 'apply') {
                         echo '🚀 Applying Terragrunt changes...'
-                        dir("${env.WORKSPACE}") {
-                            sh "terragrunt apply --terragrunt-working-dir '${TG_WORKING_DIR}/${params.TARGET_LAYER}' tfplan"
+                        dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
+                            sh "terragrunt apply tfplan"
                         }
                     } else if (params.ACTION == 'destroy') {
                         echo '🗑️  Destroying Terragrunt resources...'
-                        dir("${env.WORKSPACE}") {
-                            sh "terragrunt destroy --terragrunt-working-dir '${TG_WORKING_DIR}/${params.TARGET_LAYER}' -auto-approve"
+                        dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
+                            sh "terragrunt destroy -auto-approve"
                         }
                     }
                 }
@@ -365,9 +365,9 @@ pipeline {
             steps {
                 script {
                     echo '🗑️  Destroying All Layers (역순)...'
-                    dir("${env.WORKSPACE}") {
+                    dir("${TG_WORKING_DIR}") {
                         // 역순으로 destroy (의존성 고려)
-                        sh "terragrunt run-all destroy --terragrunt-working-dir ${TG_WORKING_DIR} -auto-approve"
+                        sh "terragrunt run-all destroy -auto-approve"
                     }
                 }
             }
