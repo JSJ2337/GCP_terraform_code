@@ -29,10 +29,10 @@ output "subnets" {
 
 output "vpc_self_link" {
   description = "The self_link of the VPC network"
-  value       = module.net.network_self_link
+  value       = module.net.vpc_self_link
 }
 
 output "vpc_name" {
   description = "The name of the VPC network"
-  value       = module.net.network_name
+  value       = module.naming.vpc_name
 }
