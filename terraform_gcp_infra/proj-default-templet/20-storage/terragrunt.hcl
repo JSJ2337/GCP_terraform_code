@@ -14,6 +14,12 @@ locals {
   raw_layer_inputs = try(read_tfvars_file("${get_terragrunt_dir()}/terraform.tfvars"), tomap({}))
   layer_inputs     = try(jsondecode(local.raw_layer_inputs), local.raw_layer_inputs)
 
+  # Bucket location 자동 생성
+  # region_primary = "asia-northeast3" → "ASIA-NORTHEAST3"
+  region_upper = upper(local.common_inputs.region_primary)
+  # region_primary = "asia-northeast3" → "ASIA" (multi-region)
+  region_continent = upper(split("-", local.common_inputs.region_primary)[0])
+
   default_assets_cors_rules = [
     {
       origin          = [
@@ -26,7 +32,15 @@ locals {
     }
   ]
 
-  layer_inputs_without_cors = { for k, v in local.layer_inputs : k => v if k != "assets_cors_rules" }
+  # CORS와 bucket location은 terragrunt에서 자동 주입
+  layer_inputs_without_auto = {
+    for k, v in local.layer_inputs :
+    k => v if !contains(
+      ["assets_cors_rules", "assets_bucket_location", "logs_bucket_location", "backups_bucket_location"],
+      k
+    )
+  }
+
   assets_cors_rules_effective = try(local.layer_inputs.assets_cors_rules, null)
   assets_cors_rules_final = (
     local.assets_cors_rules_effective == null || length(local.assets_cors_rules_effective) == 0
@@ -35,9 +49,13 @@ locals {
 
 inputs = merge(
   local.common_inputs,
-  local.layer_inputs_without_cors,
+  local.layer_inputs_without_auto,
   {
-    assets_cors_rules = local.assets_cors_rules_final
+    # Bucket location 자동 주입 (region_primary 기반)
+    assets_bucket_location  = local.region_upper
+    logs_bucket_location    = local.region_upper
+    backups_bucket_location = local.region_continent
+    assets_cors_rules       = local.assets_cors_rules_final
   }
 )
 
