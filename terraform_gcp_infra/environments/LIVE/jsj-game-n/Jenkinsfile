@@ -200,7 +200,8 @@ ${phaseList}
         }
 
         // ====================================================================
-        // Step 3: 승인 후 모든 Phase Apply/Destroy 순차 실행
+        // Step 3: 승인 후 모든 Phase Re-plan 및 Apply/Destroy 순차 실행
+        // 각 Phase apply 직전에 fresh plan을 생성하여 stale plan 문제 방지
         // ====================================================================
         stage('Execute All Phases') {
             when {
@@ -224,9 +225,11 @@ ${phaseList}
                             "'${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'"
                         }.join(' ')
 
-                        // Phase 실행
-                        stage("${phase.label} - ${params.ACTION.capitalize()}") {
+                        // Phase 실행: Re-plan → Apply/Destroy
+                        stage("${phase.label} - Replan & ${params.ACTION.capitalize()}") {
                             if (params.ACTION == 'apply') {
+                                echo "📋 Re-planning ${phase.label} with latest state..."
+                                runPhasePlan(phase, phaseDirs)
                                 echo "🚀 Applying ${phase.label}..."
                                 runPhaseApply(phase, phaseDirs)
                             } else {
