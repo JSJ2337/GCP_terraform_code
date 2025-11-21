@@ -1,3 +1,17 @@
+// ============================================================================
+// Phase 정의: 레이어별 의존성을 고려한 순차 실행 구조
+// ============================================================================
+def PHASES = [
+    [id: 'phase1', label: 'Phase 1 - Bootstrap (00-project)', dirs: ['00-project'], optional: false],
+    [id: 'phase2', label: 'Phase 2 - Network (10-network)', dirs: ['10-network'], optional: false],
+    [id: 'phase3', label: 'Phase 3 - Storage & Security', dirs: ['20-storage', '30-security'], optional: false],
+    [id: 'phase4', label: 'Phase 4 - Observability', dirs: ['40-observability'], optional: true],
+    [id: 'phase5', label: 'Phase 5 - Workloads (50-workloads)', dirs: ['50-workloads'], optional: false],
+    [id: 'phase6', label: 'Phase 6 - Database & Cache', dirs: ['60-database', '65-cache'], optional: false],
+    [id: 'phase7', label: 'Phase 7 - Load Balancers', dirs: ['70-loadbalancers/web', '70-loadbalancers/app', '70-loadbalancers/lobby'], optional: false],
+    [id: 'phase8', label: 'Phase 8 - DNS', dirs: ['75-dns'], optional: false]
+]
+
 pipeline {
     agent any
 
@@ -43,6 +57,11 @@ pipeline {
                 '75-dns'
             ],
             description: '실행할 레이어 (all = 전체 스택)'
+        )
+        booleanParam(
+            name: 'ENABLE_OBSERVABILITY',
+            defaultValue: true,
+            description: '40-observability 레이어 포함 여부'
         )
     }
 
@@ -103,158 +122,70 @@ pipeline {
             }
         }
 
-        stage('Terragrunt Plan - Bootstrap (00-project)') {
+        // ====================================================================
+        // Phase 기반 순차 실행 (TARGET_LAYER == 'all')
+        // ====================================================================
+        stage('Phased Deployment') {
             when {
                 expression { params.TARGET_LAYER == 'all' }
             }
             steps {
                 script {
-                    echo '📋 [Phase 1/2] Planning Bootstrap Layer (00-project)...'
-                    sh """
-                        rm -rf '${env.WORKSPACE}/${TG_WORKING_DIR}/00-project/.terragrunt-cache' || true
-                        rm -rf '${env.WORKSPACE}/${TG_WORKING_DIR}/00-project/.terraform' || true
-                        rm -f '${env.WORKSPACE}/${TG_WORKING_DIR}/00-project/tfplan-00-project' || true
-                    """
+                    def orderedPhases = params.ACTION == 'destroy' ? PHASES.reverse() : PHASES
 
-                    // Run terragrunt plan with working-dir flag
-                    sh "terragrunt run --all --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/00-project' -- plan -out=tfplan-00-project"
+                    orderedPhases.each { phase ->
+                        // Optional phase 처리 (apply/plan 시에만 skip, destroy는 항상 실행)
+                        if (phase.optional && phase.id == 'phase4' && !params.ENABLE_OBSERVABILITY && params.ACTION != 'destroy') {
+                            echo "⏭️  Skipping ${phase.label} (disabled by parameter)"
+                            return
+                        }
 
-                    // Plan 파일을 Jenkins Artifact로 저장
-                    archiveArtifacts artifacts: "**/00-project/**/tfplan-00-project", allowEmptyArchive: true
-                }
-            }
-        }
+                        def phaseDirs = phase.dirs.collect {
+                            "'${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'"
+                        }.join(' ')
 
-        stage('🛑 Approval - Bootstrap 🛑') {
-            when {
-                allOf {
-                    expression { params.ACTION == 'apply' || params.ACTION == 'destroy' }
-                    expression { params.TARGET_LAYER == 'all' }
-                }
-            }
-            steps {
-                script {
-                    def approvalMessage = """
-                    ⚠️  [Phase 1/2] Bootstrap Layer 승인 필요 ⚠️
-
-                    Action: ${params.ACTION.toUpperCase()}
-                    Target: 00-project (API 활성화)
-                    Branch: ${env.GIT_BRANCH}
-                    Commit: ${env.GIT_COMMIT}
-
-                    00-project Plan을 검토한 후 승인하시겠습니까?
-                    (승인 후 나머지 레이어 Plan이 진행됩니다)
-                    """
-
-                    timeout(time: 30, unit: 'MINUTES') {
-                        input(
-                            message: approvalMessage,
-                            ok: '✅ 승인 (Bootstrap Apply 실행)',
-                            submitter: 'admin'
-                        )
+                        // Phase 1 이후 API Propagation 대기
+                        if (phase.id == 'phase1' && params.ACTION == 'apply') {
+                            stage("${phase.label} - Plan") {
+                                echo "📋 Planning ${phase.label}..."
+                                runPhasePlan(phase, phaseDirs)
+                            }
+                            if (params.ACTION == 'apply') {
+                                stage("${phase.label} - Approval") {
+                                    waitForApproval(phase)
+                                }
+                                stage("${phase.label} - Apply") {
+                                    echo "🚀 Applying ${phase.label}..."
+                                    runPhaseApply(phase, phaseDirs)
+                                }
+                                stage('Wait for API Propagation') {
+                                    echo '⏳ Waiting for GCP API propagation (120 seconds)...'
+                                    sleep(time: 120, unit: 'SECONDS')
+                                    echo '✅ API propagation wait completed'
+                                }
+                            }
+                        } else {
+                            // 일반 Phase 실행
+                            stage("${phase.label} - Plan") {
+                                echo "📋 Planning ${phase.label}..."
+                                runPhasePlan(phase, phaseDirs)
+                            }
+                            if (params.ACTION == 'apply' || params.ACTION == 'destroy') {
+                                stage("${phase.label} - Approval") {
+                                    waitForApproval(phase)
+                                }
+                                stage("${phase.label} - ${params.ACTION.capitalize()}") {
+                                    if (params.ACTION == 'apply') {
+                                        echo "🚀 Applying ${phase.label}..."
+                                        runPhaseApply(phase, phaseDirs)
+                                    } else {
+                                        echo "🗑️  Destroying ${phase.label}..."
+                                        runPhaseDestroy(phase, phaseDirs)
+                                    }
+                                }
+                            }
+                        }
                     }
-                }
-            }
-        }
-
-        stage('Apply Bootstrap (00-project)') {
-            when {
-                allOf {
-                    expression { params.ACTION == 'apply' }
-                    expression { params.TARGET_LAYER == 'all' }
-                }
-            }
-            steps {
-                script {
-                    echo '🚀 [Phase 1/2] Applying Bootstrap Layer...'
-                    sh "terragrunt run --all --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/00-project' -- apply tfplan-00-project"
-                }
-            }
-        }
-
-        stage('Wait for API Propagation') {
-            when {
-                allOf {
-                    expression { params.ACTION == 'apply' }
-                    expression { params.TARGET_LAYER == 'all' }
-                }
-            }
-            steps {
-                script {
-                    echo '⏳ Waiting for GCP API propagation (120 seconds)...'
-                    echo 'APIs being enabled: compute, servicenetworking, networkconnectivity, etc.'
-                    sleep(time: 120, unit: 'SECONDS')
-                    echo '✅ API propagation wait completed'
-                }
-            }
-        }
-
-        stage('Terragrunt Plan - Remaining Layers') {
-            when {
-                expression { params.TARGET_LAYER == 'all' }
-            }
-            steps {
-                script {
-                    echo '📋 [Phase 2/2] Planning Remaining Layers (10-network ~ 75-dns)...'
-                    sh """
-                        find '${env.WORKSPACE}/${TG_WORKING_DIR}' -type d -name ".terragrunt-cache" -prune -exec rm -rf {} + || true
-                        find '${env.WORKSPACE}/${TG_WORKING_DIR}' -type d -name ".terraform" -prune -exec rm -rf {} + || true
-                        find '${env.WORKSPACE}/${TG_WORKING_DIR}' -name "tfplan-rest" -type f -delete || true
-                    """
-
-                    // 00-project를 제외한 모든 레이어 Plan
-                    sh "terragrunt run --all --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' --queue-exclude-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/00-project' -- plan -out=tfplan-rest"
-
-                    // Plan 파일을 Jenkins Artifact로 저장
-                    archiveArtifacts artifacts: "**/tfplan-rest", allowEmptyArchive: true
-                }
-            }
-        }
-
-        stage('🛑 Approval - Remaining Layers 🛑') {
-            when {
-                allOf {
-                    expression { params.ACTION == 'apply' || params.ACTION == 'destroy' }
-                    expression { params.TARGET_LAYER == 'all' }
-                }
-            }
-            steps {
-                script {
-                    def approvalMessage = """
-                    ⚠️  [Phase 2/2] Remaining Layers 승인 필요 ⚠️
-
-                    Action: ${params.ACTION.toUpperCase()}
-                    Target: 10-network ~ 75-dns (전체 인프라)
-                    Branch: ${env.GIT_BRANCH}
-                    Commit: ${env.GIT_COMMIT}
-
-                    전체 인프라 Plan을 검토한 후 승인하시겠습니까?
-                    ⚠️  Network, Database, LoadBalancer 등 모든 리소스가 변경될 수 있습니다!
-                    """
-
-                    timeout(time: 30, unit: 'MINUTES') {
-                        input(
-                            message: approvalMessage,
-                            ok: '✅ 승인 (전체 인프라 Apply 실행)',
-                            submitter: 'admin'
-                        )
-                    }
-                }
-            }
-        }
-
-        stage('Apply Remaining Layers') {
-            when {
-                allOf {
-                    expression { params.ACTION == 'apply' }
-                    expression { params.TARGET_LAYER == 'all' }
-                }
-            }
-            steps {
-                script {
-                    echo '🚀 [Phase 2/2] Applying Remaining Layers...'
-                    // Plan 파일을 사용하여 Apply (변경사항이 Plan과 동일함을 보장)
-                    sh "terragrunt run --all --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' --queue-exclude-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/00-project' -- apply tfplan-rest"
                 }
             }
         }
@@ -340,21 +271,6 @@ pipeline {
             }
         }
 
-        stage('Destroy All Layers') {
-            when {
-                allOf {
-                    expression { params.ACTION == 'destroy' }
-                    expression { params.TARGET_LAYER == 'all' }
-                }
-            }
-            steps {
-                script {
-                    echo '🗑️  Destroying All Layers (역순)...'
-                    // 역순으로 destroy (의존성 고려)
-                    sh "terragrunt run --all --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- destroy -auto-approve"
-                }
-            }
-        }
     }
 
     post {
@@ -371,11 +287,61 @@ pipeline {
         always {
             echo '🧹 Cleaning up plan/cache files...'
             sh '''
-                find . -name "tfplan" -type f -delete || true
+                find . -name "tfplan*" -type f -delete || true
                 find . -type d -name ".terragrunt-cache" -prune -exec rm -rf {} + || true
                 find . -type d -name ".terraform" -prune -exec rm -rf {} + || true
             '''
             echo '🏁 Pipeline finished'
         }
+    }
+}
+
+// Phase Plan 실행
+def runPhasePlan(phase, phaseDirs) {
+    phase.dirs.each { dir ->
+        sh """
+            rm -rf '${env.WORKSPACE}/${TG_WORKING_DIR}/${dir}/.terragrunt-cache' || true
+            rm -rf '${env.WORKSPACE}/${TG_WORKING_DIR}/${dir}/.terraform' || true
+            rm -f '${env.WORKSPACE}/${TG_WORKING_DIR}/${dir}/tfplan-${phase.id}' || true
+        """
+    }
+
+    def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
+    sh "terragrunt run --all ${includeArgs} --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- plan -out=tfplan-${phase.id}"
+
+    archiveArtifacts artifacts: "**/tfplan-${phase.id}", allowEmptyArchive: true
+}
+
+// Phase Apply 실행
+def runPhaseApply(phase, phaseDirs) {
+    def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
+    sh "terragrunt run --all ${includeArgs} --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- apply tfplan-${phase.id}"
+}
+
+// Phase Destroy 실행
+def runPhaseDestroy(phase, phaseDirs) {
+    def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
+    sh "terragrunt run --all ${includeArgs} --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- destroy -auto-approve"
+}
+
+// Phase Approval 대기
+def waitForApproval(phase) {
+    def approvalMessage = """
+    ⚠️  ${phase.label} 승인 필요 ⚠️
+
+    Action: ${params.ACTION.toUpperCase()}
+    Target: ${phase.dirs.join(', ')}
+    Branch: ${env.GIT_BRANCH}
+    Commit: ${env.GIT_COMMIT}
+
+    위 Plan을 검토한 후 승인하시겠습니까?
+    """
+
+    timeout(time: 30, unit: 'MINUTES') {
+        input(
+            message: approvalMessage,
+            ok: "✅ 승인 (${params.ACTION.capitalize()} 실행)",
+            submitter: 'admin'
+        )
     }
 }
