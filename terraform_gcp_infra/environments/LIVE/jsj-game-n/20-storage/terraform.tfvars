@@ -11,7 +11,8 @@ public_access_prevention    = "enforced"
 # kms_key_name = "projects/proj-default-templet-prod/locations/us-central1/keyRings/game-ring/cryptoKeys/storage-key"
 
 # Assets bucket - for game assets, images, configurations
-assets_bucket_location      = "US-CENTRAL1"
+# Location을 region_primary와 일치시켜 낮은 latency 및 무료 intra-region 트래픽 확보
+assets_bucket_location      = "ASIA-NORTHEAST3"
 assets_bucket_storage_class = "STANDARD"
 assets_bucket_labels = {
   bucket_type = "assets"
@@ -43,7 +44,8 @@ assets_lifecycle_rules = [
 assets_iam_bindings = []
 
 # Logs bucket - for application and system logs
-logs_bucket_location      = "US-CENTRAL1"
+# Location을 region_primary와 일치시켜 빠른 로그 수집 및 저렴한 비용
+logs_bucket_location      = "ASIA-NORTHEAST3"
 logs_bucket_storage_class = "COLDLINE"
 logs_enable_versioning    = false
 logs_bucket_labels = {
@@ -68,7 +70,8 @@ logs_cors_rules   = []
 logs_iam_bindings = []
 
 # Backups bucket - for database and configuration backups
-backups_bucket_location      = "US" # Multi-region for durability
+# Multi-region ASIA로 설정하여 높은 durability 및 disaster recovery 보장
+backups_bucket_location      = "ASIA" # Multi-region for DR
 backups_bucket_storage_class = "ARCHIVE"
 backups_bucket_labels = {
   bucket_type = "backups"
