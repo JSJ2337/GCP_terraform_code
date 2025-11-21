@@ -203,7 +203,7 @@ pipeline {
                     """
 
                     // 00-project를 제외한 모든 레이어 Plan
-                    sh "terragrunt run --all --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' --terragrunt-exclude-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/00-project' -- plan -out=tfplan-rest"
+                    sh "terragrunt run --all --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' --queue-exclude-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/00-project' -- plan -out=tfplan-rest"
 
                     // Plan 파일을 Jenkins Artifact로 저장
                     archiveArtifacts artifacts: "**/tfplan-rest", allowEmptyArchive: true
@@ -254,7 +254,7 @@ pipeline {
                 script {
                     echo '🚀 [Phase 2/2] Applying Remaining Layers...'
                     // Plan 파일을 사용하여 Apply (변경사항이 Plan과 동일함을 보장)
-                    sh "terragrunt run --all --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' --terragrunt-exclude-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/00-project' -- apply tfplan-rest"
+                    sh "terragrunt run --all --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' --queue-exclude-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/00-project' -- apply tfplan-rest"
                 }
             }
         }
