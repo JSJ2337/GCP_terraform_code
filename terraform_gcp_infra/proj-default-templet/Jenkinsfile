@@ -80,26 +80,23 @@ pipeline {
                     echo '🔧 Initializing Terragrunt...'
                     retry(3) {
                         if (params.TARGET_LAYER == 'all') {
-                            dir("${TG_WORKING_DIR}") {
-                                sh '''
-                                    find . -type d -name ".terragrunt-cache" -prune -exec rm -rf {} + || true
-                                    find . -type d -name ".terraform" -prune -exec rm -rf {} + || true
-                                    find . -name "tfplan" -type f -delete || true
-                                '''
-                            }
-                            dir("${TG_WORKING_DIR}") {
-                                sh "terragrunt run --all init"
-                            }
+                            // Clean cache files using absolute path
+                            sh """
+                                find '${env.WORKSPACE}/${TG_WORKING_DIR}' -type d -name ".terragrunt-cache" -prune -exec rm -rf {} + || true
+                                find '${env.WORKSPACE}/${TG_WORKING_DIR}' -type d -name ".terraform" -prune -exec rm -rf {} + || true
+                                find '${env.WORKSPACE}/${TG_WORKING_DIR}' -name "tfplan*" -type f -delete || true
+                            """
+
+                            // Run terragrunt run-all init with working-dir flag
+                            sh "terragrunt run-all init --terragrunt-working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}'"
                         } else {
-                            dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
-                                sh '''
-                                    rm -rf .terragrunt-cache .terraform || true
-                                    rm -f tfplan || true
-                                '''
-                            }
-                            dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
-                                sh "terragrunt init"
-                            }
+                            // Single layer init
+                            sh """
+                                rm -rf '${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}/.terragrunt-cache' || true
+                                rm -rf '${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}/.terraform' || true
+                                rm -f '${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}/tfplan' || true
+                            """
+                            sh "terragrunt init --terragrunt-working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}'"
                         }
                     }
                 }
@@ -113,15 +110,15 @@ pipeline {
             steps {
                 script {
                     echo '📋 [Phase 1/2] Planning Bootstrap Layer (00-project)...'
-                    dir("${TG_WORKING_DIR}/00-project") {
-                        sh '''
-                            rm -rf .terragrunt-cache .terraform || true
-                            rm -f tfplan-00-project || true
-                        '''
-                    }
-                    dir("${TG_WORKING_DIR}/00-project") {
-                        sh "terragrunt run --all plan -out=tfplan-00-project"
-                    }
+                    sh """
+                        rm -rf '${env.WORKSPACE}/${TG_WORKING_DIR}/00-project/.terragrunt-cache' || true
+                        rm -rf '${env.WORKSPACE}/${TG_WORKING_DIR}/00-project/.terraform' || true
+                        rm -f '${env.WORKSPACE}/${TG_WORKING_DIR}/00-project/tfplan-00-project' || true
+                    """
+
+                    // Run terragrunt plan with working-dir flag
+                    sh "terragrunt run-all plan -out=tfplan-00-project --terragrunt-working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/00-project'"
+
                     // Plan 파일을 Jenkins Artifact로 저장
                     archiveArtifacts artifacts: "**/00-project/**/tfplan-00-project", allowEmptyArchive: true
                 }
@@ -170,9 +167,7 @@ pipeline {
             steps {
                 script {
                     echo '🚀 [Phase 1/2] Applying Bootstrap Layer...'
-                    dir("${TG_WORKING_DIR}/00-project") {
-                        sh "terragrunt run --all apply tfplan-00-project"
-                    }
+                    sh "terragrunt run-all apply tfplan-00-project --terragrunt-working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/00-project'"
                 }
             }
         }
@@ -201,17 +196,15 @@ pipeline {
             steps {
                 script {
                     echo '📋 [Phase 2/2] Planning Remaining Layers (10-network ~ 75-dns)...'
-                    dir("${TG_WORKING_DIR}") {
-                        sh '''
-                            find . -type d -name ".terragrunt-cache" -prune -exec rm -rf {} + || true
-                            find . -type d -name ".terraform" -prune -exec rm -rf {} + || true
-                            find . -name "tfplan-rest" -type f -delete || true
-                        '''
-                    }
-                    dir("${TG_WORKING_DIR}") {
-                        // 00-project를 제외한 모든 레이어 Plan
-                        sh "terragrunt run --all plan --terragrunt-exclude-dir ${TG_WORKING_DIR}/00-project -out=tfplan-rest"
-                    }
+                    sh """
+                        find '${env.WORKSPACE}/${TG_WORKING_DIR}' -type d -name ".terragrunt-cache" -prune -exec rm -rf {} + || true
+                        find '${env.WORKSPACE}/${TG_WORKING_DIR}' -type d -name ".terraform" -prune -exec rm -rf {} + || true
+                        find '${env.WORKSPACE}/${TG_WORKING_DIR}' -name "tfplan-rest" -type f -delete || true
+                    """
+
+                    // 00-project를 제외한 모든 레이어 Plan
+                    sh "terragrunt run-all plan --terragrunt-exclude-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/00-project' -out=tfplan-rest --terragrunt-working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}'"
+
                     // Plan 파일을 Jenkins Artifact로 저장
                     archiveArtifacts artifacts: "**/tfplan-rest", allowEmptyArchive: true
                 }
@@ -260,10 +253,8 @@ pipeline {
             steps {
                 script {
                     echo '🚀 [Phase 2/2] Applying Remaining Layers...'
-                    dir("${TG_WORKING_DIR}") {
-                        // Plan 파일을 사용하여 Apply (변경사항이 Plan과 동일함을 보장)
-                        sh "terragrunt run --all apply --terragrunt-exclude-dir ${TG_WORKING_DIR}/00-project tfplan-rest"
-                    }
+                    // Plan 파일을 사용하여 Apply (변경사항이 Plan과 동일함을 보장)
+                    sh "terragrunt run-all apply --terragrunt-exclude-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/00-project' tfplan-rest --terragrunt-working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}'"
                 }
             }
         }
@@ -275,9 +266,7 @@ pipeline {
             steps {
                 script {
                     echo '📋 Running Terragrunt Plan...'
-                    dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
-                        sh "terragrunt plan -out=tfplan"
-                    }
+                    sh "terragrunt plan -out=tfplan --terragrunt-working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}'"
                     archiveArtifacts artifacts: "**/${params.TARGET_LAYER}/**/tfplan", allowEmptyArchive: true
                 }
             }
@@ -342,14 +331,10 @@ pipeline {
                 script {
                     if (params.ACTION == 'apply') {
                         echo '🚀 Applying Terragrunt changes...'
-                        dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
-                            sh "terragrunt apply tfplan"
-                        }
+                        sh "terragrunt apply tfplan --terragrunt-working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}'"
                     } else if (params.ACTION == 'destroy') {
                         echo '🗑️  Destroying Terragrunt resources...'
-                        dir("${TG_WORKING_DIR}/${params.TARGET_LAYER}") {
-                            sh "terragrunt destroy -auto-approve"
-                        }
+                        sh "terragrunt destroy -auto-approve --terragrunt-working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}'"
                     }
                 }
             }
@@ -365,10 +350,8 @@ pipeline {
             steps {
                 script {
                     echo '🗑️  Destroying All Layers (역순)...'
-                    dir("${TG_WORKING_DIR}") {
-                        // 역순으로 destroy (의존성 고려)
-                        sh "terragrunt run --all destroy -auto-approve"
-                    }
+                    // 역순으로 destroy (의존성 고려)
+                    sh "terragrunt run-all destroy -auto-approve --terragrunt-working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}'"
                 }
             }
         }
