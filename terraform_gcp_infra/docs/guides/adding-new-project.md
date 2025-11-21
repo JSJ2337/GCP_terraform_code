@@ -1,46 +1,37 @@
-# Quick Setup Guide (proj-default-templet 템플릿 기반 신규 프로젝트)
+# 신규 프로젝트 추가 가이드
 
-<!-- markdownlint-disable MD013 -->
+proj-default-templet 템플릿을 기반으로 새 환경을 빠르게 구성하는 가이드입니다.
 
-이 문서는 `terraform_gcp_infra/proj-default-templet/` 템플릿을 복제하여 새 환경을 빠르게 구성하기 위한 체크리스트입니다.
+## 빠른 시작
 
----
+### 1. 준비 사항
 
-## 1. 준비 사항
+- **새 프로젝트 코드**: 예) `jsj-game-m`
+- **GCP Project ID**: 실제 배포 대상
+- **Billing Account**: `01076D-327AD5-FC8922`
+- **Remote State 버킷**: `jsj-terraform-state-prod` (기존 재사용)
 
-- **새 프로젝트 코드**: 예) `proj-myservice-prod`
-- **GCP Project ID / Billing Account**: 실제 배포 대상
-- **Remote State 버킷/Prefix**: 중앙 상태 버킷(`delabs-terraform-state-prod`) 재사용, Prefix는 신규 환경명으로 변경
-- **Notification Channel ID**: Cloud Monitoring 알림 채널(이메일·Slack 등) 사전 생성
-
----
-
-## 2. 디렉터리 복제
+### 2. 템플릿 복사
 
 ```bash
 cd terraform_gcp_infra
-cp -R proj-default-templet environments/LIVE/proj-myservice-prod
+cp -R proj-default-templet environments/LIVE/jsj-game-m
 ```
 
----
+### 3. 환경 설정 업데이트
 
-## 3. 공통 설정 업데이트
+#### root.hcl 수정
 
-| 파일 | 수정 항목 |
-|------|-----------|
-| `environments/LIVE/proj-myservice-prod/root.hcl` | **필수**: `project_state_prefix`, `remote_state_project`, `remote_state_location` 설정 확인 |
-| `environments/LIVE/proj-myservice-prod/common.naming.tfvars` | `project_id`, `project_name`, `environment`, `organization`, `region_*` 값을 신규 환경에 맞게 설정 |
-| Terragrunt `inputs` | 필요 시 `folder_product`, `folder_region`, `folder_env` 입력을 정의해 bootstrap 폴더 조합을 선택 |
-| `environments/LIVE/proj-myservice-prod/root.hcl` | 루트 `inputs`에 공통 값(`org_id`, `billing_account` 등) 설정 |
-
-**⚠️ root.hcl 필수 설정**:
+```bash
+vim environments/LIVE/jsj-game-m/root.hcl
+```
 
 ```hcl
 locals {
   remote_state_bucket   = "jsj-terraform-state-prod"
   remote_state_project  = "jsj-system-mgmt"
   remote_state_location = "US"
-  project_state_prefix  = "proj-myservice-prod"    # 환경별로 변경
+  project_state_prefix  = "jsj-game-m"    # ⚠️ 환경별로 변경
 }
 
 remote_state {
@@ -55,148 +46,177 @@ remote_state {
     location = local.remote_state_location
     prefix   = "${local.project_state_prefix}/${path_relative_to_include()}"
   }
-  # 버킷이 이미 존재하므로 생성 건너뛰기
-  skip_bucket_creation      = true
-  skip_bucket_versioning    = true
-  skip_bucket_accesslogging = true
+  skip_bucket_creation = true
+}
+
+inputs = {
+  org_id          = ""
+  billing_account = "01076D-327AD5-FC8922"
+  region_primary  = "asia-northeast3"
+  region_backup   = "asia-northeast1"
 }
 ```
 
-- Terragrunt가 위 `generate` 설정으로 각 레이어에 `backend.tf`를 자동 생성합니다. 별도의 backend 파일을 커밋하거나 수동으로 관리할 필요가 없습니다.
-
----
-
-## Terragrunt & Naming 구조 개요
-
-- 각 레이어의 `terragrunt.hcl`은 `common.naming.tfvars`와 레이어 전용 `terraform.tfvars`를 자동 병합해 Terraform에 전달합니다.
-- `common.naming.tfvars`에 적은 값(예: `project_id`, `region_primary`)은 naming 모듈을 통해 공통 리소스 이름·라벨·기본 존(`region_primary` + suffix)을 계산합니다.
-- 레이어의 `terraform.tfvars`에 값이 비어 있으면 Terragrunt가 루트 `inputs` 값을 주입하고, 필요한 경우에만 해당 파일에서 재정의하면 됩니다.
-- 프로젝트마다 리전을 바꾸고 싶다면 해당 환경의 `common.naming.tfvars`에서 `region_primary`/`region_backup`만 수정하면 되고, naming 모듈이 자동으로 존까지 계산합니다.
-- 특정 레이어에서 다른 리전·존을 써야 한다면 그 레이어 `terraform.tfvars`에 직접 값을 넣어 Terragrunt 입력을 덮어쓰면 됩니다.
-
----
-
-## 4. 레이어별 필수 값
-
-| 레이어 | 필수 수정 항목 | 파일 |
-|--------|----------------|------|
-| 00-project | `folder_id`, `billing_account`, 필요 API, 라벨 | `terraform.tfvars` |
-| 10-network | VPC CIDR, Secondary 범위, Firewall 규칙 | `terraform.tfvars` |
-| 20-storage | 버킷 위치/Storage Class, KMS 키, IAM | `terraform.tfvars` |
-| 30-security | IAM 바인딩, 서비스 계정 생성 토글 | `terraform.tfvars` |
-| 40-observability | `notification_channels`, 필요 시 Alert 임계값/정규식 | `terraform.tfvars` |
-| 50-workloads | VM 갯수/머신타입/시작 스크립트, 네트워크 태그 | `terraform.tfvars` |
-| 60-database | Cloud SQL Tier/지역/백업/로그 정책 | `terraform.tfvars` |
-| 65-cache | Memorystore 메모리, 대체 존, 유지보수 창 | `terraform.tfvars` |
-| 70-loadbalancers/* | 서비스별 Load Balancer 설정 (예: lobby, web) | 각 하위 디렉터리의 `terraform.tfvars` |
-
-> ⚠️ Load Balancer 디렉터리가 여러 개일 경우, 각 `terraform.tfvars`에서 `backend_service_name`, `url_map_name`, `forwarding_rule_name`, `static_ip_name` 등을 서로 다른 값으로 지정해 이름 충돌을 방지하세요.
-> 모든 레이어는 `terraform.tfvars.example`를 복사한 뒤 필수 항목을 채우면 됩니다.
-
----
-
-## 5. Jenkinsfile 복사 및 설정 (CI/CD 사용 시)
-
-### 5.1. Jenkinsfile 템플릿 복사
+#### common.naming.tfvars 수정
 
 ```bash
-# Jenkinsfile 템플릿 복사
-cp .jenkins/Jenkinsfile.template environments/LIVE/proj-myservice-prod/Jenkinsfile
+vim environments/LIVE/jsj-game-m/common.naming.tfvars
 ```
 
-### 5.2. TG_WORKING_DIR 수정 (⚠️ 필수)
+```hcl
+project_id     = "jsj-game-m"      # ⚠️ GCP 프로젝트 ID
+project_name   = "game-m"          # ⚠️ 프로젝트 이름
+environment    = "prod"
+organization   = "433"
+region_primary = "asia-northeast3"
+region_backup  = "asia-northeast1"
+```
+
+## Phase 기반 배포 (권장)
+
+### Jenkins 사용
+
+1. **Jenkinsfile 복사 및 수정**
 
 ```bash
-# Jenkinsfile 편집
-vim environments/LIVE/proj-myservice-prod/Jenkinsfile
+cp proj-default-templet/Jenkinsfile environments/LIVE/jsj-game-m/Jenkinsfile
 
-# TG_WORKING_DIR을 실제 프로젝트 경로로 변경:
-# TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/proj-myservice-prod'
+vim environments/LIVE/jsj-game-m/Jenkinsfile
+# TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/jsj-game-m'
 ```
 
-**⚠️ 중요**:
-
-- `TG_WORKING_DIR`은 workspace root 기준 **절대 경로** 사용
-- `.` (상대 경로)를 사용하면 템플릿 디렉터리까지 실행됨
-- Jenkins Pipeline은 항상 workspace root에서 시작
-
-### 5.3. Jenkins Job 생성
+2. **Jenkins Job 생성**
 
 ```text
 Jenkins → New Item → Pipeline
-
-Configuration:
-  - Pipeline script from SCM
-  - SCM: Git
-  - Repository URL: <your-git-repo>
-  - Script Path: terraform_gcp_infra/environments/LIVE/proj-myservice-prod/Jenkinsfile
+- Name: terraform-jsj-game-m
+- Pipeline script from SCM
+- Script Path: terraform_gcp_infra/environments/LIVE/jsj-game-m/Jenkinsfile
 ```
 
-### 5.4. GCP Credential 설정
-
-Jenkins에 GCP Service Account Key 등록 (최초 1회):
+3. **배포 실행**
 
 ```text
-Jenkins → Manage Jenkins → Credentials → Add Credentials
-  - Kind: Secret file
-  - File: jenkins-sa-key.json (bootstrap에서 생성)
-  - ID: gcp-jenkins-service-account  ⚠️ 정확히 이 ID로 입력
-  - Description: GCP Service Account for Jenkins
+Parameters:
+- TARGET_LAYER: all
+- ACTION: apply
+- ENABLE_OBSERVABILITY: true
 ```
 
-> 상세 내용은 `00_README.md`의 "GCP 인증 설정 (Jenkins용)" 섹션 참조
+**실행 순서:**
+1. 모든 Phase Plan (Phase 1-8 순차)
+2. 전체 승인 (한 번만)
+3. 각 Phase Re-plan + Apply (순차)
 
----
-
-## 6. Terragrunt 실행 순서
+### 수동 배포 (Phase 기반)
 
 ```bash
-cd environments/LIVE/proj-myservice-prod
-# 레이어별 배포 (예시)
-terragrunt run --all init
-terragrunt run --all plan
-terragrunt run --queue-include-dir '00-project' --all apply -- -auto-approve   # 00-project
-terragrunt run --queue-include-dir '10-network' --all apply -- -auto-approve  # 10-network
-# 이후 20 → 30 → ... → 70 순서로 동일하게 실행
+cd environments/LIVE/jsj-game-m
+
+# Phase 1: Project Setup
+terragrunt run --all --queue-include-dir 00-project -- apply
+
+# Phase 2: Network
+terragrunt run --all --queue-include-dir 10-network -- apply
+
+# Phase 3: Storage & Security
+terragrunt run --all \
+  --queue-include-dir 20-storage \
+  --queue-include-dir 30-security \
+  -- apply
+
+# Phase 4: Observability (Optional)
+terragrunt run --all --queue-include-dir 40-observability -- apply
+
+# Phase 5: Workloads
+terragrunt run --all --queue-include-dir 50-workloads -- apply
+
+# Phase 6: Database & Cache
+terragrunt run --all \
+  --queue-include-dir 60-database \
+  --queue-include-dir 65-cache \
+  -- apply
+
+# Phase 7: Load Balancers
+terragrunt run --all --queue-include-dir 70-loadbalancers -- apply
+
+# Phase 8: DNS
+terragrunt run --all --queue-include-dir 75-dns -- apply
 ```
 
-> Terragrunt 0.93 이상에서는 `run --all` 명령을 사용합니다. 특정 레이어만 실행하려면 `--queue-include-dir '<레이어 디렉터리>'`로 큐를 필터링하거나, 필요 시 `terragrunt -chdir=<layer> plan/apply` 형태로 단일 레이어를 직접 실행할 수도 있습니다.
+## 자동화 기능
 
----
+### 1. subnet_type 자동 매핑
 
-## 7. 마무리 체크
+50-workloads에서 subnet_type만 지정하면 자동 매핑:
 
-- [ ] Cloud Monitoring Alert 정책이 새 프로젝트에서 정상 생성되었는지 확인
-- [ ] 중앙 로그 싱크 사용 시 대상 버킷에 `log_sink_writer_identity` 서비스 계정 권한 부여
-- [ ] Terraform/Terragrunt 상태 버킷에 새로운 Prefix가 생성되었는지 확인
-- [ ] README/작업 내역(CHANGELOG 등)에 신규 환경 추가 기록
-
-필요 시 `04_WORK_HISTORY.md`에 신규 배포 이력을 남기고, 후속 자동화(CI/CD, tfsec 등)를 연동해주세요.
-
----
-
-## Bootstrap state 공유 메모
-
-- bootstrap은 local backend를 사용합니다. `terraform_gcp_infra/bootstrap/terraform.tfstate`를
-  안전한 곳에 백업하고, 파이프라인/다른 엔지니어가 `data "terraform_remote_state"`로 읽을 수
-  있도록 GCS 복사본을 유지하세요.
-
-  ```bash
-  cd terraform_gcp_infra/bootstrap
-  terraform apply
-  gsutil cp terraform.tfstate gs://jsj-terraform-state-prod/bootstrap/default.tfstate
-  ```
-
-- 환경 코드에서는 아래와 같이 GCS backend로 bootstrap state를 조회합니다.
-
-  ```hcl
-  data "terraform_remote_state" "bootstrap" {
-    backend = "gcs"
-    config = {
-      bucket = "jsj-terraform-state-prod"
-      prefix = "bootstrap"
-    }
+```hcl
+# 50-workloads/terraform.tfvars
+instances = {
+  "web-01" = {
+    subnet_type = "dmz"    # 자동으로 10-network outputs 참조
+    machine_type = "e2-medium"
   }
-  ```
+}
+```
 
-<!-- markdownlint-enable MD013 -->
+### 2. GCS Location 자동화
+
+region_primary 기반 자동 생성 (수동 설정 불필요):
+- assets/logs 버킷: Same-region
+- backups 버킷: Multi-region (DR)
+
+### 3. 네이밍 자동화
+
+project_name 기반 모든 리소스명 자동 생성:
+- VPC: `{project_name}-vpc`
+- Subnet: `{project_name}-subnet-{type}`
+- Backend: `{project_name}-{service}-backend`
+
+## 레이어별 필수 설정
+
+| 레이어 | 필수 수정 항목 | 파일 |
+|--------|----------------|------|
+| 00-project | folder_id, billing_account, APIs | terraform.tfvars |
+| 10-network | VPC CIDR, Subnet 범위 | terraform.tfvars |
+| 20-storage | (자동 생성, 수정 불필요) | - |
+| 30-security | IAM 바인딩 | terraform.tfvars |
+| 40-observability | notification_channels | terraform.tfvars |
+| 50-workloads | VM 개수/타입, subnet_type | terraform.tfvars |
+| 60-database | Cloud SQL Tier, 백업 정책 | terraform.tfvars |
+| 65-cache | Memorystore 메모리 크기 | terraform.tfvars |
+| 70-loadbalancers | Backend 필터링 패턴 | terraform.tfvars |
+| 75-dns | DNS Zone, 레코드 | terraform.tfvars |
+
+## 마무리 체크리스트
+
+- [ ] root.hcl의 project_state_prefix 변경 확인
+- [ ] common.naming.tfvars의 project_id, project_name 변경 확인
+- [ ] Jenkinsfile의 TG_WORKING_DIR 변경 확인
+- [ ] Jenkins Job 생성 및 GCP Credential 연결
+- [ ] Phase 1 (00-project) 배포 성공 확인
+- [ ] Phase 2-8 순차 배포
+- [ ] Cloud Monitoring Alert 정책 생성 확인
+- [ ] State 버킷에 새 prefix 생성 확인
+
+## Jenkins vs 수동 배포 비교
+
+| 항목 | Jenkins (권장) | 수동 배포 |
+|------|---------------|-----------|
+| 승인 | 1회 (전체) | Phase별 |
+| Re-plan | 자동 | 수동 |
+| 에러 처리 | 자동 중단 | 수동 확인 |
+| 로깅 | 중앙화 | 분산 |
+| 배포 시간 | 45-70분 | 동일 |
+| 권장 상황 | 프로덕션, 전체 배포 | 개발, 부분 배포 |
+
+## 참고 자료
+
+- [Jenkins CI/CD 가이드](./jenkins-cicd.md) - Phase 기반 배포 상세
+- [Terragrunt 사용법](./terragrunt-usage.md) - Terragrunt 0.93+ 구문
+- [트러블슈팅](../troubleshooting/common-errors.md) - 일반적인 오류 해결
+
+---
+
+**Last Updated: 2025-11-21**
+**Version: Phase-Based v2.0**
