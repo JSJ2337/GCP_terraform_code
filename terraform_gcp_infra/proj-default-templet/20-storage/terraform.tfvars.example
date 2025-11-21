@@ -23,9 +23,8 @@ public_access_prevention    = "enforced"
 # kms_key_name = "projects/YOUR_PROJECT/locations/REGION/keyRings/KEYRING/cryptoKeys/KEY"
 
 # === 자산(Assets) 버킷 ===
-# 주의: location은 region_primary와 일치시켜 낮은 latency 및 무료 intra-region 트래픽 확보
-# 예: region_primary가 asia-northeast3이면 ASIA-NORTHEAST3 사용
-assets_bucket_location      = "US-CENTRAL1"
+# Location은 terragrunt.hcl에서 region_primary 기반으로 자동 주입됨
+# (region_primary를 대문자로 변환하여 사용: asia-northeast3 → ASIA-NORTHEAST3)
 assets_bucket_storage_class = "STANDARD"
 assets_bucket_labels = {
   bucket_type = "assets"
@@ -54,8 +53,7 @@ assets_iam_bindings = [
 ]
 
 # === 로그(Logs) 버킷 ===
-# 주의: location은 region_primary와 일치시켜 빠른 로그 수집 및 저렴한 비용
-logs_bucket_location      = "US-CENTRAL1"
+# Location은 terragrunt.hcl에서 region_primary 기반으로 자동 주입됨
 logs_bucket_storage_class = "COLDLINE"
 logs_enable_versioning    = false
 logs_bucket_labels = {
@@ -73,9 +71,8 @@ logs_cors_rules              = []
 logs_iam_bindings            = []
 
 # === 백업(Backups) 버킷 ===
-# 주의: 백업은 DR 목적으로 multi-region 권장 (US, EU, ASIA 중 선택)
-# 예: 아시아 리전이면 ASIA 사용
-backups_bucket_location      = "US"        # 멀티 리전 권장
+# Location은 terragrunt.hcl에서 multi-region (ASIA/US/EU)으로 자동 주입됨
+# (region_primary의 대륙 부분 추출: asia-northeast3 → ASIA)
 backups_bucket_storage_class = "ARCHIVE"
 backups_bucket_labels = {
   bucket_type = "backups"
