@@ -124,8 +124,9 @@ pipeline {
 
         // ====================================================================
         // Phase 기반 순차 실행 (TARGET_LAYER == 'all')
+        // Step 1: 모든 Phase Plan 실행
         // ====================================================================
-        stage('Phased Deployment') {
+        stage('Plan All Phases') {
             when {
                 expression { params.TARGET_LAYER == 'all' }
             }
@@ -144,45 +145,102 @@ pipeline {
                             "'${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'"
                         }.join(' ')
 
+                        stage("${phase.label} - Plan") {
+                            echo "📋 Planning ${phase.label}..."
+                            runPhasePlan(phase, phaseDirs)
+                        }
+                    }
+                }
+            }
+        }
+
+        // ====================================================================
+        // Step 2: 전체 승인 (한 번만)
+        // ====================================================================
+        stage('🛑 Approve All Phases 🛑') {
+            when {
+                allOf {
+                    expression { params.ACTION == 'apply' || params.ACTION == 'destroy' }
+                    expression { params.TARGET_LAYER == 'all' }
+                }
+            }
+            steps {
+                script {
+                    def orderedPhases = params.ACTION == 'destroy' ? PHASES.reverse() : PHASES
+                    def phaseList = orderedPhases.collect { phase ->
+                        if (phase.optional && phase.id == 'phase4' && !params.ENABLE_OBSERVABILITY && params.ACTION != 'destroy') {
+                            return null
+                        }
+                        return "  - ${phase.label}: ${phase.dirs.join(', ')}"
+                    }.findAll { it != null }.join('\n')
+
+                    def approvalMessage = """
+                    ⚠️  전체 인프라 변경 승인 필요 ⚠️
+
+                    Action: ${params.ACTION.toUpperCase()}
+                    Branch: ${env.GIT_BRANCH}
+                    Commit: ${env.GIT_COMMIT}
+
+                    실행될 Phase 목록:
+${phaseList}
+
+                    모든 Phase의 Plan을 검토한 후 승인하시겠습니까?
+                    승인 시 모든 Phase가 순차적으로 실행됩니다.
+                    """
+
+                    timeout(time: 30, unit: 'MINUTES') {
+                        input(
+                            message: approvalMessage,
+                            ok: "✅ 전체 승인 (${params.ACTION.capitalize()} 순차 실행)",
+                            submitter: 'admin'
+                        )
+                    }
+                }
+            }
+        }
+
+        // ====================================================================
+        // Step 3: 승인 후 모든 Phase Apply/Destroy 순차 실행
+        // ====================================================================
+        stage('Execute All Phases') {
+            when {
+                allOf {
+                    expression { params.ACTION == 'apply' || params.ACTION == 'destroy' }
+                    expression { params.TARGET_LAYER == 'all' }
+                }
+            }
+            steps {
+                script {
+                    def orderedPhases = params.ACTION == 'destroy' ? PHASES.reverse() : PHASES
+
+                    orderedPhases.each { phase ->
+                        // Optional phase 처리
+                        if (phase.optional && phase.id == 'phase4' && !params.ENABLE_OBSERVABILITY && params.ACTION != 'destroy') {
+                            echo "⏭️  Skipping ${phase.label} (disabled by parameter)"
+                            return
+                        }
+
+                        def phaseDirs = phase.dirs.collect {
+                            "'${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'"
+                        }.join(' ')
+
+                        // Phase 실행
+                        stage("${phase.label} - ${params.ACTION.capitalize()}") {
+                            if (params.ACTION == 'apply') {
+                                echo "🚀 Applying ${phase.label}..."
+                                runPhaseApply(phase, phaseDirs)
+                            } else {
+                                echo "🗑️  Destroying ${phase.label}..."
+                                runPhaseDestroy(phase, phaseDirs)
+                            }
+                        }
+
                         // Phase 1 이후 API Propagation 대기
                         if (phase.id == 'phase1' && params.ACTION == 'apply') {
-                            stage("${phase.label} - Plan") {
-                                echo "📋 Planning ${phase.label}..."
-                                runPhasePlan(phase, phaseDirs)
-                            }
-                            if (params.ACTION == 'apply') {
-                                stage("${phase.label} - Approval") {
-                                    waitForApproval(phase)
-                                }
-                                stage("${phase.label} - Apply") {
-                                    echo "🚀 Applying ${phase.label}..."
-                                    runPhaseApply(phase, phaseDirs)
-                                }
-                                stage('Wait for API Propagation') {
-                                    echo '⏳ Waiting for GCP API propagation (120 seconds)...'
-                                    sleep(time: 120, unit: 'SECONDS')
-                                    echo '✅ API propagation wait completed'
-                                }
-                            }
-                        } else {
-                            // 일반 Phase 실행
-                            stage("${phase.label} - Plan") {
-                                echo "📋 Planning ${phase.label}..."
-                                runPhasePlan(phase, phaseDirs)
-                            }
-                            if (params.ACTION == 'apply' || params.ACTION == 'destroy') {
-                                stage("${phase.label} - Approval") {
-                                    waitForApproval(phase)
-                                }
-                                stage("${phase.label} - ${params.ACTION.capitalize()}") {
-                                    if (params.ACTION == 'apply') {
-                                        echo "🚀 Applying ${phase.label}..."
-                                        runPhaseApply(phase, phaseDirs)
-                                    } else {
-                                        echo "🗑️  Destroying ${phase.label}..."
-                                        runPhaseDestroy(phase, phaseDirs)
-                                    }
-                                }
+                            stage('Wait for API Propagation') {
+                                echo '⏳ Waiting for GCP API propagation (120 seconds)...'
+                                sleep(time: 120, unit: 'SECONDS')
+                                echo '✅ API propagation wait completed'
                             }
                         }
                     }
