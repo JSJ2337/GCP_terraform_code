@@ -23,67 +23,68 @@ labels = {
 }
 
 # 역할별 인스턴스 정의 예시
+# subnet_type: "dmz", "private", "db" 중 하나 선택 (10-network에서 자동으로 가져옴)
 instances = {
   "jsj-lobby-01" = {
-    hostname = "jsj-lobby-01"
-    zone     = "asia-northeast3-a"
-    tags     = ["lobby", "ssh-allowed"]
-    image_family  = "rocky-linux-9"
-    image_project = "rocky-linux-cloud"
+    hostname            = "jsj-lobby-01"
+    zone                = "asia-northeast3-a"
+    tags                = ["lobby", "ssh-allowed"]
+    image_family        = "rocky-linux-9"
+    image_project       = "rocky-linux-cloud"
     startup_script_file = "scripts/lobby.sh"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
+    subnet_type         = "dmz"  # 자동으로 game-l-subnet-dmz 선택
   }
   "jsj-lobby-02" = {
-    hostname = "jsj-lobby-02"
-    zone     = "asia-northeast3-b"
-    tags     = ["lobby", "ssh-allowed"]
-    image_family  = "rocky-linux-9"
-    image_project = "rocky-linux-cloud"
+    hostname            = "jsj-lobby-02"
+    zone                = "asia-northeast3-b"
+    tags                = ["lobby", "ssh-allowed"]
+    image_family        = "rocky-linux-9"
+    image_project       = "rocky-linux-cloud"
     startup_script_file = "scripts/lobby.sh"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
+    subnet_type         = "dmz"
   }
   "jsj-web-01" = {
-    hostname     = "jsj-web-01"
-    zone         = "asia-northeast3-a"
-    machine_type = "e2-small"
-    tags         = ["web", "ssh-allowed"]
-    image_family  = "rocky-linux-9"
-    image_project = "rocky-linux-cloud"
+    hostname            = "jsj-web-01"
+    zone                = "asia-northeast3-a"
+    machine_type        = "e2-small"
+    tags                = ["web", "ssh-allowed"]
+    image_family        = "rocky-linux-9"
+    image_project       = "rocky-linux-cloud"
     startup_script_file = "scripts/lobby.sh"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
+    subnet_type         = "dmz"
   }
   "jsj-web-02" = {
-    hostname = "jsj-web-02"
-    zone     = "asia-northeast3-b"
-    tags     = ["web", "ssh-allowed"]
-    image_family  = "rocky-linux-9"
-    image_project = "rocky-linux-cloud"
+    hostname            = "jsj-web-02"
+    zone                = "asia-northeast3-b"
+    tags                = ["web", "ssh-allowed"]
+    image_family        = "rocky-linux-9"
+    image_project       = "rocky-linux-cloud"
     startup_script_file = "scripts/lobby.sh"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-dmz"
+    subnet_type         = "dmz"
   }
   "jsj-was-01" = {
-    hostname     = "jsj-was-01"
-    zone         = "asia-northeast3-c"
-    machine_type = "e2-standard-4"
-    tags         = ["was", "ssh-allowed"]
-    image_family  = "rocky-linux-9"
-    image_project = "rocky-linux-cloud"
+    hostname            = "jsj-was-01"
+    zone                = "asia-northeast3-c"
+    machine_type        = "e2-standard-4"
+    tags                = ["was", "ssh-allowed"]
+    image_family        = "rocky-linux-9"
+    image_project       = "rocky-linux-cloud"
     startup_script_file = "scripts/was.sh"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-private"
+    subnet_type         = "private"  # 자동으로 game-l-subnet-private 선택
   }
   "jsj-was-02" = {
-    hostname             = "jsj-was-02"
-    zone                 = "asia-northeast3-b"
-    machine_type         = "e2-standard-4"
-    tags                 = ["was", "ssh-allowed"]
+    hostname            = "jsj-was-02"
+    zone                = "asia-northeast3-b"
+    machine_type        = "e2-standard-4"
+    tags                = ["was", "ssh-allowed"]
     labels = {
       role = "was"
       tier = "backend"
     }
-    image_family         = "rocky-linux-9"
-    image_project        = "rocky-linux-cloud"
-    startup_script_file  = "scripts/was.sh"
-    subnetwork_self_link = "projects/jsj-game-l/regions/asia-northeast3/subnetworks/game-l-subnet-private"
+    image_family        = "rocky-linux-9"
+    image_project       = "rocky-linux-cloud"
+    startup_script_file = "scripts/was.sh"
+    subnet_type         = "private"
   }
 }
 

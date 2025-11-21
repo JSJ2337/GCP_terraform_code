@@ -15,9 +15,18 @@ locals {
   layer_inputs     = try(jsondecode(local.raw_layer_inputs), local.raw_layer_inputs)
 }
 
+# 네트워크 레이어 의존성 설정
+dependency "network" {
+  config_path = "../10-network"
+}
+
 inputs = merge(
   local.common_inputs,
-  local.layer_inputs
+  local.layer_inputs,
+  {
+    # 네트워크 레이어에서 서브넷 정보 가져오기
+    subnets = dependency.network.outputs.subnets
+  }
 )
 
 dependencies {

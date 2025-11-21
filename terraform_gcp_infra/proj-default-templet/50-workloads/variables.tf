@@ -144,13 +144,26 @@ variable "labels" {
   default     = {}
 }
 
+# 네트워크 레이어에서 가져온 서브넷 정보
+variable "subnets" {
+  type = map(object({
+    self_link  = string
+    region     = string
+    project_id = string
+    name       = string
+  }))
+  description = "10-network 레이어에서 가져온 서브넷 맵 (dependency를 통해 자동 주입)"
+  default     = {}
+}
+
 # 새로운 for_each 방식 (권장)
 variable "instances" {
   type = map(object({
     hostname              = optional(string)
     zone                  = optional(string)
     machine_type          = optional(string)
-    subnetwork_self_link  = optional(string)
+    subnet_type           = optional(string)  # "dmz", "private", "db" 중 하나 (subnets 맵 키)
+    subnetwork_self_link  = optional(string)  # 하위 호환성을 위해 유지 (subnet_type 우선)
     enable_public_ip      = optional(bool)
     enable_os_login       = optional(bool)
     preemptible           = optional(bool)
@@ -168,6 +181,14 @@ variable "instances" {
   }))
   default     = {}
   description = "VM 인스턴스 맵 (키=인스턴스명, 값=설정). 비워두면 instance_count 방식 사용"
+
+  validation {
+    condition = alltrue([
+      for name, cfg in var.instances :
+      cfg.subnet_type == null || contains(["dmz", "private", "db"], cfg.subnet_type)
+    ])
+    error_message = "subnet_type은 'dmz', 'private', 'db' 중 하나여야 합니다."
+  }
 }
 
 variable "instance_groups" {

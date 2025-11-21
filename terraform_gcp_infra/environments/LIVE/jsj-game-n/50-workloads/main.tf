@@ -41,9 +41,14 @@ locals {
   processed_instances = {
     for name, cfg in var.instances :
     name => merge(
-      { for k, v in cfg : k => v if k != "startup_script_file" },
+      { for k, v in cfg : k => v if k != "startup_script_file" && k != "subnet_type" },
       try(cfg.startup_script_file, null) != null ?
       { startup_script = file("${path.module}/${cfg.startup_script_file}") } :
+      {},
+      # subnet_type이 지정되면 subnets 맵에서 self_link 가져오기
+      # 하위 호환성: subnet_type이 없으면 subnetwork_self_link 그대로 사용
+      try(cfg.subnet_type, null) != null ?
+      { subnetwork_self_link = var.subnets[cfg.subnet_type].self_link } :
       {}
     )
   }

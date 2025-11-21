@@ -21,8 +21,9 @@ labels = {
 }
 
 # 역할별 인스턴스 정의
+# subnet_type: "dmz", "private", "db" 중 하나 선택
 instances = {
-  # lobby tier (3대)
+  # lobby tier (3대) - DMZ 서브넷 배치
   "jsj-lobby-01" = {
     zone         = "asia-northeast3-a"
     machine_type = "e2-small"
@@ -33,8 +34,8 @@ instances = {
       role = "lobby"
       tier = "frontend"
     }
-    startup_script_file  = "scripts/lobby.sh"
-    subnetwork_self_link = "projects/jsj-game-n/regions/asia-northeast3/subnetworks/game-n-subnet-dmz"
+    startup_script_file = "scripts/lobby.sh"
+    subnet_type         = "dmz"  # 자동으로 game-n-subnet-dmz 선택
   }
   "jsj-lobby-02" = {
     zone     = "asia-northeast3-b"
@@ -43,8 +44,8 @@ instances = {
       role = "lobby"
       tier = "frontend"
     }
-    startup_script_file  = "scripts/lobby.sh"
-    subnetwork_self_link = "projects/jsj-game-n/regions/asia-northeast3/subnetworks/game-n-subnet-dmz"
+    startup_script_file = "scripts/lobby.sh"
+    subnet_type         = "dmz"
   }
   "jsj-lobby-03" = {
     zone     = "asia-northeast3-c"
@@ -53,11 +54,11 @@ instances = {
       role = "lobby"
       tier = "frontend"
     }
-    startup_script_file  = "scripts/lobby.sh"
-    subnetwork_self_link = "projects/jsj-game-n/regions/asia-northeast3/subnetworks/game-n-subnet-dmz"
+    startup_script_file = "scripts/lobby.sh"
+    subnet_type         = "dmz"
   }
 
-  # web tier (3대)
+  # web tier (3대) - DMZ 서브넷 배치
   "jsj-web-01" = {
     zone         = "asia-northeast3-a"
     machine_type = "e2-medium"
@@ -66,8 +67,8 @@ instances = {
       role = "web"
       tier = "frontend"
     }
-    startup_script_file  = "scripts/lobby.sh"
-    subnetwork_self_link = "projects/jsj-game-n/regions/asia-northeast3/subnetworks/game-n-subnet-dmz"
+    startup_script_file = "scripts/lobby.sh"
+    subnet_type         = "dmz"
   }
   "jsj-web-02" = {
     zone         = "asia-northeast3-b"
@@ -77,8 +78,8 @@ instances = {
       role = "web"
       tier = "frontend"
     }
-    startup_script_file  = "scripts/lobby.sh"
-    subnetwork_self_link = "projects/jsj-game-n/regions/asia-northeast3/subnetworks/game-n-subnet-dmz"
+    startup_script_file = "scripts/lobby.sh"
+    subnet_type         = "dmz"
   }
   "jsj-web-03" = {
     zone         = "asia-northeast3-c"
@@ -88,11 +89,11 @@ instances = {
       role = "web"
       tier = "frontend"
     }
-    startup_script_file  = "scripts/lobby.sh"
-    subnetwork_self_link = "projects/jsj-game-n/regions/asia-northeast3/subnetworks/game-n-subnet-dmz"
+    startup_script_file = "scripts/lobby.sh"
+    subnet_type         = "dmz"
   }
 
-  # WAS tier (2대)
+  # WAS tier (2대) - Private 서브넷 배치
   "jsj-was-01" = {
     zone         = "asia-northeast3-a"
     machine_type = "e2-standard-4"
@@ -101,8 +102,8 @@ instances = {
       role = "was"
       tier = "backend"
     }
-    startup_script_file  = "scripts/was.sh"
-    subnetwork_self_link = "projects/jsj-game-n/regions/asia-northeast3/subnetworks/game-n-subnet-private"
+    startup_script_file = "scripts/was.sh"
+    subnet_type         = "private"  # 자동으로 game-n-subnet-private 선택
   }
   "jsj-was-02" = {
     zone         = "asia-northeast3-b"
@@ -112,10 +113,10 @@ instances = {
       role = "was"
       tier = "backend"
     }
-    startup_script_file  = "scripts/was.sh"
-    image_family         = "rocky-linux-9"
-    image_project        = "rocky-linux-cloud"
-    subnetwork_self_link = "projects/jsj-game-n/regions/asia-northeast3/subnetworks/game-n-subnet-private"
+    startup_script_file = "scripts/was.sh"
+    image_family        = "rocky-linux-9"
+    image_project       = "rocky-linux-cloud"
+    subnet_type         = "private"
   }
 }
 
