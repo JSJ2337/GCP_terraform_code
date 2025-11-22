@@ -384,25 +384,3 @@ def runPhaseDestroy(phase, phaseDirs) {
     def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
     sh "terragrunt run --all ${includeArgs} --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- destroy -auto-approve"
 }
-
-// Phase Approval 대기
-def waitForApproval(phase) {
-    def approvalMessage = """
-    ⚠️  ${phase.label} 승인 필요 ⚠️
-
-    Action: ${params.ACTION.toUpperCase()}
-    Target: ${phase.dirs.join(', ')}
-    Branch: ${env.GIT_BRANCH}
-    Commit: ${env.GIT_COMMIT}
-
-    위 Plan을 검토한 후 승인하시겠습니까?
-    """
-
-    timeout(time: 30, unit: 'MINUTES') {
-        input(
-            message: approvalMessage,
-            ok: "✅ 승인 (${params.ACTION.capitalize()} 실행)",
-            submitter: 'admin'
-        )
-    }
-}
