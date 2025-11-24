@@ -474,6 +474,43 @@ def runPhaseApply(phase, phaseDirs) {
 def runPhaseDestroy(phase, phaseDirs) {
     def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
 
+    // Phase 5 (Workloads) 전에 Backend Service 강제 정리
+    if (phase.id == 'phase5') {
+        echo '🧹 Cleaning up orphaned Backend Services before destroying workloads...'
+
+        // Backend Services 존재 확인 및 강제 삭제
+        def backendServices = sh(
+            script: """
+                gcloud compute backend-services list \
+                    --project=jsj-game-n \
+                    --filter="name~game-n-prod" \
+                    --format='value(name)' 2>&1 || echo "NONE"
+            """,
+            returnStdout: true
+        ).trim()
+
+        if (backendServices != "NONE" && backendServices != "") {
+            echo "⚠️  Found orphaned Backend Services: ${backendServices}"
+
+            backendServices.split('\n').each { serviceName ->
+                if (serviceName && serviceName != "NONE") {
+                    echo "Deleting Backend Service: ${serviceName}"
+                    sh """
+                        gcloud compute backend-services delete ${serviceName} \
+                            --global \
+                            --project=jsj-game-n \
+                            --quiet || echo "Warning: Could not delete ${serviceName}"
+                    """
+                    sleep(time: 5, unit: 'SECONDS')
+                }
+            }
+
+            echo "✅ Orphaned Backend Services cleaned up"
+        } else {
+            echo "✅ No orphaned Backend Services found"
+        }
+    }
+
     // Phase 6 (Database & Cache)의 경우 deletion protection 먼저 비활성화
     if (phase.id == 'phase6') {
         echo '🔓 Disabling deletion protection for Redis cluster...'
