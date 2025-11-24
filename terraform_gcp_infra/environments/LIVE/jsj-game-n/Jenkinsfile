@@ -429,6 +429,40 @@ def runPhaseApply(phase, phaseDirs) {
 def runPhaseDestroy(phase, phaseDirs) {
     def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
 
+    // Phase 6 (Database & Cache)의 경우 deletion protection 먼저 비활성화
+    if (phase.id == 'phase6') {
+        echo '🔓 Disabling deletion protection for Redis cluster...'
+
+        // Step 1: Check if Redis cluster exists and has deletion protection
+        def redisExists = sh(
+            script: """
+                gcloud redis clusters describe game-n-prod-redis \
+                    --region=asia-northeast3 \
+                    --project=jsj-game-n \
+                    --format='value(name)' 2>/dev/null || echo "NOT_FOUND"
+            """,
+            returnStdout: true
+        ).trim()
+
+        if (redisExists != "NOT_FOUND") {
+            echo "Redis cluster found. Disabling deletion protection via gcloud..."
+
+            // Use gcloud to disable deletion protection
+            sh """
+                gcloud redis clusters update game-n-prod-redis \
+                    --region=asia-northeast3 \
+                    --project=jsj-game-n \
+                    --no-deletion-protection \
+                    --quiet || echo "Warning: Could not disable deletion protection"
+            """
+
+            echo "Waiting 10 seconds for changes to propagate..."
+            sleep(time: 10, unit: 'SECONDS')
+        } else {
+            echo "Redis cluster not found or already deleted. Skipping deletion protection step."
+        }
+    }
+
     // Phase 2 (network)의 경우 PSC 연결 삭제 에러 발생 시 재시도
     if (phase.id == 'phase2') {
         retry(3) {
