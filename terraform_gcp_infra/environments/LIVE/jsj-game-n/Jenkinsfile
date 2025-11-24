@@ -430,6 +430,82 @@ def runPhaseApply(phase, phaseDirs) {
 def runPhaseDestroy(phase, phaseDirs) {
     def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
 
+    // Phase 7 먼저 destroy 실행
+    if (phase.id == 'phase7') {
+        sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- destroy -auto-approve"
+
+        // Phase 7 destroy 후 Backend Service cleanup
+        echo '🧹 Cleaning up orphaned Backend Services after Phase 7 destroy...'
+
+        def backendServices = sh(
+            script: """
+                gcloud compute backend-services list \
+                    --project=jsj-game-n \
+                    --filter="name~game-n-prod" \
+                    --format='value(name)' 2>&1 || echo "NONE"
+            """,
+            returnStdout: true
+        ).trim()
+
+        if (backendServices != "NONE" && backendServices != "") {
+            echo "⚠️  Found orphaned Backend Services: ${backendServices}"
+
+            backendServices.split('\n').each { serviceName ->
+                if (serviceName && serviceName != "NONE") {
+                    echo "Processing Backend Service: ${serviceName}"
+
+                    // Get all backends
+                    def backends = sh(
+                        script: """
+                            gcloud compute backend-services describe ${serviceName} \
+                                --global \
+                                --project=jsj-game-n \
+                                --format='value(backends[].group)' 2>&1 || echo "NONE"
+                        """,
+                        returnStdout: true
+                    ).trim()
+
+                    // Remove each backend
+                    if (backends != "NONE" && backends != "") {
+                        backends.split('\n').each { backendUrl ->
+                            if (backendUrl && backendUrl != "NONE") {
+                                def urlParts = backendUrl.tokenize('/')
+                                def igName = urlParts[-1]
+                                def zone = urlParts[-3]
+
+                                echo "  Removing backend ${igName} from ${serviceName}"
+                                sh """
+                                    gcloud compute backend-services remove-backend ${serviceName} \
+                                        --instance-group=${igName} \
+                                        --instance-group-zone=${zone} \
+                                        --global \
+                                        --project=jsj-game-n \
+                                        --quiet || echo "    Warning: Could not remove backend ${igName}"
+                                """
+                                sleep(time: 2, unit: 'SECONDS')
+                            }
+                        }
+                    }
+
+                    // Delete Backend Service
+                    echo "  Deleting Backend Service: ${serviceName}"
+                    sh """
+                        gcloud compute backend-services delete ${serviceName} \
+                            --global \
+                            --project=jsj-game-n \
+                            --quiet || echo "    Warning: Could not delete ${serviceName}"
+                    """
+                    sleep(time: 3, unit: 'SECONDS')
+                }
+            }
+            echo "✅ Backend Services cleaned up"
+        } else {
+            echo "✅ No orphaned Backend Services found"
+        }
+
+        return // Phase 7은 이미 destroy 했으므로 함수 종료
+    }
+
     // Phase 6 (Database & Cache)의 경우 deletion protection 먼저 비활성화
     if (phase.id == 'phase6') {
         echo '🔓 Disabling deletion protection for Redis cluster...'
