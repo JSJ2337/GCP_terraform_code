@@ -478,7 +478,7 @@ def runPhaseDestroy(phase, phaseDirs) {
     if (phase.id == 'phase5') {
         echo '🧹 Cleaning up orphaned Backend Services before destroying workloads...'
 
-        // Backend Services 존재 확인 및 강제 삭제
+        // Backend Services 존재 확인
         def backendServices = sh(
             script: """
                 gcloud compute backend-services list \
@@ -494,6 +494,45 @@ def runPhaseDestroy(phase, phaseDirs) {
 
             backendServices.split('\n').each { serviceName ->
                 if (serviceName && serviceName != "NONE") {
+                    echo "Processing Backend Service: ${serviceName}"
+
+                    // Step 1: Get all backends from this Backend Service
+                    def backends = sh(
+                        script: """
+                            gcloud compute backend-services describe ${serviceName} \
+                                --global \
+                                --project=jsj-game-n \
+                                --format='value(backends[].group)' 2>&1 || echo "NONE"
+                        """,
+                        returnStdout: true
+                    ).trim()
+
+                    // Step 2: Remove each backend (instance group) from the Backend Service
+                    if (backends != "NONE" && backends != "") {
+                        backends.split('\n').each { backendUrl ->
+                            if (backendUrl && backendUrl != "NONE") {
+                                // Parse zone and instance group name from URL
+                                // URL format: https://www.googleapis.com/compute/v1/projects/jsj-game-n/zones/asia-northeast3-a/instanceGroups/jsj-web-ig-a
+                                def urlParts = backendUrl.tokenize('/')
+                                def igName = urlParts[-1]
+                                def zone = urlParts[-3]
+
+                                echo "Removing backend ${igName} from ${serviceName}"
+                                sh """
+                                    gcloud compute backend-services remove-backend ${serviceName} \
+                                        --instance-group=${igName} \
+                                        --instance-group-zone=${zone} \
+                                        --global \
+                                        --project=jsj-game-n \
+                                        --quiet || echo "Warning: Could not remove backend ${igName}"
+                                """
+                                sleep(time: 3, unit: 'SECONDS')
+                            }
+                        }
+                        echo "✅ All backends removed from ${serviceName}"
+                    }
+
+                    // Step 3: Now delete the Backend Service itself
                     echo "Deleting Backend Service: ${serviceName}"
                     sh """
                         gcloud compute backend-services delete ${serviceName} \
