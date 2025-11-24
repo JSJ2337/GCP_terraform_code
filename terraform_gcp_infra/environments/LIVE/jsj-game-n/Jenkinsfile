@@ -247,50 +247,6 @@ ${phaseList}
                             }
                         }
 
-                        // Phase 7 (Load Balancers) 삭제 후 Backend Service 완전 삭제 확인
-                        if (phase.id == 'phase7' && params.ACTION == 'destroy') {
-                            stage('Verify Backend Services Deleted') {
-                                echo '🔍 Verifying all backend services are deleted...'
-                                script {
-                                    def maxRetries = 10
-                                    def retryCount = 0
-                                    def backendServicesDeleted = false
-
-                                    while (!backendServicesDeleted && retryCount < maxRetries) {
-                                        try {
-                                            def backendServices = sh(
-                                                script: """
-                                                    gcloud compute backend-services list \
-                                                        --project=jsj-game-n \
-                                                        --filter="name~game-n-prod" \
-                                                        --format='value(name)' 2>&1 || echo "NONE"
-                                                """,
-                                                returnStdout: true
-                                            ).trim()
-
-                                            if (backendServices == "NONE" || backendServices == "") {
-                                                echo "✅ All backend services deleted successfully"
-                                                backendServicesDeleted = true
-                                            } else {
-                                                retryCount++
-                                                echo "⏳ Backend services still exist: ${backendServices}"
-                                                echo "Waiting 15 seconds before retry (attempt ${retryCount}/${maxRetries})..."
-                                                sleep(time: 15, unit: 'SECONDS')
-                                            }
-                                        } catch (Exception e) {
-                                            echo "✅ Backend services check completed (no services found): ${e.message}"
-                                            backendServicesDeleted = true
-                                        }
-                                    }
-
-                                    if (!backendServicesDeleted) {
-                                        echo "⚠️  Backend services still exist after ${maxRetries} attempts"
-                                        echo "⚠️  Phase 5 (Workloads) destroy may fail with 'resourceInUseByAnotherResource' error"
-                                        echo "Manual cleanup may be required for backend services"
-                                    }
-                                }
-                            }
-                        }
 
                         // Phase 6 (Database & Cache) 삭제 후 PSC Connection 정리 대기
                         if (phase.id == 'phase6' && params.ACTION == 'destroy') {
@@ -473,82 +429,6 @@ def runPhaseApply(phase, phaseDirs) {
 // Phase Destroy 실행
 def runPhaseDestroy(phase, phaseDirs) {
     def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
-
-    // Phase 5 (Workloads) 전에 Backend Service 강제 정리
-    if (phase.id == 'phase5') {
-        echo '🧹 Cleaning up orphaned Backend Services before destroying workloads...'
-
-        // Backend Services 존재 확인
-        def backendServices = sh(
-            script: """
-                gcloud compute backend-services list \
-                    --project=jsj-game-n \
-                    --filter="name~game-n-prod" \
-                    --format='value(name)' 2>&1 || echo "NONE"
-            """,
-            returnStdout: true
-        ).trim()
-
-        if (backendServices != "NONE" && backendServices != "") {
-            echo "⚠️  Found orphaned Backend Services: ${backendServices}"
-
-            backendServices.split('\n').each { serviceName ->
-                if (serviceName && serviceName != "NONE") {
-                    echo "Processing Backend Service: ${serviceName}"
-
-                    // Step 1: Get all backends from this Backend Service
-                    def backends = sh(
-                        script: """
-                            gcloud compute backend-services describe ${serviceName} \
-                                --global \
-                                --project=jsj-game-n \
-                                --format='value(backends[].group)' 2>&1 || echo "NONE"
-                        """,
-                        returnStdout: true
-                    ).trim()
-
-                    // Step 2: Remove each backend (instance group) from the Backend Service
-                    if (backends != "NONE" && backends != "") {
-                        backends.split('\n').each { backendUrl ->
-                            if (backendUrl && backendUrl != "NONE") {
-                                // Parse zone and instance group name from URL
-                                // URL format: https://www.googleapis.com/compute/v1/projects/jsj-game-n/zones/asia-northeast3-a/instanceGroups/jsj-web-ig-a
-                                def urlParts = backendUrl.tokenize('/')
-                                def igName = urlParts[-1]
-                                def zone = urlParts[-3]
-
-                                echo "Removing backend ${igName} from ${serviceName}"
-                                sh """
-                                    gcloud compute backend-services remove-backend ${serviceName} \
-                                        --instance-group=${igName} \
-                                        --instance-group-zone=${zone} \
-                                        --global \
-                                        --project=jsj-game-n \
-                                        --quiet || echo "Warning: Could not remove backend ${igName}"
-                                """
-                                sleep(time: 3, unit: 'SECONDS')
-                            }
-                        }
-                        echo "✅ All backends removed from ${serviceName}"
-                    }
-
-                    // Step 3: Now delete the Backend Service itself
-                    echo "Deleting Backend Service: ${serviceName}"
-                    sh """
-                        gcloud compute backend-services delete ${serviceName} \
-                            --global \
-                            --project=jsj-game-n \
-                            --quiet || echo "Warning: Could not delete ${serviceName}"
-                    """
-                    sleep(time: 5, unit: 'SECONDS')
-                }
-            }
-
-            echo "✅ Orphaned Backend Services cleaned up"
-        } else {
-            echo "✅ No orphaned Backend Services found"
-        }
-    }
 
     // Phase 6 (Database & Cache)의 경우 deletion protection 먼저 비활성화
     if (phase.id == 'phase6') {
