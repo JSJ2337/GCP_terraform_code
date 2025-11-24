@@ -14,9 +14,9 @@ services:
     ports:
       - "4040:4040"  # ngrok 웹 UI 포트
     networks:
-      - jenkins_default  # Jenkins 컨테이너와 동일 네트워크 사용
+      - jenkins_docker_jenkins_default  # Jenkins 컨테이너와 동일 네트워크 사용
     restart: unless-stopped
 
 networks:
-  jenkins_default:
+  jenkins_docker_jenkins_default:
     external: true  # 외부에서 생성된 네트워크 사용
