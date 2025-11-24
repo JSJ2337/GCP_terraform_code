@@ -414,7 +414,7 @@ def runPhasePlan(phase, phaseDirs) {
     }
 
     def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
-    sh "terragrunt run --all ${includeArgs} --terragrunt-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- plan -out=tfplan-${phase.id}"
+    sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- plan -out=tfplan-${phase.id}"
 
     archiveArtifacts artifacts: "**/tfplan-${phase.id}", allowEmptyArchive: true
 }
@@ -422,7 +422,7 @@ def runPhasePlan(phase, phaseDirs) {
 // Phase Apply 실행
 def runPhaseApply(phase, phaseDirs) {
     def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
-    sh "terragrunt run --all ${includeArgs} --terragrunt-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- apply tfplan-${phase.id}"
+    sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- apply tfplan-${phase.id}"
 }
 
 // Phase Destroy 실행
@@ -433,7 +433,7 @@ def runPhaseDestroy(phase, phaseDirs) {
     if (phase.id == 'phase2') {
         retry(3) {
             try {
-                sh "terragrunt run --all ${includeArgs} --terragrunt-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- destroy -auto-approve"
+                sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- destroy -auto-approve"
             } catch (Exception e) {
                 if (e.message.contains("ServiceConnectionPolicy") && e.message.contains("PSC Connections")) {
                     echo "⚠️  PSC connections still exist. Waiting 60 seconds before retry..."
@@ -445,6 +445,6 @@ def runPhaseDestroy(phase, phaseDirs) {
             }
         }
     } else {
-        sh "terragrunt run --all ${includeArgs} --terragrunt-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- destroy -auto-approve"
+        sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- destroy -auto-approve"
     }
 }
