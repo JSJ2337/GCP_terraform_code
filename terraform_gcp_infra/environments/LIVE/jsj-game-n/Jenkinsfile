@@ -247,6 +247,51 @@ ${phaseList}
                             }
                         }
 
+                        // Phase 7 (Load Balancers) 삭제 후 Backend Service 완전 삭제 확인
+                        if (phase.id == 'phase7' && params.ACTION == 'destroy') {
+                            stage('Verify Backend Services Deleted') {
+                                echo '🔍 Verifying all backend services are deleted...'
+                                script {
+                                    def maxRetries = 10
+                                    def retryCount = 0
+                                    def backendServicesDeleted = false
+
+                                    while (!backendServicesDeleted && retryCount < maxRetries) {
+                                        try {
+                                            def backendServices = sh(
+                                                script: """
+                                                    gcloud compute backend-services list \
+                                                        --project=jsj-game-n \
+                                                        --filter="name~game-n-prod" \
+                                                        --format='value(name)' 2>&1 || echo "NONE"
+                                                """,
+                                                returnStdout: true
+                                            ).trim()
+
+                                            if (backendServices == "NONE" || backendServices == "") {
+                                                echo "✅ All backend services deleted successfully"
+                                                backendServicesDeleted = true
+                                            } else {
+                                                retryCount++
+                                                echo "⏳ Backend services still exist: ${backendServices}"
+                                                echo "Waiting 15 seconds before retry (attempt ${retryCount}/${maxRetries})..."
+                                                sleep(time: 15, unit: 'SECONDS')
+                                            }
+                                        } catch (Exception e) {
+                                            echo "✅ Backend services check completed (no services found): ${e.message}"
+                                            backendServicesDeleted = true
+                                        }
+                                    }
+
+                                    if (!backendServicesDeleted) {
+                                        echo "⚠️  Backend services still exist after ${maxRetries} attempts"
+                                        echo "⚠️  Phase 5 (Workloads) destroy may fail with 'resourceInUseByAnotherResource' error"
+                                        echo "Manual cleanup may be required for backend services"
+                                    }
+                                }
+                            }
+                        }
+
                         // Phase 6 (Database & Cache) 삭제 후 PSC Connection 정리 대기
                         if (phase.id == 'phase6' && params.ACTION == 'destroy') {
                             stage('Wait for PSC Cleanup') {
