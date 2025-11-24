@@ -246,6 +246,52 @@ ${phaseList}
                                 echo '✅ API propagation wait completed'
                             }
                         }
+
+                        // Phase 6 (Database & Cache) 삭제 후 PSC Connection 정리 대기
+                        if (phase.id == 'phase6' && params.ACTION == 'destroy') {
+                            stage('Wait for PSC Cleanup') {
+                                echo '⏳ Waiting for Memorystore PSC connections cleanup...'
+                                script {
+                                    def maxRetries = 12
+                                    def retryCount = 0
+                                    def pscCleanedUp = false
+
+                                    while (!pscCleanedUp && retryCount < maxRetries) {
+                                        try {
+                                            def pscConnections = sh(
+                                                script: """
+                                                    gcloud network-connectivity service-connection-policies describe \
+                                                        game-n-prod-vpc-asia-northeast3-redis-psc \
+                                                        --project=jsj-game-n \
+                                                        --region=asia-northeast3 \
+                                                        --format='value(pscConnections)' 2>&1 || echo "POLICY_NOT_FOUND"
+                                                """,
+                                                returnStdout: true
+                                            ).trim()
+
+                                            if (pscConnections == "POLICY_NOT_FOUND" || pscConnections == "" || pscConnections == "[]") {
+                                                echo "✅ PSC connections cleared or policy already deleted"
+                                                pscCleanedUp = true
+                                            } else {
+                                                retryCount++
+                                                echo "⏳ PSC connections still exist (attempt ${retryCount}/${maxRetries}). Waiting 30 seconds..."
+                                                sleep(time: 30, unit: 'SECONDS')
+                                            }
+                                        } catch (Exception e) {
+                                            echo "⚠️  Could not check PSC status (policy may be deleted): ${e.message}"
+                                            pscCleanedUp = true
+                                        }
+                                    }
+
+                                    if (!pscCleanedUp) {
+                                        echo "⚠️  PSC connections still exist after ${maxRetries} attempts (6 minutes)"
+                                        echo "Proceeding anyway - Network destroy may fail and require retry"
+                                    } else {
+                                        echo '✅ PSC cleanup wait completed'
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -368,7 +414,7 @@ def runPhasePlan(phase, phaseDirs) {
     }
 
     def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
-    sh "terragrunt run --all ${includeArgs} --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- plan -out=tfplan-${phase.id}"
+    sh "terragrunt run --all ${includeArgs} --terragrunt-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- plan -out=tfplan-${phase.id}"
 
     archiveArtifacts artifacts: "**/tfplan-${phase.id}", allowEmptyArchive: true
 }
@@ -376,11 +422,29 @@ def runPhasePlan(phase, phaseDirs) {
 // Phase Apply 실행
 def runPhaseApply(phase, phaseDirs) {
     def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
-    sh "terragrunt run --all ${includeArgs} --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- apply tfplan-${phase.id}"
+    sh "terragrunt run --all ${includeArgs} --terragrunt-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- apply tfplan-${phase.id}"
 }
 
 // Phase Destroy 실행
 def runPhaseDestroy(phase, phaseDirs) {
     def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
-    sh "terragrunt run --all ${includeArgs} --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- destroy -auto-approve"
+
+    // Phase 2 (network)의 경우 PSC 연결 삭제 에러 발생 시 재시도
+    if (phase.id == 'phase2') {
+        retry(3) {
+            try {
+                sh "terragrunt run --all ${includeArgs} --terragrunt-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- destroy -auto-approve"
+            } catch (Exception e) {
+                if (e.message.contains("ServiceConnectionPolicy") && e.message.contains("PSC Connections")) {
+                    echo "⚠️  PSC connections still exist. Waiting 60 seconds before retry..."
+                    sleep(time: 60, unit: 'SECONDS')
+                    throw e
+                } else {
+                    throw e
+                }
+            }
+        }
+    } else {
+        sh "terragrunt run --all ${includeArgs} --terragrunt-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- destroy -auto-approve"
+    }
 }
