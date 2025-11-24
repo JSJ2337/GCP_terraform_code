@@ -9,7 +9,8 @@ include "root" {
 dependencies {
   paths = [
     "../../00-project",
-    "../../10-network"
+    "../../10-network",
+    "../../50-workloads"
   ]
 }
 
