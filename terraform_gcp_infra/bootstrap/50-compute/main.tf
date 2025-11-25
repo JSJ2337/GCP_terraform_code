@@ -70,7 +70,7 @@ resource "google_compute_instance" "vm" {
     }
   )
 
-  metadata_startup_script = coalesce(each.value.startup_script, var.startup_script != "" ? var.startup_script : null)
+  metadata_startup_script = try(coalesce(each.value.startup_script, var.startup_script), null)
 
   scheduling {
     automatic_restart   = coalesce(each.value.preemptible, var.preemptible) ? false : true
@@ -87,7 +87,7 @@ resource "google_compute_instance" "vm" {
   }
 
   dynamic "service_account" {
-    for_each = coalesce(each.value.service_account_email, var.service_account_email) != "" ? [coalesce(each.value.service_account_email, var.service_account_email)] : []
+    for_each = try(coalesce(each.value.service_account_email, var.service_account_email), "") != "" ? [try(coalesce(each.value.service_account_email, var.service_account_email), "")] : []
     content {
       email  = service_account.value
       scopes = var.service_account_scopes
