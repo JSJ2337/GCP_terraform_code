@@ -18,7 +18,7 @@ resource "google_compute_firewall" "allow_iap_ssh" {
 
   # IAP 터널링 IP 대역
   source_ranges = ["35.235.240.0/20"]
-  target_tags   = ["allow-ssh"]
+  target_tags   = ["ssh-iap"]
 
   # Firewall 로그 활성화
   log_config {
