@@ -37,8 +37,8 @@ pipeline {
     parameters {
         choice(
             name: 'ACTION',
-            choices: ['plan', 'apply', 'destroy'],
-            description: 'Terragrunt 실행할 작업 선택'
+            choices: ['plan', 'apply', 'destroy', 'import-state'],
+            description: 'Terragrunt 실행할 작업 선택 (import-state: 기존 리소스를 GCS state로 import)'
         )
         choice(
             name: 'LAYER',
@@ -310,6 +310,77 @@ pipeline {
                             cd '${layerDir}' && terragrunt output || true
                         """
                     }
+                }
+            }
+        }
+
+        stage('Import State') {
+            when {
+                expression { params.ACTION == 'import-state' }
+            }
+            steps {
+                script {
+                    echo "📥 기존 GCP 리소스를 Terraform State로 Import합니다..."
+                    echo "⚠️  USE_LOCAL_BACKEND는 반드시 false여야 합니다!"
+
+                    def layers = env.LAYERS.split(',')
+
+                    for (layer in layers) {
+                        def layerDir = "${env.WORKSPACE}/${TF_WORKING_DIR}/${layer}"
+
+                        echo "🔧 [${layer}] Initializing for import..."
+                        sh """
+                            rm -rf '${layerDir}/.terraform' || true
+                            rm -rf '${layerDir}/.terragrunt-cache' || true
+                            rm -f '${layerDir}/backend.tf' || true
+                            rm -f '${layerDir}/provider.tf' || true
+                            cd '${layerDir}' && terragrunt init
+                        """
+
+                        if (layer == '00-foundation') {
+                            echo "📥 [${layer}] Importing resources..."
+                            sh """
+                                cd '${layerDir}' && terragrunt import 'google_service_account.jenkins_terraform' 'projects/delabs-gcp-mgmt/serviceAccounts/jenkins-terraform-admin@delabs-gcp-mgmt.iam.gserviceaccount.com' || true
+                            """
+                            // API는 import 불필요 (존재하면 no-op)
+                        }
+
+                        if (layer == '10-network') {
+                            echo "📥 [${layer}] Importing resources..."
+                            sh """
+                                cd '${layerDir}' && terragrunt import 'google_compute_network.mgmt_vpc' 'projects/delabs-gcp-mgmt/global/networks/delabs-gcp-mgmt-vpc' || true
+                                cd '${layerDir}' && terragrunt import 'google_compute_subnetwork.mgmt_subnet' 'projects/delabs-gcp-mgmt/regions/asia-northeast3/subnetworks/delabs-gcp-mgmt-subnet' || true
+                                cd '${layerDir}' && terragrunt import 'google_compute_router.mgmt_router' 'projects/delabs-gcp-mgmt/regions/asia-northeast3/routers/delabs-gcp-mgmt-router' || true
+                                cd '${layerDir}' && terragrunt import 'google_compute_router_nat.mgmt_nat' 'projects/delabs-gcp-mgmt/regions/asia-northeast3/routers/delabs-gcp-mgmt-router/delabs-gcp-mgmt-nat' || true
+                                cd '${layerDir}' && terragrunt import 'google_compute_firewall.allow_iap_ssh' 'projects/delabs-gcp-mgmt/global/firewalls/delabs-gcp-mgmt-vpc-allow-iap-ssh' || true
+                                cd '${layerDir}' && terragrunt import 'google_compute_firewall.allow_jenkins' 'projects/delabs-gcp-mgmt/global/firewalls/delabs-gcp-mgmt-vpc-allow-jenkins' || true
+                                cd '${layerDir}' && terragrunt import 'google_compute_firewall.allow_internal' 'projects/delabs-gcp-mgmt/global/firewalls/delabs-gcp-mgmt-vpc-allow-internal' || true
+                            """
+                        }
+
+                        if (layer == '20-storage') {
+                            echo "📥 [${layer}] Importing resources..."
+                            sh """
+                                cd '${layerDir}' && terragrunt import 'google_storage_bucket.tfstate_prod' 'delabs-gcp-mgmt/delabs-terraform-state-live' || true
+                                cd '${layerDir}' && terragrunt import 'google_storage_bucket_iam_member.jenkins_tfstate_prod' 'delabs-terraform-state-live roles/storage.objectAdmin serviceAccount:jenkins-terraform-admin@delabs-gcp-mgmt.iam.gserviceaccount.com' || true
+                            """
+                        }
+
+                        if (layer == '50-compute') {
+                            echo "📥 [${layer}] Importing resources..."
+                            sh """
+                                cd '${layerDir}' && terragrunt import 'google_compute_disk.boot["delabs-terraform-jenkins"]' 'projects/delabs-gcp-mgmt/zones/asia-northeast3-a/disks/delabs-terraform-jenkins-boot' || true
+                                cd '${layerDir}' && terragrunt import 'google_compute_disk.boot["delabs-bastion"]' 'projects/delabs-gcp-mgmt/zones/asia-northeast3-a/disks/delabs-bastion-boot' || true
+                                cd '${layerDir}' && terragrunt import 'google_compute_instance.vm["delabs-terraform-jenkins"]' 'projects/delabs-gcp-mgmt/zones/asia-northeast3-a/instances/delabs-terraform-jenkins' || true
+                                cd '${layerDir}' && terragrunt import 'google_compute_instance.vm["delabs-bastion"]' 'projects/delabs-gcp-mgmt/zones/asia-northeast3-a/instances/delabs-bastion' || true
+                            """
+                        }
+
+                        echo "✅ [${layer}] Import 완료!"
+                    }
+
+                    echo ""
+                    echo "🎉 Import 완료! 이제 ACTION=plan으로 확인 후 apply하세요."
                 }
             }
         }
