@@ -10,6 +10,10 @@ locals {
   management_project_id   = "delabs-gcp-mgmt"
   management_project_name = "delabs-gcp-mgmt"
 
+  # Jenkins Service Account (00-foundation에서 생성됨)
+  # 패턴: {account_id}@{project_id}.iam.gserviceaccount.com
+  jenkins_service_account_email = "jenkins-terraform-admin@delabs-gcp-mgmt.iam.gserviceaccount.com"
+
   # 공통 레이블
   labels = {
     managed_by  = "terraform"
@@ -21,4 +25,9 @@ locals {
   # 리전 설정 (한국 리전 전용)
   region_primary = "asia-northeast3"
   region_backup  = "asia-northeast3"
+
+  # 네트워크 정보 (10-network에서 생성됨)
+  # 형식: projects/{project}/global/networks/{network}
+  vpc_self_link    = "projects/delabs-gcp-mgmt/global/networks/mgmt-vpc"
+  subnet_self_link = "projects/delabs-gcp-mgmt/regions/asia-northeast3/subnetworks/mgmt-subnet"
 }
