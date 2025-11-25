@@ -1,3 +1,13 @@
 jenkins-sa-key.json
 backend.hcl
 .DS_Store
+
+# Terraform/Terragrunt generated files
+.terraform/
+.terragrunt-cache/
+backend.tf
+provider.tf
+*.tfstate
+*.tfstate.*
+*.tfplan
+.terraform.lock.hcl
