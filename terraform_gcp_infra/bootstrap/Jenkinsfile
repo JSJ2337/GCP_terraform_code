@@ -127,16 +127,20 @@ pipeline {
                     def envVars = params.USE_LOCAL_BACKEND ? ['TG_USE_LOCAL_BACKEND=true'] : []
 
                     withEnv(envVars) {
+                        // 디버그: 환경변수 확인
+                        sh 'echo "TG_USE_LOCAL_BACKEND=$TG_USE_LOCAL_BACKEND"'
+
                         for (layer in layers) {
                             def layerDir = "${env.WORKSPACE}/${TF_WORKING_DIR}/${layer}"
 
                             echo "🔧 [${layer}] Initializing Terragrunt..."
 
-                            // Clean cache files
+                            // Clean cache files (backend.tf도 삭제해야 새로 생성됨)
                             sh """
                                 rm -rf '${layerDir}/.terraform' || true
                                 rm -rf '${layerDir}/.terragrunt-cache' || true
                                 rm -f '${layerDir}/tfplan' || true
+                                rm -f '${layerDir}/backend.tf' || true
                             """
 
                             retry(3) {
