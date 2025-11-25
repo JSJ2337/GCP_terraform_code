@@ -37,8 +37,8 @@ pipeline {
     parameters {
         choice(
             name: 'ACTION',
-            choices: ['plan', 'apply', 'destroy', 'import-state'],
-            description: 'Terragrunt 실행할 작업 선택 (import-state: 기존 리소스를 GCS state로 import)'
+            choices: ['plan', 'apply', 'destroy', 'import-state', 'migrate-state'],
+            description: 'Terragrunt 실행할 작업 선택 (migrate-state: local state를 GCS로 복사)'
         )
         choice(
             name: 'LAYER',
@@ -381,6 +381,44 @@ pipeline {
 
                     echo ""
                     echo "🎉 Import 완료! 이제 ACTION=plan으로 확인 후 apply하세요."
+                }
+            }
+        }
+
+        stage('Migrate State') {
+            when {
+                expression { params.ACTION == 'migrate-state' }
+            }
+            steps {
+                script {
+                    echo "📦 Local State를 GCS로 마이그레이션합니다..."
+
+                    def layers = ['00-foundation', '10-network', '20-storage', '50-compute']
+                    def bucket = 'delabs-terraform-state-live'
+
+                    for (layer in layers) {
+                        def layerDir = "${env.WORKSPACE}/${TF_WORKING_DIR}/${layer}"
+                        def localState = "${layerDir}/terraform.tfstate"
+                        def gcsPath = "gs://${bucket}/bootstrap/${layer}/default.tfstate"
+
+                        echo "🔍 [${layer}] Checking local state..."
+
+                        def stateExists = sh(returnStatus: true, script: "test -f '${localState}'") == 0
+
+                        if (stateExists) {
+                            echo "📤 [${layer}] Uploading local state to GCS..."
+                            sh """
+                                gsutil cp '${localState}' '${gcsPath}'
+                            """
+                            echo "✅ [${layer}] State migrated to ${gcsPath}"
+                        } else {
+                            echo "⚠️  [${layer}] No local state found at ${localState}"
+                        }
+                    }
+
+                    echo ""
+                    echo "🎉 마이그레이션 완료!"
+                    echo "이제 USE_LOCAL_BACKEND 체크 해제하고 plan/apply 실행하세요."
                 }
             }
         }
