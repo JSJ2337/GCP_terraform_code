@@ -12,6 +12,35 @@ locals {
   preemptible       = false
   tags              = ["ssh-iap"]
 
+  # SSH 비밀번호 접속 활성화 스크립트
+  ssh_password_script = <<-EOT
+    #!/bin/bash
+    set -e
+
+    # SSH 비밀번호 인증 활성화
+    sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+    sed -i 's/^#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+    # sshd_config.d 디렉토리 파일도 수정 (Rocky Linux)
+    if [ -d /etc/ssh/sshd_config.d ]; then
+      for f in /etc/ssh/sshd_config.d/*.conf; do
+        [ -f "$f" ] && sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/' "$f"
+      done
+    fi
+
+    # SSH 서비스 재시작
+    systemctl restart sshd
+
+    # 기본 사용자 생성 및 비밀번호 설정
+    # 사용자명: admin, 비밀번호: 초기 배포 후 반드시 변경 필요!
+    if ! id "admin" &>/dev/null; then
+      useradd -m -s /bin/bash -G wheel admin
+      echo "admin:Delabs2024!" | chpasswd
+    fi
+
+    echo "SSH password authentication enabled"
+  EOT
+
   # 인스턴스 정의 (for_each 방식)
   instances = {
     # Jenkins CI/CD 서버
@@ -28,6 +57,7 @@ locals {
         role    = "ci-cd"
         purpose = "jenkins"
       }
+      startup_script = local.ssh_password_script
     }
 
     # Bastion Host (점프 서버)
@@ -44,6 +74,7 @@ locals {
         role    = "bastion"
         purpose = "jump-server"
       }
+      startup_script = local.ssh_password_script
     }
   }
 }
