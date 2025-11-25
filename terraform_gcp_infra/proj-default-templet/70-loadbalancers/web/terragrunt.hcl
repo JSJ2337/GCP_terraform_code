@@ -9,7 +9,8 @@ include "root" {
 dependencies {
   paths = [
     "../../00-project",
-    "../../10-network"
+    "../../10-network",
+    "../../50-workloads"
   ]
 }
 
@@ -23,7 +24,7 @@ dependency "workloads" {
     instance_groups = {}
   }
 
-  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan", "destroy"]
 }
 
 locals {
