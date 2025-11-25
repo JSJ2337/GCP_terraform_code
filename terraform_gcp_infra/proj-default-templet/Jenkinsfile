@@ -36,8 +36,8 @@ pipeline {
     parameters {
         choice(
             name: 'ACTION',
-            choices: ['plan', 'apply', 'destroy'],
-            description: 'Terragrunt 실행할 작업 선택'
+            choices: ['plan', 'apply', 'destroy', 'prepare-destroy'],
+            description: 'Terragrunt 실행할 작업 선택 (prepare-destroy: Phase 7만 apply해서 cleanup resource 추가)'
         )
         choice(
             name: 'TARGET_LAYER',
@@ -200,6 +200,44 @@ ${phaseList}
         }
 
         // ====================================================================
+        // Prepare Destroy: Phase 7만 apply해서 cleanup resource 추가
+        // ====================================================================
+        stage('Prepare for Destroy') {
+            when {
+                allOf {
+                    expression { params.ACTION == 'prepare-destroy' }
+                    expression { params.TARGET_LAYER == 'all' }
+                }
+            }
+            steps {
+                script {
+                    def phase7 = PHASES.find { it.id == 'phase7' }
+
+                    stage("${phase7.label} - Apply Cleanup Resources") {
+                        echo "📋 Phase 7만 apply해서 null_resource.backend_cleanup을 state에 추가합니다..."
+                        echo "⚠️  참고: 이 단계는 Terraform GCP Provider 버그 워크어라운드입니다."
+                        echo "⚠️  null_resource provisioner는 state에 있어야 destroy 시 실행됩니다."
+
+                        def includeArgs = phase7.dirs.collect {
+                            "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'"
+                        }.join(' ')
+
+                        // Plan
+                        echo "📋 Planning Phase 7..."
+                        sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- plan -out=tfplan-prepare-destroy"
+
+                        // Apply
+                        echo "🚀 Applying Phase 7 (cleanup resources only)..."
+                        sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- apply tfplan-prepare-destroy"
+
+                        echo "✅ Phase 7 cleanup resources added to Terraform state"
+                        echo "✅ 이제 'destroy' 액션을 실행하면 Backend Service가 정상적으로 정리됩니다."
+                    }
+                }
+            }
+        }
+
+        // ====================================================================
         // Step 3: 승인 후 모든 Phase Re-plan 및 Apply/Destroy 순차 실행
         // 각 Phase apply 직전에 fresh plan을 생성하여 stale plan 문제 방지
         // ====================================================================
@@ -244,6 +282,59 @@ ${phaseList}
                                 echo '⏳ Waiting for GCP API propagation (120 seconds)...'
                                 sleep(time: 120, unit: 'SECONDS')
                                 echo '✅ API propagation wait completed'
+                            }
+                        }
+
+
+                        // Phase 6 (Database & Cache) 삭제 후 PSC Connection 정리 대기
+                        if (phase.id == 'phase6' && params.ACTION == 'destroy') {
+                            stage('Wait for PSC Cleanup') {
+                                echo '⏳ Waiting for Memorystore PSC connections cleanup...'
+                                script {
+                                    def maxRetries = 12
+                                    def retryCount = 0
+                                    def pscCleanedUp = false
+
+                                    // ⚠️ 프로젝트별 Redis 클러스터명과 프로젝트ID 수정 필요
+                                    def redisClusterName = "YOUR_REDIS_CLUSTER_NAME"  // e.g., "game-n-prod-redis"
+                                    def projectId = "YOUR_PROJECT_ID"  // e.g., "jsj-game-n"
+                                    def pscPolicyName = "YOUR_PSC_POLICY_NAME"  // e.g., "game-n-prod-vpc-asia-northeast3-redis-psc"
+                                    def region = "asia-northeast3"
+
+                                    while (!pscCleanedUp && retryCount < maxRetries) {
+                                        try {
+                                            def pscConnections = sh(
+                                                script: """
+                                                    gcloud network-connectivity service-connection-policies describe \
+                                                        ${pscPolicyName} \
+                                                        --project=${projectId} \
+                                                        --region=${region} \
+                                                        --format='value(pscConnections)' 2>&1 || echo "POLICY_NOT_FOUND"
+                                                """,
+                                                returnStdout: true
+                                            ).trim()
+
+                                            if (pscConnections == "POLICY_NOT_FOUND" || pscConnections == "" || pscConnections == "[]") {
+                                                echo "✅ PSC connections cleared or policy already deleted"
+                                                pscCleanedUp = true
+                                            } else {
+                                                retryCount++
+                                                echo "⏳ PSC connections still exist (attempt ${retryCount}/${maxRetries}). Waiting 30 seconds..."
+                                                sleep(time: 30, unit: 'SECONDS')
+                                            }
+                                        } catch (Exception e) {
+                                            echo "⚠️  Could not check PSC status (policy may be deleted): ${e.message}"
+                                            pscCleanedUp = true
+                                        }
+                                    }
+
+                                    if (!pscCleanedUp) {
+                                        echo "⚠️  PSC connections still exist after ${maxRetries} attempts (6 minutes)"
+                                        echo "Proceeding anyway - Network destroy may fail and require retry"
+                                    } else {
+                                        echo '✅ PSC cleanup wait completed'
+                                    }
+                                }
                             }
                         }
                     }
@@ -368,7 +459,7 @@ def runPhasePlan(phase, phaseDirs) {
     }
 
     def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
-    sh "terragrunt run --all ${includeArgs} --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- plan -out=tfplan-${phase.id}"
+    sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- plan -out=tfplan-${phase.id}"
 
     archiveArtifacts artifacts: "**/tfplan-${phase.id}", allowEmptyArchive: true
 }
@@ -376,11 +467,68 @@ def runPhasePlan(phase, phaseDirs) {
 // Phase Apply 실행
 def runPhaseApply(phase, phaseDirs) {
     def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
-    sh "terragrunt run --all ${includeArgs} --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- apply tfplan-${phase.id}"
+    sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- apply tfplan-${phase.id}"
 }
 
 // Phase Destroy 실행
 def runPhaseDestroy(phase, phaseDirs) {
     def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
-    sh "terragrunt run --all ${includeArgs} --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- destroy -auto-approve"
+
+    // Phase 6 (Database & Cache)의 경우 deletion protection 먼저 비활성화
+    if (phase.id == 'phase6') {
+        echo '🔓 Disabling deletion protection for Redis cluster...'
+
+        // ⚠️ 프로젝트별 Redis 클러스터명과 프로젝트ID 수정 필요
+        def redisClusterName = "YOUR_REDIS_CLUSTER_NAME"  // e.g., "game-n-prod-redis"
+        def projectId = "YOUR_PROJECT_ID"  // e.g., "jsj-game-n"
+        def region = "asia-northeast3"
+
+        // Step 1: Check if Redis cluster exists and has deletion protection
+        def redisExists = sh(
+            script: """
+                gcloud redis clusters describe ${redisClusterName} \
+                    --region=${region} \
+                    --project=${projectId} \
+                    --format='value(name)' 2>/dev/null || echo "NOT_FOUND"
+            """,
+            returnStdout: true
+        ).trim()
+
+        if (redisExists != "NOT_FOUND") {
+            echo "Redis cluster found. Disabling deletion protection via gcloud..."
+
+            // Use gcloud to disable deletion protection
+            sh """
+                gcloud redis clusters update ${redisClusterName} \
+                    --region=${region} \
+                    --project=${projectId} \
+                    --no-deletion-protection \
+                    --quiet || echo "Warning: Could not disable deletion protection"
+            """
+
+            echo "Waiting 10 seconds for changes to propagate..."
+            sleep(time: 10, unit: 'SECONDS')
+        } else {
+            echo "Redis cluster not found or already deleted. Skipping deletion protection step."
+        }
+    }
+
+    // Phase 2 (network)의 경우 PSC 연결 삭제 에러 발생 시 재시도
+    if (phase.id == 'phase2') {
+        retry(3) {
+            try {
+                sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- destroy -auto-approve"
+            } catch (Exception e) {
+                if (e.message.contains("ServiceConnectionPolicy") && e.message.contains("PSC Connections")) {
+                    echo "⚠️  PSC connections still exist. Waiting 60 seconds before retry..."
+                    sleep(time: 60, unit: 'SECONDS')
+                    throw e
+                } else {
+                    throw e
+                }
+            }
+        }
+    } else {
+        sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- destroy -auto-approve"
+    }
 }

@@ -45,8 +45,8 @@ dependency "network" {
     vpc_name      = "mock-vpc-name"
   }
 
-  # 10-network가 apply되지 않았어도 init/plan/validate는 가능하도록 설정
-  mock_outputs_allowed_terraform_commands = ["init", "plan", "validate"]
+  # 10-network가 apply되지 않았거나 destroy되었을 때도 mock outputs 사용 가능하도록 설정
+  mock_outputs_allowed_terraform_commands = ["init", "plan", "validate", "destroy"]
 }
 
 inputs = merge(
