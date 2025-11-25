@@ -22,14 +22,16 @@ output "name_servers" {
   value       = google_dns_managed_zone.private.name_servers
 }
 
-output "jenkins_fqdn" {
-  description = "Jenkins 내부 FQDN"
-  value       = google_dns_record_set.jenkins.name
-}
-
-output "bastion_fqdn" {
-  description = "Bastion 내부 FQDN"
-  value       = google_dns_record_set.bastion.name
+output "dns_records" {
+  description = "등록된 DNS 레코드 목록"
+  value = {
+    for k, v in google_dns_record_set.records : k => {
+      fqdn    = v.name
+      type    = v.type
+      ttl     = v.ttl
+      rrdatas = v.rrdatas
+    }
+  }
 }
 
 # DNS Peering 설정을 위한 정보 (다른 프로젝트에서 사용)

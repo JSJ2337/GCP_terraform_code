@@ -25,34 +25,10 @@ resource "google_dns_managed_zone" "private" {
 }
 
 # -----------------------------------------------------------------------------
-# 2) DNS Records - Jenkins
+# 2) DNS Records (동적 생성)
 # -----------------------------------------------------------------------------
-resource "google_dns_record_set" "jenkins" {
-  project      = var.management_project_id
-  managed_zone = google_dns_managed_zone.private.name
-  name         = "jenkins.${var.dns_domain}"
-  type         = "A"
-  ttl          = 300
-  rrdatas      = [var.jenkins_internal_ip]
-}
-
-# -----------------------------------------------------------------------------
-# 3) DNS Records - Bastion
-# -----------------------------------------------------------------------------
-resource "google_dns_record_set" "bastion" {
-  project      = var.management_project_id
-  managed_zone = google_dns_managed_zone.private.name
-  name         = "bastion.${var.dns_domain}"
-  type         = "A"
-  ttl          = 300
-  rrdatas      = [var.bastion_internal_ip]
-}
-
-# -----------------------------------------------------------------------------
-# 4) 추가 DNS Records (동적 생성)
-# -----------------------------------------------------------------------------
-resource "google_dns_record_set" "additional" {
-  for_each = var.additional_dns_records
+resource "google_dns_record_set" "records" {
+  for_each = var.dns_records
 
   project      = var.management_project_id
   managed_zone = google_dns_managed_zone.private.name
@@ -63,7 +39,7 @@ resource "google_dns_record_set" "additional" {
 }
 
 # -----------------------------------------------------------------------------
-# 5) DNS Peering Zone (다른 프로젝트 VPC에서 이 Zone으로 쿼리 포워딩)
+# DNS Peering Zone (다른 프로젝트 VPC에서 이 Zone으로 쿼리 포워딩)
 # 나중에 다른 프로젝트 생성 시 해당 프로젝트에서 peering zone을 만들어야 함
 # 여기서는 mgmt VPC가 authoritative zone을 호스팅
 # -----------------------------------------------------------------------------

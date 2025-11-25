@@ -5,19 +5,33 @@ locals {
   dns_zone_name = "delabsgames-internal"
   dns_domain    = "delabsgames.internal."
 
-  # VM 내부 IP 주소 (50-compute에서 생성된 VM들)
-  # 10-network layer.hcl의 subnet_cidr: 10.250.10.0/24 기준
-  jenkins_internal_ip = "10.250.10.4"
-  bastion_internal_ip = "10.250.10.3"
-
-  # 추가 DNS 레코드 (필요시 추가)
+  # 모든 DNS 레코드를 여기서 관리
   # 형식: hostname = { type = "A", ttl = 300, rrdatas = ["IP"] }
-  additional_dns_records = {
-    # 예시:
+  dns_records = {
+    # mgmt 프로젝트 VM들
+    "jenkins" = {
+      type    = "A"
+      ttl     = 300
+      rrdatas = ["10.250.10.4"]
+    }
+    "bastion" = {
+      type    = "A"
+      ttl     = 300
+      rrdatas = ["10.250.10.3"]
+    }
+
+    # 새 서버 추가 시 여기에 추가
     # "gitlab" = {
     #   type    = "A"
     #   ttl     = 300
     #   rrdatas = ["10.250.10.5"]
+    # }
+    #
+    # 다른 프로젝트 VM (VPC Peering 필요)
+    # "game-lobby" = {
+    #   type    = "A"
+    #   ttl     = 300
+    #   rrdatas = ["10.100.1.10"]
     # }
   }
 }

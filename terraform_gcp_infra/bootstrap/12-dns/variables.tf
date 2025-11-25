@@ -32,28 +32,8 @@ variable "dns_domain" {
   }
 }
 
-variable "jenkins_internal_ip" {
-  description = "Jenkins VM 내부 IP"
-  type        = string
-
-  validation {
-    condition     = can(regex("^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$", var.jenkins_internal_ip))
-    error_message = "jenkins_internal_ip must be a valid IPv4 address."
-  }
-}
-
-variable "bastion_internal_ip" {
-  description = "Bastion VM 내부 IP"
-  type        = string
-
-  validation {
-    condition     = can(regex("^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$", var.bastion_internal_ip))
-    error_message = "bastion_internal_ip must be a valid IPv4 address."
-  }
-}
-
-variable "additional_dns_records" {
-  description = "추가 DNS 레코드 맵"
+variable "dns_records" {
+  description = "DNS 레코드 맵"
   type = map(object({
     type    = string
     ttl     = number
