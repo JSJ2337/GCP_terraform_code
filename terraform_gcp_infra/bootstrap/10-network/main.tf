@@ -116,6 +116,27 @@ resource "google_compute_firewall" "allow_jenkins" {
   }
 }
 
+# Bastion SSH 허용 (외부에서 직접 접속)
+resource "google_compute_firewall" "allow_bastion_ssh" {
+  project     = var.management_project_id
+  name        = "${local.network_name}-allow-bastion-ssh"
+  network     = google_compute_network.mgmt_vpc.id
+  description = "Allow SSH to Bastion from external"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  source_ranges = var.bastion_allowed_cidrs
+  target_tags   = ["bastion"]
+
+  # Firewall 로그 활성화 (인터넷 facing 규칙)
+  log_config {
+    metadata = "INCLUDE_ALL_METADATA"
+  }
+}
+
 # 내부 통신 허용
 resource "google_compute_firewall" "allow_internal" {
   project     = var.management_project_id
