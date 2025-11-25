@@ -39,8 +39,8 @@ pipeline {
     parameters {
         choice(
             name: 'ACTION',
-            choices: ['plan', 'apply', 'destroy', 'import-state'],
-            description: 'Terragrunt 실행할 작업 선택 (import-state: 기존 리소스를 GCS state로 import)'
+            choices: ['plan', 'apply', 'destroy', 'import-state', 'fix-dns-state'],
+            description: 'Terragrunt 실행할 작업 선택 (fix-dns-state: DNS 리팩토링 후 state 정리)'
         )
         choice(
             name: 'LAYER',
@@ -361,8 +361,8 @@ pipeline {
                             echo "📥 [${layer}] Importing resources..."
                             sh """
                                 cd '${layerDir}' && terragrunt import 'google_dns_managed_zone.private' 'projects/delabs-gcp-mgmt/managedZones/delabsgames-internal' || true
-                                cd '${layerDir}' && terragrunt import 'google_dns_record_set.jenkins' 'projects/delabs-gcp-mgmt/managedZones/delabsgames-internal/rrsets/jenkins.delabsgames.internal./A' || true
-                                cd '${layerDir}' && terragrunt import 'google_dns_record_set.bastion' 'projects/delabs-gcp-mgmt/managedZones/delabsgames-internal/rrsets/bastion.delabsgames.internal./A' || true
+                                cd '${layerDir}' && terragrunt import 'google_dns_record_set.records["jenkins"]' 'projects/delabs-gcp-mgmt/managedZones/delabsgames-internal/rrsets/jenkins.delabsgames.internal./A' || true
+                                cd '${layerDir}' && terragrunt import 'google_dns_record_set.records["bastion"]' 'projects/delabs-gcp-mgmt/managedZones/delabsgames-internal/rrsets/bastion.delabsgames.internal./A' || true
                             """
                         }
 
@@ -399,6 +399,50 @@ pipeline {
 
                     echo ""
                     echo "🎉 Import 완료! 이제 ACTION=plan으로 확인 후 apply하세요."
+                }
+            }
+        }
+
+        stage('Fix DNS State') {
+            when {
+                expression { params.ACTION == 'fix-dns-state' }
+            }
+            steps {
+                script {
+                    echo "🔧 DNS 리팩토링 후 state 정리를 시작합니다..."
+                    echo "   이전 리소스명(google_dns_record_set.jenkins/bastion)을"
+                    echo "   새 리소스명(google_dns_record_set.records[\"...\"])으로 이전합니다."
+
+                    def layerDir = "${env.WORKSPACE}/${TF_WORKING_DIR}/12-dns"
+
+                    // Clean cache and init
+                    sh """
+                        rm -rf '${layerDir}/.terraform' || true
+                        rm -rf '${layerDir}/.terragrunt-cache' || true
+                        rm -f '${layerDir}/backend.tf' || true
+                        rm -f '${layerDir}/provider.tf' || true
+                        cd '${layerDir}' && terragrunt init
+                    """
+
+                    echo "📋 현재 state 확인..."
+                    sh """
+                        cd '${layerDir}' && terragrunt state list || true
+                    """
+
+                    echo "🗑️  이전 리소스 참조 제거..."
+                    sh """
+                        cd '${layerDir}' && terragrunt state rm 'google_dns_record_set.jenkins' || true
+                        cd '${layerDir}' && terragrunt state rm 'google_dns_record_set.bastion' || true
+                    """
+
+                    echo "📋 정리 후 state 확인..."
+                    sh """
+                        cd '${layerDir}' && terragrunt state list || true
+                    """
+
+                    echo ""
+                    echo "✅ State 정리 완료!"
+                    echo "   이제 LAYER=12-dns, ACTION=apply로 DNS 레코드를 생성하세요."
                 }
             }
         }
