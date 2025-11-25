@@ -3,9 +3,10 @@ terraform {
   required_providers {
     google = { source = "hashicorp/google", version = ">= 5.30" }
   }
-  # Local backend - bootstrap 프로젝트는 로컬에 state 저장
-  backend "local" {
-    path = "terraform.tfstate"
+  # GCS backend - 다른 프로젝트와 동일하게 원격 state 사용
+  backend "gcs" {
+    bucket = "jsj-terraform-state-prod"
+    prefix = "bootstrap"
   }
 }
 

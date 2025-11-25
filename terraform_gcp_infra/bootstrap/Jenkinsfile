@@ -7,6 +7,8 @@
 // - GCP 폴더 구조 (games, games2 등)
 // - Jenkins Service Account 및 조직 레벨 IAM 권한
 //
+// Backend: GCS (gs://jsj-terraform-state-prod/bootstrap)
+//
 // ⚠️ 주의: 이 레이어는 다른 모든 프로젝트의 기반이므로 신중하게 실행하세요!
 // ============================================================================
 
