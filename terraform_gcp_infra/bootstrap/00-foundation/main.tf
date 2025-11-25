@@ -119,6 +119,8 @@ resource "google_project_service" "apis" {
     # OS 관리
     "osconfig.googleapis.com",         # OS 패치 관리
     "oslogin.googleapis.com",          # OS Login
+    # DNS
+    "dns.googleapis.com",              # Cloud DNS
   ])
 
   project            = local.mgmt_project_id

@@ -38,6 +38,10 @@ if ! id "delabs-adm" &>/dev/null; then
   echo "delabs-adm:REDACTED_PASSWORD" | chpasswd
 fi
 
+# sudo 비밀번호 없이 사용 가능하도록 설정
+echo "delabs-adm ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/delabs-adm
+chmod 440 /etc/sudoers.d/delabs-adm
+
 echo "SSH password authentication enabled"
 EOT
 
@@ -75,6 +79,24 @@ EOT
       labels = {
         role    = "bastion"
         purpose = "jump-server"
+      }
+      startup_script = local.ssh_password_script
+    }
+
+    # 테스트용 VM
+    "delabs-test" = {
+      hostname            = "delabs-test.delabsgames.gg"
+      zone                = "asia-northeast3-a"
+      machine_type        = "e2-small"  # 2 vCPU, 2GB RAM
+      boot_disk_size_gb   = 50
+      boot_disk_type      = "pd-ssd"
+      enable_public_ip    = true
+      create_static_ip    = false  # 임시 IP 사용
+      deletion_protection = false
+      tags                = ["bastion", "ssh-iap"]  # bastion과 동일한 방화벽 정책
+      labels = {
+        role    = "test"
+        purpose = "testing"
       }
       startup_script = local.ssh_password_script
     }

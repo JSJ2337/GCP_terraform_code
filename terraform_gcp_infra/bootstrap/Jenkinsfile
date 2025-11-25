@@ -6,6 +6,7 @@
 // 레이어 구조:
 //   00-foundation : 관리 프로젝트, API 활성화, Terraform State 버킷
 //   10-network    : VPC, 서브넷, Router, NAT
+//   12-dns        : Cloud DNS Private Zone (내부 DNS)
 //   15-firewall   : 방화벽 규칙 (IAP SSH, Jenkins, Bastion, Internal)
 //   20-storage    : GCS 버킷 (아티팩트, 백업 등)
 //   50-compute    : Jenkins VM, Bastion Host
@@ -43,7 +44,7 @@ pipeline {
         )
         choice(
             name: 'LAYER',
-            choices: ['all', '00-foundation', '10-network', '15-firewall', '20-storage', '50-compute'],
+            choices: ['all', '00-foundation', '10-network', '12-dns', '15-firewall', '20-storage', '50-compute'],
             description: '실행할 레이어 선택 (all = 모든 레이어 순차 실행)'
         )
         booleanParam(
@@ -114,7 +115,7 @@ pipeline {
                     sh "mkdir -p '${env.TF_PLUGIN_CACHE_DIR}'"
 
                     def layers = params.LAYER == 'all' ?
-                        ['00-foundation', '10-network', '15-firewall', '20-storage', '50-compute'] :
+                        ['00-foundation', '10-network', '12-dns', '15-firewall', '20-storage', '50-compute'] :
                         [params.LAYER]
 
                     // destroy의 경우 역순 실행
@@ -353,6 +354,15 @@ pipeline {
                                 cd '${layerDir}' && terragrunt import 'google_compute_subnetwork.mgmt_subnet' 'projects/delabs-gcp-mgmt/regions/asia-northeast3/subnetworks/delabs-gcp-mgmt-subnet' || true
                                 cd '${layerDir}' && terragrunt import 'google_compute_router.mgmt_router' 'projects/delabs-gcp-mgmt/regions/asia-northeast3/routers/delabs-gcp-mgmt-router' || true
                                 cd '${layerDir}' && terragrunt import 'google_compute_router_nat.mgmt_nat' 'projects/delabs-gcp-mgmt/regions/asia-northeast3/routers/delabs-gcp-mgmt-router/delabs-gcp-mgmt-nat' || true
+                            """
+                        }
+
+                        if (layer == '12-dns') {
+                            echo "📥 [${layer}] Importing resources..."
+                            sh """
+                                cd '${layerDir}' && terragrunt import 'google_dns_managed_zone.private' 'projects/delabs-gcp-mgmt/managedZones/delabsgames-internal' || true
+                                cd '${layerDir}' && terragrunt import 'google_dns_record_set.jenkins' 'projects/delabs-gcp-mgmt/managedZones/delabsgames-internal/rrsets/jenkins.delabsgames.internal./A' || true
+                                cd '${layerDir}' && terragrunt import 'google_dns_record_set.bastion' 'projects/delabs-gcp-mgmt/managedZones/delabsgames-internal/rrsets/bastion.delabsgames.internal./A' || true
                             """
                         }
 

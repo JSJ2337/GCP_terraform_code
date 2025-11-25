@@ -1,5 +1,5 @@
 # =============================================================================
-# 20-storage Terragrunt Configuration
+# 12-dns Terragrunt Configuration
 # =============================================================================
 
 include "root" {
@@ -16,20 +16,25 @@ locals {
   layer_vars = read_terragrunt_config("${get_terragrunt_dir()}/layer.hcl")
 }
 
-# 00-foundation 의존성 (실행 순서 보장용)
-dependency "foundation" {
-  config_path = "../00-foundation"
-  skip_outputs = true
+# 10-network 의존성 (VPC 정보 필요)
+dependency "network" {
+  config_path = "../10-network"
+
+  mock_outputs = {
+    vpc_self_link = "projects/mock/global/networks/mock-vpc"
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
 
-# 의존성 순서 (network 다음에 실행)
 dependencies {
   paths = ["../00-foundation", "../10-network"]
 }
 
-# common.hcl에서 직접 값을 가져옴 (dependency output 대신)
+# common.hcl + layer.hcl + network dependency 출력 병합
 inputs = merge(
   local.common_vars.locals,
   local.layer_vars.locals,
-  {}
+  {
+    vpc_self_link = dependency.network.outputs.vpc_self_link
+  }
 )
