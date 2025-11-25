@@ -123,12 +123,17 @@ pipeline {
 
                     env.LAYERS = layers.join(',')
 
-                    // 로컬 백엔드 환경변수 설정
-                    def envVars = params.USE_LOCAL_BACKEND ? ['TG_USE_LOCAL_BACKEND=true'] : []
+                    // 로컬 백엔드 환경변수 설정 (Boolean 확실하게 변환)
+                    def useLocalBackend = params.USE_LOCAL_BACKEND?.toString()?.toBoolean() ?: false
 
-                    withEnv(envVars) {
+                    // 항상 환경변수 설정 (true/false 명시)
+                    withEnv(["TG_USE_LOCAL_BACKEND=${useLocalBackend ? 'true' : 'false'}"]) {
                         // 디버그: 환경변수 확인
-                        sh 'echo "TG_USE_LOCAL_BACKEND=$TG_USE_LOCAL_BACKEND"'
+                        sh '''
+                            echo "=== Environment Check ==="
+                            echo "TG_USE_LOCAL_BACKEND=$TG_USE_LOCAL_BACKEND"
+                            env | grep -i "TG_USE" || echo "No TG_USE vars found"
+                        '''
 
                         for (layer in layers) {
                             def layerDir = "${env.WORKSPACE}/${TF_WORKING_DIR}/${layer}"
@@ -252,9 +257,9 @@ pipeline {
             steps {
                 script {
                     def layers = env.LAYERS.split(',')
-                    def envVars = params.USE_LOCAL_BACKEND ? ['TG_USE_LOCAL_BACKEND=true'] : []
+                    def useLocalBackend = params.USE_LOCAL_BACKEND?.toString()?.toBoolean() ?: false
 
-                    withEnv(envVars) {
+                    withEnv(["TG_USE_LOCAL_BACKEND=${useLocalBackend ? 'true' : 'false'}"]) {
                         for (layer in layers) {
                             def layerDir = "${env.WORKSPACE}/${TF_WORKING_DIR}/${layer}"
 
@@ -281,9 +286,9 @@ pipeline {
             steps {
                 script {
                     def layers = env.LAYERS.split(',')
-                    def envVars = params.USE_LOCAL_BACKEND ? ['TG_USE_LOCAL_BACKEND=true'] : []
+                    def useLocalBackend = params.USE_LOCAL_BACKEND?.toString()?.toBoolean() ?: false
 
-                    withEnv(envVars) {
+                    withEnv(["TG_USE_LOCAL_BACKEND=${useLocalBackend ? 'true' : 'false'}"]) {
                         for (layer in layers) {
                             def layerDir = "${env.WORKSPACE}/${TF_WORKING_DIR}/${layer}"
                             echo "📤 [${layer}] Terragrunt Outputs:"
