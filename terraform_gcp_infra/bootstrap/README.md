@@ -12,10 +12,10 @@
 
 ## 중요 사항
 
-⚠️ **이 프로젝트의 상태는 로컬에 저장됩니다**
-- `terraform.tfstate` 파일이 로컬에 생성됨
-- Git에 커밋하거나 안전한 곳에 백업 필요
-- 이것은 부트스트랩 문제 해결을 위한 의도된 설계
+⚠️ **이 프로젝트의 상태는 GCS에 저장됩니다**
+- Backend: `gs://jsj-terraform-state-prod/bootstrap`
+- 다른 프로젝트와 동일한 State 버킷 사용
+- Jenkins 파이프라인을 통해 자동화된 배포 가능
 
 ## 사용 방법
 
@@ -26,21 +26,18 @@
 - 기본값은 `manage_folders=false`이며, 기존 수동 폴더 구조를 유지하는 환경에서도 안전하게 적용할 수 있습니다.
 
 ### Bootstrap state를 다른 환경에서 참조하기
-- bootstrap은 local backend를 사용합니다. `terraform apply`가 끝난 뒤에는 최신 `terraform.tfstate`를 안전한 위치에 백업하고, 파이프라인이나 다른 개발자가 참조할 수 있도록 GCS 버킷에 복사본을 올려두세요.
-  ```bash
-  # 로컬 state를 GCS에 복사 (Terragrunt/CI에서 data.terraform_remote_state로 사용)
-  gsutil cp terraform.tfstate gs://jsj-terraform-state-prod/bootstrap/default.tfstate
-  ```
-- 환경 코드에서는 아래와 같이 GCS backend를 사용하는 `data "terraform_remote_state"`를 선언해 bootstrap 출력값을 읽습니다.
-  ```hcl
-  data "terraform_remote_state" "bootstrap" {
-    backend = "gcs"
-    config = {
-      bucket = "jsj-terraform-state-prod"
-      prefix = "bootstrap"
-    }
+
+Bootstrap은 GCS backend를 사용하므로 다른 환경에서 쉽게 참조할 수 있습니다.
+
+```hcl
+data "terraform_remote_state" "bootstrap" {
+  backend = "gcs"
+  config = {
+    bucket = "jsj-terraform-state-prod"
+    prefix = "bootstrap"
   }
-  ```
+}
+```
 
 ### 1. terraform.tfvars 설정
 
@@ -204,26 +201,27 @@ terraform {
 
 ---
 
-## 상태 파일 백업
+## Jenkins 파이프라인
 
-로컬 `terraform.tfstate` 파일 백업 방법:
+Bootstrap 레이어는 전용 Jenkinsfile을 통해 CI/CD 자동화가 가능합니다.
 
-### 옵션 1: Git에 암호화해서 저장
+### 파이프라인 파라미터
+
+| 파라미터 | 기본값 | 설명 |
+|---------|--------|------|
+| `ACTION` | `plan` | plan / apply / destroy |
+| `MANAGE_FOLDERS` | `false` | GCP 폴더 구조 관리 여부 |
+| `MANAGE_ORG_IAM` | `false` | 조직 레벨 IAM 관리 여부 |
+| `ENABLE_BILLING_BINDING` | `false` | Billing 계정 바인딩 여부 |
+
+### State 마이그레이션 (로컬 → GCS)
+
+기존 로컬 state가 있는 경우 GCS로 마이그레이션:
+
 ```bash
-# git-crypt 또는 sops 사용
-git-crypt init
-git-crypt add-gpg-user <your-key>
-```
-
-### 옵션 2: 안전한 위치에 수동 백업
-```bash
-# 주기적으로 복사
-cp terraform.tfstate ~/safe-backup/bootstrap-$(date +%Y%m%d).tfstate
-```
-
-### 옵션 3: 다른 GCS 버킷에 수동 업로드
-```bash
-gsutil cp terraform.tfstate gs://your-backup-bucket/bootstrap/
+cd bootstrap
+terraform init -migrate-state
+# "yes" 입력
 ```
 
 ## 리소스 삭제 시 주의
@@ -235,13 +233,13 @@ gsutil cp terraform.tfstate gs://your-backup-bucket/bootstrap/
 
 ## 디렉토리 구조
 
-```
+```text
 bootstrap/
 ├── main.tf              # 프로젝트 및 버킷 정의
 ├── variables.tf         # 변수 정의
 ├── terraform.tfvars     # 실제 값
 ├── outputs.tf           # 출력값
-├── terraform.tfstate    # ⚠️ 로컬 상태 (백업 필요!)
+├── Jenkinsfile          # CI/CD 파이프라인
 └── README.md            # 이 파일
 ```
 

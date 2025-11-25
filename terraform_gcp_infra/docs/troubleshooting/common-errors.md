@@ -208,7 +208,7 @@ sleep 120
 terragrunt apply
 ```
 
-### 8. "Required plugins are not installed" - Provider Lock 파일
+### 8. "Required plugins are not installed" - Provider Checksum 불일치
 
 **증상**:
 
@@ -217,48 +217,56 @@ Error: Required plugins are not installed
 
 The installed provider plugins are not consistent with the packages
 selected in the dependency lock file:
-  - registry.terraform.io/hashicorp/google-beta: the cached package for
-    registry.terraform.io/hashicorp/google-beta 7.11.0 (in .terraform/providers)
+  - registry.terraform.io/hashicorp/null: the cached package for
+    registry.terraform.io/hashicorp/null 3.2.4 (in .terraform/providers)
     does not match any of the checksums recorded in the dependency lock file
 ```
 
 **원인**:
-- `root.hcl`에서 모든 레이어에 google-beta provider를 generate
-- 일부 레이어의 `.terraform.lock.hcl`에 google-beta checksum 누락
+- Jenkins의 `TF_PLUGIN_CACHE_DIR`에 캐시된 provider와 `.terraform.lock.hcl`의 checksum 불일치
 - 다른 플랫폼에서 lock 파일 생성 시 checksum 불일치
+- Provider 버전 업데이트 후 캐시 불일치
 
 **해결**:
 
-이 문제는 2025-11-17에 수정되었습니다. 최신 코드를 pull하세요:
+이 문제는 2025-11-25에 Jenkinsfile에서 자동 처리되도록 수정되었습니다:
 
 ```bash
 git pull origin main
 ```
 
+**Jenkinsfile 변경 내용**:
+- `.terraform.lock.hcl` 파일 삭제 추가
+- `init` → `init -upgrade`로 변경
+
 수동으로 수정하려면:
 
-**옵션 1**: 정상 레이어에서 lock 파일 복사
+**옵션 1**: lock 파일 삭제 후 재생성
 
 ```bash
-# 00-project의 lock 파일을 다른 레이어에 복사
-cd terraform_gcp_infra/environments/LIVE/jsj-game-m
-cp 00-project/.terraform.lock.hcl 40-observability/.terraform.lock.hcl
-cp 00-project/.terraform.lock.hcl 70-loadbalancers/web/.terraform.lock.hcl
-```
-
-**옵션 2**: terraform init -upgrade로 재생성
-
-```bash
-cd terraform_gcp_infra/environments/LIVE/jsj-game-m/40-observability
+cd terraform_gcp_infra/environments/LIVE/jsj-game-n/70-loadbalancers/web
+rm -rf .terraform .terraform.lock.hcl
 terraform init -upgrade
 ```
 
-**옵션 3**: Jenkins 파이프라인 수정 (미래 예방)
+**옵션 2**: 전체 레이어 lock 파일 정리
 
-Jenkinsfile의 init 단계에 `-upgrade` 추가:
+```bash
+cd terraform_gcp_infra/environments/LIVE/jsj-game-n
+find . -name ".terraform.lock.hcl" -delete
+find . -type d -name ".terraform" -prune -exec rm -rf {} +
+terragrunt run-all init -upgrade
+```
+
+**옵션 3**: Jenkins 파이프라인 수정 (2025-11-25 적용됨)
 
 ```groovy
-sh 'terraform init -upgrade -reconfigure'
+// init 전에 lock 파일 삭제
+sh """
+    find '${env.WORKSPACE}/${TG_WORKING_DIR}' -name ".terraform.lock.hcl" -type f -delete || true
+"""
+// -upgrade 옵션으로 provider 재다운로드
+sh "terragrunt run --all --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- init -upgrade"
 ```
 
 ### 9. "Service Networking API" 타이밍 이슈

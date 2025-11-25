@@ -3,6 +3,8 @@
 Bootstrap 프로젝트는 **중앙 집중식 Terraform State 관리**를 위한 핵심 인프라입니다.
 
 > ⚠️ **중요**: 다른 모든 인프라를 배포하기 전에 반드시 Bootstrap을 먼저 배포해야 합니다.
+>
+> **Backend**: GCS (`gs://jsj-terraform-state-prod/bootstrap`)
 
 ## Bootstrap이 생성하는 리소스
 
@@ -68,21 +70,17 @@ management_project_id = "jsj-system-mgmt"
 state_bucket_name = "jsj-terraform-state-prod"
 ```
 
-## 3단계: Bootstrap State 백업 (중요!)
+## 3단계: State 마이그레이션 (기존 로컬 State가 있는 경우)
 
-Bootstrap은 로컬 State를 사용하므로 **반드시 백업**해야 합니다.
+Bootstrap은 GCS backend를 사용합니다. 기존 로컬 state가 있다면 마이그레이션하세요.
 
 ```bash
-# 로컬 백업
-cp terraform.tfstate ~/backup/bootstrap-$(date +%Y%m%d).tfstate
+# 로컬 state → GCS 마이그레이션
+terraform init -migrate-state
+# "yes" 입력하면 자동으로 GCS로 복사됨
 
-# GCS 백업 (권장)
-gsutil cp terraform.tfstate gs://jsj-terraform-state-prod/bootstrap/default.tfstate
-
-# 정기 백업 (Cron) - 실제 crontab에는 한 줄로 입력
-0 0 * * 0 cd /path/to/bootstrap && \
-    cp terraform.tfstate \
-    ~/backup/bootstrap-$(date +\%Y\%m\%d).tfstate
+# 확인
+gsutil ls gs://jsj-terraform-state-prod/bootstrap/
 ```
 
 ## 4단계: 인증 설정
