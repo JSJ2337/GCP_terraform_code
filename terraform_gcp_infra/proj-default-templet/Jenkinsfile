@@ -103,19 +103,21 @@ pipeline {
                             sh """
                                 find '${env.WORKSPACE}/${TG_WORKING_DIR}' -type d -name ".terragrunt-cache" -prune -exec rm -rf {} + || true
                                 find '${env.WORKSPACE}/${TG_WORKING_DIR}' -type d -name ".terraform" -prune -exec rm -rf {} + || true
+                                find '${env.WORKSPACE}/${TG_WORKING_DIR}' -name ".terraform.lock.hcl" -type f -delete || true
                                 find '${env.WORKSPACE}/${TG_WORKING_DIR}' -name "tfplan*" -type f -delete || true
                             """
 
                             // Run terragrunt run --all init with working-dir flag
-                            sh "terragrunt run --all --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- init"
+                            sh "terragrunt run --all --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- init -upgrade"
                         } else {
                             // Single layer init
                             sh """
                                 rm -rf '${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}/.terragrunt-cache' || true
                                 rm -rf '${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}/.terraform' || true
+                                rm -f '${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}/.terraform.lock.hcl' || true
                                 rm -f '${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}/tfplan' || true
                             """
-                            sh "terragrunt --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}' init"
+                            sh "terragrunt --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}' init -upgrade"
                         }
                     }
                 }
