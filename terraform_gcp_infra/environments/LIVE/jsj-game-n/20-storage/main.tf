@@ -70,7 +70,7 @@ module "game_storage" {
       storage_class               = var.logs_bucket_storage_class
       uniform_bucket_level_access = var.uniform_bucket_level_access
       labels                      = local.logs_bucket_labels
-      force_destroy               = true # destroy 시 내용물 있어도 강제 삭제
+      # force_destroy는 false (기본값) - 감사 로그 보호
 
       enable_versioning       = var.logs_enable_versioning
       lifecycle_rules         = var.logs_lifecycle_rules
@@ -86,7 +86,7 @@ module "game_storage" {
       storage_class               = var.backups_bucket_storage_class
       uniform_bucket_level_access = var.uniform_bucket_level_access
       labels                      = local.backups_bucket_labels
-      force_destroy               = true # destroy 시 내용물 있어도 강제 삭제
+      # force_destroy는 false (기본값) - 백업 데이터 보호
 
       enable_versioning       = var.backups_enable_versioning
       lifecycle_rules         = var.backups_lifecycle_rules
