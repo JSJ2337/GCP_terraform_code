@@ -18,7 +18,7 @@ locals {
   labels = {
     managed_by  = "terraform"
     purpose     = "bootstrap"
-    team        = "platform"
+    team        = "system"
     cost_center = "infrastructure"
   }
 

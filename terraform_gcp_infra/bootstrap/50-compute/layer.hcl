@@ -22,6 +22,7 @@ locals {
       boot_disk_size_gb = 100
       boot_disk_type    = "pd-ssd"
       enable_public_ip  = true
+      create_static_ip  = true  # 고정 IP 사용
       tags              = ["jenkins", "ssh-iap", "http-server"]
       labels = {
         role    = "ci-cd"
@@ -37,6 +38,7 @@ locals {
       boot_disk_size_gb = 100
       boot_disk_type    = "pd-ssd"
       enable_public_ip  = true
+      create_static_ip  = true  # 고정 IP 사용
       tags              = ["bastion", "ssh-iap"]
       labels = {
         role    = "bastion"

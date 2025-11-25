@@ -14,7 +14,22 @@ data "google_compute_image" "per_instance" {
 }
 
 # -----------------------------------------------------------------------------
-# 1) Boot Disk (인스턴스별)
+# 1) Static IP (고정 외부 IP)
+# -----------------------------------------------------------------------------
+resource "google_compute_address" "static_ip" {
+  for_each = { for k, v in var.instances : k => v if coalesce(v.create_static_ip, var.create_static_ip) }
+
+  project      = var.management_project_id
+  name         = "${each.key}-ip"
+  region       = var.region_primary
+  address_type = "EXTERNAL"
+  network_tier = "PREMIUM"
+
+  labels = merge(var.labels, coalesce(each.value.labels, {}))
+}
+
+# -----------------------------------------------------------------------------
+# 2) Boot Disk (인스턴스별)
 # -----------------------------------------------------------------------------
 resource "google_compute_disk" "boot" {
   for_each = var.instances
@@ -56,7 +71,10 @@ resource "google_compute_instance" "vm" {
 
     dynamic "access_config" {
       for_each = coalesce(each.value.enable_public_ip, var.enable_public_ip) ? [1] : []
-      content {}
+      content {
+        # 고정 IP가 있으면 사용, 없으면 임시 IP
+        nat_ip = coalesce(each.value.create_static_ip, var.create_static_ip) ? google_compute_address.static_ip[each.key].address : null
+      }
     }
   }
 

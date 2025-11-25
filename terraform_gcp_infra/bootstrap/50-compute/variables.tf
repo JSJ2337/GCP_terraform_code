@@ -36,6 +36,7 @@ variable "instances" {
     zone                  = optional(string)
     machine_type          = optional(string)
     enable_public_ip      = optional(bool)
+    create_static_ip      = optional(bool)
     enable_os_login       = optional(bool)
     preemptible           = optional(bool)
     startup_script        = optional(string)

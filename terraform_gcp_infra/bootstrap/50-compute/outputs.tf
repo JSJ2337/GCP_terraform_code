@@ -43,3 +43,15 @@ output "jenkins_web_url" {
     null
   ) : null
 }
+
+# 고정 IP 주소 출력
+output "static_ips" {
+  description = "예약된 고정 IP 주소"
+  value = {
+    for k, v in google_compute_address.static_ip : k => {
+      name    = v.name
+      address = v.address
+      region  = v.region
+    }
+  }
+}
