@@ -1,0 +1,244 @@
+// ============================================================================
+// Bootstrap Pipeline
+// ============================================================================
+// 이 파이프라인은 모든 프로젝트의 Terraform State 버킷과 공통 리소스를 관리합니다.
+// - 관리용 프로젝트 (jsj-system-mgmt)
+// - Terraform State 버킷
+// - GCP 폴더 구조 (games, games2 등)
+// - Jenkins Service Account 및 조직 레벨 IAM 권한
+//
+// ⚠️ 주의: 이 레이어는 다른 모든 프로젝트의 기반이므로 신중하게 실행하세요!
+// ============================================================================
+
+pipeline {
+    agent any
+
+    options {
+        skipDefaultCheckout(true)
+        timestamps()
+        disableConcurrentBuilds()
+    }
+
+    environment {
+        TF_IN_AUTOMATION = 'true'
+        TF_INPUT = 'false'
+        // Bootstrap 작업 디렉터리
+        TF_WORKING_DIR = 'terraform_gcp_infra/bootstrap'
+        // Provider 캐시
+        TF_PLUGIN_CACHE_DIR = "${env.WORKSPACE}/.terraform.d/plugin-cache"
+        // GCP 인증 설정 (Jenkins Credential 사용)
+        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-jenkins-service-account')
+    }
+
+    parameters {
+        choice(
+            name: 'ACTION',
+            choices: ['plan', 'apply', 'destroy'],
+            description: 'Terraform 실행할 작업 선택'
+        )
+        booleanParam(
+            name: 'MANAGE_FOLDERS',
+            defaultValue: false,
+            description: 'GCP 폴더 구조 (games/regions/environments) 관리 여부'
+        )
+        booleanParam(
+            name: 'MANAGE_ORG_IAM',
+            defaultValue: false,
+            description: '조직 레벨 IAM (프로젝트 생성, billing.user, editor) 관리 여부'
+        )
+        booleanParam(
+            name: 'ENABLE_BILLING_BINDING',
+            defaultValue: false,
+            description: '청구 계정에 Jenkins SA의 roles/billing.user 부여 여부'
+        )
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                cleanWs()
+                checkout scm
+                script {
+                    def shortCommit = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+                    echo "✅ Repository checked out"
+                    echo "Branch: ${env.BRANCH_NAME ?: env.GIT_BRANCH}"
+                    echo "Commit: ${shortCommit}"
+                    echo "Action: ${params.ACTION}"
+                    echo ""
+                    echo "⚠️  Bootstrap Layer - 모든 프로젝트의 기반 리소스입니다!"
+                    echo "🔧 Options:"
+                    echo "   - Manage Folders: ${params.MANAGE_FOLDERS}"
+                    echo "   - Manage Org IAM: ${params.MANAGE_ORG_IAM}"
+                    echo "   - Enable Billing Binding: ${params.ENABLE_BILLING_BINDING}"
+                }
+            }
+        }
+
+        stage('Environment Check') {
+            steps {
+                echo '🔍 Checking tools...'
+                sh '''
+                    terraform --version
+                    git --version
+                '''
+            }
+        }
+
+        stage('Terraform Init') {
+            steps {
+                script {
+                    sh "mkdir -p '${env.TF_PLUGIN_CACHE_DIR}'"
+                    echo '🔧 Initializing Terraform...'
+
+                    // Clean cache files
+                    sh """
+                        rm -rf '${env.WORKSPACE}/${TF_WORKING_DIR}/.terraform' || true
+                        rm -f '${env.WORKSPACE}/${TF_WORKING_DIR}/tfplan' || true
+                    """
+
+                    retry(3) {
+                        sh "terraform -chdir='${env.WORKSPACE}/${TF_WORKING_DIR}' init"
+                    }
+                }
+            }
+        }
+
+        stage('Terraform Plan') {
+            steps {
+                script {
+                    echo '📋 Running Terraform Plan...'
+
+                    // 변수 파일 생성 (파라미터 반영)
+                    def varArgs = """
+                        -var='manage_folders=${params.MANAGE_FOLDERS}' \
+                        -var='manage_org_iam=${params.MANAGE_ORG_IAM}' \
+                        -var='enable_billing_account_binding=${params.ENABLE_BILLING_BINDING}'
+                    """.trim()
+
+                    if (params.ACTION == 'destroy') {
+                        sh "terraform -chdir='${env.WORKSPACE}/${TF_WORKING_DIR}' plan -destroy ${varArgs} -out=tfplan"
+                    } else {
+                        sh "terraform -chdir='${env.WORKSPACE}/${TF_WORKING_DIR}' plan ${varArgs} -out=tfplan"
+                    }
+
+                    archiveArtifacts artifacts: "${TF_WORKING_DIR}/tfplan", allowEmptyArchive: true
+                }
+            }
+        }
+
+        stage('Review Plan') {
+            when {
+                expression { params.ACTION == 'apply' || params.ACTION == 'destroy' }
+            }
+            steps {
+                script {
+                    echo '👀 Plan 결과를 확인하세요!'
+                    echo ''
+                    echo "⚠️  Bootstrap Layer 변경 주의사항:"
+                    echo "   - State 버킷 삭제 시 모든 프로젝트의 Terraform State가 손실됩니다!"
+                    echo "   - 관리 프로젝트 삭제 시 모든 공유 리소스가 삭제됩니다!"
+                    echo "   - 폴더 구조 변경 시 하위 프로젝트에 영향을 줄 수 있습니다!"
+                    echo ''
+                    echo "Action: ${params.ACTION.toUpperCase()}"
+                }
+            }
+        }
+
+        stage('🛑 Approval 🛑') {
+            when {
+                expression { params.ACTION == 'apply' || params.ACTION == 'destroy' }
+            }
+            steps {
+                script {
+                    def warningMessage = params.ACTION == 'destroy' ?
+                        """
+                        🚨🚨🚨 최상위 위험 경고 🚨🚨🚨
+
+                        Bootstrap Layer DESTROY를 요청하셨습니다!
+
+                        이 작업은 다음을 삭제합니다:
+                        - Terraform State 버킷 (모든 프로젝트의 state 손실!)
+                        - 관리용 프로젝트 (jsj-system-mgmt)
+                        - Jenkins Service Account
+                        - GCP 폴더 구조 (활성화된 경우)
+
+                        이 작업은 되돌릴 수 없습니다!
+                        정말 진행하시겠습니까?
+                        """ :
+                        """
+                        ⚠️  Bootstrap Layer 변경 승인 필요 ⚠️
+
+                        Action: ${params.ACTION.toUpperCase()}
+                        Branch: ${env.GIT_BRANCH}
+                        Commit: ${env.GIT_COMMIT}
+
+                        Options:
+                        - Manage Folders: ${params.MANAGE_FOLDERS}
+                        - Manage Org IAM: ${params.MANAGE_ORG_IAM}
+                        - Enable Billing Binding: ${params.ENABLE_BILLING_BINDING}
+
+                        위 Plan을 검토한 후 승인하시겠습니까?
+                        """
+
+                    timeout(time: 30, unit: 'MINUTES') {
+                        input(
+                            message: warningMessage,
+                            ok: params.ACTION == 'destroy' ?
+                                '🚨 DESTROY 실행 (되돌릴 수 없음!)' :
+                                '✅ 승인 (Apply 실행)',
+                            submitter: 'admin'
+                        )
+                    }
+                }
+            }
+        }
+
+        stage('Apply/Destroy') {
+            when {
+                expression { params.ACTION == 'apply' || params.ACTION == 'destroy' }
+            }
+            steps {
+                script {
+                    if (params.ACTION == 'apply') {
+                        echo '🚀 Applying Terraform changes...'
+                        sh "terraform -chdir='${env.WORKSPACE}/${TF_WORKING_DIR}' apply tfplan"
+                    } else if (params.ACTION == 'destroy') {
+                        echo '🗑️  Destroying Terraform resources...'
+                        echo '⚠️  이 작업은 되돌릴 수 없습니다!'
+                        sh "terraform -chdir='${env.WORKSPACE}/${TF_WORKING_DIR}' apply tfplan"
+                    }
+                }
+            }
+        }
+
+        stage('Show Outputs') {
+            when {
+                expression { params.ACTION == 'apply' }
+            }
+            steps {
+                script {
+                    echo '📤 Terraform Outputs:'
+                    sh "terraform -chdir='${env.WORKSPACE}/${TF_WORKING_DIR}' output || true"
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Bootstrap Pipeline completed successfully!'
+            echo "Action: ${params.ACTION}"
+        }
+        failure {
+            echo '❌ Bootstrap Pipeline failed!'
+            echo "Failed at action: ${params.ACTION}"
+        }
+        always {
+            echo '🧹 Cleaning up plan files...'
+            sh '''
+                find . -name "tfplan" -type f -delete || true
+            '''
+            echo '🏁 Pipeline finished'
+        }
+    }
+}
