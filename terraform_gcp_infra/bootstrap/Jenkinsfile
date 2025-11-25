@@ -125,50 +125,58 @@ pipeline {
 
                     // 로컬 백엔드 환경변수 설정 (Boolean 확실하게 변환)
                     def useLocalBackend = params.USE_LOCAL_BACKEND?.toString()?.toBoolean() ?: false
+                    def localBackendValue = useLocalBackend ? 'true' : 'false'
 
-                    // 항상 환경변수 설정 (true/false 명시)
-                    withEnv(["TG_USE_LOCAL_BACKEND=${useLocalBackend ? 'true' : 'false'}"]) {
-                        // 디버그: 환경변수 확인
-                        sh '''
-                            echo "=== Environment Check ==="
-                            echo "TG_USE_LOCAL_BACKEND=$TG_USE_LOCAL_BACKEND"
-                            env | grep -i "TG_USE" || echo "No TG_USE vars found"
-                        '''
+                    // 디버그: 환경변수 확인
+                    echo "USE_LOCAL_BACKEND param: ${params.USE_LOCAL_BACKEND}"
+                    echo "useLocalBackend: ${useLocalBackend}"
+                    echo "localBackendValue: ${localBackendValue}"
 
-                        for (layer in layers) {
-                            def layerDir = "${env.WORKSPACE}/${TF_WORKING_DIR}/${layer}"
+                    for (layer in layers) {
+                        def layerDir = "${env.WORKSPACE}/${TF_WORKING_DIR}/${layer}"
 
-                            echo "🔧 [${layer}] Initializing Terragrunt..."
+                        echo "🔧 [${layer}] Initializing Terragrunt..."
 
-                            // Clean cache files (backend.tf도 삭제해야 새로 생성됨)
+                        // Clean cache files (backend.tf도 삭제해야 새로 생성됨)
+                        sh """
+                            rm -rf '${layerDir}/.terraform' || true
+                            rm -rf '${layerDir}/.terragrunt-cache' || true
+                            rm -f '${layerDir}/tfplan' || true
+                            rm -f '${layerDir}/backend.tf' || true
+                            rm -f '${layerDir}/provider.tf' || true
+                        """
+
+                        // export로 명시적 환경변수 설정 후 terragrunt 실행
+                        retry(3) {
                             sh """
-                                rm -rf '${layerDir}/.terraform' || true
-                                rm -rf '${layerDir}/.terragrunt-cache' || true
-                                rm -f '${layerDir}/tfplan' || true
-                                rm -f '${layerDir}/backend.tf' || true
+                                export TG_USE_LOCAL_BACKEND=${localBackendValue}
+                                echo "TG_USE_LOCAL_BACKEND=\$TG_USE_LOCAL_BACKEND"
+                                cd '${layerDir}' && terragrunt init
                             """
+                        }
 
-                            retry(3) {
-                                sh "cd '${layerDir}' && terragrunt init"
-                            }
+                        echo "📋 [${layer}] Running Terragrunt Plan..."
 
-                            echo "📋 [${layer}] Running Terragrunt Plan..."
+                        // 변수 파일 생성 (파라미터 반영) - foundation 레이어만 해당
+                        def varArgs = ""
+                        if (layer == '00-foundation') {
+                            varArgs = """
+                                -var='manage_folders=${params.MANAGE_FOLDERS}' \
+                                -var='manage_org_iam=${params.MANAGE_ORG_IAM}' \
+                                -var='enable_billing_account_binding=${params.ENABLE_BILLING_BINDING}'
+                            """.trim()
+                        }
 
-                            // 변수 파일 생성 (파라미터 반영) - foundation 레이어만 해당
-                            def varArgs = ""
-                            if (layer == '00-foundation') {
-                                varArgs = """
-                                    -var='manage_folders=${params.MANAGE_FOLDERS}' \
-                                    -var='manage_org_iam=${params.MANAGE_ORG_IAM}' \
-                                    -var='enable_billing_account_binding=${params.ENABLE_BILLING_BINDING}'
-                                """.trim()
-                            }
-
-                            if (params.ACTION == 'destroy') {
-                                sh "cd '${layerDir}' && terragrunt plan -destroy ${varArgs} -out=tfplan"
-                            } else {
-                                sh "cd '${layerDir}' && terragrunt plan ${varArgs} -out=tfplan"
-                            }
+                        if (params.ACTION == 'destroy') {
+                            sh """
+                                export TG_USE_LOCAL_BACKEND=${localBackendValue}
+                                cd '${layerDir}' && terragrunt plan -destroy ${varArgs} -out=tfplan
+                            """
+                        } else {
+                            sh """
+                                export TG_USE_LOCAL_BACKEND=${localBackendValue}
+                                cd '${layerDir}' && terragrunt plan ${varArgs} -out=tfplan
+                            """
                         }
                     }
 
@@ -258,22 +266,27 @@ pipeline {
                 script {
                     def layers = env.LAYERS.split(',')
                     def useLocalBackend = params.USE_LOCAL_BACKEND?.toString()?.toBoolean() ?: false
+                    def localBackendValue = useLocalBackend ? 'true' : 'false'
 
-                    withEnv(["TG_USE_LOCAL_BACKEND=${useLocalBackend ? 'true' : 'false'}"]) {
-                        for (layer in layers) {
-                            def layerDir = "${env.WORKSPACE}/${TF_WORKING_DIR}/${layer}"
+                    for (layer in layers) {
+                        def layerDir = "${env.WORKSPACE}/${TF_WORKING_DIR}/${layer}"
 
-                            if (params.ACTION == 'apply') {
-                                echo "🚀 [${layer}] Applying Terragrunt changes..."
-                                sh "cd '${layerDir}' && terragrunt apply tfplan"
-                            } else if (params.ACTION == 'destroy') {
-                                echo "🗑️  [${layer}] Destroying Terragrunt resources..."
-                                echo "⚠️  이 작업은 되돌릴 수 없습니다!"
-                                sh "cd '${layerDir}' && terragrunt apply tfplan"
-                            }
-
-                            echo "✅ [${layer}] 완료!"
+                        if (params.ACTION == 'apply') {
+                            echo "🚀 [${layer}] Applying Terragrunt changes..."
+                            sh """
+                                export TG_USE_LOCAL_BACKEND=${localBackendValue}
+                                cd '${layerDir}' && terragrunt apply tfplan
+                            """
+                        } else if (params.ACTION == 'destroy') {
+                            echo "🗑️  [${layer}] Destroying Terragrunt resources..."
+                            echo "⚠️  이 작업은 되돌릴 수 없습니다!"
+                            sh """
+                                export TG_USE_LOCAL_BACKEND=${localBackendValue}
+                                cd '${layerDir}' && terragrunt apply tfplan
+                            """
                         }
+
+                        echo "✅ [${layer}] 완료!"
                     }
                 }
             }
@@ -287,13 +300,15 @@ pipeline {
                 script {
                     def layers = env.LAYERS.split(',')
                     def useLocalBackend = params.USE_LOCAL_BACKEND?.toString()?.toBoolean() ?: false
+                    def localBackendValue = useLocalBackend ? 'true' : 'false'
 
-                    withEnv(["TG_USE_LOCAL_BACKEND=${useLocalBackend ? 'true' : 'false'}"]) {
-                        for (layer in layers) {
-                            def layerDir = "${env.WORKSPACE}/${TF_WORKING_DIR}/${layer}"
-                            echo "📤 [${layer}] Terragrunt Outputs:"
-                            sh "cd '${layerDir}' && terragrunt output || true"
-                        }
+                    for (layer in layers) {
+                        def layerDir = "${env.WORKSPACE}/${TF_WORKING_DIR}/${layer}"
+                        echo "📤 [${layer}] Terragrunt Outputs:"
+                        sh """
+                            export TG_USE_LOCAL_BACKEND=${localBackendValue}
+                            cd '${layerDir}' && terragrunt output || true
+                        """
                     }
                 }
             }
