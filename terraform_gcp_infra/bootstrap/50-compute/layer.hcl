@@ -45,14 +45,15 @@ locals {
   instances = {
     # Jenkins CI/CD 서버
     "delabs-terraform-jenkins" = {
-      hostname          = "delabs-terraform-jenkins.delabsgames.gg"
-      zone              = "asia-northeast3-a"
-      machine_type      = "e2-custom-4-8192"  # 4 vCPU, 8GB RAM
-      boot_disk_size_gb = 100
-      boot_disk_type    = "pd-ssd"
-      enable_public_ip  = true
-      create_static_ip  = true  # 고정 IP 사용
-      tags              = ["jenkins", "ssh-iap", "http-server"]
+      hostname            = "delabs-terraform-jenkins.delabsgames.gg"
+      zone                = "asia-northeast3-a"
+      machine_type        = "e2-custom-4-8192"  # 4 vCPU, 8GB RAM
+      boot_disk_size_gb   = 100
+      boot_disk_type      = "pd-ssd"
+      enable_public_ip    = true
+      create_static_ip    = true  # 고정 IP 사용
+      deletion_protection = false # 삭제 방지 비활성화
+      tags                = ["jenkins", "ssh-iap", "http-server"]
       labels = {
         role    = "ci-cd"
         purpose = "jenkins"
@@ -62,14 +63,15 @@ locals {
 
     # Bastion Host (점프 서버)
     "delabs-bastion" = {
-      hostname          = "delabs-bastion.delabsgames.gg"
-      zone              = "asia-northeast3-a"
-      machine_type      = "e2-small"  # 2 vCPU, 2GB RAM
-      boot_disk_size_gb = 100
-      boot_disk_type    = "pd-ssd"
-      enable_public_ip  = true
-      create_static_ip  = true  # 고정 IP 사용
-      tags              = ["bastion", "ssh-iap"]
+      hostname            = "delabs-bastion.delabsgames.gg"
+      zone                = "asia-northeast3-a"
+      machine_type        = "e2-small"  # 2 vCPU, 2GB RAM
+      boot_disk_size_gb   = 100
+      boot_disk_type      = "pd-ssd"
+      enable_public_ip    = true
+      create_static_ip    = true  # 고정 IP 사용
+      deletion_protection = false # 삭제 방지 비활성화
+      tags                = ["bastion", "ssh-iap"]
       labels = {
         role    = "bastion"
         purpose = "jump-server"
