@@ -1,13 +1,15 @@
 // ============================================================================
-// Bootstrap Pipeline
+// Bootstrap Pipeline (Terragrunt Multi-Layer)
 // ============================================================================
 // 이 파이프라인은 모든 프로젝트의 Terraform State 버킷과 공통 리소스를 관리합니다.
-// - 관리용 프로젝트 (jsj-system-mgmt)
-// - Terraform State 버킷
-// - GCP 폴더 구조 (games, games2 등)
-// - Jenkins Service Account 및 조직 레벨 IAM 권한
 //
-// Backend: GCS (gs://jsj-terraform-state-prod/bootstrap)
+// 레이어 구조:
+//   00-foundation : 관리 프로젝트, API 활성화, Terraform State 버킷
+//   10-network    : VPC, 서브넷, 방화벽, NAT
+//   20-storage    : GCS 버킷 (아티팩트, 백업 등)
+//   50-compute    : Jenkins VM, Bastion Host
+//
+// Backend: GCS (gs://delabs-terraform-state-live/bootstrap)
 //
 // ⚠️ 주의: 이 레이어는 다른 모든 프로젝트의 기반이므로 신중하게 실행하세요!
 // ============================================================================
@@ -29,14 +31,19 @@ pipeline {
         // Provider 캐시
         TF_PLUGIN_CACHE_DIR = "${env.WORKSPACE}/.terraform.d/plugin-cache"
         // GCP 인증 설정 (Jenkins Credential 사용)
-        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-jenkins-service-account')
+        GOOGLE_APPLICATION_CREDENTIALS = credentials('delabs-terraform-admin')
     }
 
     parameters {
         choice(
             name: 'ACTION',
             choices: ['plan', 'apply', 'destroy'],
-            description: 'Terraform 실행할 작업 선택'
+            description: 'Terragrunt 실행할 작업 선택'
+        )
+        choice(
+            name: 'LAYER',
+            choices: ['all', '00-foundation', '10-network', '20-storage', '50-compute'],
+            description: '실행할 레이어 선택 (all = 모든 레이어 순차 실행)'
         )
         booleanParam(
             name: 'MANAGE_FOLDERS',
@@ -66,6 +73,7 @@ pipeline {
                     echo "Branch: ${env.BRANCH_NAME ?: env.GIT_BRANCH}"
                     echo "Commit: ${shortCommit}"
                     echo "Action: ${params.ACTION}"
+                    echo "Layer: ${params.LAYER}"
                     echo ""
                     echo "⚠️  Bootstrap Layer - 모든 프로젝트의 기반 리소스입니다!"
                     echo "🔧 Options:"
@@ -81,49 +89,65 @@ pipeline {
                 echo '🔍 Checking tools...'
                 sh '''
                     terraform --version
+                    terragrunt --version
                     git --version
                 '''
             }
         }
 
-        stage('Terraform Init') {
+        stage('Terragrunt Init & Plan') {
             steps {
                 script {
                     sh "mkdir -p '${env.TF_PLUGIN_CACHE_DIR}'"
-                    echo '🔧 Initializing Terraform...'
 
-                    // Clean cache files
-                    sh """
-                        rm -rf '${env.WORKSPACE}/${TF_WORKING_DIR}/.terraform' || true
-                        rm -f '${env.WORKSPACE}/${TF_WORKING_DIR}/tfplan' || true
-                    """
+                    def layers = params.LAYER == 'all' ?
+                        ['00-foundation', '10-network', '20-storage', '50-compute'] :
+                        [params.LAYER]
 
-                    retry(3) {
-                        sh "terraform -chdir='${env.WORKSPACE}/${TF_WORKING_DIR}' init"
-                    }
-                }
-            }
-        }
-
-        stage('Terraform Plan') {
-            steps {
-                script {
-                    echo '📋 Running Terraform Plan...'
-
-                    // 변수 파일 생성 (파라미터 반영)
-                    def varArgs = """
-                        -var='manage_folders=${params.MANAGE_FOLDERS}' \
-                        -var='manage_org_iam=${params.MANAGE_ORG_IAM}' \
-                        -var='enable_billing_account_binding=${params.ENABLE_BILLING_BINDING}'
-                    """.trim()
-
+                    // destroy의 경우 역순 실행
                     if (params.ACTION == 'destroy') {
-                        sh "terraform -chdir='${env.WORKSPACE}/${TF_WORKING_DIR}' plan -destroy ${varArgs} -out=tfplan"
-                    } else {
-                        sh "terraform -chdir='${env.WORKSPACE}/${TF_WORKING_DIR}' plan ${varArgs} -out=tfplan"
+                        layers = layers.reverse()
                     }
 
-                    archiveArtifacts artifacts: "${TF_WORKING_DIR}/tfplan", allowEmptyArchive: true
+                    env.LAYERS = layers.join(',')
+
+                    for (layer in layers) {
+                        def layerDir = "${env.WORKSPACE}/${TF_WORKING_DIR}/${layer}"
+
+                        echo "🔧 [${layer}] Initializing Terragrunt..."
+
+                        // Clean cache files
+                        sh """
+                            rm -rf '${layerDir}/.terraform' || true
+                            rm -rf '${layerDir}/.terragrunt-cache' || true
+                            rm -f '${layerDir}/tfplan' || true
+                        """
+
+                        retry(3) {
+                            sh "cd '${layerDir}' && terragrunt init"
+                        }
+
+                        echo "📋 [${layer}] Running Terragrunt Plan..."
+
+                        // 변수 파일 생성 (파라미터 반영) - foundation 레이어만 해당
+                        def varArgs = ""
+                        if (layer == '00-foundation') {
+                            varArgs = """
+                                -var='manage_folders=${params.MANAGE_FOLDERS}' \
+                                -var='manage_org_iam=${params.MANAGE_ORG_IAM}' \
+                                -var='enable_billing_account_binding=${params.ENABLE_BILLING_BINDING}'
+                            """.trim()
+                        }
+
+                        if (params.ACTION == 'destroy') {
+                            sh "cd '${layerDir}' && terragrunt plan -destroy ${varArgs} -out=tfplan"
+                        } else {
+                            sh "cd '${layerDir}' && terragrunt plan ${varArgs} -out=tfplan"
+                        }
+                    }
+
+                    // Archive all tfplan files
+                    sh "find '${env.WORKSPACE}/${TF_WORKING_DIR}' -name 'tfplan' -type f | head -20"
                 }
             }
         }
@@ -142,6 +166,7 @@ pipeline {
                     echo "   - 폴더 구조 변경 시 하위 프로젝트에 영향을 줄 수 있습니다!"
                     echo ''
                     echo "Action: ${params.ACTION.toUpperCase()}"
+                    echo "Layers: ${env.LAYERS}"
                 }
             }
         }
@@ -158,10 +183,13 @@ pipeline {
 
                         Bootstrap Layer DESTROY를 요청하셨습니다!
 
+                        대상 레이어: ${env.LAYERS}
+
                         이 작업은 다음을 삭제합니다:
                         - Terraform State 버킷 (모든 프로젝트의 state 손실!)
-                        - 관리용 프로젝트 (jsj-system-mgmt)
-                        - Jenkins Service Account
+                        - 관리용 프로젝트 (delabs-gcp-mgmt)
+                        - Jenkins / Bastion VM
+                        - VPC, 서브넷, 방화벽 규칙
                         - GCP 폴더 구조 (활성화된 경우)
 
                         이 작업은 되돌릴 수 없습니다!
@@ -171,6 +199,7 @@ pipeline {
                         ⚠️  Bootstrap Layer 변경 승인 필요 ⚠️
 
                         Action: ${params.ACTION.toUpperCase()}
+                        Layers: ${env.LAYERS}
                         Branch: ${env.GIT_BRANCH}
                         Commit: ${env.GIT_COMMIT}
 
@@ -201,13 +230,21 @@ pipeline {
             }
             steps {
                 script {
-                    if (params.ACTION == 'apply') {
-                        echo '🚀 Applying Terraform changes...'
-                        sh "terraform -chdir='${env.WORKSPACE}/${TF_WORKING_DIR}' apply tfplan"
-                    } else if (params.ACTION == 'destroy') {
-                        echo '🗑️  Destroying Terraform resources...'
-                        echo '⚠️  이 작업은 되돌릴 수 없습니다!'
-                        sh "terraform -chdir='${env.WORKSPACE}/${TF_WORKING_DIR}' apply tfplan"
+                    def layers = env.LAYERS.split(',')
+
+                    for (layer in layers) {
+                        def layerDir = "${env.WORKSPACE}/${TF_WORKING_DIR}/${layer}"
+
+                        if (params.ACTION == 'apply') {
+                            echo "🚀 [${layer}] Applying Terragrunt changes..."
+                            sh "cd '${layerDir}' && terragrunt apply tfplan"
+                        } else if (params.ACTION == 'destroy') {
+                            echo "🗑️  [${layer}] Destroying Terragrunt resources..."
+                            echo "⚠️  이 작업은 되돌릴 수 없습니다!"
+                            sh "cd '${layerDir}' && terragrunt apply tfplan"
+                        }
+
+                        echo "✅ [${layer}] 완료!"
                     }
                 }
             }
@@ -219,8 +256,13 @@ pipeline {
             }
             steps {
                 script {
-                    echo '📤 Terraform Outputs:'
-                    sh "terraform -chdir='${env.WORKSPACE}/${TF_WORKING_DIR}' output || true"
+                    def layers = env.LAYERS.split(',')
+
+                    for (layer in layers) {
+                        def layerDir = "${env.WORKSPACE}/${TF_WORKING_DIR}/${layer}"
+                        echo "📤 [${layer}] Terragrunt Outputs:"
+                        sh "cd '${layerDir}' && terragrunt output || true"
+                    }
                 }
             }
         }
@@ -230,6 +272,7 @@ pipeline {
         success {
             echo '✅ Bootstrap Pipeline completed successfully!'
             echo "Action: ${params.ACTION}"
+            echo "Layers: ${env.LAYERS ?: params.LAYER}"
         }
         failure {
             echo '❌ Bootstrap Pipeline failed!'
@@ -239,6 +282,7 @@ pipeline {
             echo '🧹 Cleaning up plan files...'
             sh '''
                 find . -name "tfplan" -type f -delete || true
+                find . -name ".terragrunt-cache" -type d -exec rm -rf {} + || true
             '''
             echo '🏁 Pipeline finished'
         }
