@@ -32,10 +32,10 @@ locals {
     systemctl restart sshd
 
     # 기본 사용자 생성 및 비밀번호 설정
-    # 사용자명: admin, 비밀번호: 초기 배포 후 반드시 변경 필요!
-    if ! id "admin" &>/dev/null; then
-      useradd -m -s /bin/bash -G wheel admin
-      echo "admin:Delabs2024!" | chpasswd
+    # 사용자명: delabs-adm, 비밀번호: 초기 배포 후 반드시 변경 필요!
+    if ! id "delabs-adm" &>/dev/null; then
+      useradd -m -s /bin/bash -G wheel delabs-adm
+      echo "delabs-adm:REDACTED_PASSWORD" | chpasswd
     fi
 
     echo "SSH password authentication enabled"
