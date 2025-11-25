@@ -87,6 +87,7 @@ resource "google_project" "mgmt" {
 # -----------------------------------------------------------------------------
 resource "google_project_service" "apis" {
   for_each = toset([
+    # 핵심 API
     "storage.googleapis.com",
     "cloudresourcemanager.googleapis.com",
     "iam.googleapis.com",
@@ -94,6 +95,16 @@ resource "google_project_service" "apis" {
     "serviceusage.googleapis.com",
     "compute.googleapis.com",
     "servicenetworking.googleapis.com",
+    # 보안 및 접근 제어
+    "iap.googleapis.com",              # IAP 터널링
+    "iamcredentials.googleapis.com",   # SA 토큰 생성
+    "secretmanager.googleapis.com",    # Secret Manager
+    # 모니터링 및 로깅
+    "logging.googleapis.com",          # Cloud Logging
+    "monitoring.googleapis.com",       # Cloud Monitoring
+    # OS 관리
+    "osconfig.googleapis.com",         # OS 패치 관리
+    "oslogin.googleapis.com",          # OS Login
   ])
 
   project            = google_project.mgmt.project_id
@@ -176,4 +187,40 @@ resource "google_billing_account_iam_member" "jenkins_billing_user_on_account" {
   billing_account_id = var.billing_account
   role               = "roles/billing.user"
   member             = "serviceAccount:${google_service_account.jenkins_terraform.email}"
+}
+
+# -----------------------------------------------------------------------------
+# 7) IAP 터널 접근 권한 (관리자용)
+# -----------------------------------------------------------------------------
+resource "google_project_iam_member" "iap_tunnel_user" {
+  for_each = var.iap_tunnel_members
+
+  project = google_project.mgmt.project_id
+  role    = "roles/iap.tunnelResourceAccessor"
+  member  = each.value
+
+  depends_on = [google_project_service.apis]
+}
+
+# -----------------------------------------------------------------------------
+# 8) OS Login 권한 (관리자용)
+# -----------------------------------------------------------------------------
+resource "google_project_iam_member" "os_admin_login" {
+  for_each = var.os_login_admins
+
+  project = google_project.mgmt.project_id
+  role    = "roles/compute.osAdminLogin"
+  member  = each.value
+
+  depends_on = [google_project_service.apis]
+}
+
+resource "google_project_iam_member" "os_login" {
+  for_each = var.os_login_users
+
+  project = google_project.mgmt.project_id
+  role    = "roles/compute.osLogin"
+  member  = each.value
+
+  depends_on = [google_project_service.apis]
 }

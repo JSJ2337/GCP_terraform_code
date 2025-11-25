@@ -53,3 +53,21 @@ variable "enable_billing_account_binding" {
   type        = bool
   default     = false
 }
+
+variable "iap_tunnel_members" {
+  description = "IAP 터널 접근 권한을 부여할 멤버 목록 (user:, group:, serviceAccount: 형식)"
+  type        = set(string)
+  default     = []
+}
+
+variable "os_login_admins" {
+  description = "OS Login 관리자 권한을 부여할 멤버 목록 (sudo 권한)"
+  type        = set(string)
+  default     = []
+}
+
+variable "os_login_users" {
+  description = "OS Login 일반 사용자 권한을 부여할 멤버 목록"
+  type        = set(string)
+  default     = []
+}

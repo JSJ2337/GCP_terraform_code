@@ -3,7 +3,7 @@
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# 1) Terraform State 저장용 버킷 (Production)
+# 1) Terraform State 저장용 버킷 (Live/Production)
 # -----------------------------------------------------------------------------
 resource "google_storage_bucket" "tfstate_prod" {
   project       = var.management_project_id
@@ -13,6 +13,9 @@ resource "google_storage_bucket" "tfstate_prod" {
 
   # 실수로 삭제 방지
   force_destroy = false
+
+  # 공개 액세스 완전 차단
+  public_access_prevention = "enforced"
 
   # Versioning 활성화 (State 이력 보관)
   versioning {
@@ -35,12 +38,12 @@ resource "google_storage_bucket" "tfstate_prod" {
 
   labels = merge(var.labels, {
     purpose     = "terraform-state"
-    environment = "prod"
+    environment = "live"
   })
 }
 
 # -----------------------------------------------------------------------------
-# 2) Terraform State 저장용 버킷 (Development) - 선택사항
+# 2) Terraform State 저장용 버킷 (QA/Development) - 선택사항
 # -----------------------------------------------------------------------------
 resource "google_storage_bucket" "tfstate_dev" {
   count = var.create_dev_bucket ? 1 : 0
@@ -51,6 +54,9 @@ resource "google_storage_bucket" "tfstate_dev" {
   storage_class = "STANDARD"
 
   force_destroy = false
+
+  # 공개 액세스 완전 차단
+  public_access_prevention = "enforced"
 
   versioning {
     enabled = true
@@ -70,7 +76,7 @@ resource "google_storage_bucket" "tfstate_dev" {
 
   labels = merge(var.labels, {
     purpose     = "terraform-state"
-    environment = "dev"
+    environment = "qa-dev"
   })
 }
 
@@ -86,6 +92,9 @@ resource "google_storage_bucket" "artifacts" {
   storage_class = "STANDARD"
 
   force_destroy = false
+
+  # 공개 액세스 완전 차단
+  public_access_prevention = "enforced"
 
   versioning {
     enabled = true

@@ -65,7 +65,7 @@ resource "google_compute_router_nat" "mgmt_nat" {
 
   log_config {
     enable = true
-    filter = "ERRORS_ONLY"
+    filter = "ALL"  # 모든 NAT 로그 수집 (트러블슈팅용)
   }
 }
 
@@ -88,6 +88,11 @@ resource "google_compute_firewall" "allow_iap_ssh" {
   # IAP 터널링 IP 대역
   source_ranges = ["35.235.240.0/20"]
   target_tags   = ["allow-ssh"]
+
+  # Firewall 로그 활성화
+  log_config {
+    metadata = "INCLUDE_ALL_METADATA"
+  }
 }
 
 # Jenkins 웹 UI 허용
@@ -104,6 +109,11 @@ resource "google_compute_firewall" "allow_jenkins" {
 
   source_ranges = var.jenkins_allowed_cidrs
   target_tags   = ["jenkins"]
+
+  # Firewall 로그 활성화 (인터넷 facing 규칙)
+  log_config {
+    metadata = "INCLUDE_ALL_METADATA"
+  }
 }
 
 # 내부 통신 허용
@@ -128,6 +138,5 @@ resource "google_compute_firewall" "allow_internal" {
   }
 
   source_ranges = [var.subnet_cidr]
+  target_tags   = ["allow-internal"]
 }
-
-# Egress deny 기본 규칙은 GCP에서 허용하므로 별도 설정 불필요

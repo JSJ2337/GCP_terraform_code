@@ -9,11 +9,11 @@ include "root" {
 locals {
   parent_dir = abspath("${get_terragrunt_dir()}/..")
 
-  # 공통 입력 읽기
-  raw_common_inputs = read_tfvars_file("${local.parent_dir}/common.bootstrap.tfvars")
+  # 공통 입력 읽기 (HCL 파일 직접 파싱)
+  common_vars = read_terragrunt_config("${local.parent_dir}/common.hcl")
 
   # 레이어 입력 읽기
-  raw_layer_inputs = read_tfvars_file("${get_terragrunt_dir()}/terraform.tfvars")
+  layer_vars = read_terragrunt_config("${get_terragrunt_dir()}/layer.hcl")
 }
 
 # 00-foundation 의존성
@@ -33,8 +33,8 @@ dependencies {
 }
 
 inputs = merge(
-  local.raw_common_inputs,
-  local.raw_layer_inputs,
+  local.common_vars.locals,
+  local.layer_vars.locals,
   {
     management_project_id = dependency.foundation.outputs.management_project_id
   }

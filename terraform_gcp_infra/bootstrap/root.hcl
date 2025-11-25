@@ -3,18 +3,24 @@
 
 locals {
   # 환경 변수에서 state bucket 이름을 가져오거나 기본값 사용
-  state_bucket = get_env("TG_BOOTSTRAP_STATE_BUCKET", "jsj-terraform-state-prod")
+  state_bucket = get_env("TG_BOOTSTRAP_STATE_BUCKET", "delabs-terraform-state-live")
+
+  # 로컬 백엔드 사용 여부 (초기 부트스트랩 시 true로 설정)
+  # 사용법: TG_USE_LOCAL_BACKEND=true terragrunt apply
+  use_local_backend = tobool(get_env("TG_USE_LOCAL_BACKEND", "false"))
 }
 
-# Remote State 설정
+# Remote State 설정 (조건부)
 remote_state {
-  backend = "gcs"
+  backend = local.use_local_backend ? "local" : "gcs"
 
-  config = {
+  config = local.use_local_backend ? {
+    path = "${get_terragrunt_dir()}/terraform.tfstate"
+  } : {
     bucket   = local.state_bucket
     prefix   = "bootstrap/${path_relative_to_include()}"
-    project  = "jsj-system-mgmt"
-    location = "US"
+    project  = "delabs-gcp-mgmt"
+    location = "ASIA"
   }
 
   generate = {
