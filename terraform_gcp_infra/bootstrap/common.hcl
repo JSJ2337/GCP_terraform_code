@@ -28,6 +28,6 @@ locals {
 
   # 네트워크 정보 (10-network에서 생성됨)
   # 형식: projects/{project}/global/networks/{network}
-  vpc_self_link    = "projects/delabs-gcp-mgmt/global/networks/delabs-gcp-mgmt-mgmt-vpc"
-  subnet_self_link = "projects/delabs-gcp-mgmt/regions/asia-northeast3/subnetworks/delabs-gcp-mgmt-mgmt-subnet"
+  vpc_self_link    = "projects/delabs-gcp-mgmt/global/networks/delabs-gcp-mgmt-vpc"
+  subnet_self_link = "projects/delabs-gcp-mgmt/regions/asia-northeast3/subnetworks/delabs-gcp-mgmt-subnet"
 }

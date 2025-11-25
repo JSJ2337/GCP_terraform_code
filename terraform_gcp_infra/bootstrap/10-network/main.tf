@@ -3,8 +3,8 @@
 # =============================================================================
 
 locals {
-  network_name = "${var.management_project_id}-mgmt-vpc"
-  subnet_name  = "${var.management_project_id}-mgmt-subnet"
+  network_name = "${var.management_project_id}-vpc"
+  subnet_name  = "${var.management_project_id}-subnet"
 }
 
 # -----------------------------------------------------------------------------
@@ -42,7 +42,7 @@ resource "google_compute_subnetwork" "mgmt_subnet" {
 # -----------------------------------------------------------------------------
 resource "google_compute_router" "mgmt_router" {
   project = var.management_project_id
-  name    = "${var.management_project_id}-mgmt-router"
+  name    = "${var.management_project_id}-router"
   region  = var.region_primary
   network = google_compute_network.mgmt_vpc.id
 
@@ -56,7 +56,7 @@ resource "google_compute_router" "mgmt_router" {
 # -----------------------------------------------------------------------------
 resource "google_compute_router_nat" "mgmt_nat" {
   project = var.management_project_id
-  name    = "${var.management_project_id}-mgmt-nat"
+  name    = "${var.management_project_id}-nat"
   router  = google_compute_router.mgmt_router.name
   region  = var.region_primary
 
