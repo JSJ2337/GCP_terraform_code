@@ -170,10 +170,61 @@ resource "google_compute_backend_service" "default" {
   load_balancing_scheme = var.lb_type == "internal" ? "INTERNAL_MANAGED" : "EXTERNAL_MANAGED"
 }
 
-# NOTE: null_resource provisioner는 state에 있어야 destroy 시 실행됩니다.
-# 현재는 Jenkins에서 Phase 7 destroy 직후에 gcloud로 처리합니다.
-# 향후 Provider 버그 수정 시 이 방식으로 전환 가능:
-# https://github.com/hashicorp/terraform-provider-google/issues/6376
+# Terraform GCP Provider 버그 워크어라운드:
+# Backend Service destroy 시 Instance Group을 자동으로 detach하지 않는 문제 해결
+# 참고: https://github.com/hashicorp/terraform-provider-google/issues/6376
+#
+# 사용 방법:
+# 1. Jenkins에서 'prepare-destroy' 액션 실행 → Phase 7 apply로 이 리소스를 state에 추가
+# 2. 그 다음 'destroy' 액션 실행 → provisioner가 자동으로 backend 제거
+resource "null_resource" "backend_cleanup" {
+  count = var.lb_type == "http" || var.lb_type == "internal" ? 1 : 0
+
+  triggers = {
+    backend_service_name = var.backend_service_name
+    project_id           = var.project_id
+    backends_json = jsonencode([
+      for b in var.backends : {
+        group = b.group
+      }
+    ])
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = <<-EOT
+      set -e
+      echo "🧹 Cleaning up backends from Backend Service: ${self.triggers.backend_service_name}"
+
+      backends=$(gcloud compute backend-services describe ${self.triggers.backend_service_name} \
+        --global \
+        --project=${self.triggers.project_id} \
+        --format='value(backends[].group)' 2>&1 || echo "NONE")
+
+      if [ "$backends" != "NONE" ] && [ -n "$backends" ]; then
+        echo "$backends" | while IFS= read -r backend_url; do
+          if [ -n "$backend_url" ]; then
+            ig_name=$(echo "$backend_url" | awk -F'/' '{print $NF}')
+            zone=$(echo "$backend_url" | awk -F'/' '{for(i=1;i<=NF;i++) if($i=="zones") print $(i+1)}')
+            echo "  Removing backend: $ig_name (zone: $zone)"
+            gcloud compute backend-services remove-backend ${self.triggers.backend_service_name} \
+              --instance-group="$ig_name" \
+              --instance-group-zone="$zone" \
+              --global \
+              --project=${self.triggers.project_id} \
+              --quiet || echo "    Warning: Could not remove backend $ig_name"
+            sleep 2
+          fi
+        done
+        echo "✅ All backends removed from ${self.triggers.backend_service_name}"
+      else
+        echo "✅ No backends found in ${self.triggers.backend_service_name}"
+      fi
+    EOT
+  }
+
+  depends_on = [google_compute_backend_service.default]
+}
 
 # 리전 백엔드 서비스 (Internal Classic LB)
 resource "google_compute_region_backend_service" "internal" {

@@ -36,8 +36,8 @@ pipeline {
     parameters {
         choice(
             name: 'ACTION',
-            choices: ['plan', 'apply', 'destroy'],
-            description: 'Terragrunt 실행할 작업 선택'
+            choices: ['plan', 'apply', 'destroy', 'prepare-destroy'],
+            description: 'Terragrunt 실행할 작업 선택 (prepare-destroy: Phase 7만 apply해서 cleanup resource 추가)'
         )
         choice(
             name: 'TARGET_LAYER',
@@ -194,6 +194,44 @@ ${phaseList}
                             ok: "✅ 전체 승인 (${params.ACTION.capitalize()} 순차 실행)",
                             submitter: 'admin'
                         )
+                    }
+                }
+            }
+        }
+
+        // ====================================================================
+        // Prepare Destroy: Phase 7만 apply해서 cleanup resource 추가
+        // ====================================================================
+        stage('Prepare for Destroy') {
+            when {
+                allOf {
+                    expression { params.ACTION == 'prepare-destroy' }
+                    expression { params.TARGET_LAYER == 'all' }
+                }
+            }
+            steps {
+                script {
+                    def phase7 = PHASES.find { it.id == 'phase7' }
+
+                    stage("${phase7.label} - Apply Cleanup Resources") {
+                        echo "📋 Phase 7만 apply해서 null_resource.backend_cleanup을 state에 추가합니다..."
+                        echo "⚠️  참고: 이 단계는 Terraform GCP Provider 버그 워크어라운드입니다."
+                        echo "⚠️  null_resource provisioner는 state에 있어야 destroy 시 실행됩니다."
+
+                        def includeArgs = phase7.dirs.collect {
+                            "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'"
+                        }.join(' ')
+
+                        // Plan
+                        echo "📋 Planning Phase 7..."
+                        sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- plan -out=tfplan-prepare-destroy"
+
+                        // Apply
+                        echo "🚀 Applying Phase 7 (cleanup resources only)..."
+                        sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- apply tfplan-prepare-destroy"
+
+                        echo "✅ Phase 7 cleanup resources added to Terraform state"
+                        echo "✅ 이제 'destroy' 액션을 실행하면 Backend Service가 정상적으로 정리됩니다."
                     }
                 }
             }
@@ -429,82 +467,6 @@ def runPhaseApply(phase, phaseDirs) {
 // Phase Destroy 실행
 def runPhaseDestroy(phase, phaseDirs) {
     def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
-
-    // Phase 7 먼저 destroy 실행
-    if (phase.id == 'phase7') {
-        sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- destroy -auto-approve"
-
-        // Phase 7 destroy 후 Backend Service cleanup
-        echo '🧹 Cleaning up orphaned Backend Services after Phase 7 destroy...'
-
-        def backendServices = sh(
-            script: """
-                gcloud compute backend-services list \
-                    --project=jsj-game-n \
-                    --filter="name~game-n-prod" \
-                    --format='value(name)' 2>&1 || echo "NONE"
-            """,
-            returnStdout: true
-        ).trim()
-
-        if (backendServices != "NONE" && backendServices != "") {
-            echo "⚠️  Found orphaned Backend Services: ${backendServices}"
-
-            backendServices.split('\n').each { serviceName ->
-                if (serviceName && serviceName != "NONE") {
-                    echo "Processing Backend Service: ${serviceName}"
-
-                    // Get all backends
-                    def backends = sh(
-                        script: """
-                            gcloud compute backend-services describe ${serviceName} \
-                                --global \
-                                --project=jsj-game-n \
-                                --format='value(backends[].group)' 2>&1 || echo "NONE"
-                        """,
-                        returnStdout: true
-                    ).trim()
-
-                    // Remove each backend
-                    if (backends != "NONE" && backends != "") {
-                        backends.split('\n').each { backendUrl ->
-                            if (backendUrl && backendUrl != "NONE") {
-                                def urlParts = backendUrl.tokenize('/')
-                                def igName = urlParts[-1]
-                                def zone = urlParts[-3]
-
-                                echo "  Removing backend ${igName} from ${serviceName}"
-                                sh """
-                                    gcloud compute backend-services remove-backend ${serviceName} \
-                                        --instance-group=${igName} \
-                                        --instance-group-zone=${zone} \
-                                        --global \
-                                        --project=jsj-game-n \
-                                        --quiet || echo "    Warning: Could not remove backend ${igName}"
-                                """
-                                sleep(time: 2, unit: 'SECONDS')
-                            }
-                        }
-                    }
-
-                    // Delete Backend Service
-                    echo "  Deleting Backend Service: ${serviceName}"
-                    sh """
-                        gcloud compute backend-services delete ${serviceName} \
-                            --global \
-                            --project=jsj-game-n \
-                            --quiet || echo "    Warning: Could not delete ${serviceName}"
-                    """
-                    sleep(time: 3, unit: 'SECONDS')
-                }
-            }
-            echo "✅ Backend Services cleaned up"
-        } else {
-            echo "✅ No orphaned Backend Services found"
-        }
-
-        return // Phase 7은 이미 destroy 했으므로 함수 종료
-    }
 
     // Phase 6 (Database & Cache)의 경우 deletion protection 먼저 비활성화
     if (phase.id == 'phase6') {
