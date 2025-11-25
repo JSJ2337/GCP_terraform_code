@@ -19,18 +19,6 @@ variable "subnet_cidr" {
   default     = "10.0.0.0/24"
 }
 
-variable "jenkins_allowed_cidrs" {
-  description = "Jenkins 접근 허용 CIDR 목록"
-  type        = list(string)
-  default     = ["0.0.0.0/0"] # 운영 시 제한 필요
-}
-
-variable "bastion_allowed_cidrs" {
-  description = "Bastion SSH 접근 허용 CIDR 목록"
-  type        = list(string)
-  default     = ["0.0.0.0/0"] # 운영 시 제한 필요
-}
-
 variable "labels" {
   description = "리소스 레이블"
   type        = map(string)

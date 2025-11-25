@@ -1,5 +1,6 @@
 # =============================================================================
-# 10-network: 관리용 네트워크 인프라 (VPC, Subnet, Firewall, NAT)
+# 10-network: 관리용 네트워크 인프라 (VPC, Subnet, Router, NAT)
+# Firewall 규칙은 15-firewall 레이어로 분리됨
 # =============================================================================
 
 locals {
@@ -69,95 +70,3 @@ resource "google_compute_router_nat" "mgmt_nat" {
   }
 }
 
-# -----------------------------------------------------------------------------
-# 5) Firewall Rules
-# -----------------------------------------------------------------------------
-
-# SSH 허용 (IAP 터널링용)
-resource "google_compute_firewall" "allow_iap_ssh" {
-  project     = var.management_project_id
-  name        = "${local.network_name}-allow-iap-ssh"
-  network     = google_compute_network.mgmt_vpc.id
-  description = "Allow SSH from IAP"
-
-  allow {
-    protocol = "tcp"
-    ports    = ["22"]
-  }
-
-  # IAP 터널링 IP 대역
-  source_ranges = ["35.235.240.0/20"]
-  target_tags   = ["allow-ssh"]
-
-  # Firewall 로그 활성화
-  log_config {
-    metadata = "INCLUDE_ALL_METADATA"
-  }
-}
-
-# Jenkins 웹 UI 허용
-resource "google_compute_firewall" "allow_jenkins" {
-  project     = var.management_project_id
-  name        = "${local.network_name}-allow-jenkins"
-  network     = google_compute_network.mgmt_vpc.id
-  description = "Allow Jenkins Web UI"
-
-  allow {
-    protocol = "tcp"
-    ports    = ["8080", "443"]
-  }
-
-  source_ranges = var.jenkins_allowed_cidrs
-  target_tags   = ["jenkins"]
-
-  # Firewall 로그 활성화 (인터넷 facing 규칙)
-  log_config {
-    metadata = "INCLUDE_ALL_METADATA"
-  }
-}
-
-# Bastion SSH 허용 (외부에서 직접 접속)
-resource "google_compute_firewall" "allow_bastion_ssh" {
-  project     = var.management_project_id
-  name        = "${local.network_name}-allow-bastion-ssh"
-  network     = google_compute_network.mgmt_vpc.id
-  description = "Allow SSH to Bastion from external"
-
-  allow {
-    protocol = "tcp"
-    ports    = ["22"]
-  }
-
-  source_ranges = var.bastion_allowed_cidrs
-  target_tags   = ["bastion"]
-
-  # Firewall 로그 활성화 (인터넷 facing 규칙)
-  log_config {
-    metadata = "INCLUDE_ALL_METADATA"
-  }
-}
-
-# 내부 통신 허용
-resource "google_compute_firewall" "allow_internal" {
-  project     = var.management_project_id
-  name        = "${local.network_name}-allow-internal"
-  network     = google_compute_network.mgmt_vpc.id
-  description = "Allow internal communication"
-
-  allow {
-    protocol = "tcp"
-    ports    = ["0-65535"]
-  }
-
-  allow {
-    protocol = "udp"
-    ports    = ["0-65535"]
-  }
-
-  allow {
-    protocol = "icmp"
-  }
-
-  source_ranges = [var.subnet_cidr]
-  target_tags   = ["allow-internal"]
-}
