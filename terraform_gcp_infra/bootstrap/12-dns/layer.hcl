@@ -12,12 +12,12 @@ locals {
     "jenkins" = {
       type    = "A"
       ttl     = 300
-      rrdatas = ["10.250.10.4"]
+      rrdatas = ["10.250.10.7"]
     }
     "bastion" = {
       type    = "A"
       ttl     = 300
-      rrdatas = ["10.250.10.3"]
+      rrdatas = ["10.250.10.6"]
     }
 
     # 새 서버 추가 시 여기에 추가

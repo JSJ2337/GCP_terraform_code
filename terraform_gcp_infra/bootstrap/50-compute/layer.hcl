@@ -57,7 +57,7 @@ EOT
       enable_public_ip    = true
       create_static_ip    = true  # 고정 IP 사용
       deletion_protection = false # 삭제 방지 비활성화
-      tags                = ["jenkins", "ssh-iap", "http-server"]
+      tags                = ["jenkins", "ssh-iap", "http-server", "allow-internal"]
       labels = {
         role    = "ci-cd"
         purpose = "jenkins"
@@ -75,7 +75,7 @@ EOT
       enable_public_ip    = true
       create_static_ip    = true  # 고정 IP 사용
       deletion_protection = false # 삭제 방지 비활성화
-      tags                = ["bastion", "ssh-iap"]
+      tags                = ["bastion", "ssh-iap", "allow-internal"]
       labels = {
         role    = "bastion"
         purpose = "jump-server"
@@ -93,7 +93,7 @@ EOT
       enable_public_ip    = true
       create_static_ip    = false  # 임시 IP 사용
       deletion_protection = false
-      tags                = ["bastion", "ssh-iap"]  # bastion과 동일한 방화벽 정책
+      tags                = ["bastion", "ssh-iap", "allow-internal"]  # bastion과 동일한 방화벽 정책
       labels = {
         role    = "test"
         purpose = "testing"
