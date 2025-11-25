@@ -5,12 +5,12 @@
 # 프로젝트 정보
 output "management_project_id" {
   description = "관리용 프로젝트 ID"
-  value       = google_project.mgmt.project_id
+  value       = local.mgmt_project_id
 }
 
 output "management_project_number" {
   description = "관리용 프로젝트 번호"
-  value       = google_project.mgmt.number
+  value       = var.create_project ? google_project.mgmt[0].number : data.google_project.mgmt_existing[0].number
 }
 
 # Service Account 정보

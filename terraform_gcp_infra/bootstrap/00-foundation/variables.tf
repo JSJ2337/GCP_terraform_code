@@ -18,6 +18,12 @@ variable "management_project_id" {
   type        = string
 }
 
+variable "create_project" {
+  description = "프로젝트를 새로 생성할지 여부 (false면 기존 프로젝트 참조)"
+  type        = bool
+  default     = false
+}
+
 variable "management_project_name" {
   description = "관리용 프로젝트 이름"
   type        = string

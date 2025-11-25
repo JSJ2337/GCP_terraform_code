@@ -69,9 +69,18 @@ resource "google_folder" "environments" {
 }
 
 # -----------------------------------------------------------------------------
-# 1) 관리용 프로젝트 생성
+# 1) 관리용 프로젝트 (이미 존재하는 경우 data source로 참조)
 # -----------------------------------------------------------------------------
+# 프로젝트가 이미 gcloud로 생성되어 있으므로 data source 사용
+# 새 프로젝트 생성이 필요하면 var.create_project = true로 설정
+data "google_project" "mgmt_existing" {
+  count      = var.create_project ? 0 : 1
+  project_id = var.management_project_id
+}
+
 resource "google_project" "mgmt" {
+  count = var.create_project ? 1 : 0
+
   project_id      = var.management_project_id
   name            = var.management_project_name
   billing_account = var.billing_account
@@ -80,6 +89,11 @@ resource "google_project" "mgmt" {
 
   auto_create_network = false
   deletion_policy     = "PREVENT"
+}
+
+locals {
+  # 프로젝트 ID (생성 또는 기존 참조)
+  mgmt_project_id = var.create_project ? google_project.mgmt[0].project_id : data.google_project.mgmt_existing[0].project_id
 }
 
 # -----------------------------------------------------------------------------
@@ -107,7 +121,7 @@ resource "google_project_service" "apis" {
     "oslogin.googleapis.com",          # OS Login
   ])
 
-  project            = google_project.mgmt.project_id
+  project            = local.mgmt_project_id
   service            = each.key
   disable_on_destroy = false
 }
@@ -116,7 +130,7 @@ resource "google_project_service" "apis" {
 # 3) Jenkins Terraform 자동화용 Service Account 생성
 # -----------------------------------------------------------------------------
 resource "google_service_account" "jenkins_terraform" {
-  project      = google_project.mgmt.project_id
+  project      = local.mgmt_project_id
   account_id   = "jenkins-terraform-admin"
   display_name = "Jenkins Terraform Admin"
   description  = "Service Account for Jenkins to create and manage GCP projects via Terraform/Terragrunt"
@@ -195,7 +209,7 @@ resource "google_billing_account_iam_member" "jenkins_billing_user_on_account" {
 resource "google_project_iam_member" "iap_tunnel_user" {
   for_each = var.iap_tunnel_members
 
-  project = google_project.mgmt.project_id
+  project = local.mgmt_project_id
   role    = "roles/iap.tunnelResourceAccessor"
   member  = each.value
 
@@ -208,7 +222,7 @@ resource "google_project_iam_member" "iap_tunnel_user" {
 resource "google_project_iam_member" "os_admin_login" {
   for_each = var.os_login_admins
 
-  project = google_project.mgmt.project_id
+  project = local.mgmt_project_id
   role    = "roles/compute.osAdminLogin"
   member  = each.value
 
@@ -218,7 +232,7 @@ resource "google_project_iam_member" "os_admin_login" {
 resource "google_project_iam_member" "os_login" {
   for_each = var.os_login_users
 
-  project = google_project.mgmt.project_id
+  project = local.mgmt_project_id
   role    = "roles/compute.osLogin"
   member  = each.value
 
