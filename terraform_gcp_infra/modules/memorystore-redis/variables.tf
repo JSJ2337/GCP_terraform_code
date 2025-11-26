@@ -72,7 +72,7 @@ variable "memory_size_gb" {
 
 variable "redis_version" {
   type        = string
-  description = "Desired Redis version (REDIS_3_2, REDIS_4_0, REDIS_5_0, REDIS_6_X)"
+  description = "Desired Redis version (REDIS_3_2, REDIS_4_0, REDIS_5_0, REDIS_6_X, REDIS_7_0, REDIS_7_2)"
   default     = "REDIS_6_X"
 
   validation {
@@ -80,9 +80,11 @@ variable "redis_version" {
       "REDIS_3_2",
       "REDIS_4_0",
       "REDIS_5_0",
-      "REDIS_6_X"
+      "REDIS_6_X",
+      "REDIS_7_0",
+      "REDIS_7_2"
     ], var.redis_version)
-    error_message = "redis_version must be one of REDIS_3_2, REDIS_4_0, REDIS_5_0, REDIS_6_X (REDIS_7_X is not yet supported by the Google provider)."
+    error_message = "redis_version must be one of REDIS_3_2, REDIS_4_0, REDIS_5_0, REDIS_6_X, REDIS_7_0, REDIS_7_2."
   }
 }
 

@@ -8,11 +8,11 @@ db_suffix = "gdb-m1"  # gdb (game db), ldb (log db), udb (user db) 등
 # Instance configuration (Terragrunt supplies region_primary by default)
 # region            = "asia-northeast3"
 database_version  = "MYSQL_8_0"
-tier              = "db-n1-standard-1"
+tier              = "db-n2-standard-4"  # 4 vCPUs, 16GB RAM (N2 시리즈)
 availability_type = "REGIONAL" # Live 기본값 (qa-dev 환경 시 ZONAL로 조정)
 
 # Disk configuration
-disk_size       = 20
+disk_size       = 100
 disk_type       = "PD_SSD"
 disk_autoresize = true
 
@@ -63,7 +63,7 @@ users = []
 read_replicas = {
   replica1 = {
     # region 미지정 시 Master와 같은 리전(region_primary) 자동 사용
-    tier              = "db-n1-standard-1"
+    tier              = "db-n2-standard-4"  # 4 vCPUs, 16GB RAM (Master와 동일)
     availability_type = "ZONAL" # Read Replica는 ZONAL만 가능
     # Optional overrides per replica:
     # region = "asia-northeast1"  # DR용 다른 리전 지정 시
