@@ -38,7 +38,7 @@ locals {
         ) ? trimspace(var.read_replicas[key].region) : local.region_effective
         name = (
           can(trimspace(var.read_replicas[key].name)) && trimspace(var.read_replicas[key].name) != ""
-        ) ? trimspace(var.read_replicas[key].name) : format("%s-read-%02d", module.naming.db_instance_name, idx + 1)
+        ) ? trimspace(var.read_replicas[key].name) : format("%s-%s-read-%02d", module.naming.project_prefix, var.db_suffix, idx + 1)
       }
     )
   }
@@ -62,7 +62,7 @@ module "mysql" {
   source = "../../../../modules/cloudsql-mysql"
 
   project_id    = var.project_id
-  instance_name = module.naming.db_instance_name
+  instance_name = "${module.naming.project_prefix}-${var.db_suffix}"
   region        = local.region_effective
 
   database_version  = var.database_version

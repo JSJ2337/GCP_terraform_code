@@ -13,6 +13,25 @@ locals {
 
   raw_layer_inputs = try(read_tfvars_file("${get_terragrunt_dir()}/terraform.tfvars"), tomap({}))
   layer_inputs     = try(jsondecode(local.raw_layer_inputs), local.raw_layer_inputs)
+
+  # region_primary에서 자동으로 zone 생성
+  region_primary = local.common_inputs.region_primary
+
+  # instances의 zone을 region_primary 기반으로 자동 변환
+  instances_with_zones = {
+    for k, v in try(local.layer_inputs.instances, {}) :
+    k => merge(v, {
+      zone = "${local.region_primary}-${v.zone_suffix}"
+    })
+  }
+
+  # instance_groups의 zone도 자동 변환
+  instance_groups_with_zones = {
+    for k, v in try(local.layer_inputs.instance_groups, {}) :
+    k => merge(v, {
+      zone = "${local.region_primary}-${v.zone_suffix}"
+    })
+  }
 }
 
 # 네트워크 레이어 의존성 설정
@@ -55,6 +74,9 @@ inputs = merge(
   {
     # 네트워크 레이어에서 서브넷 정보 가져오기
     subnets = dependency.network.outputs.subnets
+    # region_primary 기반으로 zone 자동 생성된 instances와 instance_groups
+    instances       = local.instances_with_zones
+    instance_groups = local.instance_groups_with_zones
   }
 )
 

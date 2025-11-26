@@ -3,10 +3,10 @@
 # 도메인이 있다면 슬러그 형태로: 예) mycompany.com → mycompany
 project_id     = "gcp-gcby"
 project_name   = "gcby"
-environment    = "prod"
+environment    = "live"
 organization   = "delabs"  # 조직명 또는 도메인 슬러그
-region_primary = "asia-northeast3"
-region_backup  = "asia-northeast1"
+region_primary = "us-west1"         # Oregon (오레곤)
+region_backup  = "us-west2"         # Los Angeles (백업/DR)
 
 # 선택 입력 (필요 시 주석 해제해 사용)
 # default_zone_suffix = "a"   # naming.default_zone 계산 시 접미사

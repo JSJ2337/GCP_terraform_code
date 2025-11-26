@@ -10,8 +10,8 @@ variable "project_name" {
 
 variable "environment" {
   type        = string
-  description = "환경 값"
-  default     = "prod"
+  description = "환경 값 (live, qa-dev)"
+  default     = "live"
 }
 
 variable "organization" {
@@ -256,4 +256,10 @@ variable "labels" {
   type        = map(string)
   description = "리소스 레이블"
   default     = {}
+}
+
+variable "db_suffix" {
+  type        = string
+  description = "DB 인스턴스 이름 suffix (예: gdb, ldb, mysql)"
+  default     = "mysql"
 }

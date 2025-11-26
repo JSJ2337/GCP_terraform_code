@@ -1,10 +1,10 @@
 # 공통 네이밍 입력 (모든 레이어에서 공유)
 # 주의: organization은 리소스 네이밍 접두어로 사용되므로 소문자/숫자/하이픈 권장
 # 도메인이 있다면 슬러그 형태로: 예) mycompany.com → mycompany
-project_id     = "my-project-prod"
+project_id     = "my-project-live"
 project_name   = "my-project"
-environment    = "prod"
-organization   = "myorg"  # 조직명 또는 도메인 슬러그
+environment    = "live"      # live (운영), qa-dev (개발/QA)
+organization   = "myorg"     # 조직명 또는 도메인 슬러그
 region_primary = "asia-northeast3"
 region_backup  = "asia-northeast1"
 
@@ -14,4 +14,4 @@ region_backup  = "asia-northeast1"
 #   managed-by  = "terraform"
 #   cost-center = "gaming"
 # }
-# extra_tags = ["prod", "game"]  # 공통 태그
+# extra_tags = ["live", "game"]  # 공통 태그

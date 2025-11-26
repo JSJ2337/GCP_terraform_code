@@ -257,3 +257,9 @@ variable "labels" {
   description = "리소스 레이블"
   default     = {}
 }
+
+variable "db_suffix" {
+  type        = string
+  description = "DB 인스턴스 이름 suffix (예: gdb, ldb, mysql)"
+  default     = "mysql"
+}

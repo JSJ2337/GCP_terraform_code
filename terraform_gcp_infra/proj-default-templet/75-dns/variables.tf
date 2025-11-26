@@ -11,7 +11,7 @@ variable "project_name" {
 variable "environment" {
   type        = string
   description = "환경 값 (예: prod, stg)"
-  default     = "prod"
+  default     = "live"
 }
 
 variable "organization" {

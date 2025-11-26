@@ -10,8 +10,8 @@ variable "project_name" {
 
 variable "environment" {
   type        = string
-  description = "환경 값"
-  default     = "prod"
+  description = "환경 값 (live, qa-dev)"
+  default     = "live"
 }
 
 variable "organization" {

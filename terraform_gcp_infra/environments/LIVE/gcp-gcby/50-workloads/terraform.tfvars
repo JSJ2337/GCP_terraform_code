@@ -16,16 +16,17 @@ preemptible       = false
 startup_script    = ""
 tags              = ["game", "ssh-allowed"]
 labels = {
-  environment = "prod"
+  environment = "live"
   component   = "game-server"
 }
 
 # 역할별 인스턴스 정의
 # subnet_type: "dmz", "private", "db" 중 하나 선택
+# zone_suffix: "a", "b", "c" - common.naming.tfvars의 region_primary와 자동 결합됨 (예: us-west1-a)
 instances = {
   # lobby tier (3대) - DMZ 서브넷 배치
   "delabs-lobby-01" = {
-    zone         = "asia-northeast3-a"
+    zone_suffix  = "a"  # region_primary-a (예: us-west1-a)
     machine_type = "custom-4-8192"  # 4 vCPUs, 8GB RAM
     tags         = ["lobby", "ssh-allowed", "dmz-zone"]
     image_family  = "rocky-linux-10-optimized-gcp"
@@ -38,7 +39,7 @@ instances = {
     subnet_type         = "dmz"  # 자동으로 gcby-subnet-dmz 선택
   }
   "delabs-lobby-02" = {
-    zone     = "asia-northeast3-b"
+    zone_suffix = "b"
     tags     = ["lobby", "ssh-allowed", "dmz-zone"]
     labels = {
       role = "lobby"
@@ -48,7 +49,7 @@ instances = {
     subnet_type         = "dmz"
   }
   "delabs-lobby-03" = {
-    zone     = "asia-northeast3-c"
+    zone_suffix = "c"
     tags     = ["lobby", "ssh-allowed", "dmz-zone"]
     labels = {
       role = "lobby"
@@ -60,7 +61,7 @@ instances = {
 
   # web tier (3대) - DMZ 서브넷 배치
   "delabs-web-01" = {
-    zone         = "asia-northeast3-a"
+    zone_suffix  = "a"
     machine_type = "custom-4-8192"  # 4 vCPUs, 8GB RAM
     tags         = ["web", "ssh-allowed", "dmz-zone"]
     labels = {
@@ -71,7 +72,7 @@ instances = {
     subnet_type         = "dmz"
   }
   "delabs-web-02" = {
-    zone         = "asia-northeast3-b"
+    zone_suffix  = "b"
     machine_type = "custom-4-8192"  # 4 vCPUs, 8GB RAM
     tags         = ["web", "ssh-allowed", "dmz-zone"]
     labels = {
@@ -82,7 +83,7 @@ instances = {
     subnet_type         = "dmz"
   }
   "delabs-web-03" = {
-    zone         = "asia-northeast3-c"
+    zone_suffix  = "c"
     machine_type = "custom-4-8192"  # 4 vCPUs, 8GB RAM
     tags         = ["web", "ssh-allowed", "dmz-zone"]
     labels = {
@@ -95,7 +96,7 @@ instances = {
 
   # WAS tier (2대) - Private 서브넷 배치
   "delabs-was-01" = {
-    zone         = "asia-northeast3-a"
+    zone_suffix  = "a"
     machine_type = "custom-4-8192"  # 4 vCPUs, 8GB RAM
     tags         = ["was", "ssh-allowed", "private-zone"]
     labels = {
@@ -106,7 +107,7 @@ instances = {
     subnet_type         = "private"  # 자동으로 gcby-subnet-private 선택
   }
   "delabs-was-02" = {
-    zone         = "asia-northeast3-b"
+    zone_suffix  = "b"
     machine_type = "custom-4-8192"  # 4 vCPUs, 8GB RAM
     tags         = ["was", "ssh-allowed", "private-zone"]
     labels = {
@@ -124,46 +125,46 @@ instance_groups = {
   # Web (존별 분리)
   "delabs-web-ig-a" = {
     instances  = ["delabs-web-01"]
-    zone       = "asia-northeast3-a"
+    zone_suffix = "a"
     named_ports = [{ name = "http", port = 80 }]
   }
   "delabs-web-ig-b" = {
     instances  = ["delabs-web-02"]
-    zone       = "asia-northeast3-b"
+    zone_suffix = "b"
     named_ports = [{ name = "http", port = 80 }]
   }
   "delabs-web-ig-c" = {
     instances  = ["delabs-web-03"]
-    zone       = "asia-northeast3-c"
+    zone_suffix = "c"
     named_ports = [{ name = "http", port = 80 }]
   }
 
   # Lobby (존별 분리)
   "delabs-lobby-ig-a" = {
     instances  = ["delabs-lobby-01"]
-    zone       = "asia-northeast3-a"
+    zone_suffix = "a"
     named_ports = [{ name = "http", port = 80 }]
   }
   "delabs-lobby-ig-b" = {
     instances  = ["delabs-lobby-02"]
-    zone       = "asia-northeast3-b"
+    zone_suffix = "b"
     named_ports = [{ name = "http", port = 80 }]
   }
   "delabs-lobby-ig-c" = {
     instances  = ["delabs-lobby-03"]
-    zone       = "asia-northeast3-c"
+    zone_suffix = "c"
     named_ports = [{ name = "http", port = 80 }]
   }
 
   # WAS (각 존에 1대씩)
   "delabs-was-ig-a" = {
     instances  = ["delabs-was-01"]
-    zone       = "asia-northeast3-a"
+    zone_suffix = "a"
     named_ports = [{ name = "http", port = 8080 }]
   }
   "delabs-was-ig-b" = {
     instances  = ["delabs-was-02"]
-    zone       = "asia-northeast3-b"
+    zone_suffix = "b"
     named_ports = [{ name = "http", port = 8080 }]
   }
 }
