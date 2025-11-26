@@ -65,7 +65,7 @@ variable "folder_env" {
 
 variable "bootstrap_state_bucket" {
   type        = string
-  default     = "jsj-terraform-state-prod"
+  default     = "delabs-terraform-state-live"
   description = "GCS bucket storing bootstrap state"
 }
 
