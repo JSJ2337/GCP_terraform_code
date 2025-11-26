@@ -65,14 +65,13 @@ variable "folder_env" {
 
 variable "bootstrap_state_bucket" {
   type        = string
-  default     = "jsj-terraform-state-prod"
-  description = "GCS bucket storing bootstrap state"
+  description = "GCS bucket storing bootstrap state (root.hcl에서 자동 전달)"
 }
 
 variable "bootstrap_state_prefix" {
   type        = string
-  default     = "bootstrap"
-  description = "GCS prefix for bootstrap state"
+  default     = "bootstrap/00-foundation"
+  description = "GCS prefix for bootstrap state (root.hcl에서 자동 전달)"
 }
 
 variable "billing_account" {
