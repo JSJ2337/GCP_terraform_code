@@ -3,7 +3,7 @@
 # Example: gcby-prod-gdb, gcby-prod-ldb
 
 # DB instance suffix (구분 용도에 따라 변경)
-db_suffix = "gdb"  # gdb (game db), ldb (log db), udb (user db) 등
+db_suffix = "gdb-m1"  # gdb (game db), ldb (log db), udb (user db) 등
 
 # Instance configuration (Terragrunt supplies region_primary by default)
 # region            = "asia-northeast3"
