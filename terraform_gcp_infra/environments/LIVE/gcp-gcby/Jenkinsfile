@@ -29,7 +29,7 @@ pipeline {
         // 반복 다운로드를 줄여 provider 설치 실패를 예방
         TF_PLUGIN_CACHE_DIR = "${env.WORKSPACE}/.terraform.d/plugin-cache"
         // GCP 인증 설정 (Jenkins Credential 사용)
-        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-jenkins-service-account')
+        GOOGLE_APPLICATION_CREDENTIALS = credentials('delabs-terraform-admin')
     }
 
     parameters {
