@@ -34,22 +34,63 @@ firewall_rules = [
     target_tags    = ["ssh-allowed"]
     description    = "Allow SSH from Identity-Aware Proxy"
   },
+  # DMZ zone internal communication
   {
-    name           = "allow-game-traffic"
+    name           = "allow-dmz-internal"
     direction      = "INGRESS"
-    ranges         = ["10.1.0.0/16", "10.2.0.0/16"]
+    ranges         = ["10.3.0.0/24"] # DMZ subnet only
+    allow_protocol = "all"
+    allow_ports    = []
+    target_tags    = ["dmz-zone"]
+    description    = "Allow all traffic within DMZ subnet (10.3.0.0/24)"
+  },
+  # Private zone internal communication
+  {
+    name           = "allow-private-internal"
+    direction      = "INGRESS"
+    ranges         = ["10.3.1.0/24"] # Private subnet only
+    allow_protocol = "all"
+    allow_ports    = []
+    target_tags    = ["private-zone"]
+    description    = "Allow all traffic within Private subnet (10.3.1.0/24)"
+  },
+  # DB zone internal communication
+  {
+    name           = "allow-db-internal"
+    direction      = "INGRESS"
+    ranges         = ["10.3.2.0/24"] # DB subnet only
+    allow_protocol = "all"
+    allow_ports    = []
+    target_tags    = ["db-zone"]
+    description    = "Allow all traffic within DB subnet (10.3.2.0/24)"
+  },
+  # DMZ to Private communication (frontend -> backend)
+  {
+    name           = "allow-dmz-to-private"
+    direction      = "INGRESS"
+    ranges         = ["10.3.0.0/24"] # From DMZ
     allow_protocol = "tcp"
-    allow_ports    = ["8080", "9090"]
-    target_tags    = ["game", "app"]
-    description    = "Allow game traffic between subnets"
+    allow_ports    = ["8080", "9090", "3000", "5000"]
+    target_tags    = ["private-zone"]
+    description    = "Allow DMZ to Private zone (frontend to backend APIs)"
+  },
+  # Private to DB communication (backend -> database)
+  {
+    name           = "allow-private-to-db"
+    direction      = "INGRESS"
+    ranges         = ["10.3.1.0/24"] # From Private
+    allow_protocol = "tcp"
+    allow_ports    = ["3306", "5432", "6379", "27017"]
+    target_tags    = ["db-zone"]
+    description    = "Allow Private to DB zone (backend to database)"
   },
   {
     name           = "allow-health-check"
     direction      = "INGRESS"
     ranges         = ["130.211.0.0/22", "35.191.0.0/16"] # Health check ranges
     allow_protocol = "tcp"
-    allow_ports    = ["8080"]
-    target_tags    = ["game", "app"]
+    allow_ports    = ["80", "8080"]
+    target_tags    = ["dmz-zone", "private-zone"]
     description    = "Allow health checks from Google Load Balancer"
   }
 ]
