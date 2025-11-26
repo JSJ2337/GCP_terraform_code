@@ -6,7 +6,6 @@ locals {
 
   # 게임별 리전 매핑 - 새 게임 추가 시 여기만 수정!
   product_regions = {
-    "gcb-ygg"  = ["us-west1"]
     "gcp-gcby" = ["us-west1"]
     # 새 게임 추가 예시:
     # "new-game" = ["asia-northeast3", "us-central1"]
