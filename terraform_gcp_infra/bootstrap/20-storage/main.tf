@@ -142,3 +142,14 @@ resource "google_storage_bucket_iam_member" "jenkins_artifacts" {
   role   = "roles/storage.objectAdmin"
   member = "serviceAccount:${var.jenkins_service_account_email}"
 }
+
+# -----------------------------------------------------------------------------
+# 5) 추가 Jenkins SA에 버킷 권한 부여 (다른 프로젝트의 Jenkins SA)
+# -----------------------------------------------------------------------------
+resource "google_storage_bucket_iam_member" "additional_jenkins_tfstate_prod" {
+  for_each = toset(var.additional_jenkins_sa_emails)
+
+  bucket = google_storage_bucket.tfstate_prod.name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${each.value}"
+}
