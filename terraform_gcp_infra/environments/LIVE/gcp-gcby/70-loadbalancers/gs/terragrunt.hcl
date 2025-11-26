@@ -60,10 +60,19 @@ inputs = merge(
   local.layer_inputs,
   local.lb_name_defaults,
   {
+    # Game Server 인스턴스 그룹 자동 매핑
+    # gcby-gs-ig-a, gcby-gs-ig-b 패턴 매칭
     auto_instance_groups = {
       for name, link in try(dependency.workloads.outputs.instance_groups, {}) :
       name => link
-      if length(regexall("app", lower(name))) > 0
+      if length(regexall("gs-ig", lower(name))) > 0
     }
+
+    # # 이전 web 인스턴스 그룹 매핑 (COMMENTED OUT)
+    # auto_instance_groups = {
+    #   for name, link in try(dependency.workloads.outputs.instance_groups, {}) :
+    #   name => link
+    #   if length(regexall("web", lower(name))) > 0
+    # }
   }
 )
