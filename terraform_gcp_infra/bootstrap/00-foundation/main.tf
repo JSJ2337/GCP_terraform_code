@@ -6,18 +6,9 @@
 # 0) 폴더 구조 생성 (게임별로 다른 리전 조합 지원)
 # -----------------------------------------------------------------------------
 locals {
-  # 게임별 사용 리전 매핑 (여기만 수정하면 자동으로 폴더 생성!)
-  product_regions = {
-    gcb-ygg  = ["us-west1"] # games는 한국, 미국
-  # games2 = ["uk-region"] # games2는 일본, 영국
-  }
-
-  # 환경은 모든 게임/리전에서 동일 (고정)
-  environments = ["LIVE", "Staging", "GQ-dev"]
-
-  # 게임-리전 조합 생성
+  # 게임-리전 조합 생성 (var.product_regions에서 가져옴 - layer.hcl에서 관리)
   product_region_combinations = flatten([
-    for product, regions in local.product_regions : [
+    for product, regions in var.product_regions : [
       for region in regions : {
         key     = "${product}/${region}"
         product = product
@@ -28,9 +19,9 @@ locals {
 
   # 게임-리전-환경 전체 조합 생성
   folder_combinations = flatten([
-    for product, regions in local.product_regions : [
+    for product, regions in var.product_regions : [
       for region in regions : [
-        for env in local.environments : {
+        for env in var.environments : {
           key     = "${product}/${region}/${env}"
           product = product
           region  = region
@@ -43,7 +34,7 @@ locals {
 
 # 1단계: 최상위 폴더 (games, games2 등)
 resource "google_folder" "products" {
-  for_each     = var.manage_folders ? toset(keys(local.product_regions)) : toset([])
+  for_each     = var.manage_folders ? toset(keys(var.product_regions)) : toset([])
   display_name = each.key
   parent       = "organizations/${var.organization_id}"
 }
