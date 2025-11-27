@@ -24,8 +24,8 @@ variable "billing_account" {
 
 variable "auto_grant_billing_permission" {
   type        = bool
-  default     = true
-  description = "자동으로 Terraform Service Account에 빌링 권한 부여 여부"
+  default     = false
+  description = "자동으로 Terraform Service Account에 빌링 권한 부여 여부 (SA에 billing.admin 권한 필요)"
 }
 
 variable "labels" {
