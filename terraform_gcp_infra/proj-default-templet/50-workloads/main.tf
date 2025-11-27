@@ -50,9 +50,12 @@ locals {
       try(cfg.subnet_type, null) != null ?
       { subnetwork_self_link = var.subnets[cfg.subnet_type].self_link } :
       {},
-      # zone_suffix를 실제 zone으로 변환
-      try(cfg.zone_suffix, null) != null ?
-      { zone = "${module.naming.region_primary}-${cfg.zone_suffix}" } :
+      # zone 결정 우선순위: 1. zone (직접 지정) 2. zone_suffix (region과 결합) 3. 기본값
+      # zone이 이미 있으면 zone 사용, 없으면 zone_suffix를 region_primary와 결합
+      try(cfg.zone, null) != null && length(trimspace(cfg.zone)) > 0 ?
+      {} : # zone이 직접 지정되어 있으면 그대로 사용 (위 필터링에서 통과됨)
+      try(cfg.zone_suffix, null) != null && length(trimspace(cfg.zone_suffix)) > 0 ?
+      { zone = "${module.naming.region_primary}-${trimspace(cfg.zone_suffix)}" } :
       {}
     )
   }
@@ -69,7 +72,14 @@ locals {
           zone      = local.vm_details[inst_name].zone
         }
       ]
-      zone = try(cfg.zone_suffix, null) != null ? "${module.naming.region_primary}-${cfg.zone_suffix}" : coalesce(cfg.zone, local.vm_details[cfg.instances[0]].zone)
+      # zone 결정 우선순위: 1. zone (직접 지정) 2. zone_suffix (region과 결합) 3. VM의 zone (자동 감지)
+      zone = (
+        try(cfg.zone, null) != null && length(trimspace(cfg.zone)) > 0 ?
+        cfg.zone :
+        try(cfg.zone_suffix, null) != null && length(trimspace(cfg.zone_suffix)) > 0 ?
+        "${module.naming.region_primary}-${trimspace(cfg.zone_suffix)}" :
+        local.vm_details[cfg.instances[0]].zone
+      )
       named_ports = coalesce(cfg.named_ports, [])
     }
     if length(cfg.instances) > 0
