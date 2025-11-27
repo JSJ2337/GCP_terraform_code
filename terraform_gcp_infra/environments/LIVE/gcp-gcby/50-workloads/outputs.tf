@@ -4,6 +4,19 @@ output "instance_groups" {
 }
 
 # DEBUG: zone_suffix 변환 확인용
+output "debug_var_instances_raw" {
+  description = "DEBUG: var.instances 원본 데이터 확인"
+  value = {
+    for name, cfg in var.instances :
+    name => {
+      has_zone        = try(cfg.zone, null) != null
+      has_zone_suffix = try(cfg.zone_suffix, null) != null
+      zone_suffix_val = try(cfg.zone_suffix, "NOT_SET")
+      zone_val        = try(cfg.zone, "NOT_SET")
+    }
+  }
+}
+
 output "debug_processed_instances_zones" {
   description = "DEBUG: processed_instances의 zone 값 확인"
   value = {
