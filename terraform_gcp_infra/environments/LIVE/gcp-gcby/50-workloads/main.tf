@@ -41,7 +41,7 @@ locals {
   processed_instances = {
     for name, cfg in var.instances :
     name => merge(
-      { for k, v in cfg : k => v if k != "startup_script_file" && k != "subnet_type" },
+      { for k, v in cfg : k => v if k != "startup_script_file" && k != "subnet_type" && k != "zone_suffix" },
       try(cfg.startup_script_file, null) != null ?
       { startup_script = file("${path.module}/${cfg.startup_script_file}") } :
       {},
@@ -49,6 +49,10 @@ locals {
       # 하위 호환성: subnet_type이 없으면 subnetwork_self_link 그대로 사용
       try(cfg.subnet_type, null) != null ?
       { subnetwork_self_link = var.subnets[cfg.subnet_type].self_link } :
+      {},
+      # zone_suffix를 실제 zone으로 변환
+      try(cfg.zone_suffix, null) != null ?
+      { zone = "${module.naming.region_primary}-${cfg.zone_suffix}" } :
       {}
     )
   }
@@ -65,7 +69,7 @@ locals {
           zone      = local.vm_details[inst_name].zone
         }
       ]
-      zone        = coalesce(cfg.zone, local.vm_details[cfg.instances[0]].zone)
+      zone = try(cfg.zone_suffix, null) != null ? "${module.naming.region_primary}-${cfg.zone_suffix}" : coalesce(cfg.zone, local.vm_details[cfg.instances[0]].zone)
       named_ports = coalesce(cfg.named_ports, [])
     }
     if length(cfg.instances) > 0
