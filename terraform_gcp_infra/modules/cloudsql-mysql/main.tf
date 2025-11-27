@@ -52,6 +52,7 @@ resource "google_sql_database_instance" "instance" {
 
   settings {
     tier              = var.tier
+    edition           = var.edition
     availability_type = var.availability_type
     disk_size         = var.disk_size
     disk_type         = var.disk_type
@@ -161,6 +162,7 @@ resource "google_sql_database_instance" "read_replicas" {
 
   settings {
     tier              = each.value.tier
+    edition           = try(each.value.edition, var.edition)
     availability_type = try(each.value.availability_type, "ZONAL")
     disk_autoresize   = try(each.value.disk_autoresize, var.disk_autoresize)
     disk_type         = try(each.value.disk_type, var.disk_type)

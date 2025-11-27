@@ -9,6 +9,7 @@ db_suffix = "gdb-m1"  # gdb (game db), ldb (log db), udb (user db) 등
 # region            = "asia-northeast3"
 database_version  = "MYSQL_8_0"
 tier              = "db-n2-standard-4"  # 4 vCPUs, 16GB RAM (N2 시리즈)
+edition           = "ENTERPRISE"        # Cloud SQL Edition (ENTERPRISE, ENTERPRISE_PLUS)
 availability_type = "REGIONAL" # Live 기본값 (qa-dev 환경 시 ZONAL로 조정)
 
 # Disk configuration

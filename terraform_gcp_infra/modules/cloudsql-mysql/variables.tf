@@ -25,6 +25,12 @@ variable "tier" {
   default     = "db-n1-standard-1"
 }
 
+variable "edition" {
+  type        = string
+  description = "Cloud SQL Edition (ENTERPRISE, ENTERPRISE_PLUS)"
+  default     = "ENTERPRISE"
+}
+
 variable "availability_type" {
   type        = string
   description = "가용성 타입 (ZONAL 또는 REGIONAL for HA)"
