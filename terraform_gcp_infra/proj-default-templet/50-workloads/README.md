@@ -45,6 +45,8 @@ tags = ["web", "prod"]
 
 **사용 시기**: 각 VM마다 다른 설정이 필요할 때
 
+#### 옵션 A: zone과 subnetwork_self_link 직접 지정
+
 ```hcl
 # terraform.tfvars
 instance_count = 0  # count 방식 비활성화
@@ -78,6 +80,53 @@ instances = {
   }
 }
 ```
+
+#### 옵션 B: zone_suffix와 subnet_type 사용 (간편)
+
+**신규 기능**: zone_suffix와 subnet_type을 사용하면 간단하게 설정 가능
+
+```hcl
+# terraform.tfvars
+instance_count = 0
+
+instances = {
+  "web-server-01" = {
+    zone_suffix         = "a"  # region_primary-a로 자동 변환
+    subnet_type         = "dmz"  # "dmz", "private", "db" 중 선택
+    machine_type        = "e2-small"
+    tags                = ["web", "frontend"]
+    labels = {
+      role = "web"
+    }
+    startup_script_file = "scripts/lobby.sh"
+  }
+
+  "app-server-01" = {
+    zone_suffix         = "b"  # region_primary-b로 자동 변환
+    subnet_type         = "private"
+    machine_type        = "e2-medium"
+    tags                = ["app", "backend"]
+    image_family        = "ubuntu-2204-lts"
+    image_project       = "ubuntu-os-cloud"
+    startup_script_file = "scripts/was.sh"
+  }
+
+  "db-proxy-01" = {
+    zone_suffix  = "c"
+    subnet_type  = "db"
+    machine_type = "e2-micro"
+  }
+}
+```
+
+**zone_suffix vs zone 우선순위**:
+1. `zone` 직접 지정 (최우선)
+2. `zone_suffix` 사용 (region_primary와 결합)
+3. 기본값 사용
+
+**subnet_type vs subnetwork_self_link 우선순위**:
+1. `subnetwork_self_link` 직접 지정 (최우선)
+2. `subnet_type` 사용 (10-network outputs에서 자동 조회)
 
 - ✅ 각 VM map key가 곧 인스턴스 이름(네이밍 모듈 규칙 유지)
 - ✅ 각 VM마다 다른 서브넷 (Web/App/DB 분리)
@@ -115,21 +164,41 @@ terragrunt apply  --non-interactive
 ## Instance Group 구성 (Load Balancer 연동)
 `instance_groups` 맵을 사용하면 기존 VM들을 역할/존별로 묶어 수동 Instance Group을 만들 수 있습니다. **Unmanaged Instance Group은 동일한 Zone의 VM만 포함할 수 있으므로, 멀티존 고가용성이 필요하면 Zone별로 그룹을 나눠야 합니다.**
 
+### 옵션 A: zone 직접 지정
+
 ```hcl
 instance_groups = {
   "web-ig-a" = {
-    instances  = ["jsj-web-01"]
-    zone       = "asia-northeast3-a"
+    instances   = ["jsj-web-01"]
+    zone        = "asia-northeast3-a"
     named_ports = [{ name = "http", port = 80 }]
   }
   "web-ig-b" = {
-    instances  = ["jsj-web-02"]
-    zone       = "asia-northeast3-b"
+    instances   = ["jsj-web-02"]
+    zone        = "asia-northeast3-b"
     named_ports = [{ name = "http", port = 80 }]
   }
-  ...
 }
 ```
+
+### 옵션 B: zone_suffix 사용 (간편)
+
+```hcl
+instance_groups = {
+  "web-ig-a" = {
+    instances   = ["jsj-web-01"]
+    zone_suffix = "a"  # region_primary-a로 자동 변환
+    named_ports = [{ name = "http", port = 80 }]
+  }
+  "web-ig-b" = {
+    instances   = ["jsj-web-02"]
+    zone_suffix = "b"  # region_primary-b로 자동 변환
+    named_ports = [{ name = "http", port = 80 }]
+  }
+}
+```
+
+**Note**: zone을 생략하면 첫 번째 VM의 zone을 자동으로 사용합니다.
 
 `terragrunt output instance_groups` 명령으로 생성된 Instance Group self-link를 확인한 뒤, Load Balancer 백엔드(`70-loadbalancer/terraform.tfvars`)의 `backends` 항목에 전달하면 됩니다.
 
@@ -147,8 +216,16 @@ instance_groups = {
 ### VM별 개별 설정 (instances map)
 - `hostname` (선택): FQDN이 필요할 때만 설정하세요. 기본값은 `instance-name.c.<project>.internal`
 - `boot_disk_name`: 부팅 디스크 리소스 이름(기본: `<instance-name>-boot`). 인스턴스 교체 시 동일 디스크를 재사용합니다.
-- `subnetwork_self_link`: 배치할 서브넷 전체 경로 (**중요**)
-- `zone`: 배치할 존 (고가용성 구성 시 분산 배치)
+
+**네트워크 설정 (우선순위 순서)**:
+- `subnetwork_self_link`: 서브넷 전체 경로 직접 지정 (최우선)
+- `subnet_type`: "dmz", "private", "db" 중 선택 (10-network outputs에서 자동 조회)
+
+**존(Zone) 설정 (우선순위 순서)**:
+- `zone`: 전체 존 경로 직접 지정 (최우선, 예: "asia-northeast3-a")
+- `zone_suffix`: 존 suffix만 지정 (예: "a", "b", "c" → region_primary와 결합)
+
+**기타 설정**:
 - `machine_type`: VM 타입 (기본값 override)
 - `startup_script_file`: `path.module` 기준 스크립트 파일 경로 → 내용이 자동으로 `startup_script`로 삽입
 - `startup_script`: 인라인 스크립트를 직접 기입할 때 사용

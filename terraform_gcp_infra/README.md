@@ -84,14 +84,32 @@ subnetwork_self_link = "projects/jsj-game-n/regions/asia-northeast3/subnetworks/
 subnet_type = "dmz"  # 10-network outputs에서 자동 매핑
 ```
 
-### 2. GCS Bucket Location 자동화 (20-storage)
+### 2. Zone 자동 변환 (50-workloads)
+```hcl
+# ❌ 기존 방식 (전체 zone 경로 입력)
+zone = "asia-northeast3-a"
+
+# ✅ 새로운 방식 (zone_suffix만 지정)
+zone_suffix = "a"  # region_primary와 자동 결합 → asia-northeast3-a
+```
+
+**멀티 존 고가용성 구성 예시**:
+```hcl
+instances = {
+  "web-01" = { zone_suffix = "a", subnet_type = "dmz" }
+  "web-02" = { zone_suffix = "b", subnet_type = "dmz" }
+  "web-03" = { zone_suffix = "c", subnet_type = "dmz" }
+}
+```
+
+### 3. GCS Bucket Location 자동화 (20-storage)
 ```hcl
 # region_primary만 설정하면 자동 생성
 # - assets/logs 버킷: Same-region 배치 (무료 트래픽)
 # - backups 버킷: Multi-region 배치 (DR 목적)
 ```
 
-### 3. 네이밍 일관성 (modules/naming)
+### 4. 네이밍 일관성 (modules/naming)
 ```hcl
 # project_name만 설정하면 모든 리소스명 자동 생성
 # 예: project_name="game-n" → "game-n-subnet-dmz", "game-n-web-backend" 등
