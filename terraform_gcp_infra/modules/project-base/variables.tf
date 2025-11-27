@@ -18,7 +18,14 @@ variable "org_id" {
 }
 
 variable "billing_account" {
-  type = string
+  type        = string
+  description = "Billing account ID to attach to the project"
+}
+
+variable "auto_grant_billing_permission" {
+  type        = bool
+  default     = true
+  description = "자동으로 Terraform Service Account에 빌링 권한 부여 여부"
 }
 
 variable "labels" {

@@ -16,6 +16,24 @@ locals {
   parent_org_id    = local.trimmed_org_id != "" ? local.trimmed_org_id : null
 }
 
+# 현재 실행 중인 Service Account 정보 가져오기
+data "google_client_openid_userinfo" "terraform_sa" {
+  count = var.billing_account != "" && var.auto_grant_billing_permission ? 1 : 0
+}
+
+# Terraform을 실행하는 Service Account에 빌링 권한 자동 부여
+resource "google_billing_account_iam_member" "terraform_billing_user" {
+  count              = var.billing_account != "" && var.auto_grant_billing_permission ? 1 : 0
+  billing_account_id = var.billing_account
+  role               = "roles/billing.user"
+  member             = "serviceAccount:${data.google_client_openid_userinfo.terraform_sa[0].email}"
+
+  # 프로젝트 생성 전에 권한 부여
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
 # 0) 프로젝트 생성 (+ 폴더/결제 연결)
 resource "google_project" "this" {
   project_id          = var.project_id
@@ -26,6 +44,9 @@ resource "google_project" "this" {
   labels              = var.labels
   auto_create_network = false
   deletion_policy     = "DELETE" # terraform destroy 허용
+
+  # 빌링 권한이 먼저 부여된 후 프로젝트 생성
+  depends_on = [google_billing_account_iam_member.terraform_billing_user]
 
   # 참고: 프로덕션 환경에서 삭제 방지가 필요한 경우
   # 아래 lifecycle 블록의 주석을 해제하세요
