@@ -26,8 +26,8 @@ pipeline {
         TG_NON_INTERACTIVE = 'true'
         // Terragrunt 작업 디렉터리 (환경 루트)
         TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/gcp-gcby'
-        // 반복 다운로드를 줄여 provider 설치 실패를 예방
-        TF_PLUGIN_CACHE_DIR = "${env.WORKSPACE}/.terraform.d/plugin-cache"
+        // Plugin cache 비활성화 - 병렬 실행 시 "text file busy" 에러 방지
+        // TF_PLUGIN_CACHE_DIR = "${env.WORKSPACE}/.terraform.d/plugin-cache"
         // GCP 인증 설정 (Jenkins Credential 사용)
         GOOGLE_APPLICATION_CREDENTIALS = credentials('delabs-terraform-admin')
     }
@@ -91,7 +91,8 @@ pipeline {
         stage('Terragrunt Init') {
             steps {
                 script {
-                    sh "mkdir -p '${env.TF_PLUGIN_CACHE_DIR}'"
+                    // Plugin cache 비활성화로 인해 디렉토리 생성 불필요
+                    // sh "mkdir -p '${env.TF_PLUGIN_CACHE_DIR}'"
                     echo '🔧 Initializing Terragrunt...'
                     retry(3) {
                         if (params.TARGET_LAYER == 'all') {
