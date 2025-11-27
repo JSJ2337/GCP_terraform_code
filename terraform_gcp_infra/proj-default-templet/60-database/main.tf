@@ -67,6 +67,7 @@ module "mysql" {
 
   database_version  = var.database_version
   tier              = var.tier
+  edition           = var.edition
   availability_type = var.availability_type
 
   disk_size       = var.disk_size
