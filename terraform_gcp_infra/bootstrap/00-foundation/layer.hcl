@@ -4,6 +4,13 @@ locals {
   # 폴더 구조 관리 (게임/리전/환경)
   manage_folders = true
 
+  # 게임별 리전 매핑 - 새 게임 추가 시 여기만 수정!
+  product_regions = {
+    "gcp-gcby" = ["us-west1"]
+    # 새 게임 추가 예시:
+    # "new-game" = ["asia-northeast3", "us-central1"]
+  }
+
   # 조직 레벨 IAM 관리 여부
   manage_org_iam = false
 

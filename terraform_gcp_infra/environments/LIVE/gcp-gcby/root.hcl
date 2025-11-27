@@ -26,4 +26,9 @@ remote_state {
 inputs = {
   org_id          = "1034166519592"  # GCP Organization ID (delabsgames.gg)
   billing_account = "01B77E-0A986D-CB2651"
+
+  # Bootstrap remote state 설정 (00-project에서 사용)
+  # bootstrap이 레이어 구조로 되어 있어서 00-foundation을 참조
+  bootstrap_state_bucket = local.remote_state_bucket
+  bootstrap_state_prefix = "bootstrap/00-foundation"
 }

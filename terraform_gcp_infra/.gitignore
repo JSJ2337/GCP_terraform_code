@@ -10,4 +10,4 @@ provider.tf
 *.tfstate
 *.tfstate.*
 *.tfplan
-.terraform.lock.hcl
+# .terraform.lock.hcl 은 커밋해야 함 (provider 버전 고정)

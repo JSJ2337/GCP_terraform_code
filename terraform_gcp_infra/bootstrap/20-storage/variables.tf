@@ -52,3 +52,9 @@ variable "labels" {
   type        = map(string)
   default     = {}
 }
+
+variable "additional_jenkins_sa_emails" {
+  description = "추가 Jenkins SA 이메일 목록 (다른 프로젝트의 Jenkins SA)"
+  type        = list(string)
+  default     = []
+}

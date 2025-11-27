@@ -8,6 +8,13 @@ organization   = "myorg"     # 조직명 또는 도메인 슬러그
 region_primary = "asia-northeast3"
 region_backup  = "asia-northeast1"
 
+# Bootstrap 폴더 설정 (environment_folder_ids 키 조회용)
+# 형식: product/region/env → "my-game/us-west1/LIVE"
+# ⚠️ bootstrap/00-foundation/layer.hcl의 product_regions에 등록 필요!
+folder_product = "my-game"
+folder_region  = "us-west1"
+folder_env     = "LIVE"
+
 # 선택 입력 (필요 시 주석 해제해 사용)
 # default_zone_suffix = "a"   # naming.default_zone 계산 시 접미사
 # base_labels = {              # naming.common_labels에 병합되는 기본 라벨

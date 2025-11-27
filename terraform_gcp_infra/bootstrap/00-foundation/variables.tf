@@ -48,6 +48,23 @@ variable "manage_folders" {
   default     = false
 }
 
+variable "product_regions" {
+  description = "게임별 리전 매핑 (layer.hcl에서 관리)"
+  type        = map(list(string))
+  default     = {}
+  # 예시:
+  # {
+  #   "gcb-ygg"  = ["us-west1"]
+  #   "gcp-gcby" = ["us-west1"]
+  # }
+}
+
+variable "environments" {
+  description = "환경 목록 (모든 게임/리전에서 동일)"
+  type        = list(string)
+  default     = ["LIVE", "Staging", "GQ-dev"]
+}
+
 variable "manage_org_iam" {
   description = "Terraform으로 조직 레벨 IAM 부여를 관리할지 여부"
   type        = bool

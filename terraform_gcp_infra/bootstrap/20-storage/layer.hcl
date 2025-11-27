@@ -12,4 +12,8 @@ locals {
 
   # 아티팩트 버킷 (선택사항)
   bucket_name_artifacts = "delabs-build-artifacts"
+
+  # 추가 Jenkins SA (다른 프로젝트에서 State 버킷 접근 필요한 경우)
+  # 현재는 모든 프로젝트가 delabs-gcp-mgmt의 jenkins-terraform-admin SA 사용
+  additional_jenkins_sa_emails = []
 }

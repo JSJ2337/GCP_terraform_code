@@ -49,8 +49,8 @@ pipeline {
         )
         booleanParam(
             name: 'MANAGE_FOLDERS',
-            defaultValue: false,
-            description: 'GCP 폴더 구조 (games/regions/environments) 관리 여부'
+            defaultValue: true,
+            description: 'GCP 폴더 구조 (games/regions/environments) 관리 여부 - layer.hcl의 product_regions 기반'
         )
         booleanParam(
             name: 'MANAGE_ORG_IAM',
