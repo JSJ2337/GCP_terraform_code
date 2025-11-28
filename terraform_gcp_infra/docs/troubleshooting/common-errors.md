@@ -857,6 +857,142 @@ terraform {
 
 ---
 
+## Load Balancer 관련 오류
+
+### Invalid index (vm_details 참조 오류)
+
+**증상**:
+
+```text
+Error: Invalid index
+on main.tf line 39, in locals:
+  39:           self_link = var.vm_details[inst_name].self_link
+│ var.vm_details is map of object with 2 elements
+The given key does not identify an element in this collection value.
+```
+
+**원인**:
+- terraform.tfvars에 instance_groups 정의는 있지만
+- 해당 VM이 아직 50-workloads에서 생성되지 않음
+- vm_details에 존재하지 않는 키를 참조하려고 함
+
+**해결**:
+
+```hcl
+# main.tf에서 안전한 필터링 추가
+resolved_instances = [
+  for inst_name in cfg.instances : {
+    name      = inst_name
+    self_link = var.vm_details[inst_name].self_link
+    zone      = var.vm_details[inst_name].zone
+  }
+  if contains(keys(var.vm_details), inst_name)  # ← 추가
+]
+```
+
+**관련 문서**: [작업 이력 (2025-11-28)](../changelog/work_history/2025-11-28.md#1-jenkins-plan-stage-에러-수정-invalid-index)
+
+---
+
+### Resource precondition failed (빈 Instance Group)
+
+**증상**:
+
+```text
+Error: Resource precondition failed
+on main.tf line 191:
+  condition = length(distinct([for inst in each.value.resolved_instances : inst.zone])) == 1
+│ each.value.resolved_instances is empty tuple
+instance group에는 동일한 존의 VM만 포함해야 합니다.
+```
+
+**원인**:
+- VM 필터링 후 resolved_instances가 빈 배열이 됨
+- Precondition이 빈 배열을 처리하지 못함
+
+**해결**:
+
+두 가지 접근:
+
+1. **2단계 필터링 추가**:
+```hcl
+# 1단계: 모든 Instance Group 처리
+_all_instance_groups = { ... }
+
+# 2단계: 빈 Instance Group 제거
+processed_instance_groups = {
+  for name, ig in local._all_instance_groups :
+  name => ig
+  if length(ig.resolved_instances) > 0
+}
+
+# 리소스에서 processed_instance_groups 사용
+resource "google_compute_instance_group" "lb_instance_group" {
+  for_each = local.processed_instance_groups
+  # ...
+}
+```
+
+2. **Precondition 개선**:
+```hcl
+lifecycle {
+  precondition {
+    # 빈 배열 허용 추가
+    condition = length(each.value.resolved_instances) == 0 ||
+                length(distinct([for inst in each.value.resolved_instances : inst.zone])) == 1
+    error_message = "..."
+  }
+}
+```
+
+**관련 문서**: [작업 이력 (2025-11-28)](../changelog/work_history/2025-11-28.md#2-precondition-에러-수정)
+
+---
+
+### ❌ vm_details.auto.tfvars 파일 생성 금지
+
+**증상**:
+- Instance Group이 계획대로 생성/삭제되지 않음
+- VM 추가/삭제 시 수동 업데이트 필요
+
+**원인**:
+- vm_details.auto.tfvars 파일을 수동으로 생성함
+- Terragrunt dependency의 자동 주입을 수동 파일이 덮어씀
+
+**올바른 방법**:
+
+```hcl
+# terragrunt.hcl에서 자동 주입 (파일 생성 불필요)
+dependency "workloads" {
+  config_path = "../../50-workloads"
+}
+
+inputs = merge(
+  ...
+  {
+    # 자동으로 가져옴 - 파일 만들지 마세요!
+    vm_details = try(dependency.workloads.outputs.vm_details, {})
+  }
+)
+```
+
+**절대 금지**:
+```bash
+# ❌ 이런 파일 만들지 마세요!
+echo 'vm_details = { ... }' > vm_details.auto.tfvars
+```
+
+**해결**:
+```bash
+# 잘못 만든 파일 삭제
+git rm vm_details.auto.tfvars
+git commit -m "Remove manual vm_details file"
+```
+
+**관련 문서**: [작업 이력 (2025-11-28)](../changelog/work_history/2025-11-28.md#4-vm_detailsautotfvars-삭제-중요)
+
+---
+
 ## 긴급 복구
 
 ### State 복원
