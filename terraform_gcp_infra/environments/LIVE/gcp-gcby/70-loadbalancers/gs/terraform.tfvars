@@ -6,6 +6,21 @@ backend_timeout   = 30
 
 backends = []
 
+# Instance Groups 정의 (50-workloads의 VM을 그룹화)
+instance_groups = {
+  # Game Server (존별 분리)
+  "gcby-gs-ig-a" = {
+    instances   = ["gcby-gs01"]
+    zone_suffix = "a"
+    named_ports = [{ name = "http", port = 80 }]
+  }
+  "gcby-gs-ig-b" = {
+    instances   = ["gcby-gs02"]
+    zone_suffix = "b"
+    named_ports = [{ name = "http", port = 80 }]
+  }
+}
+
 auto_backend_balancing_mode  = "UTILIZATION"
 auto_backend_capacity_scaler = 1.0
 auto_backend_max_utilization = 0.8

@@ -192,16 +192,3 @@ variable "instances" {
   }
 }
 
-variable "instance_groups" {
-  description = "수동 Instance Group 정의 (Load Balancer 등에서 사용). instances에는 50-workloads 인스턴스 키를 나열하세요."
-  type = map(object({
-    instances   = list(string)
-    zone        = optional(string)
-    zone_suffix = optional(string)  # "a", "b", "c" - region_primary와 결합됨
-    named_ports = optional(list(object({
-      name = string
-      port = number
-    })))
-  }))
-  default = {}
-}

@@ -61,29 +61,6 @@ locals {
   }
 
   vm_details = module.gce_vmset.vm_details
-
-  processed_instance_groups = {
-    for name, cfg in var.instance_groups :
-    name => {
-      resolved_instances = [
-        for inst_name in cfg.instances : {
-          name      = inst_name
-          self_link = local.vm_details[inst_name].self_link
-          zone      = local.vm_details[inst_name].zone
-        }
-      ]
-      # zone 결정 우선순위: 1. zone (직접 지정) 2. zone_suffix (region과 결합) 3. VM의 zone (자동 감지)
-      zone = (
-        try(cfg.zone, null) != null && length(trimspace(cfg.zone)) > 0 ?
-        cfg.zone :
-        try(cfg.zone_suffix, null) != null && length(trimspace(cfg.zone_suffix)) > 0 ?
-        "${module.naming.region_primary}-${trimspace(cfg.zone_suffix)}" :
-        local.vm_details[cfg.instances[0]].zone
-      )
-      named_ports = coalesce(cfg.named_ports, [])
-    }
-    if length(cfg.instances) > 0
-  }
 }
 
 # Naming conventions supplied by modules/naming
@@ -119,29 +96,4 @@ module "gce_vmset" {
 
   tags   = local.tags
   labels = local.labels
-}
-
-resource "google_compute_instance_group" "custom" {
-  for_each = local.processed_instance_groups
-
-  project = var.project_id
-  name    = each.key
-  zone    = each.value.zone
-
-  instances = [for inst in each.value.resolved_instances : inst.self_link]
-
-  dynamic "named_port" {
-    for_each = each.value.named_ports
-    content {
-      name = named_port.value.name
-      port = named_port.value.port
-    }
-  }
-
-  lifecycle {
-    precondition {
-      condition     = length(distinct([for inst in each.value.resolved_instances : inst.zone])) == 1
-      error_message = "${each.key} instance group에는 동일한 존의 VM만 포함해야 합니다."
-    }
-  }
 }

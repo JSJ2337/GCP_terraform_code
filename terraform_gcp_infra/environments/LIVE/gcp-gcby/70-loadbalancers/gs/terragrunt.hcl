@@ -21,7 +21,7 @@ dependency "workloads" {
   skip_outputs = get_env("SKIP_WORKLOADS_DEPENDENCY", "false") == "true"
 
   mock_outputs = {
-    instance_groups = {}
+    vm_details = {}
   }
 
   mock_outputs_allowed_terraform_commands = ["init", "validate", "plan", "destroy"]
@@ -60,19 +60,7 @@ inputs = merge(
   local.layer_inputs,
   local.lb_name_defaults,
   {
-    # Game Server 인스턴스 그룹 자동 매핑
-    # gcby-gs-ig-a, gcby-gs-ig-b 패턴 매칭
-    auto_instance_groups = {
-      for name, link in try(dependency.workloads.outputs.instance_groups, {}) :
-      name => link
-      if length(regexall("gs-ig", lower(name))) > 0
-    }
-
-    # # 이전 web 인스턴스 그룹 매핑 (COMMENTED OUT)
-    # auto_instance_groups = {
-    #   for name, link in try(dependency.workloads.outputs.instance_groups, {}) :
-    #   name => link
-    #   if length(regexall("web", lower(name))) > 0
-    # }
+    # 50-workloads에서 VM 정보 가져오기
+    vm_details = try(dependency.workloads.outputs.vm_details, {})
   }
 )

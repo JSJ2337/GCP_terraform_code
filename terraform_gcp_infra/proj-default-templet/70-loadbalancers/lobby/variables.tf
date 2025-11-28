@@ -102,9 +102,32 @@ variable "backends" {
   default     = []
 }
 
+variable "vm_details" {
+  type = map(object({
+    self_link = string
+    zone      = string
+  }))
+  description = "50-workloads에서 생성한 VM 정보 맵 (Terragrunt dependency로 주입)"
+  default     = {}
+}
+
+variable "instance_groups" {
+  description = "Instance Group 정의 (Load Balancer 백엔드로 사용). instances에는 50-workloads VM 키를 나열하세요."
+  type = map(object({
+    instances   = list(string)
+    zone        = optional(string)
+    zone_suffix = optional(string)  # "a", "b", "c" - region_primary와 결합됨
+    named_ports = optional(list(object({
+      name = string
+      port = number
+    })))
+  }))
+  default = {}
+}
+
 variable "auto_instance_groups" {
   type        = map(string)
-  description = "50-workloads에서 생성한 Instance Group self-link 맵 (Terragrunt dependency로 주입)"
+  description = "[DEPRECATED] 50-workloads에서 생성한 Instance Group self-link 맵 - 이제 instance_groups 변수 사용"
   default     = {}
 }
 
