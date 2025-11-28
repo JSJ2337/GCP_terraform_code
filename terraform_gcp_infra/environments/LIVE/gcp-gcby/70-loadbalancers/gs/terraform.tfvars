@@ -19,6 +19,11 @@ instance_groups = {
     zone_suffix = "b"
     named_ports = [{ name = "http", port = 80 }]
   }
+  "gcby-gs-ig-c" = {
+    instances   = ["gcby-gs03"]
+    zone_suffix = "c"
+    named_ports = [{ name = "http", port = 80 }]
+  }
 }
 
 auto_backend_balancing_mode  = "UTILIZATION"
