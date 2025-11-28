@@ -9,7 +9,7 @@ folder_id       = null
 
 # Labels (only add extra labels here; modules/naming.common_labels will be merged)
 labels = {
-  team = "game-dev"
+  # team = "dev-team"
 }
 
 # APIs to enable

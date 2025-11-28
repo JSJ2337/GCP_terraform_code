@@ -179,7 +179,7 @@ log_info "설정 파일 치환 시작..."
 # -----------------------------------------------------------------------------
 # 1. root.hcl
 # -----------------------------------------------------------------------------
-log_info "[1/5] root.hcl 치환 중..."
+log_info "[1/4] root.hcl 치환 중..."
 ROOT_HCL="${TARGET_DIR}/root.hcl"
 
 sed -i "s|remote_state_bucket\s*=\s*\"[^\"]*\"|remote_state_bucket   = \"${REMOTE_STATE_BUCKET}\"|g" "${ROOT_HCL}"
@@ -194,7 +194,7 @@ log_success "root.hcl 치환 완료"
 # -----------------------------------------------------------------------------
 # 2. common.naming.tfvars
 # -----------------------------------------------------------------------------
-log_info "[2/5] common.naming.tfvars 치환 중..."
+log_info "[2/4] common.naming.tfvars 치환 중..."
 COMMON_TFVARS="${TARGET_DIR}/common.naming.tfvars"
 
 sed -i "s|^project_id\s*=\s*\"[^\"]*\"|project_id     = \"${PROJECT_ID}\"|g" "${COMMON_TFVARS}"
@@ -208,7 +208,7 @@ log_success "common.naming.tfvars 치환 완료"
 # -----------------------------------------------------------------------------
 # 3. Jenkinsfile
 # -----------------------------------------------------------------------------
-log_info "[3/5] Jenkinsfile 치환 중..."
+log_info "[3/4] Jenkinsfile 치환 중..."
 JENKINSFILE="${TARGET_DIR}/Jenkinsfile"
 
 # TG_WORKING_DIR 패턴 치환 (LIVE, QA, STG 모두 대응)
@@ -217,29 +217,14 @@ sed -i "s|TG_WORKING_DIR = '${TF_GCP_INFRA_DIR_NAME}/${ENVIRONMENTS_DIR_NAME}/[^
 log_success "Jenkinsfile 치환 완료"
 
 # -----------------------------------------------------------------------------
-# 4. 10-network/terraform.tfvars - 서브넷 이름
+# 4. 50-workloads/terraform.tfvars - VM/IG 이름 접두사 치환
 # -----------------------------------------------------------------------------
-log_info "[4/5] 10-network/terraform.tfvars 치환 중..."
-NETWORK_TFVARS="${TARGET_DIR}/10-network/terraform.tfvars"
-
-# 서브넷 이름 패턴 치환: game-l-subnet-xxx → ${PROJECT_NAME}-subnet-xxx
-sed -i "s|\"[^\"]*-subnet-dmz\"|\"${PROJECT_NAME}-subnet-dmz\"|g" "${NETWORK_TFVARS}"
-sed -i "s|\"[^\"]*-subnet-private\"|\"${PROJECT_NAME}-subnet-private\"|g" "${NETWORK_TFVARS}"
-sed -i "s|\"[^\"]*-subnet-db\"|\"${PROJECT_NAME}-subnet-db\"|g" "${NETWORK_TFVARS}"
-
-log_success "10-network/terraform.tfvars 치환 완료"
-
-# -----------------------------------------------------------------------------
-# 5. 50-workloads/terraform.tfvars - subnetwork_self_link
-# -----------------------------------------------------------------------------
-log_info "[5/5] 50-workloads/terraform.tfvars 치환 중..."
+log_info "[4/4] 50-workloads/terraform.tfvars 치환 중..."
 WORKLOADS_TFVARS="${TARGET_DIR}/50-workloads/terraform.tfvars"
 
-# subnetwork_self_link 패턴 치환
-# projects/xxx/regions/xxx/subnetworks/xxx → projects/${PROJECT_ID}/regions/${REGION_PRIMARY}/subnetworks/${PROJECT_NAME}-subnet-xxx
-sed -i "s|projects/[^/]*/regions/[^/]*/subnetworks/[^\"]*-subnet-dmz|projects/${PROJECT_ID}/regions/${REGION_PRIMARY}/subnetworks/${PROJECT_NAME}-subnet-dmz|g" "${WORKLOADS_TFVARS}"
-sed -i "s|projects/[^/]*/regions/[^/]*/subnetworks/[^\"]*-subnet-private|projects/${PROJECT_ID}/regions/${REGION_PRIMARY}/subnetworks/${PROJECT_NAME}-subnet-private|g" "${WORKLOADS_TFVARS}"
-sed -i "s|projects/[^/]*/regions/[^/]*/subnetworks/[^\"]*-subnet-db|projects/${PROJECT_ID}/regions/${REGION_PRIMARY}/subnetworks/${PROJECT_NAME}-subnet-db|g" "${WORKLOADS_TFVARS}"
+# VM 및 Instance Group 이름의 "jsj-" 접두사를 organization으로 치환
+# 예: "jsj-lobby-01" → "myorg-lobby-01", ["jsj-web-01"] → ["myorg-web-01"]
+sed -i "s|\"jsj-|\"${ORGANIZATION}-|g" "${WORKLOADS_TFVARS}"
 
 log_success "50-workloads/terraform.tfvars 치환 완료"
 
