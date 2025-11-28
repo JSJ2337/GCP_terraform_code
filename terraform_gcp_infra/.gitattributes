@@ -1,0 +1,8 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Force LF for shell scripts and terraform files
+*.sh text eol=lf
+*.tf text eol=lf
+*.hcl text eol=lf
+*.tfvars text eol=lf
