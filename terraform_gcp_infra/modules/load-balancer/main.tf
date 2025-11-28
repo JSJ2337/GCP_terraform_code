@@ -191,8 +191,9 @@ resource "null_resource" "backend_cleanup" {
   }
 
   provisioner "local-exec" {
-    when    = destroy
-    command = <<-EOT
+    when        = destroy
+    interpreter = ["/bin/bash", "-c"]
+    command     = <<-EOT
       set -e
       echo "🧹 Cleaning up backends from Backend Service: ${self.triggers.backend_service_name}"
 
