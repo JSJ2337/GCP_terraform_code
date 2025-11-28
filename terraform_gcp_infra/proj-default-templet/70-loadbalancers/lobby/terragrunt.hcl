@@ -21,7 +21,7 @@ dependency "workloads" {
   skip_outputs = get_env("SKIP_WORKLOADS_DEPENDENCY", "false") == "true"
 
   mock_outputs = {
-    instance_groups = {}
+    vm_details = {}
   }
 
   mock_outputs_allowed_terraform_commands = ["init", "validate", "plan", "destroy"]
@@ -60,10 +60,7 @@ inputs = merge(
   local.layer_inputs,
   local.lb_name_defaults,
   {
-    auto_instance_groups = {
-      for name, link in try(dependency.workloads.outputs.instance_groups, {}) :
-      name => link
-      if length(regexall("lobby", lower(name))) > 0
-    }
+    # 50-workloads에서 VM 정보 가져오기
+    vm_details = try(dependency.workloads.outputs.vm_details, {})
   }
 )
