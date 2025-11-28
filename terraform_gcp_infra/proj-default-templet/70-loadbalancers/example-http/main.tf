@@ -29,8 +29,8 @@ locals {
   static_ip_name    = length(trimspace(var.static_ip_name)) > 0 ? var.static_ip_name : "${module.naming.forwarding_rule_name}-ip"
   health_check_name = length(trimspace(var.health_check_name)) > 0 ? var.health_check_name : module.naming.health_check_name
 
-  # Instance Group 처리 로직
-  processed_instance_groups = {
+  # Instance Group 처리 로직 (1단계: 모든 Instance Group 처리)
+  _all_instance_groups = {
     for name, cfg in var.instance_groups :
     name => {
       resolved_instances = [
@@ -47,11 +47,20 @@ locals {
         cfg.zone :
         try(cfg.zone_suffix, null) != null && length(trimspace(cfg.zone_suffix)) > 0 ?
         "${module.naming.region_primary}-${trimspace(cfg.zone_suffix)}" :
-        var.vm_details[cfg.instances[0]].zone
+        length([for inst_name in cfg.instances : inst_name if contains(keys(var.vm_details), inst_name)]) > 0 ?
+        var.vm_details[[for inst_name in cfg.instances : inst_name if contains(keys(var.vm_details), inst_name)][0]].zone :
+        ""
       )
       named_ports = coalesce(cfg.named_ports, [])
     }
     if length(cfg.instances) > 0
+  }
+
+  # Instance Group 처리 로직 (2단계: 빈 Instance Group 제거)
+  processed_instance_groups = {
+    for name, ig in local._all_instance_groups :
+    name => ig
+    if length(ig.resolved_instances) > 0
   }
 
   # Instance Group에서 backend 자동 생성
@@ -179,7 +188,7 @@ resource "google_compute_instance_group" "lb_instance_group" {
 
   lifecycle {
     precondition {
-      condition     = length(distinct([for inst in each.value.resolved_instances : inst.zone])) == 1
+      condition     = length(each.value.resolved_instances) == 0 || length(distinct([for inst in each.value.resolved_instances : inst.zone])) == 1
       error_message = "${each.key} instance group에는 동일한 존의 VM만 포함해야 합니다."
     }
   }
