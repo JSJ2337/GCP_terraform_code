@@ -8,8 +8,7 @@ def PHASES = [
     [id: 'phase4', label: 'Phase 4 - Observability', dirs: ['40-observability'], optional: true],
     [id: 'phase5', label: 'Phase 5 - Workloads (50-workloads)', dirs: ['50-workloads'], optional: false],
     [id: 'phase6', label: 'Phase 6 - Database & Cache', dirs: ['60-database', '65-cache'], optional: false],
-    [id: 'phase7', label: 'Phase 7 - Load Balancers', dirs: ['70-loadbalancers/web', '70-loadbalancers/app', '70-loadbalancers/lobby'], optional: false],
-    [id: 'phase8', label: 'Phase 8 - DNS', dirs: ['75-dns'], optional: false]
+    [id: 'phase7', label: 'Phase 7 - Load Balancers', dirs: ['70-loadbalancers/gs'], optional: false]
 ]
 
 pipeline {
@@ -25,12 +24,12 @@ pipeline {
         TF_IN_AUTOMATION = 'true'
         TF_INPUT = 'false'
         TG_NON_INTERACTIVE = 'true'
-        // Terragrunt 작업 디렉터리 (환경 루트)
-        TG_WORKING_DIR = 'terraform_gcp_infra/proj-default-templet'
-        // 반복 다운로드를 줄여 provider 설치 실패를 예방
-        TF_PLUGIN_CACHE_DIR = "${env.WORKSPACE}/.terraform.d/plugin-cache"
+        // Terragrunt 작업 디렉터리 (환경 루트) - 프로젝트명에 맞게 수정 필요
+        TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/YOUR_PROJECT_NAME'
+        // Plugin cache 비활성화 - 병렬 실행 시 "text file busy" 에러 방지
+        // TF_PLUGIN_CACHE_DIR = "${env.WORKSPACE}/.terraform.d/plugin-cache"
         // GCP 인증 설정 (Jenkins Credential 사용)
-        GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-jenkins-service-account')
+        GOOGLE_APPLICATION_CREDENTIALS = credentials('delabs-terraform-admin')
     }
 
     parameters {
@@ -51,10 +50,7 @@ pipeline {
                 '50-workloads',
                 '60-database',
                 '65-cache',
-                '70-loadbalancers/web',
-                '70-loadbalancers/app',
-                '70-loadbalancers/lobby',
-                '75-dns'
+                '70-loadbalancers/gs'
             ],
             description: '실행할 레이어 (all = 전체 스택)'
         )
@@ -95,7 +91,8 @@ pipeline {
         stage('Terragrunt Init') {
             steps {
                 script {
-                    sh "mkdir -p '${env.TF_PLUGIN_CACHE_DIR}'"
+                    // Plugin cache 비활성화로 인해 디렉토리 생성 불필요
+                    // sh "mkdir -p '${env.TF_PLUGIN_CACHE_DIR}'"
                     echo '🔧 Initializing Terragrunt...'
                     retry(3) {
                         if (params.TARGET_LAYER == 'all') {
@@ -270,6 +267,27 @@ ${phaseList}
                             if (params.ACTION == 'apply') {
                                 echo "📋 Re-planning ${phase.label} with latest state..."
                                 runPhasePlan(phase, phaseDirs)
+
+                                // Phase 7 apply 전에 Backend cleanup 스크립트 실행
+                                if (phase.id == 'phase7') {
+                                    echo "🧹 Running backend cleanup script before Phase 7 apply..."
+                                    phase.dirs.each { dir ->
+                                        def cleanupScript = "${env.WORKSPACE}/${TG_WORKING_DIR}/${dir}/cleanup_backends.sh"
+                                        def scriptExists = sh(
+                                            script: "test -f '${cleanupScript}' && echo 'EXISTS' || echo 'NOT_FOUND'",
+                                            returnStdout: true
+                                        ).trim()
+
+                                        if (scriptExists == 'EXISTS') {
+                                            echo "  Running cleanup for ${dir}..."
+                                            sh "cd '${env.WORKSPACE}/${TG_WORKING_DIR}/${dir}' && bash cleanup_backends.sh"
+                                        } else {
+                                            echo "  ⚠️  No cleanup script found for ${dir} (expected at ${cleanupScript})"
+                                        }
+                                    }
+                                    echo "✅ Backend cleanup completed"
+                                }
+
                                 echo "🚀 Applying ${phase.label}..."
                                 runPhaseApply(phase, phaseDirs)
                             } else {
@@ -298,9 +316,9 @@ ${phaseList}
                                     def pscCleanedUp = false
 
                                     // ⚠️ 프로젝트별 Redis 클러스터명과 프로젝트ID 수정 필요
-                                    def redisClusterName = "YOUR_REDIS_CLUSTER_NAME"  // e.g., "game-n-prod-redis"
-                                    def projectId = "YOUR_PROJECT_ID"  // e.g., "jsj-game-n"
-                                    def pscPolicyName = "YOUR_PSC_POLICY_NAME"  // e.g., "game-n-prod-vpc-asia-northeast3-redis-psc"
+                                    def redisClusterName = "YOUR_REDIS_CLUSTER_NAME"  // e.g., "gcby-prod-redis"
+                                    def projectId = "YOUR_PROJECT_ID"  // e.g., "gcp-gcby"
+                                    def pscPolicyName = "YOUR_PSC_POLICY_NAME"  // e.g., "gcby-prod-vpc-asia-northeast3-redis-psc"
                                     def region = "asia-northeast3"
 
                                     while (!pscCleanedUp && retryCount < maxRetries) {
@@ -415,6 +433,23 @@ ${phaseList}
             steps {
                 script {
                     if (params.ACTION == 'apply') {
+                        // Phase 7 (70-loadbalancers/*) apply 전에 Backend cleanup 스크립트 실행
+                        if (params.TARGET_LAYER.startsWith('70-loadbalancers/')) {
+                            echo "🧹 Running backend cleanup script before ${params.TARGET_LAYER} apply..."
+                            def cleanupScript = "${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}/cleanup_backends.sh"
+                            def scriptExists = sh(
+                                script: "test -f '${cleanupScript}' && echo 'EXISTS' || echo 'NOT_FOUND'",
+                                returnStdout: true
+                            ).trim()
+
+                            if (scriptExists == 'EXISTS') {
+                                sh "cd '${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}' && bash cleanup_backends.sh"
+                                echo "✅ Backend cleanup completed"
+                            } else {
+                                echo "⚠️  No cleanup script found (expected at ${cleanupScript})"
+                            }
+                        }
+
                         echo '🚀 Applying Terragrunt changes...'
                         sh "terragrunt --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}' apply tfplan"
                     } else if (params.ACTION == 'destroy') {
@@ -481,8 +516,8 @@ def runPhaseDestroy(phase, phaseDirs) {
         echo '🔓 Disabling deletion protection for Redis cluster...'
 
         // ⚠️ 프로젝트별 Redis 클러스터명과 프로젝트ID 수정 필요
-        def redisClusterName = "YOUR_REDIS_CLUSTER_NAME"  // e.g., "game-n-prod-redis"
-        def projectId = "YOUR_PROJECT_ID"  // e.g., "jsj-game-n"
+        def redisClusterName = "YOUR_REDIS_CLUSTER_NAME"  // e.g., "gcby-prod-redis"
+        def projectId = "YOUR_PROJECT_ID"  // e.g., "gcp-gcby"
         def region = "asia-northeast3"
 
         // Step 1: Check if Redis cluster exists and has deletion protection
