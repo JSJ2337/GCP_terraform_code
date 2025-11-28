@@ -204,19 +204,57 @@ Instance Group 삭제 시 `resourceInUseByAnotherResource` 에러 발생
 **해결책:**
 각 Load Balancer 폴더에 `cleanup_backends.sh` 스크립트 포함
 
-**동작:**
+**동작 원리:**
 ```bash
 # Jenkins가 Phase 7 apply 전에 자동 실행
-1. terraform.tfvars 파싱
-2. Backend Service와 비교
-3. 제거할 Instance Group 자동 detach
-4. terragrunt apply 안전하게 실행
+1. terraform.tfvars에서 정의된 instance_groups 파싱
+2. Backend Service에 실제 연결된 backends 확인
+3. Backend에는 있지만 tfvars에 없는 Instance Group 찾기
+4. gcloud로 Backend Service에서 자동 제거
+5. terragrunt apply 안전하게 실행
 ```
 
-**수동 실행:**
+**⚠️ 중요: cleanup 스크립트가 작동하는 조건**
+
+✅ **작동하는 경우**: terraform.tfvars에서 instance_group을 **직접 제거**했을 때
+```hcl
+# terraform.tfvars 수정 전
+instance_groups = {
+  "gcby-gs-ig-a" = { ... }
+  "gcby-gs-ig-b" = { ... }
+  "gcby-gs-ig-c" = { ... }  # ← 이것을 제거
+}
+
+# terraform.tfvars 수정 후
+instance_groups = {
+  "gcby-gs-ig-a" = { ... }
+  "gcby-gs-ig-b" = { ... }
+}
+# → cleanup 스크립트가 gcby-gs-ig-c를 Backend에서 제거
+```
+
+❌ **작동하지 않는 경우**: VM 삭제로 인한 Instance Group 자동 삭제
 ```bash
+# 1. 50-workloads에서 gcby-gs03 삭제
+# 2. terraform.tfvars에는 gcby-gs-ig-c 그대로 유지
+# → cleanup 스크립트: "tfvars에 있으니까 유지" (아무것도 안 함)
+# → Terraform: "VM이 없으니 Instance Group 삭제" (2단계 필터링)
+# → 에러 발생! (Backend에 여전히 붙어있음)
+
+# 해결: terraform.tfvars에서도 gcby-gs-ig-c를 제거해야 함
+```
+
+**올바른 사용법:**
+```bash
+# 방법 1: Instance Group과 VM을 함께 제거 (권장)
+1. 50-workloads에서 gcby-gs03 삭제
+2. 70-loadbalancers terraform.tfvars에서도 gcby-gs-ig-c 제거
+3. terragrunt apply
+   → cleanup 스크립트가 자동으로 Backend에서 제거
+
+# 방법 2: 수동 cleanup
 cd 70-loadbalancers/gs
-./cleanup_backends.sh  # Phase 7 apply 전에 실행
+./cleanup_backends.sh  # 수동 실행
 terragrunt apply
 ```
 

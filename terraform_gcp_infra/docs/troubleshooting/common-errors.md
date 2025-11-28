@@ -1079,6 +1079,33 @@ Jenkins 파이프라인이 Phase 7 apply 전에 cleanup 스크립트를 자동 �
 3. Backend에는 있지만 tfvars에 없는 Instance Group 찾기
 4. gcloud로 Backend Service에서 자동 제거
 
+**⚠️ 중요: cleanup이 작동하는 조건**
+
+✅ **작동**: terraform.tfvars에서 instance_group을 **직접 제거**
+```hcl
+# Before
+instance_groups = {
+  "gcby-gs-ig-a" = { ... }
+  "gcby-gs-ig-c" = { ... }  # ← 제거
+}
+# After
+instance_groups = {
+  "gcby-gs-ig-a" = { ... }
+}
+# → cleanup이 gcby-gs-ig-c를 Backend에서 제거
+```
+
+❌ **작동 안 함**: VM 삭제로 인한 Instance Group 자동 삭제
+```bash
+# 1. 50-workloads에서 VM 삭제
+# 2. terraform.tfvars에는 instance_group 그대로
+# → cleanup: "tfvars에 있으니 유지" (작동 안 함)
+# → Terraform: "VM 없으니 Instance Group 삭제"
+# → 에러 발생! (Backend에 여전히 붙어있음)
+
+# 해결: terraform.tfvars에서도 instance_group 제거 필요
+```
+
 **관련 파일:**
 
 - `environments/LIVE/gcp-gcby/70-loadbalancers/gs/cleanup_backends.sh`
