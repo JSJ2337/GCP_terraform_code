@@ -186,7 +186,6 @@ resource "google_compute_instance_group" "lb_instance_group" {
     }
   }
 
-
   lifecycle {
     precondition {
       condition     = length(each.value.resolved_instances) == 0 || length(distinct([for inst in each.value.resolved_instances : inst.zone])) == 1
