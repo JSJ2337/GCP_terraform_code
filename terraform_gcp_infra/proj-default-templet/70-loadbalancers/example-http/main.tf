@@ -186,36 +186,6 @@ resource "google_compute_instance_group" "lb_instance_group" {
     }
   }
 
-  # Instance Group 삭제 전에 Backend Service에서 제거
-  provisioner "local-exec" {
-    when    = destroy
-    command = <<-EOT
-      echo "🧹 Removing ${self.name} from backend services..."
-
-      # 이 Instance Group을 사용하는 모든 Backend Service 찾기
-      backend_services=$(gcloud compute backend-services list \
-        --project=${self.project} \
-        --global \
-        --format="value(name)" \
-        --filter="backends.group:${self.name}" 2>/dev/null || echo "")
-
-      if [ -n "$backend_services" ]; then
-        echo "$backend_services" | while IFS= read -r bs_name; do
-          if [ -n "$bs_name" ]; then
-            echo "  Removing from backend service: $bs_name"
-            gcloud compute backend-services remove-backend "$bs_name" \
-              --instance-group="${self.name}" \
-              --instance-group-zone="${self.zone}" \
-              --global \
-              --project="${self.project}" \
-              --quiet 2>/dev/null || echo "    Warning: Could not remove from $bs_name"
-          fi
-        done
-      else
-        echo "  No backend services found using ${self.name}"
-      fi
-    EOT
-  }
 
   lifecycle {
     precondition {

@@ -267,6 +267,27 @@ ${phaseList}
                             if (params.ACTION == 'apply') {
                                 echo "📋 Re-planning ${phase.label} with latest state..."
                                 runPhasePlan(phase, phaseDirs)
+
+                                // Phase 7 apply 전에 Backend cleanup 스크립트 실행
+                                if (phase.id == 'phase7') {
+                                    echo "🧹 Running backend cleanup script before Phase 7 apply..."
+                                    phase.dirs.each { dir ->
+                                        def cleanupScript = "${env.WORKSPACE}/${TG_WORKING_DIR}/${dir}/cleanup_backends.sh"
+                                        def scriptExists = sh(
+                                            script: "test -f '${cleanupScript}' && echo 'EXISTS' || echo 'NOT_FOUND'",
+                                            returnStdout: true
+                                        ).trim()
+
+                                        if (scriptExists == 'EXISTS') {
+                                            echo "  Running cleanup for ${dir}..."
+                                            sh "cd '${env.WORKSPACE}/${TG_WORKING_DIR}/${dir}' && bash cleanup_backends.sh"
+                                        } else {
+                                            echo "  ⚠️  No cleanup script found for ${dir} (expected at ${cleanupScript})"
+                                        }
+                                    }
+                                    echo "✅ Backend cleanup completed"
+                                }
+
                                 echo "🚀 Applying ${phase.label}..."
                                 runPhaseApply(phase, phaseDirs)
                             } else {
@@ -412,6 +433,23 @@ ${phaseList}
             steps {
                 script {
                     if (params.ACTION == 'apply') {
+                        // Phase 7 (70-loadbalancers/*) apply 전에 Backend cleanup 스크립트 실행
+                        if (params.TARGET_LAYER.startsWith('70-loadbalancers/')) {
+                            echo "🧹 Running backend cleanup script before ${params.TARGET_LAYER} apply..."
+                            def cleanupScript = "${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}/cleanup_backends.sh"
+                            def scriptExists = sh(
+                                script: "test -f '${cleanupScript}' && echo 'EXISTS' || echo 'NOT_FOUND'",
+                                returnStdout: true
+                            ).trim()
+
+                            if (scriptExists == 'EXISTS') {
+                                sh "cd '${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}' && bash cleanup_backends.sh"
+                                echo "✅ Backend cleanup completed"
+                            } else {
+                                echo "⚠️  No cleanup script found (expected at ${cleanupScript})"
+                            }
+                        }
+
                         echo '🚀 Applying Terragrunt changes...'
                         sh "terragrunt --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${params.TARGET_LAYER}' apply tfplan"
                     } else if (params.ACTION == 'destroy') {
