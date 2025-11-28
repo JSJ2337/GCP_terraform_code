@@ -55,21 +55,6 @@ instances = {
     startup_script_file = "scripts/lobby.sh"
     subnet_type         = "private"
   }
-  "gcby-gs03" = {
-    zone_suffix  = "c"
-    machine_type = "custom-4-8192"  # 4 vCPUs, 8GB RAM
-    boot_disk_size_gb = 128  # 128GB SSD
-    boot_disk_type    = "pd-ssd"
-    tags         = ["game-server", "ssh-allowed", "private-zone"]
-    image_family  = "rocky-linux-10-optimized-gcp"
-    image_project = "rocky-linux-cloud"
-    labels = {
-      role = "game-server"
-      tier = "backend"
-    }
-    startup_script_file = "scripts/lobby.sh"
-    subnet_type         = "private"
-  }
 
   # # lobby tier (3대) - DMZ 서브넷 배치 - COMMENTED OUT
   # "delabs-lobby-01" = {
