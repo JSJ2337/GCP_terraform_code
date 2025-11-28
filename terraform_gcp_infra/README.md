@@ -62,7 +62,7 @@ Jenkins CI/CD는 8개 Phase로 인프라를 순차 배포하여 의존성을 자
 | **Phase 4** | `40-observability` | Logging/Monitoring/Slack 알림 | ✅ |
 | **Phase 5** | `50-workloads` | VM 인스턴스 배포 | ❌ |
 | **Phase 6** | `60-database`<br>`65-cache` | Cloud SQL + Redis 캐시 | ❌ |
-| **Phase 7** | `70-loadbalancers/*` | 로드밸런서 (web/app/lobby) | ❌ |
+| **Phase 7** | `70-loadbalancers/gs` | 로드밸런서 (Game Server) | ❌ |
 | **Phase 8** | `75-dns` | Cloud DNS (Public/Private) | ❌ |
 
 ### 주요 특징
@@ -146,7 +146,7 @@ Bootstrap (jsj-system-mgmt)
 | `50-workloads` | VM 인스턴스 | GCE VMs, Instance Groups, 부팅 디스크 | 10-network, 30-security |
 | `60-database` | Cloud SQL | MySQL HA, 읽기 복제본, PITR, Private IP | 10-network |
 | `65-cache` | Redis 캐시 | Memorystore Redis (Standard HA / Enterprise) | 10-network |
-| `70-loadbalancers` | Load Balancer | Backend Service, URL Map, Forwarding Rule, Static IP | 50-workloads |
+| `70-loadbalancers/gs` | Load Balancer | HTTP LB, Instance Group 자동 처리, Backend cleanup 스크립트 | 50-workloads |
 | `75-dns` | Cloud DNS | Public/Private DNS Zone, DNS 레코드, DNSSEC | 10-network |
 
 ## 🏛️ 네트워크 아키텍처
@@ -231,7 +231,8 @@ Internet → Global Load Balancer (HTTPS)
 - ✅ 서브넷 자동 매핑 (subnet_type)
 - ✅ GCS Location 자동 설정 (region_primary)
 - ✅ 네이밍 자동 생성 (project_name 기반)
-- ✅ Load Balancer 자동 연결 (Instance Groups 필터링)
+- ✅ Instance Group 자동 생성/삭제 (VM 기반)
+- ✅ Backend cleanup 자동화 (Jenkins 통합)
 
 ### 완전한 문서화
 - ✅ 12/12 모듈 README 포함
@@ -349,7 +350,7 @@ cd ../40-observability && terragrunt apply
 cd ../50-workloads && terragrunt apply
 cd ../60-database && terragrunt apply
 cd ../65-cache && terragrunt apply
-cd ../70-loadbalancers/web && terragrunt apply
+cd ../70-loadbalancers/gs && terragrunt apply
 cd ../../75-dns && terragrunt apply
 ```
 
@@ -422,12 +423,14 @@ gcloud services enable compute.googleapis.com \
 terragrunt plan -out=tfplan && terragrunt apply tfplan
 ```
 
-### 70-loadbalancers Destroy 실패
+### Instance Group 삭제 시 resourceInUseByAnotherResource 에러
 ```bash
-# 원인: 50-workloads를 먼저 destroy하여 Instance Groups 참조 실패
-# 해결: SKIP_WORKLOADS_DEPENDENCY 환경변수 사용
-export SKIP_WORKLOADS_DEPENDENCY=true
-cd 70-loadbalancers/web && terragrunt destroy
+# 원인: Backend Service가 Instance Group을 사용 중
+# 해결: Jenkins가 Phase 7 apply 전에 cleanup 스크립트 자동 실행
+# 수동 실행 시:
+cd 70-loadbalancers/gs
+./cleanup_backends.sh  # Backend에서 Instance Group 제거
+terragrunt apply       # 안전하게 apply
 ```
 
 📖 [전체 트러블슈팅 가이드](./docs/troubleshooting/common-errors.md)
@@ -474,4 +477,4 @@ cd 70-loadbalancers/web && terragrunt destroy
 ---
 
 **Made by 433 IT_infra_dept**
-**Last Updated: 2025-11-21**
+**Last Updated: 2025-11-28**
