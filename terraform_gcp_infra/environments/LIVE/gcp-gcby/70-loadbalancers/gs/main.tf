@@ -39,6 +39,7 @@ locals {
           self_link = var.vm_details[inst_name].self_link
           zone      = var.vm_details[inst_name].zone
         }
+        if contains(keys(var.vm_details), inst_name)
       ]
       # zone 결정 우선순위: 1. zone (직접 지정) 2. zone_suffix (region과 결합) 3. VM의 zone (자동 감지)
       zone = (
