@@ -197,24 +197,29 @@ resource "null_resource" "backend_cleanup" {
       set -e
       echo "🧹 Cleaning up backends from Backend Service: ${self.triggers.backend_service_name}"
 
+      # Separate stderr to avoid parsing error messages
       backends=$(gcloud compute backend-services describe ${self.triggers.backend_service_name} \
         --global \
         --project=${self.triggers.project_id} \
-        --format='value(backends[].group)' 2>&1 || echo "NONE")
+        --format='value(backends[].group)' 2>/dev/null || echo "")
 
-      if [ "$backends" != "NONE" ] && [ -n "$backends" ]; then
+      if [ -n "$backends" ]; then
         echo "$backends" | while IFS= read -r backend_url; do
-          if [ -n "$backend_url" ]; then
+          # Validate URL format (should start with https://)
+          if [[ "$backend_url" =~ ^https://.*zones/.*/instanceGroups/.* ]]; then
             ig_name=$(echo "$backend_url" | awk -F'/' '{print $NF}')
             zone=$(echo "$backend_url" | awk -F'/' '{for(i=1;i<=NF;i++) if($i=="zones") print $(i+1)}')
-            echo "  Removing backend: $ig_name (zone: $zone)"
-            gcloud compute backend-services remove-backend ${self.triggers.backend_service_name} \
-              --instance-group="$ig_name" \
-              --instance-group-zone="$zone" \
-              --global \
-              --project=${self.triggers.project_id} \
-              --quiet || echo "    Warning: Could not remove backend $ig_name"
-            sleep 2
+
+            if [ -n "$ig_name" ] && [ -n "$zone" ]; then
+              echo "  Removing backend: $ig_name (zone: $zone)"
+              gcloud compute backend-services remove-backend ${self.triggers.backend_service_name} \
+                --instance-group="$ig_name" \
+                --instance-group-zone="$zone" \
+                --global \
+                --project=${self.triggers.project_id} \
+                --quiet 2>/dev/null || echo "    Warning: Could not remove backend $ig_name"
+              sleep 2
+            fi
           fi
         done
         echo "✅ All backends removed from ${self.triggers.backend_service_name}"
