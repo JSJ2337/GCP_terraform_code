@@ -194,6 +194,42 @@ echo 'vm_details = { ... }' > vm_details.auto.tfvars
 - terragrunt.hcl의 dependency 사용
 - 아무 파일도 추가하지 않음
 
+### Backend Cleanup 자동화 (중요!)
+
+**문제:**
+Instance Group 삭제 시 `resourceInUseByAnotherResource` 에러 발생
+- Backend Service가 여전히 Instance Group 사용 중
+- Terraform Core의 제약으로 삭제 순서 제어 불가 (GitHub Issue #6376)
+
+**해결책:**
+각 Load Balancer 폴더에 `cleanup_backends.sh` 스크립트 포함
+
+**동작:**
+```bash
+# Jenkins가 Phase 7 apply 전에 자동 실행
+1. terraform.tfvars 파싱
+2. Backend Service와 비교
+3. 제거할 Instance Group 자동 detach
+4. terragrunt apply 안전하게 실행
+```
+
+**수동 실행:**
+```bash
+cd 70-loadbalancers/gs
+./cleanup_backends.sh  # Phase 7 apply 전에 실행
+terragrunt apply
+```
+
+**Jenkins 자동화:**
+- Jenkins 파이프라인이 Phase 7 apply 전에 자동 실행
+- Single Layer 실행도 자동 지원
+- 수동 개입 불필요
+
+> **참고**: cleanup 스크립트는 Terraform의 근본적인 제약을 우회하는 베스트 프랙티스입니다.
+> 자세한 내용은 [트러블슈팅 가이드](../../docs/troubleshooting/common-errors.md#backend-service-삭제-순서-문제)를 참조하세요.
+
+---
+
 ### 중복 코드 구조
 
 각 Load Balancer 폴더는 **독립적인 Terraform 파일**을 가집니다:

@@ -1022,6 +1022,77 @@ gsutil cp gs://jsj-terraform-state-prod/bootstrap/default.tfstate \
 
 ---
 
+## Backend Service 삭제 순서 문제
+
+### resourceInUseByAnotherResource 에러
+
+**증상:**
+
+```text
+Error: Error deleting InstanceGroup: googleapi: Error 400: The instance_group resource
+'projects/gcp-gcby/zones/us-west1-c/instanceGroups/gcby-gs-ig-c' is already being used by
+'projects/gcp-gcby/global/backendServices/gcby-gs-backend', resourceInUseByAnotherResource
+```
+
+**원인:**
+
+- Terraform이 삭제 순서를 잘못 계산
+- 올바른 순서: Backend Service 업데이트 (backend 제거) → Instance Group 삭제
+- 실제 순서: Instance Group 삭제 시도 → 에러
+- Terraform Core의 근본적인 제약 (GitHub Issue #6376)
+- `local.auto_backends`가 동적으로 생성되어 dependency 추적 불가
+
+**해결:**
+
+**방법 1: cleanup 스크립트 사용 (권장)**
+
+```bash
+cd environments/LIVE/gcp-gcby/70-loadbalancers/gs
+./cleanup_backends.sh  # Backend에서 Instance Group 자동 제거
+terragrunt apply       # 안전하게 apply
+```
+
+**방법 2: 수동 제거**
+
+```bash
+# Backend Service에서 Instance Group 수동 제거
+gcloud compute backend-services remove-backend gcby-gs-backend \
+  --instance-group=gcby-gs-ig-c \
+  --instance-group-zone=us-west1-c \
+  --global \
+  --project=gcp-gcby
+
+# 그 다음 apply
+terragrunt apply
+```
+
+**Jenkins 자동화:**
+
+Jenkins 파이프라인이 Phase 7 apply 전에 cleanup 스크립트를 자동 실행합니다.
+- Execute All Phases (all 실행)와 Single Layer (개별 실행) 모두 지원
+- 수동 개입 불필요
+
+**cleanup_backends.sh 동작:**
+
+1. terraform.tfvars에서 정의된 instance_groups 파싱
+2. Backend Service의 현재 backends 확인
+3. Backend에는 있지만 tfvars에 없는 Instance Group 찾기
+4. gcloud로 Backend Service에서 자동 제거
+
+**관련 파일:**
+
+- `environments/LIVE/gcp-gcby/70-loadbalancers/gs/cleanup_backends.sh`
+- `proj-default-templet/70-loadbalancers/*/cleanup_backends.sh` (템플릿)
+- `environments/LIVE/gcp-gcby/Jenkinsfile` (자동 실행 로직)
+
+**참고:**
+
+- 이것은 Terraform Core의 알려진 제약사항입니다 (해결 불가능)
+- cleanup 스크립트는 베스트 프랙티스 조사 결과 도출된 현실적인 해결책입니다
+- destroy provisioner는 `for_each` 리소스에서 작동하지 않습니다
+
+---
+
 **다른 문제?**
 
 - [State 문제](./state-issues.md)
