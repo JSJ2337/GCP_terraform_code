@@ -7,6 +7,94 @@
 
 <!-- markdownlint-disable MD005 MD007 MD013 MD024 -->
 
+## [미배포] - 2025-12-01
+
+### 추가 (Added)
+
+- **DNS Peering 설정 (mgmt ↔ gcby)**
+  - mgmt VPC와 gcby VPC 간 양방향 VPC Peering 구성
+  - mgmt VPC DNS Zone에 gcby VM DNS 레코드 추가 (gcby-gs01, gcby-gs02)
+  - gcby/12-dns: DNS Peering Zone 생성 (delabsgames.internal.)
+  - jenkins, bastion에서 gcby VM으로 DNS 이름 기반 접근 가능
+  - 파일: `bootstrap/10-network/main.tf`, `bootstrap/12-dns/layer.hcl`, `environments/LIVE/gcp-gcby/10-network/main.tf`, `environments/LIVE/gcp-gcby/12-dns/terraform.tfvars`
+  - 커밋: a74b413
+
+- **mgmt VPC SSH 접근 방화벽 규칙**
+  - allow-ssh-from-mgmt 규칙 추가 (10.250.10.0/24 → gcby VM)
+  - SSH 태그 분리: ssh-from-iap (IAP), ssh-from-mgmt (mgmt VPC)
+  - 50-workloads VM 태그 업데이트
+  - 파일: `environments/LIVE/gcp-gcby/10-network/terraform.tfvars`, `environments/LIVE/gcp-gcby/50-workloads/terraform.tfvars`
+  - 커밋: a74b413
+
+- **Cloud SQL PSC Endpoint 지원 (3-tier 격리)**
+  - 10-network: Cloud SQL Service Connection Policy 리소스 추가
+    - service_class: gcp-cloud-sql
+    - Private subnet에만 Endpoint 생성
+    - DMZ zone에서 Cloud SQL 접근 차단 (네트워크 레벨 격리)
+  - modules/cloudsql-mysql: enable_psc 변수 추가
+    - PSC Endpoint 방식과 VPC Peering 방식 선택 가능
+    - psc_enabled 설정, private_network 조건부 처리
+  - 60-database: enable_psc = true 설정
+  - 파일: `environments/LIVE/gcp-gcby/10-network/`, `modules/cloudsql-mysql/`, `environments/LIVE/gcp-gcby/60-database/`
+  - 커밋: 6463e4c
+
+### 수정 (Fixed)
+
+- **DNS Layer 번호 변경 (75-dns → 12-dns)**
+  - 문제: DNS Layer가 Phase 8에 위치 (논리적으로 Network 다음이어야 함)
+  - 해결: 모든 프로젝트의 75-dns를 12-dns로 변경
+    - gcp-gcby/12-dns
+    - jsj-game-n/12-dns
+    - proj-default-templet/12-dns
+  - Jenkinsfile Phase 재편성
+    - Phase 3: 12-dns (DNS Peering)
+    - Phase 4-8: 기존 Phase 3-7 재배치
+  - README 및 모든 문서 일괄 업데이트
+  - 파일: 전체 프로젝트
+  - 커밋: 여러 커밋 (force push)
+
+- **DB subnet → PSC 전용 대역 전환**
+  - 문제: DB subnet (10.10.12.0/24)과 PSC 대역이 분리됨
+  - 해결: DB subnet 제거, 동일 대역을 PSC 전용으로 사용
+  - modules/network-dedicated-vpc: private_service_connection_address 변수 추가
+  - gcby/10-network: PSC 주소 명시적 지정 (10.10.12.0/24)
+  - DB 관련 방화벽 규칙 삭제 (allow-db-internal, allow-private-to-db)
+  - 파일: `modules/network-dedicated-vpc/`, `environments/LIVE/gcp-gcby/10-network/terraform.tfvars`
+  - 커밋: 1c18375
+
+### 개선 (Improved)
+
+- **3-tier 네트워크 격리 아키텍처**
+  - Before (VPC Peering): 전체 VPC에서 Cloud SQL 접근 가능 (보안 취약)
+  - After (PSC Endpoint): Private subnet만 Cloud SQL 접근 가능
+  - DMZ zone에서 DB 직접 접근 차단 (네트워크 레벨 격리)
+  - 방화벽 우회 불가능 (PSC Endpoint는 지정된 subnet에만 생성)
+  - 커밋: 6463e4c
+
+### 보안 (Security)
+
+- **SSH 접근 제어 강화**
+  - IAP 접근과 mgmt VPC 접근을 별도 태그로 분리
+  - ssh-from-iap: IAP tunnel 접근 (35.235.240.0/20)
+  - ssh-from-mgmt: mgmt VPC 직접 접근 (10.250.10.0/24)
+  - VM별로 선택적 SSH 접근 제어 가능
+  - 커밋: a74b413
+
+- **Cloud SQL 네트워크 격리**
+  - VPC Peering 방식 비활성화 (전체 VPC 접근)
+  - PSC Endpoint 방식 활성화 (Private subnet만 접근)
+  - DMZ zone → Cloud SQL 접근 차단
+  - 3-tier 아키텍처 준수 (DMZ → Private → DB)
+  - 커밋: 6463e4c
+
+### 문서화 (Documentation)
+
+- **Work History 추가**
+  - 2025-12-01.md: DNS Peering, SSH 접근 제어, Cloud SQL PSC Endpoint 전환 전체 과정 기록
+  - 파일: `docs/changelog/work_history/2025-12-01.md`
+
+---
+
 ## [미배포] - 2025-11-20
 
 ### 추가 (Added)
