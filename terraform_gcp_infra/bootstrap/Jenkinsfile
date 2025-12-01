@@ -34,6 +34,8 @@ pipeline {
         TF_PLUGIN_CACHE_DIR = "${env.WORKSPACE}/.terraform.d/plugin-cache"
         // GCP 인증 설정 (Jenkins Credential 사용)
         GOOGLE_APPLICATION_CREDENTIALS = credentials('delabs-terraform-admin')
+        // IPv4 강제 사용 (IPv6 unreachable 문제 해결)
+        GODEBUG = 'netdns=cgo'
     }
 
     parameters {
