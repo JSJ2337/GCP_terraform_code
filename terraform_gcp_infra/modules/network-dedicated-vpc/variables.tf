@@ -63,6 +63,12 @@ variable "private_service_connection_prefix_length" {
   default = 24
 }
 
+variable "private_service_connection_address" {
+  description = "PSC IP 주소 (예: 10.10.12.0). 비우면 자동 할당"
+  type        = string
+  default     = ""
+}
+
 variable "private_service_connection_name" {
   type    = string
   default = ""

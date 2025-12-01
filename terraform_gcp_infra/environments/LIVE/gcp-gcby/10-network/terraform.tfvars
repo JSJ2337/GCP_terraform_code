@@ -2,7 +2,7 @@
 # region은 terragrunt.hcl에서 region_primary 자동 주입
 routing_mode = "GLOBAL"
 
-# Additional dedicated subnets (DMZ/WAS/DB zones)
+# Additional dedicated subnets (DMZ/Private zones)
 # name, region은 terragrunt.hcl에서 project_name, region_primary 기반 자동 생성
 # CIDR만 정의 (네트워크 대역 설계)
 additional_subnets = [
@@ -11,14 +11,16 @@ additional_subnets = [
   },
   {
     cidr = "10.10.11.0/24"  # Private subnet
-  },
-  {
-    cidr = "10.10.12.0/24"  # DB subnet
   }
 ]
 
 # Subnet 이름은 terragrunt.hcl에서 자동 생성
-# 형식: {project_name}-subnet-dmz, {project_name}-subnet-private, {project_name}-subnet-db
+# 형식: {project_name}-subnet-dmz, {project_name}-subnet-private
+
+# Private Service Connection (Cloud SQL, Redis 등 Managed Service용)
+# 10.10.12.0/24 대역을 PSC 전용으로 사용
+private_service_connection_address = "10.10.12.0"
+private_service_connection_prefix_length = 24
 
 # Cloud NAT configuration
 nat_min_ports_per_vm = 1024
@@ -63,16 +65,6 @@ firewall_rules = [
     target_tags    = ["private-zone"]
     description    = "Allow all traffic within Private subnet (10.10.11.0/24)"
   },
-  # DB zone internal communication
-  {
-    name           = "allow-db-internal"
-    direction      = "INGRESS"
-    ranges         = ["10.10.12.0/24"] # DB subnet only
-    allow_protocol = "all"
-    allow_ports    = []
-    target_tags    = ["db-zone"]
-    description    = "Allow all traffic within DB subnet (10.10.12.0/24)"
-  },
   # DMZ to Private communication (frontend -> backend)
   {
     name           = "allow-dmz-to-private"
@@ -82,16 +74,6 @@ firewall_rules = [
     allow_ports    = ["8080", "9090", "3000", "5000"]
     target_tags    = ["private-zone"]
     description    = "Allow DMZ to Private zone (frontend to backend APIs)"
-  },
-  # Private to DB communication (backend -> database)
-  {
-    name           = "allow-private-to-db"
-    direction      = "INGRESS"
-    ranges         = ["10.10.11.0/24"] # From Private
-    allow_protocol = "tcp"
-    allow_ports    = ["3306", "5432", "6379", "27017"]
-    target_tags    = ["db-zone"]
-    description    = "Allow Private to DB zone (backend to database)"
   },
   {
     name           = "allow-health-check"

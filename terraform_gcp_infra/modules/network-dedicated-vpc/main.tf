@@ -118,6 +118,7 @@ resource "google_compute_global_address" "private_service_connect" {
   purpose      = "VPC_PEERING"
   address_type = "INTERNAL"
 
+  address       = length(trimspace(var.private_service_connection_address)) > 0 ? var.private_service_connection_address : null
   prefix_length = var.private_service_connection_prefix_length
   network       = google_compute_network.vpc.id
 }
