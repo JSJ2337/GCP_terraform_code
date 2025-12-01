@@ -78,8 +78,14 @@ resource "google_sql_database_instance" "instance" {
       # VPC Peering 방식: private_network 사용, psc_config 미사용
       private_network = var.enable_psc ? null : (length(trimspace(var.private_network)) > 0 ? var.private_network : null)
 
-      # PSC Endpoint 활성화
-      psc_enabled = var.enable_psc
+      # PSC Endpoint 설정
+      dynamic "psc_config" {
+        for_each = var.enable_psc ? [1] : []
+        content {
+          psc_enabled               = true
+          allowed_consumer_projects = []
+        }
+      }
 
       # 참고: 최신 Google Provider에서는 require_ssl이 deprecated 상태입니다.
       # SSL 인증서와 연결 정책을 대신 사용하세요.
@@ -191,8 +197,14 @@ resource "google_sql_database_instance" "read_replicas" {
           (length(trimspace(var.private_network)) > 0 ? var.private_network : null)
         )
 
-        # PSC Endpoint 활성화 (Master 설정 상속)
-        psc_enabled = var.enable_psc
+        # PSC Endpoint 설정 (Master 설정 상속)
+        dynamic "psc_config" {
+          for_each = var.enable_psc ? [1] : []
+          content {
+            psc_enabled               = true
+            allowed_consumer_projects = []
+          }
+        }
       }
     }
 
