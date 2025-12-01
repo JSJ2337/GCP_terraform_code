@@ -28,8 +28,9 @@ transaction_log_retention_days = 7
 backup_retained_count          = 7
 
 # Network configuration
-# Use private IP; leave private_network empty to let modules/naming derive the VPC self-link
-ipv4_enabled        = false # Use Private IP
+# Use Private Service Connect (PSC Endpoint) for Private subnet isolation
+ipv4_enabled        = false # No Public IP
+enable_psc          = true  # PSC Endpoint (Private subnet only access)
 authorized_networks = []
 
 # Maintenance window

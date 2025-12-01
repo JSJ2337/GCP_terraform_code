@@ -2,7 +2,7 @@
 # region은 terragrunt.hcl에서 region_primary 자동 주입
 routing_mode = "GLOBAL"
 
-# Additional dedicated subnets (DMZ/WAS/DB zones)
+# Additional dedicated subnets (DMZ/Private zones)
 # name, region은 terragrunt.hcl에서 project_name, region_primary 기반 자동 생성
 # CIDR만 정의 (네트워크 대역 설계)
 additional_subnets = [
@@ -11,14 +11,17 @@ additional_subnets = [
   },
   {
     cidr = "10.3.1.0/24"  # Private subnet
-  },
-  {
-    cidr = "10.3.2.0/24"  # DB subnet
   }
 ]
 
 # Subnet 이름은 terragrunt.hcl에서 자동 생성
-# 형식: {project_name}-subnet-dmz, {project_name}-subnet-private, {project_name}-subnet-db
+# 형식: {project_name}-subnet-dmz, {project_name}-subnet-private
+
+# Private Service Connection (VPC Peering 방식) - DISABLED
+# PSC Endpoint 방식으로 전환하여 더 이상 사용하지 않음
+enable_private_service_connection = false
+# private_service_connection_address = "10.3.2.0"
+# private_service_connection_prefix_length = 24
 
 # Cloud NAT configuration
 nat_min_ports_per_vm = 1024
@@ -31,7 +34,7 @@ firewall_rules = [
     ranges         = ["35.235.240.0/20"] # IAP range
     allow_protocol = "tcp"
     allow_ports    = ["22"]
-    target_tags    = ["ssh-allowed"]
+    target_tags    = ["ssh-from-iap"]
     description    = "Allow SSH from Identity-Aware Proxy"
   },
   # DMZ zone internal communication
@@ -54,16 +57,6 @@ firewall_rules = [
     target_tags    = ["private-zone"]
     description    = "Allow all traffic within Private subnet (10.3.1.0/24)"
   },
-  # DB zone internal communication
-  {
-    name           = "allow-db-internal"
-    direction      = "INGRESS"
-    ranges         = ["10.3.2.0/24"] # DB subnet only
-    allow_protocol = "all"
-    allow_ports    = []
-    target_tags    = ["db-zone"]
-    description    = "Allow all traffic within DB subnet (10.3.2.0/24)"
-  },
   # DMZ to Private communication (frontend -> backend)
   {
     name           = "allow-dmz-to-private"
@@ -73,16 +66,6 @@ firewall_rules = [
     allow_ports    = ["8080", "9090", "3000", "5000"]
     target_tags    = ["private-zone"]
     description    = "Allow DMZ to Private zone (frontend to backend APIs)"
-  },
-  # Private to DB communication (backend -> database)
-  {
-    name           = "allow-private-to-db"
-    direction      = "INGRESS"
-    ranges         = ["10.3.1.0/24"] # From Private
-    allow_protocol = "tcp"
-    allow_ports    = ["3306", "5432", "6379", "27017"]
-    target_tags    = ["db-zone"]
-    description    = "Allow Private to DB zone (backend to database)"
   },
   {
     name           = "allow-health-check"
@@ -98,5 +81,11 @@ firewall_rules = [
 # Memorystore Enterprise용 PSC 자동 구성
 enable_memorystore_psc_policy = true
 # memorystore_psc_region은 terragrunt.hcl에서 region_primary 자동 주입
-# memorystore_psc_subnet_name은 terragrunt.hcl에서 자동 생성
+# memorystore_psc_subnet_name은 terragrunt.hcl에서 자동 생성 (기본: private subnet)
 memorystore_psc_connection_limit = 8
+
+# Cloud SQL용 PSC Endpoint 구성 (Private subnet 전용 접근)
+enable_cloudsql_psc_policy = true
+# cloudsql_psc_region은 terragrunt.hcl에서 region_primary 자동 주입
+# cloudsql_psc_subnet_name은 terragrunt.hcl에서 자동 생성 (기본: private subnet)
+cloudsql_psc_connection_limit = 5  # Master + Read Replicas
