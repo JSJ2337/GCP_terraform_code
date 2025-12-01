@@ -4,11 +4,12 @@
 def PHASES = [
     [id: 'phase1', label: 'Phase 1 - Bootstrap (00-project)', dirs: ['00-project'], optional: false],
     [id: 'phase2', label: 'Phase 2 - Network (10-network)', dirs: ['10-network'], optional: false],
-    [id: 'phase3', label: 'Phase 3 - Storage & Security', dirs: ['20-storage', '30-security'], optional: false],
-    [id: 'phase4', label: 'Phase 4 - Observability', dirs: ['40-observability'], optional: true],
-    [id: 'phase5', label: 'Phase 5 - Workloads (50-workloads)', dirs: ['50-workloads'], optional: false],
-    [id: 'phase6', label: 'Phase 6 - Database & Cache', dirs: ['60-database', '65-cache'], optional: false],
-    [id: 'phase7', label: 'Phase 7 - Load Balancers', dirs: ['70-loadbalancers/gs'], optional: false]
+    [id: 'phase3', label: 'Phase 3 - DNS (12-dns)', dirs: ['12-dns'], optional: false],
+    [id: 'phase4', label: 'Phase 4 - Storage & Security', dirs: ['20-storage', '30-security'], optional: false],
+    [id: 'phase5', label: 'Phase 5 - Observability', dirs: ['40-observability'], optional: true],
+    [id: 'phase6', label: 'Phase 6 - Workloads (50-workloads)', dirs: ['50-workloads'], optional: false],
+    [id: 'phase7', label: 'Phase 7 - Database & Cache', dirs: ['60-database', '65-cache'], optional: false],
+    [id: 'phase8', label: 'Phase 8 - Load Balancers', dirs: ['70-loadbalancers/gs'], optional: false]
 ]
 
 pipeline {
@@ -36,7 +37,7 @@ pipeline {
         choice(
             name: 'ACTION',
             choices: ['plan', 'apply', 'destroy', 'prepare-destroy'],
-            description: 'Terragrunt 실행할 작업 선택 (prepare-destroy: Phase 7만 apply해서 cleanup resource 추가)'
+            description: 'Terragrunt 실행할 작업 선택 (prepare-destroy: Phase 8만 apply해서 cleanup resource 추가)'
         )
         choice(
             name: 'TARGET_LAYER',
@@ -44,6 +45,7 @@ pipeline {
                 'all',
                 '00-project',
                 '10-network',
+                '12-dns',
                 '20-storage',
                 '30-security',
                 '40-observability',
@@ -199,7 +201,7 @@ ${phaseList}
         }
 
         // ====================================================================
-        // Prepare Destroy: Phase 7만 apply해서 cleanup resource 추가
+        // Prepare Destroy: Phase 8만 apply해서 cleanup resource 추가
         // ====================================================================
         stage('Prepare for Destroy') {
             when {
@@ -210,26 +212,26 @@ ${phaseList}
             }
             steps {
                 script {
-                    def phase7 = PHASES.find { it.id == 'phase7' }
+                    def phase8 = PHASES.find { it.id == 'phase8' }
 
-                    stage("${phase7.label} - Apply Cleanup Resources") {
-                        echo "📋 Phase 7만 apply해서 null_resource.backend_cleanup을 state에 추가합니다..."
+                    stage("${phase8.label} - Apply Cleanup Resources") {
+                        echo "📋 Phase 8만 apply해서 null_resource.backend_cleanup을 state에 추가합니다..."
                         echo "⚠️  참고: 이 단계는 Terraform GCP Provider 버그 워크어라운드입니다."
                         echo "⚠️  null_resource provisioner는 state에 있어야 destroy 시 실행됩니다."
 
-                        def includeArgs = phase7.dirs.collect {
+                        def includeArgs = phase8.dirs.collect {
                             "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'"
                         }.join(' ')
 
                         // Plan
-                        echo "📋 Planning Phase 7..."
+                        echo "📋 Planning Phase 8..."
                         sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- plan -out=tfplan-prepare-destroy"
 
                         // Apply
-                        echo "🚀 Applying Phase 7 (cleanup resources only)..."
+                        echo "🚀 Applying Phase 8 (cleanup resources only)..."
                         sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- apply tfplan-prepare-destroy"
 
-                        echo "✅ Phase 7 cleanup resources added to Terraform state"
+                        echo "✅ Phase 8 cleanup resources added to Terraform state"
                         echo "✅ 이제 'destroy' 액션을 실행하면 Backend Service가 정상적으로 정리됩니다."
                     }
                 }
@@ -253,7 +255,7 @@ ${phaseList}
 
                     orderedPhases.each { phase ->
                         // Optional phase 처리
-                        if (phase.optional && phase.id == 'phase4' && !params.ENABLE_OBSERVABILITY && params.ACTION != 'destroy') {
+                        if (phase.optional && phase.id == 'phase5' && !params.ENABLE_OBSERVABILITY && params.ACTION != 'destroy') {
                             echo "⏭️  Skipping ${phase.label} (disabled by parameter)"
                             return
                         }
@@ -268,9 +270,9 @@ ${phaseList}
                                 echo "📋 Re-planning ${phase.label} with latest state..."
                                 runPhasePlan(phase, phaseDirs)
 
-                                // Phase 7 apply 전에 Backend cleanup 스크립트 실행
-                                if (phase.id == 'phase7') {
-                                    echo "🧹 Running backend cleanup script before Phase 7 apply..."
+                                // Phase 8 apply 전에 Backend cleanup 스크립트 실행
+                                if (phase.id == 'phase8') {
+                                    echo "🧹 Running backend cleanup script before Phase 8 apply..."
                                     phase.dirs.each { dir ->
                                         def cleanupScript = "${env.WORKSPACE}/${TG_WORKING_DIR}/${dir}/cleanup_backends.sh"
                                         def scriptExists = sh(

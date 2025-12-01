@@ -17,12 +17,12 @@
 def PHASES = [
     [id: 'phase1', label: 'Phase 1 - Bootstrap (00-project)', dirs: ['00-project'], optional: false],
     [id: 'phase2', label: 'Phase 2 - Network (10-network)', dirs: ['10-network'], optional: false],
-    [id: 'phase3', label: 'Phase 3 - Storage & Security', dirs: ['20-storage', '30-security'], optional: false],
-    [id: 'phase4', label: 'Phase 4 - Observability', dirs: ['40-observability'], optional: true],
-    [id: 'phase5', label: 'Phase 5 - Workloads (50-workloads)', dirs: ['50-workloads'], optional: false],
-    [id: 'phase6', label: 'Phase 6 - Database & Cache', dirs: ['60-database', '65-cache'], optional: false],
-    [id: 'phase7', label: 'Phase 7 - Load Balancers', dirs: ['70-loadbalancers/web', '70-loadbalancers/app', '70-loadbalancers/lobby'], optional: false],
-    [id: 'phase8', label: 'Phase 8 - DNS', dirs: ['75-dns'], optional: false]
+    [id: 'phase3', label: 'Phase 3 - DNS (12-dns)', dirs: ['12-dns'], optional: false],
+    [id: 'phase4', label: 'Phase 4 - Storage & Security', dirs: ['20-storage', '30-security'], optional: false],
+    [id: 'phase5', label: 'Phase 5 - Observability', dirs: ['40-observability'], optional: true],
+    [id: 'phase6', label: 'Phase 6 - Workloads (50-workloads)', dirs: ['50-workloads'], optional: false],
+    [id: 'phase7', label: 'Phase 7 - Database & Cache', dirs: ['60-database', '65-cache'], optional: false],
+    [id: 'phase8', label: 'Phase 8 - Load Balancers', dirs: ['70-loadbalancers/web', '70-loadbalancers/app', '70-loadbalancers/lobby'], optional: false]
 ]
 
 pipeline {
@@ -60,6 +60,7 @@ pipeline {
                 'all',
                 '00-project',
                 '10-network',
+                '12-dns',
                 '20-storage',
                 '30-security',
                 '40-observability',
@@ -68,8 +69,7 @@ pipeline {
                 '65-cache',
                 '70-loadbalancers/web',
                 '70-loadbalancers/app',
-                '70-loadbalancers/lobby',
-                '75-dns'
+                '70-loadbalancers/lobby'
             ],
             description: '실행할 레이어 (all = 전체 스택)'
         )

@@ -24,16 +24,16 @@
     - Private DNS: VPC 네트워크 연결, DNS Forwarding, DNS Peering
     - DNS Policy: Inbound Forwarding, DNS 로깅, 대체 네임서버
     - 유연한 설정: Reverse Lookup, 커스텀 DNSSEC 키, 라벨 지원
-  - 새로운 레이어: `75-dns`
+  - 새로운 레이어: `12-dns`
     - Public DNS Zone: 외부 공개 도메인 관리 (웹사이트, 서비스)
     - Private DNS Zone: 내부 서비스 이름 해석 (VPC 내부)
     - Hybrid DNS: 온프레미스 DNS 서버 연동 (Forwarding)
     - DNS Peering: 여러 프로젝트 간 DNS 공유
     - naming 모듈 통합: 일관된 Zone 이름 및 라벨 자동 생성
   - 배포 범위:
-    - `proj-default-templet/75-dns`: 템플릿 레이어 (Public DNS 예제)
-    - `environments/LIVE/jsj-game-m/75-dns`: Private DNS (game-m.internal.)
-    - `environments/LIVE/jsj-game-n/75-dns`: Private DNS (game-n.internal.)
+    - `proj-default-templet/12-dns`: 템플릿 레이어 (Public DNS 예제)
+    - `environments/LIVE/jsj-game-m/12-dns`: Private DNS (game-m.internal.)
+    - `environments/LIVE/jsj-game-n/12-dns`: Private DNS (game-n.internal.)
   - 문서화:
     - 상세한 README.md: 7가지 사용 시나리오 예제 포함
     - terraform.tfvars.example: 주석이 포함된 설정 가이드

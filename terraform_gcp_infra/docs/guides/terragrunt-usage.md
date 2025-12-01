@@ -54,7 +54,7 @@ environments/LIVE/jsj-game-n/
 ├── 10-network/
 │   ├── terragrunt.hcl
 │   └── ...
-└── ... (20-storage ~ 75-dns)
+└── ... (20-storage ~ 12-dns)
 ```
 
 ## Terragrunt 0.93+ Migration Guide
@@ -244,8 +244,8 @@ terragrunt run --all \
 # Phase 7 (70-loadbalancers)
 terragrunt run --all --queue-include-dir 70-loadbalancers -- apply
 
-# Phase 8 (75-dns)
-terragrunt run --all --queue-include-dir 75-dns -- apply
+# Phase 8 (12-dns)
+terragrunt run --all --queue-include-dir 12-dns -- apply
 ```
 
 ### 비대화식 실행 (CI/CD용)
@@ -278,7 +278,7 @@ graph TD
     P5 --> P6A[Phase 6: 60-database]
     P5 --> P6B[Phase 6: 65-cache]
     P5 --> P7[Phase 7: 70-loadbalancers]
-    P7 --> P8[Phase 8: 75-dns]
+    P7 --> P8[Phase 8: 12-dns]
 ```
 
 ### Jenkins와의 통합
@@ -561,7 +561,7 @@ inputs = {
 # 전체 배포는 Phase 순서대로
 for phase in 00-project 10-network 20-storage 30-security \
              40-observability 50-workloads 60-database 65-cache \
-             70-loadbalancers 75-dns; do
+             70-loadbalancers 12-dns; do
   terragrunt run --all --queue-include-dir $phase -- apply
 done
 ```

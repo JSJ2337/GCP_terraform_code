@@ -141,7 +141,7 @@ terragrunt run --all \
 terragrunt run --all --queue-include-dir 70-loadbalancers -- apply
 
 # Phase 8: DNS
-terragrunt run --all --queue-include-dir 75-dns -- apply
+terragrunt run --all --queue-include-dir 12-dns -- apply
 ```
 
 ## 자동화 기능
@@ -186,7 +186,7 @@ project_name 기반 모든 리소스명 자동 생성:
 | 60-database | Cloud SQL Tier, 백업 정책 | terraform.tfvars |
 | 65-cache | Memorystore 메모리 크기 | terraform.tfvars |
 | 70-loadbalancers | Backend 필터링 패턴 | terraform.tfvars |
-| 75-dns | DNS Zone, 레코드 | terraform.tfvars |
+| 12-dns | DNS Zone, 레코드 | terraform.tfvars |
 
 ## 마무리 체크리스트
 

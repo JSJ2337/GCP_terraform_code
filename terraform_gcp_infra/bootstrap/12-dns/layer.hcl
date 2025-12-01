@@ -20,18 +20,23 @@ locals {
       rrdatas = ["10.250.10.6"]
     }
 
+    # gcp-gcby 프로젝트 VM들 (VPC Peering 필요)
+    "gcby-gs01" = {
+      type    = "A"
+      ttl     = 300
+      rrdatas = ["10.10.11.3"]
+    }
+    "gcby-gs02" = {
+      type    = "A"
+      ttl     = 300
+      rrdatas = ["10.10.11.6"]
+    }
+
     # 새 서버 추가 시 여기에 추가
     # "gitlab" = {
     #   type    = "A"
     #   ttl     = 300
     #   rrdatas = ["10.250.10.5"]
-    # }
-    #
-    # 다른 프로젝트 VM (VPC Peering 필요)
-    # "game-lobby" = {
-    #   type    = "A"
-    #   ttl     = 300
-    #   rrdatas = ["10.100.1.10"]
     # }
   }
 }

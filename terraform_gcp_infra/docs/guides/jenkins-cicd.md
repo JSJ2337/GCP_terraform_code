@@ -32,7 +32,7 @@ Jenkins는 8개의 Phase로 인프라를 순차 배포하여 의존성을 자동
 | **Phase 5** | `50-workloads` | VM 인스턴스 배포 | 10-network, 30-security | ❌ |
 | **Phase 6** | `60-database`<br>`65-cache` | Cloud SQL, Redis 캐시 | 10-network | ❌ |
 | **Phase 7** | `70-loadbalancers/*` | Load Balancers (web/app/lobby) | 50-workloads | ❌ |
-| **Phase 8** | `75-dns` | Cloud DNS (Public/Private) | 10-network | ❌ |
+| **Phase 8** | `12-dns` | Cloud DNS (Public/Private) | 10-network | ❌ |
 
 ### 배포 흐름
 
@@ -234,7 +234,7 @@ def PHASES = [
     [id: 'phase5', label: 'Phase 5: Workloads', dirs: ['50-workloads'], optional: false],
     [id: 'phase6', label: 'Phase 6: Database & Cache', dirs: ['60-database', '65-cache'], optional: false],
     [id: 'phase7', label: 'Phase 7: Load Balancers', dirs: ['70-loadbalancers'], optional: false],
-    [id: 'phase8', label: 'Phase 8: DNS', dirs: ['75-dns'], optional: false]
+    [id: 'phase8', label: 'Phase 8: DNS', dirs: ['12-dns'], optional: false]
 ]
 
 pipeline {
@@ -430,7 +430,7 @@ parameters {
         name: 'TARGET_LAYER',
         choices: ['all', '00-project', '10-network', '20-storage', '30-security',
                   '40-observability', '50-workloads', '60-database', '65-cache',
-                  '70-loadbalancers', '75-dns'],
+                  '70-loadbalancers', '12-dns'],
         description: 'Target layer to deploy (all = all phases sequentially)'
     )
     booleanParam(

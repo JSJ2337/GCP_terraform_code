@@ -58,12 +58,12 @@ Jenkins CI/CD는 8개 Phase로 인프라를 순차 배포하여 의존성을 자
 |-------|--------|------|----------|
 | **Phase 1** | `00-project` | GCP 프로젝트 생성 | ❌ |
 | **Phase 2** | `10-network` | VPC 네트워킹 구성 | ❌ |
-| **Phase 3** | `20-storage`<br>`30-security` | 스토리지 및 IAM 보안 | ❌ |
-| **Phase 4** | `40-observability` | Logging/Monitoring/Slack 알림 | ✅ |
-| **Phase 5** | `50-workloads` | VM 인스턴스 배포 | ❌ |
-| **Phase 6** | `60-database`<br>`65-cache` | Cloud SQL + Redis 캐시 | ❌ |
-| **Phase 7** | `70-loadbalancers/gs` | 로드밸런서 (Game Server) | ❌ |
-| **Phase 8** | `75-dns` | Cloud DNS (Public/Private) | ❌ |
+| **Phase 3** | `12-dns` | Cloud DNS (Public/Private) | ❌ |
+| **Phase 4** | `20-storage`<br>`30-security` | 스토리지 및 IAM 보안 | ❌ |
+| **Phase 5** | `40-observability` | Logging/Monitoring/Slack 알림 | ✅ |
+| **Phase 6** | `50-workloads` | VM 인스턴스 배포 | ❌ |
+| **Phase 7** | `60-database`<br>`65-cache` | Cloud SQL + Redis 캐시 | ❌ |
+| **Phase 8** | `70-loadbalancers/gs` | 로드밸런서 (Game Server) | ❌ |
 
 ### 주요 특징
 - ✅ **전체 승인 한 번**: `TARGET_LAYER=all` 시 모든 Phase를 한 번에 승인
@@ -121,7 +121,9 @@ instances = {
 ```
 Bootstrap (jsj-system-mgmt)
     ↓
-00-project → 10-network → 20-storage
+00-project → 10-network → 12-dns
+                ↓           ↓
+                ↓       20-storage
                 ↓           ↓
                 ↓       30-security
                 ↓           ↓
@@ -131,7 +133,6 @@ Bootstrap (jsj-system-mgmt)
                 ↓           ↓
                 ↓       60-database
                 ↓       65-cache
-                ↓       75-dns
 ```
 
 ### 레이어별 상세
@@ -140,6 +141,7 @@ Bootstrap (jsj-system-mgmt)
 |--------|------|------------|--------|
 | `00-project` | GCP 프로젝트 생성 | Project, API 활성화, Billing, 예산 알림 | Bootstrap |
 | `10-network` | VPC 네트워킹 | VPC, Subnet(DMZ/Private/DB), Firewall, Cloud NAT, PSC | 00-project |
+| `12-dns` | Cloud DNS | Public/Private DNS Zone, DNS 레코드, DNSSEC, DNS Peering | 10-network |
 | `20-storage` | GCS 버킷 관리 | Assets/Logs/Backups 버킷, Lifecycle, CORS | 10-network |
 | `30-security` | IAM 및 Service Account | IAM 바인딩, 서비스 계정(compute, monitoring, deployment) | 10-network |
 | `40-observability` | Logging/Monitoring | Log Sink, Dashboard, Alert 정책, Slack 알림 | 10-network, 30-security |
@@ -147,7 +149,6 @@ Bootstrap (jsj-system-mgmt)
 | `60-database` | Cloud SQL | MySQL HA, 읽기 복제본, PITR, Private IP | 10-network |
 | `65-cache` | Redis 캐시 | Memorystore Redis (Standard HA / Enterprise) | 10-network |
 | `70-loadbalancers/gs` | Load Balancer | HTTP LB, Instance Group 자동 처리, Backend cleanup 스크립트 | 50-workloads |
-| `75-dns` | Cloud DNS | Public/Private DNS Zone, DNS 레코드, DNSSEC | 10-network |
 
 ## 🏛️ 네트워크 아키텍처
 
@@ -344,6 +345,7 @@ vim common.naming.tfvars
 # 3. Phase 순서대로 배포 (Jenkins 사용 권장)
 cd 00-project && terragrunt apply
 cd ../10-network && terragrunt apply
+cd ../12-dns && terragrunt apply
 cd ../20-storage && terragrunt apply
 cd ../30-security && terragrunt apply
 cd ../40-observability && terragrunt apply
@@ -351,7 +353,6 @@ cd ../50-workloads && terragrunt apply
 cd ../60-database && terragrunt apply
 cd ../65-cache && terragrunt apply
 cd ../70-loadbalancers/gs && terragrunt apply
-cd ../../75-dns && terragrunt apply
 ```
 
 📖 [상세 가이드](./docs/guides/adding-new-project.md)
@@ -360,7 +361,7 @@ cd ../../75-dns && terragrunt apply
 
 ### 배포 순서 준수
 1. **Bootstrap 최우선**: 모든 환경의 State 관리 기반
-2. **Phase 순서대로**: 의존성 자동 해결 (00 → 10 → 20 → ... → 75)
+2. **Phase 순서대로**: 의존성 자동 해결 (00 → 10 → 12 → 20 → ... → 70)
 3. **Jenkins 사용**: Phase 기반 배포로 Mock outputs 문제 회피
 
 ### State 관리
@@ -426,7 +427,7 @@ terragrunt plan -out=tfplan && terragrunt apply tfplan
 ### Instance Group 삭제 시 resourceInUseByAnotherResource 에러
 ```bash
 # 원인: Backend Service가 Instance Group을 사용 중
-# 해결: Jenkins가 Phase 7 apply 전에 cleanup 스크립트 자동 실행
+# 해결: Jenkins가 Phase 8 apply 전에 cleanup 스크립트 자동 실행
 # 수동 실행 시:
 cd 70-loadbalancers/gs
 ./cleanup_backends.sh  # Backend에서 Instance Group 제거

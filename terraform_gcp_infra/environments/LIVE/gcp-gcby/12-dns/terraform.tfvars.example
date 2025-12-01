@@ -1,0 +1,258 @@
+# =============================================================================
+# Cloud DNS 설정 예제
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 기본 설정
+# -----------------------------------------------------------------------------
+
+# DNS Managed Zone 이름 (비워두면 자동 생성: {project_name}-{environment}-zone)
+zone_name   = ""
+
+# DNS 도메인 이름 (반드시 마침표로 끝나야 함)
+# 예: example.com., subdomain.example.com., internal.local.
+dns_name    = "example.com."
+
+# Zone 설명
+description = "Example DNS zone for production"
+
+# DNS Zone 가시성
+# - "public": 인터넷에 공개되는 DNS Zone (도메인 등록 필요)
+# - "private": VPC 내부에서만 사용하는 DNS Zone
+visibility = "public"
+
+# -----------------------------------------------------------------------------
+# Private DNS Zone 설정 (visibility = "private"일 때만 사용)
+# -----------------------------------------------------------------------------
+
+# Private Zone이 접근 가능한 VPC 네트워크 self-link 목록
+# 비워두면 naming 모듈의 기본 VPC 사용
+# 예:
+# private_networks = [
+#   "projects/my-project/global/networks/my-vpc"
+# ]
+private_networks = []
+
+# -----------------------------------------------------------------------------
+# DNSSEC 설정 (Public Zone에서만 사용 가능)
+# -----------------------------------------------------------------------------
+
+# DNSSEC 활성화 여부
+# Public Zone에서 도메인 보안 강화를 위해 사용
+enable_dnssec = false
+
+# DNSSEC 키 사양 (기본값 사용 권장)
+# dnssec_key_specs = [
+#   {
+#     algorithm  = "rsasha256"
+#     key_length = 2048
+#     key_type   = "keySigning"
+#   },
+#   {
+#     algorithm  = "rsasha256"
+#     key_length = 2048
+#     key_type   = "zoneSigning"
+#   }
+# ]
+
+# -----------------------------------------------------------------------------
+# DNS Forwarding 설정 (Private Zone)
+# -----------------------------------------------------------------------------
+
+# Forwarding 대상 DNS 서버 목록
+# Private Zone에서 특정 도메인 쿼리를 외부 DNS로 전달
+# 온프레미스 DNS 서버와 연동 시 사용
+# 예:
+# target_name_servers = [
+#   {
+#     ipv4_address    = "192.168.1.10"
+#     forwarding_path = "default"
+#   },
+#   {
+#     ipv4_address    = "192.168.1.11"
+#     forwarding_path = "default"
+#   }
+# ]
+target_name_servers = []
+
+# -----------------------------------------------------------------------------
+# DNS Peering 설정 (Private Zone)
+# -----------------------------------------------------------------------------
+
+# Peering할 VPC 네트워크 self-link
+# 다른 프로젝트/VPC의 DNS Zone과 연결
+# Shared VPC 환경이나 중앙 집중식 DNS 관리 시 사용
+# 예:
+# peering_network = "projects/shared-services/global/networks/shared-vpc"
+peering_network = ""
+
+# -----------------------------------------------------------------------------
+# DNS 레코드 설정
+# -----------------------------------------------------------------------------
+
+# 생성할 DNS 레코드 목록
+# 주의: 모든 레코드 이름은 반드시 마침표(.)로 끝나야 함
+dns_records = [
+  # A 레코드 (도메인 → IPv4 주소)
+  {
+    name    = "example.com."
+    type    = "A"
+    ttl     = 300
+    rrdatas = ["203.0.113.1"]
+  },
+
+  # CNAME 레코드 (별칭)
+  {
+    name    = "www.example.com."
+    type    = "CNAME"
+    ttl     = 300
+    rrdatas = ["example.com."]
+  },
+
+  # 추가 레코드 예제:
+
+  # MX 레코드 (메일 서버)
+  # {
+  #   name    = "example.com."
+  #   type    = "MX"
+  #   ttl     = 300
+  #   rrdatas = [
+  #     "10 mail1.example.com.",
+  #     "20 mail2.example.com."
+  #   ]
+  # },
+
+  # TXT 레코드 (SPF, DKIM 등)
+  # {
+  #   name    = "example.com."
+  #   type    = "TXT"
+  #   ttl     = 300
+  #   rrdatas = ["v=spf1 include:_spf.google.com ~all"]
+  # },
+
+  # AAAA 레코드 (IPv6 주소)
+  # {
+  #   name    = "example.com."
+  #   type    = "AAAA"
+  #   ttl     = 300
+  #   rrdatas = ["2001:db8::1"]
+  # },
+]
+
+# -----------------------------------------------------------------------------
+# DNS Policy 설정 (고급 설정)
+# -----------------------------------------------------------------------------
+
+# DNS Policy 생성 여부
+# Private Zone에서 고급 DNS 기능 사용 시 활성화
+create_dns_policy = false
+
+# DNS Policy 이름
+dns_policy_name = ""
+
+# DNS Policy 설명
+dns_policy_description = ""
+
+# Inbound DNS Forwarding 활성화
+# 외부(온프레미스 등)에서 VPC의 DNS로 쿼리 가능하게 함
+enable_inbound_forwarding = false
+
+# DNS 쿼리 로깅 활성화
+# Cloud Logging으로 DNS 쿼리 기록
+enable_dns_logging = false
+
+# 대체 네임서버 목록
+# Google의 기본 DNS 대신 사용할 DNS 서버 지정
+# 예:
+# alternative_name_servers = [
+#   {
+#     ipv4_address    = "8.8.8.8"
+#     forwarding_path = "default"
+#   },
+#   {
+#     ipv4_address    = "8.8.4.4"
+#     forwarding_path = "default"
+#   }
+# ]
+alternative_name_servers = []
+
+# DNS Policy가 적용될 VPC 네트워크 목록
+# 예:
+# dns_policy_networks = [
+#   "projects/my-project/global/networks/my-vpc"
+# ]
+dns_policy_networks = []
+
+# -----------------------------------------------------------------------------
+# 라벨
+# -----------------------------------------------------------------------------
+
+# 추가 라벨 (naming 모듈의 공통 라벨과 병합됨)
+labels = {
+  tier        = "dns"
+  app         = "default-templet"
+  cost-center = "engineering"
+}
+
+# =============================================================================
+# 사용 시나리오별 예제
+# =============================================================================
+
+# 시나리오 1: Public DNS Zone (웹사이트)
+# -----------------------------------------------------------------------------
+# zone_name   = ""
+# dns_name    = "mywebsite.com."
+# visibility  = "public"
+# enable_dnssec = true
+# dns_records = [
+#   {
+#     name    = "mywebsite.com."
+#     type    = "A"
+#     ttl     = 300
+#     rrdatas = ["203.0.113.1"]  # 웹서버 IP
+#   },
+#   {
+#     name    = "www.mywebsite.com."
+#     type    = "CNAME"
+#     ttl     = 300
+#     rrdatas = ["mywebsite.com."]
+#   }
+# ]
+
+# 시나리오 2: Private DNS Zone (내부 서비스)
+# -----------------------------------------------------------------------------
+# zone_name   = ""
+# dns_name    = "internal.local."
+# visibility  = "private"
+# private_networks = [
+#   "projects/my-project/global/networks/my-vpc"
+# ]
+# dns_records = [
+#   {
+#     name    = "app.internal.local."
+#     type    = "A"
+#     ttl     = 300
+#     rrdatas = ["10.0.1.10"]  # 내부 앱 서버
+#   },
+#   {
+#     name    = "db.internal.local."
+#     type    = "A"
+#     ttl     = 300
+#     rrdatas = ["10.0.2.20"]  # 내부 DB 서버
+#   }
+# ]
+
+# 시나리오 3: Hybrid DNS (온프레미스 연동)
+# -----------------------------------------------------------------------------
+# zone_name   = ""
+# dns_name    = "onprem.local."
+# visibility  = "private"
+# private_networks = [
+#   "projects/my-project/global/networks/my-vpc"
+# ]
+# target_name_servers = [
+#   {
+#     ipv4_address    = "192.168.1.10"  # 온프레미스 DNS
+#     forwarding_path = "default"
+#   }
+# ]
