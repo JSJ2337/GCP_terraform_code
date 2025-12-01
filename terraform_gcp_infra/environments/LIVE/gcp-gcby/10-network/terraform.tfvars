@@ -31,7 +31,7 @@ firewall_rules = [
     ranges         = ["35.235.240.0/20"] # IAP range
     allow_protocol = "tcp"
     allow_ports    = ["22"]
-    target_tags    = ["ssh-allowed"]
+    target_tags    = ["ssh-from-iap"]
     description    = "Allow SSH from Identity-Aware Proxy"
   },
   {
@@ -40,7 +40,7 @@ firewall_rules = [
     ranges         = ["10.250.10.0/24"] # mgmt VPC subnet
     allow_protocol = "tcp"
     allow_ports    = ["22"]
-    target_tags    = ["ssh-allowed"]
+    target_tags    = ["ssh-from-mgmt"]
     description    = "Allow SSH from mgmt VPC (jenkins, bastion)"
   },
   # DMZ zone internal communication
