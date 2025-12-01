@@ -145,3 +145,34 @@ variable "memorystore_psc_connection_limit" {
   description = "PSC 서비스 연결 정책에서 허용할 최대 연결 수"
   default     = 4
 }
+
+# Cloud SQL PSC Configuration
+variable "enable_cloudsql_psc_policy" {
+  type        = bool
+  description = "Cloud SQL용 Service Connection Policy 생성 여부"
+  default     = false
+}
+
+variable "cloudsql_psc_region" {
+  type        = string
+  description = "Cloud SQL PSC 정책을 생성할 리전 (비워두면 region_primary 사용)"
+  default     = ""
+}
+
+variable "cloudsql_psc_subnet_name" {
+  type        = string
+  description = "Cloud SQL PSC에서 IP를 할당할 서브넷 이름 (기본: private_subnet_name)"
+  default     = ""
+}
+
+variable "cloudsql_psc_policy_name" {
+  type        = string
+  description = "Cloud SQL Service Connection Policy 이름 (비워두면 자동 생성)"
+  default     = ""
+}
+
+variable "cloudsql_psc_connection_limit" {
+  type        = number
+  description = "Cloud SQL PSC 서비스 연결 정책에서 허용할 최대 연결 수"
+  default     = 5
+}
