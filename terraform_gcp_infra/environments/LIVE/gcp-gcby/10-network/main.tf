@@ -77,6 +77,12 @@ locals {
   memorystore_psc_subnet_self_link = local.memorystore_psc_subnet != null ? "projects/${var.project_id}/regions/${local.memorystore_psc_subnet.region}/subnetworks/${local.memorystore_psc_subnet_name}" : ""
   memorystore_psc_region           = length(trimspace(var.memorystore_psc_region)) > 0 ? var.memorystore_psc_region : module.naming.region_primary
   memorystore_psc_policy_name      = length(trimspace(var.memorystore_psc_policy_name)) > 0 ? var.memorystore_psc_policy_name : "${module.naming.vpc_name}-${local.memorystore_psc_region}-redis-psc"
+
+  cloudsql_psc_subnet_name      = length(trimspace(var.cloudsql_psc_subnet_name)) > 0 ? var.cloudsql_psc_subnet_name : local.private_subnet_name
+  cloudsql_psc_subnet           = try(local.requested_subnets[local.cloudsql_psc_subnet_name], null)
+  cloudsql_psc_subnet_self_link = local.cloudsql_psc_subnet != null ? "projects/${var.project_id}/regions/${local.cloudsql_psc_subnet.region}/subnetworks/${local.cloudsql_psc_subnet_name}" : ""
+  cloudsql_psc_region           = length(trimspace(var.cloudsql_psc_region)) > 0 ? var.cloudsql_psc_region : module.naming.region_primary
+  cloudsql_psc_policy_name      = length(trimspace(var.cloudsql_psc_policy_name)) > 0 ? var.cloudsql_psc_policy_name : "${module.naming.vpc_name}-${local.cloudsql_psc_region}-cloudsql-psc"
 }
 
 module "net" {
@@ -170,6 +176,33 @@ resource "google_network_connectivity_service_connection_policy" "memorystore_ps
     precondition {
       condition     = local.memorystore_psc_subnet_self_link != ""
       error_message = "memorystore_psc_subnet_name must reference an existing subnet in additional_subnets."
+    }
+  }
+}
+
+# Cloud SQL Private Service Connect Policy
+resource "google_network_connectivity_service_connection_policy" "cloudsql_psc" {
+  count         = var.enable_cloudsql_psc_policy ? 1 : 0
+  project       = var.project_id
+  location      = local.cloudsql_psc_region
+  name          = local.cloudsql_psc_policy_name
+  service_class = "gcp-cloud-sql"
+  network       = "projects/${var.project_id}/global/networks/${module.naming.vpc_name}"
+
+  psc_config {
+    subnetworks = [local.cloudsql_psc_subnet_self_link]
+    limit       = var.cloudsql_psc_connection_limit
+  }
+
+  depends_on = [
+    module.net,
+    time_sleep.wait_networkconnectivity_api
+  ]
+
+  lifecycle {
+    precondition {
+      condition     = local.cloudsql_psc_subnet_self_link != ""
+      error_message = "cloudsql_psc_subnet_name must reference an existing subnet in additional_subnets."
     }
   }
 }

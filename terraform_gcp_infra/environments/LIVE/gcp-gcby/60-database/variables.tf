@@ -124,8 +124,14 @@ variable "ipv4_enabled" {
 
 variable "private_network" {
   type        = string
-  description = "VPC 네트워크 셀프 링크"
+  description = "VPC 네트워크 셀프 링크 (VPC Peering 방식)"
   default     = ""
+}
+
+variable "enable_psc" {
+  type        = bool
+  description = "Private Service Connect 활성화 (true: PSC Endpoint, false: VPC Peering)"
+  default     = false
 }
 
 # Note: require_ssl is deprecated in Google provider 7.x+

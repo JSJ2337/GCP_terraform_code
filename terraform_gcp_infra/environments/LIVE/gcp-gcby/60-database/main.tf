@@ -86,6 +86,7 @@ module "mysql" {
   # Network configuration
   ipv4_enabled    = var.ipv4_enabled
   private_network = local.private_network
+  enable_psc      = var.enable_psc  # PSC Endpoint 활성화
   # require_ssl is deprecated in Google provider 7.x+
   authorized_networks = var.authorized_networks
 

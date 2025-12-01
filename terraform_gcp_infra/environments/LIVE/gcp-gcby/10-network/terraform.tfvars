@@ -17,10 +17,11 @@ additional_subnets = [
 # Subnet 이름은 terragrunt.hcl에서 자동 생성
 # 형식: {project_name}-subnet-dmz, {project_name}-subnet-private
 
-# Private Service Connection (Cloud SQL, Redis 등 Managed Service용)
-# 10.10.12.0/24 대역을 PSC 전용으로 사용
-private_service_connection_address = "10.10.12.0"
-private_service_connection_prefix_length = 24
+# Private Service Connection (VPC Peering 방식) - DISABLED
+# PSC Endpoint 방식으로 전환하여 더 이상 사용하지 않음
+enable_private_service_connection = false
+# private_service_connection_address = "10.10.12.0"
+# private_service_connection_prefix_length = 24
 
 # Cloud NAT configuration
 nat_min_ports_per_vm = 1024
@@ -89,5 +90,11 @@ firewall_rules = [
 # Memorystore Enterprise용 PSC 자동 구성
 enable_memorystore_psc_policy = true
 # memorystore_psc_region은 terragrunt.hcl에서 region_primary 자동 주입
-# memorystore_psc_subnet_name은 terragrunt.hcl에서 자동 생성
+# memorystore_psc_subnet_name은 terragrunt.hcl에서 자동 생성 (기본: private subnet)
 memorystore_psc_connection_limit = 8
+
+# Cloud SQL용 PSC Endpoint 구성 (Private subnet 전용 접근)
+enable_cloudsql_psc_policy = true
+# cloudsql_psc_region은 terragrunt.hcl에서 region_primary 자동 주입
+# cloudsql_psc_subnet_name은 terragrunt.hcl에서 자동 생성 (기본: private subnet)
+cloudsql_psc_connection_limit = 5  # Master + Read Replicas

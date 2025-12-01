@@ -72,8 +72,15 @@ resource "google_sql_database_instance" "instance" {
 
     # IP 설정
     ip_configuration {
-      ipv4_enabled    = var.ipv4_enabled
-      private_network = var.private_network
+      ipv4_enabled = var.ipv4_enabled
+
+      # PSC 방식: psc_config 사용, private_network 미사용
+      # VPC Peering 방식: private_network 사용, psc_config 미사용
+      private_network = var.enable_psc ? null : (length(trimspace(var.private_network)) > 0 ? var.private_network : null)
+
+      # PSC Endpoint 활성화
+      psc_enabled = var.enable_psc
+
       # 참고: 최신 Google Provider에서는 require_ssl이 deprecated 상태입니다.
       # SSL 인증서와 연결 정책을 대신 사용하세요.
 
@@ -176,10 +183,16 @@ resource "google_sql_database_instance" "read_replicas" {
       ]
       content {
         ipv4_enabled = ip_configuration.value.ipv4_enabled
-        private_network = (
+
+        # PSC 방식: private_network 미사용
+        # VPC Peering 방식: private_network 사용
+        private_network = var.enable_psc ? null : (
           try(length(trimspace(each.value.private_network)) > 0, false) ? each.value.private_network :
           (length(trimspace(var.private_network)) > 0 ? var.private_network : null)
         )
+
+        # PSC Endpoint 활성화 (Master 설정 상속)
+        psc_enabled = var.enable_psc
       }
     }
 
