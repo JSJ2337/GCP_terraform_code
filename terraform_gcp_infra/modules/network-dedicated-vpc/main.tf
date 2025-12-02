@@ -74,8 +74,9 @@ resource "google_compute_router_nat" "nat" {
   source_subnetwork_ip_ranges_to_nat  = length(var.nat_subnet_self_links) > 0 ? "LIST_OF_SUBNETWORKS" : "ALL_SUBNETWORKS_ALL_IP_RANGES"
   min_ports_per_vm                    = var.nat_min_ports_per_vm
   enable_endpoint_independent_mapping = true
-  # depends_on 제거: subnet 삭제 시 NAT 업데이트가 먼저 일어나야 하므로
-  # depends_on                          = [google_compute_subnetwork.subnets]
+  # depends_on 제거: Dynamic block의 implicit dependency 사용
+  # Terraform Best Practice: depends_on은 최후의 수단으로만 사용
+  # Reference: https://developer.hashicorp.com/terraform/tutorials/configuration-language/dependencies
 
   log_config {
     enable = true
@@ -88,11 +89,6 @@ resource "google_compute_router_nat" "nat" {
       name                    = subnetwork.value
       source_ip_ranges_to_nat = ["ALL_IP_RANGES"]
     }
-  }
-
-  lifecycle {
-    # NAT 업데이트가 subnet 삭제보다 먼저 일어나도록 보장
-    create_before_destroy = true
   }
 }
 
