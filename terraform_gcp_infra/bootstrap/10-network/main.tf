@@ -134,6 +134,20 @@ resource "google_compute_network_peering" "mgmt_to_gcby" {
 # -----------------------------------------------------------------------------
 # 6) PSC Endpoints for Cloud SQL
 # -----------------------------------------------------------------------------
+# Internal IP 주소 예약
+resource "google_compute_address" "psc_addresses" {
+  for_each = var.psc_endpoints
+
+  project      = var.management_project_id
+  name         = "${each.key}-psc-ip"
+  region       = each.value.region
+  subnetwork   = each.value.region == "us-west1" ? google_compute_subnetwork.mgmt_subnet_us_west1.id : google_compute_subnetwork.mgmt_subnet.id
+  address_type = "INTERNAL"
+  address      = each.value.ip_address
+  purpose      = "GCE_ENDPOINT"
+}
+
+# PSC Forwarding Rule
 resource "google_compute_forwarding_rule" "psc_endpoints" {
   for_each = var.psc_endpoints
 
@@ -141,7 +155,7 @@ resource "google_compute_forwarding_rule" "psc_endpoints" {
   name                  = "${each.key}-psc-fr"
   region                = each.value.region
   network               = google_compute_network.mgmt_vpc.id
-  ip_address            = each.value.ip_address
+  ip_address            = google_compute_address.psc_addresses[each.key].id
   load_balancing_scheme = ""
   target                = each.value.target_service_attachment
 
