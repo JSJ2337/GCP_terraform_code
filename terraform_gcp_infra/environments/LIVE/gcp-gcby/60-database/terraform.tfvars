@@ -35,10 +35,9 @@ authorized_networks = []
 
 # PSC Allowed Consumer Projects
 # 자기 프로젝트는 자동으로 포함됩니다 (data source)
-# 여기서는 mgmt 프로젝트(bastion)만 명시
-psc_allowed_consumer_projects = [
-  var.management_project_id  # mgmt 프로젝트 (bastion에서 접근)
-]
+# mgmt 프로젝트는 root.hcl에서 자동 추가됩니다 (main.tf의 local 변수)
+# 추가 프로젝트가 필요한 경우에만 여기에 명시
+psc_allowed_consumer_projects = []
 
 # Maintenance window
 maintenance_window_day          = 7 # Sunday

@@ -42,6 +42,12 @@ locals {
       }
     )
   }
+
+  # PSC allowed projects: management project 자동 추가
+  psc_allowed_projects = distinct(concat(
+    var.psc_allowed_consumer_projects,
+    [var.management_project_id]
+  ))
 }
 
 provider "google" {
@@ -87,7 +93,7 @@ module "mysql" {
   ipv4_enabled                  = var.ipv4_enabled
   private_network               = local.private_network
   enable_psc                    = var.enable_psc
-  psc_allowed_consumer_projects = var.psc_allowed_consumer_projects
+  psc_allowed_consumer_projects = local.psc_allowed_projects
   # require_ssl is deprecated in Google provider 7.x+
   authorized_networks = var.authorized_networks
 
