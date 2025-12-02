@@ -139,7 +139,7 @@ resource "google_compute_address" "psc_addresses" {
   for_each = var.psc_endpoints
 
   project      = var.management_project_id
-  name         = "${each.key}-psc-ip"
+  name         = "${each.key}-psc"  # 기존 리소스 이름과 일치 (gcby-cloudsql-psc)
   region       = each.value.region
   subnetwork   = each.value.region == "us-west1" ? google_compute_subnetwork.mgmt_subnet_us_west1.id : google_compute_subnetwork.mgmt_subnet.id
   address_type = "INTERNAL"
