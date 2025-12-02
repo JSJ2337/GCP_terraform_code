@@ -33,6 +33,13 @@ ipv4_enabled        = false # No Public IP
 enable_psc          = true  # PSC Endpoint (Private subnet only access)
 authorized_networks = []
 
+# PSC Allowed Consumer Projects
+# mgmt 프로젝트(bastion)에서 이 Cloud SQL에 접근할 수 있도록 허용
+psc_allowed_consumer_projects = [
+  "gcp-gcby",         # 자기 프로젝트 (Private subnet에서 접근)
+  "delabs-gcp-mgmt"   # mgmt 프로젝트 (bastion에서 접근)
+]
+
 # Maintenance window
 maintenance_window_day          = 7 # Sunday
 maintenance_window_hour         = 3 # 03:00
