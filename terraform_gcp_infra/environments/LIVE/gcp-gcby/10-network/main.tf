@@ -98,8 +98,7 @@ module "net" {
   nat_min_ports_per_vm = var.nat_min_ports_per_vm
   nat_subnet_self_links = compact([
     local.dmz_subnet_self_link,
-    local.private_subnet_self_link,
-    local.db_subnet_self_link
+    local.private_subnet_self_link
   ])
 
   firewall_rules = var.firewall_rules
