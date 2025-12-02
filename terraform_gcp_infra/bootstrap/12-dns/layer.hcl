@@ -47,10 +47,10 @@ locals {
     "gcby-cloudsql" = {
       name               = "gcby-cloudsql-psc"
       region             = "us-west1"
-      subnetwork         = "projects/delabs-gcp-mgmt/regions/us-west1/subnetworks/delabs-gcp-mgmt-subnet"
+      subnetwork         = "projects/delabs-gcp-mgmt/regions/us-west1/subnetworks/delabs-gcp-mgmt-subnet-us-west1"
       service_attachment = "projects/va89486946f7d978dp-tp/regions/us-west1/serviceAttachments/a-be04a6986d44-psc-service-attachment-a54302c8eccd8399"
       dns_name           = "gcby-live-gdb-m1"
-      ip_address         = "10.250.10.20"  # mgmt subnet 내 IP 할당
+      ip_address         = "10.250.20.20"  # us-west1 subnet 내 IP 할당
     }
 
     # 향후 다른 프로젝트 추가 시 여기에 추가

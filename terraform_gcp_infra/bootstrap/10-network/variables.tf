@@ -14,9 +14,15 @@ variable "region_primary" {
 }
 
 variable "subnet_cidr" {
-  description = "관리용 Subnet CIDR"
+  description = "관리용 Subnet CIDR (asia-northeast3)"
   type        = string
   default     = "10.0.0.0/24"
+}
+
+variable "subnet_cidr_us_west1" {
+  description = "us-west1 Subnet CIDR (PSC Endpoint용)"
+  type        = string
+  default     = "10.0.1.0/24"
 }
 
 variable "labels" {

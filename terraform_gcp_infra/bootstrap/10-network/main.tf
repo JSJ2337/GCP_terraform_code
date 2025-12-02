@@ -20,8 +20,9 @@ resource "google_compute_network" "mgmt_vpc" {
 }
 
 # -----------------------------------------------------------------------------
-# 2) Subnet
+# 2) Subnets
 # -----------------------------------------------------------------------------
+# Primary subnet (asia-northeast3)
 resource "google_compute_subnetwork" "mgmt_subnet" {
   project       = var.management_project_id
   name          = local.subnet_name
@@ -38,9 +39,27 @@ resource "google_compute_subnetwork" "mgmt_subnet" {
   }
 }
 
+# us-west1 subnet (PSC Endpoint용)
+resource "google_compute_subnetwork" "mgmt_subnet_us_west1" {
+  project       = var.management_project_id
+  name          = "${var.management_project_id}-subnet-us-west1"
+  ip_cidr_range = var.subnet_cidr_us_west1
+  region        = "us-west1"
+  network       = google_compute_network.mgmt_vpc.id
+
+  private_ip_google_access = true
+
+  log_config {
+    aggregation_interval = "INTERVAL_5_SEC"
+    flow_sampling        = 0.5
+    metadata             = "INCLUDE_ALL_METADATA"
+  }
+}
+
 # -----------------------------------------------------------------------------
-# 3) Cloud Router (NAT용)
+# 3) Cloud Routers (NAT용, 리전별)
 # -----------------------------------------------------------------------------
+# Primary region (asia-northeast3) Router
 resource "google_compute_router" "mgmt_router" {
   project = var.management_project_id
   name    = "${var.management_project_id}-router"
@@ -52,9 +71,22 @@ resource "google_compute_router" "mgmt_router" {
   }
 }
 
+# us-west1 Router
+resource "google_compute_router" "mgmt_router_us_west1" {
+  project = var.management_project_id
+  name    = "${var.management_project_id}-router-us-west1"
+  region  = "us-west1"
+  network = google_compute_network.mgmt_vpc.id
+
+  bgp {
+    asn = 64515
+  }
+}
+
 # -----------------------------------------------------------------------------
-# 4) Cloud NAT
+# 4) Cloud NATs (리전별)
 # -----------------------------------------------------------------------------
+# Primary region (asia-northeast3) NAT
 resource "google_compute_router_nat" "mgmt_nat" {
   project = var.management_project_id
   name    = "${var.management_project_id}-nat"
@@ -67,6 +99,22 @@ resource "google_compute_router_nat" "mgmt_nat" {
   log_config {
     enable = true
     filter = "ALL"  # 모든 NAT 로그 수집 (트러블슈팅용)
+  }
+}
+
+# us-west1 NAT
+resource "google_compute_router_nat" "mgmt_nat_us_west1" {
+  project = var.management_project_id
+  name    = "${var.management_project_id}-nat-us-west1"
+  router  = google_compute_router.mgmt_router_us_west1.name
+  region  = "us-west1"
+
+  nat_ip_allocate_option             = "AUTO_ONLY"
+  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+
+  log_config {
+    enable = true
+    filter = "ALL"
   }
 }
 

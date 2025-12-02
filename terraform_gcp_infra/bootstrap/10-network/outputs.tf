@@ -46,3 +46,19 @@ output "nat_name" {
   description = "Cloud NAT 이름"
   value       = google_compute_router_nat.mgmt_nat.name
 }
+
+# us-west1 subnet outputs
+output "subnet_us_west1_id" {
+  description = "us-west1 Subnet ID"
+  value       = google_compute_subnetwork.mgmt_subnet_us_west1.id
+}
+
+output "subnet_us_west1_name" {
+  description = "us-west1 Subnet 이름"
+  value       = google_compute_subnetwork.mgmt_subnet_us_west1.name
+}
+
+output "subnet_us_west1_self_link" {
+  description = "us-west1 Subnet Self Link"
+  value       = google_compute_subnetwork.mgmt_subnet_us_west1.self_link
+}
