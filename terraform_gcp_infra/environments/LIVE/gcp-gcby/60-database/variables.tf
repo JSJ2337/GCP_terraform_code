@@ -134,6 +134,12 @@ variable "enable_psc" {
   default     = false
 }
 
+variable "psc_allowed_consumer_projects" {
+  type        = list(string)
+  description = "PSC 엔드포인트 생성을 허용할 프로젝트 ID 목록 (자기 프로젝트 + mgmt 프로젝트 등)"
+  default     = []
+}
+
 # Note: require_ssl is deprecated in Google provider 7.x+
 # variable "require_ssl" {
 #   type        = bool
