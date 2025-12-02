@@ -493,7 +493,7 @@ resource "google_network_connectivity_service_connection_policy" "cloudsql_psc" 
   project       = var.project_id
   location      = local.cloudsql_psc_region
   name          = local.cloudsql_psc_policy_name
-  service_class = "gcp-cloud-sql"  # Cloud SQL 서비스
+  service_class = "google-cloud-sql"  # 올바른 service class 이름
   network       = "projects/${var.project_id}/global/networks/${module.naming.vpc_name}"
 
   psc_config {
@@ -625,6 +625,260 @@ mysql -h <PSC_ENDPOINT_IP> -u root -p
 ⚠️ **API 활성화:**
 - `networkconnectivity.googleapis.com` 필수
 - 10-network에서 자동 활성화 및 대기 시간 확보
+
+---
+
+## Private Service Connection IP 대역 사용자 지정
+
+### 개요
+
+VPC Peering 방식의 Private Service Connection은 IP 대역을 명시적으로 지정할 수 있습니다.
+
+### 기본 vs 사용자 지정
+
+| 방식 | IP 대역 | 관리 |
+|------|--------|------|
+| **자동 할당** | 10.201.x.0/24 (GCP 자동) | GCP 관리 |
+| **사용자 지정** | 10.10.12.0/24 (명시) | 사용자 관리 |
+
+### 설정 방법
+
+**파일:** `environments/LIVE/gcp-gcby/10-network/terraform.tfvars`
+
+```hcl
+# Private Service Connection (VPC Peering 방식)
+# Cloud SQL 등의 관리형 서비스가 사용할 IP 대역
+enable_private_service_connection = true
+private_service_connection_address = "10.10.12.0"
+private_service_connection_prefix_length = 24
+```
+
+**파일:** `modules/network-dedicated-vpc/main.tf`
+
+```hcl
+resource "google_compute_global_address" "private_service_connect" {
+  count        = var.enable_private_service_connection ? 1 : 0
+  name         = local.private_service_connection_name
+  project      = var.project_id
+  purpose      = "VPC_PEERING"
+  address_type = "INTERNAL"
+
+  address       = var.private_service_connection_address  # 명시적 지정
+  prefix_length = var.private_service_connection_prefix_length
+  network       = google_compute_network.vpc.id
+}
+```
+
+### 장점
+
+- **일관성**: 프로젝트 간 통일된 IP 체계
+- **예측 가능**: 미리 할당된 IP 대역 사용
+- **관리 편의**: IP 충돌 방지 및 문서화 용이
+
+---
+
+## Cross-Project PSC 접근 (mgmt → gcp-gcby)
+
+### 개요
+
+mgmt VPC의 bastion 호스트에서 다른 프로젝트의 Cloud SQL에 PSC를 통해 접근합니다.
+
+### 아키텍처
+
+```text
+mgmt VPC (delabs-gcp-mgmt)
+  └─ bastion (10.250.10.6)
+      ↓ PSC Endpoint
+      ↓ Forwarding Rule → Service Attachment
+      ↓
+gcp-gcby 프로젝트
+  └─ Cloud SQL (PSC Endpoint)
+      └─ allowed_consumer_projects = ["delabs-gcp-mgmt"]
+```
+
+### 1. Cloud SQL 설정 (gcp-gcby)
+
+**파일:** `environments/LIVE/gcp-gcby/60-database/terraform.tfvars`
+
+```hcl
+enable_psc = true
+psc_allowed_consumer_projects = [
+  "gcp-gcby",         # 자기 프로젝트
+  "delabs-gcp-mgmt"   # mgmt 프로젝트 (bastion 접근용)
+]
+```
+
+**파일:** `modules/cloudsql-mysql/main.tf`
+
+```hcl
+ip_configuration {
+  dynamic "psc_config" {
+    for_each = var.enable_psc ? [1] : []
+    content {
+      psc_enabled               = true
+      allowed_consumer_projects = var.psc_allowed_consumer_projects
+    }
+  }
+}
+```
+
+### 2. PSC 리전 제약사항
+
+⚠️ **중요: PSC Endpoint는 Service Attachment와 동일 리전에 있어야 합니다.**
+
+```text
+❌ 지원 안 됨:
+Cloud SQL (us-west1) ←→ PSC Endpoint (asia-northeast3)
+
+✅ 지원됨:
+Cloud SQL (us-west1) ←→ PSC Endpoint (us-west1)
+```
+
+**해결 방법:**
+- mgmt VPC에 Cloud SQL과 동일한 리전의 서브넷 생성
+- PSC Endpoint는 해당 서브넷에 생성
+
+### 3. mgmt VPC 멀티리전 서브넷 구성
+
+**파일:** `bootstrap/10-network/layer.hcl`
+
+```hcl
+locals {
+  # Primary Subnet (asia-northeast3)
+  subnet_cidr = "10.250.10.0/24"
+
+  # us-west1 Subnet (PSC Endpoint용)
+  subnet_cidr_us_west1 = "10.250.20.0/24"
+}
+```
+
+**파일:** `bootstrap/10-network/main.tf`
+
+```hcl
+# Primary subnet (asia-northeast3)
+resource "google_compute_subnetwork" "mgmt_subnet" {
+  name          = "${var.management_project_id}-subnet"
+  ip_cidr_range = var.subnet_cidr
+  region        = var.region_primary  # asia-northeast3
+  network       = google_compute_network.mgmt_vpc.id
+}
+
+# us-west1 subnet (PSC Endpoint용)
+resource "google_compute_subnetwork" "mgmt_subnet_us_west1" {
+  name          = "${var.management_project_id}-subnet-us-west1"
+  ip_cidr_range = var.subnet_cidr_us_west1
+  region        = "us-west1"
+  network       = google_compute_network.mgmt_vpc.id
+}
+
+# 각 리전별 Router 및 NAT 필요
+resource "google_compute_router" "mgmt_router_us_west1" {
+  name    = "${var.management_project_id}-router-us-west1"
+  region  = "us-west1"
+  network = google_compute_network.mgmt_vpc.id
+}
+
+resource "google_compute_router_nat" "mgmt_nat_us_west1" {
+  name   = "${var.management_project_id}-nat-us-west1"
+  router = google_compute_router.mgmt_router_us_west1.name
+  region = "us-west1"
+
+  nat_ip_allocate_option             = "AUTO_ONLY"
+  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
+}
+```
+
+### 4. mgmt VPC PSC Endpoint 설정
+
+**파일:** `bootstrap/12-dns/main.tf`
+
+```hcl
+# PSC Endpoint IP 예약
+resource "google_compute_address" "psc_endpoints" {
+  for_each = var.psc_endpoints
+
+  project      = var.management_project_id
+  name         = each.value.name
+  address_type = "INTERNAL"
+  purpose      = "GCE_ENDPOINT"
+  region       = each.value.region
+  subnetwork   = each.value.subnetwork
+  address      = try(each.value.ip_address, null)
+}
+
+# PSC Forwarding Rule (Service Attachment 연결)
+resource "google_compute_forwarding_rule" "psc_endpoints" {
+  for_each = var.psc_endpoints
+
+  project               = var.management_project_id
+  name                  = "${each.value.name}-fr"
+  region                = each.value.region
+  network               = var.vpc_self_link
+  ip_address            = google_compute_address.psc_endpoints[each.key].id
+  load_balancing_scheme = ""
+  target                = each.value.service_attachment
+}
+
+# DNS 레코드 자동 생성
+resource "google_dns_record_set" "psc_endpoint_records" {
+  for_each = var.psc_endpoints
+
+  project      = var.management_project_id
+  managed_zone = google_dns_managed_zone.private.name
+  name         = "${each.value.dns_name}.${var.dns_domain}"
+  type         = "A"
+  ttl          = 300
+  rrdatas      = [google_compute_address.psc_endpoints[each.key].address]
+}
+```
+
+**파일:** `bootstrap/12-dns/layer.hcl`
+
+```hcl
+psc_endpoints = {
+  "gcby-cloudsql" = {
+    name               = "gcby-cloudsql-psc"
+    region             = "us-west1"  # Cloud SQL과 동일 리전
+    subnetwork         = "projects/delabs-gcp-mgmt/regions/us-west1/subnetworks/delabs-gcp-mgmt-subnet-us-west1"  # us-west1 서브넷 사용
+    service_attachment = "projects/va89486946f7d978dp-tp/regions/us-west1/serviceAttachments/a-be04a6986d44-psc-service-attachment-a54302c8eccd8399"
+    dns_name           = "gcby-live-gdb-m1"  # 인스턴스 이름과 일치
+    ip_address         = "10.250.20.20"  # us-west1 서브넷 대역 내 IP
+  }
+}
+```
+
+### 5. Service Attachment URI 확인
+
+Cloud SQL 생성 후:
+
+```bash
+gcloud sql instances describe gcby-live-gdb-m1 \
+  --project=gcp-gcby \
+  --format="value(pscServiceAttachmentLink)"
+```
+
+### 6. Bastion 접속 테스트
+
+```bash
+# Bastion에 SSH 접속
+gcloud compute ssh bastion --project=delabs-gcp-mgmt
+
+# DNS 해석 확인
+nslookup gcby-live-gdb-m1.delabsgames.internal
+# 예상 결과: 10.250.20.20
+
+# 네트워크 연결 테스트
+nc -zv gcby-live-gdb-m1.delabsgames.internal 3306
+
+# MySQL 접속 (사용자 계정 생성 후)
+mysql -h gcby-live-gdb-m1.delabsgames.internal -u user -p
+```
+
+### 보안 효과
+
+- **프로젝트 격리**: mgmt 프로젝트는 allowed list에 명시적으로 추가된 경우만 접근 가능
+- **네트워크 격리**: PSC Endpoint를 통한 제어된 접근
+- **중앙 관리**: mgmt VPC에서 모든 프로젝트 DB 관리
 
 ---
 
