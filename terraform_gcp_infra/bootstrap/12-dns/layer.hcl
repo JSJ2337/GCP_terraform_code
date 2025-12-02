@@ -49,7 +49,7 @@ locals {
       region             = "us-west1"
       subnetwork         = "projects/delabs-gcp-mgmt/regions/us-west1/subnetworks/delabs-gcp-mgmt-subnet"
       service_attachment = "projects/va89486946f7d978dp-tp/regions/us-west1/serviceAttachments/a-be04a6986d44-psc-service-attachment-a54302c8eccd8399"
-      dns_name           = "gcby-db"
+      dns_name           = "gcby-gdb-m1"
       ip_address         = "10.250.10.20"  # mgmt subnet 내 IP 할당
     }
 
