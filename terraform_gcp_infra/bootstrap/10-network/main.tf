@@ -131,3 +131,21 @@ resource "google_compute_network_peering" "mgmt_to_gcby" {
   export_custom_routes = true
 }
 
+# -----------------------------------------------------------------------------
+# 6) PSC Endpoints for Cloud SQL
+# -----------------------------------------------------------------------------
+resource "google_compute_forwarding_rule" "psc_endpoints" {
+  for_each = var.psc_endpoints
+
+  project               = var.management_project_id
+  name                  = "${each.key}-psc-fr"
+  region                = each.value.region
+  network               = google_compute_network.mgmt_vpc.id
+  ip_address            = each.value.ip_address
+  load_balancing_scheme = ""
+  target                = each.value.target_service_attachment
+
+  # Cross-region access 활성화 (Global Access)
+  allow_psc_global_access = each.value.allow_global_access
+}
+

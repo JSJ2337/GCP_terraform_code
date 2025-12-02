@@ -30,3 +30,14 @@ variable "labels" {
   type        = map(string)
   default     = {}
 }
+
+variable "psc_endpoints" {
+  description = "PSC Endpoints for Cloud SQL instances"
+  type = map(object({
+    region                    = string
+    ip_address                = string
+    target_service_attachment = string
+    allow_global_access       = bool
+  }))
+  default = {}
+}
