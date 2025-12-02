@@ -83,7 +83,7 @@ resource "google_sql_database_instance" "instance" {
         for_each = var.enable_psc ? [1] : []
         content {
           psc_enabled               = true
-          allowed_consumer_projects = []
+          allowed_consumer_projects = var.psc_allowed_consumer_projects
         }
       }
 

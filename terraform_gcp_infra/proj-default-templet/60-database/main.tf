@@ -84,8 +84,10 @@ module "mysql" {
   backup_retained_count          = var.backup_retained_count
 
   # Network configuration
-  ipv4_enabled    = var.ipv4_enabled
-  private_network = local.private_network
+  ipv4_enabled                  = var.ipv4_enabled
+  private_network               = local.private_network
+  enable_psc                    = var.enable_psc
+  psc_allowed_consumer_projects = var.psc_allowed_consumer_projects
   # require_ssl is deprecated in Google provider 7.x+
   authorized_networks = var.authorized_networks
 

@@ -111,6 +111,12 @@ variable "enable_psc" {
   default     = false
 }
 
+variable "psc_allowed_consumer_projects" {
+  type        = list(string)
+  description = "PSC 엔드포인트 생성을 허용할 프로젝트 ID 목록 (자기 프로젝트 + mgmt 프로젝트)"
+  default     = []
+}
+
 # 참고: require_ssl은 Google Provider 7.x+에서 더 이상 지원되지 않습니다.
 # SSL 인증서와 연결 정책은 클라이언트에서 직접 관리하세요.
 # variable "require_ssl" {

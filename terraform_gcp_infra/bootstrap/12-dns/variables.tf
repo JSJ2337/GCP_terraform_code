@@ -47,3 +47,16 @@ variable "labels" {
   type        = map(string)
   default     = {}
 }
+
+variable "psc_endpoints" {
+  description = "Private Service Connect Endpoints (다른 프로젝트 Cloud SQL 등 접근용)"
+  type = map(object({
+    name               = string
+    region             = string
+    subnetwork         = string
+    service_attachment = string
+    dns_name           = string
+    ip_address         = optional(string)
+  }))
+  default = {}
+}

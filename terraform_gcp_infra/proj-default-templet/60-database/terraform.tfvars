@@ -33,6 +33,14 @@ ipv4_enabled        = false # No Public IP
 enable_psc          = true  # PSC Endpoint (Private subnet only access)
 authorized_networks = []
 
+# PSC Allowed Consumer Projects
+# mgmt 프로젝트에서 이 Cloud SQL에 PSC 엔드포인트를 생성하려면
+# 프로젝트 ID를 여기에 추가
+psc_allowed_consumer_projects = [
+  # "프로젝트ID",           # 자기 프로젝트
+  # "delabs-gcp-mgmt",      # mgmt 프로젝트 (bastion 접근용)
+]
+
 # Maintenance window
 maintenance_window_day          = 7 # Sunday
 maintenance_window_hour         = 3 # 03:00
