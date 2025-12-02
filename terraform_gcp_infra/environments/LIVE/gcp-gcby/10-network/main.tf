@@ -185,7 +185,7 @@ resource "google_network_connectivity_service_connection_policy" "cloudsql_psc" 
   project       = var.project_id
   location      = local.cloudsql_psc_region
   name          = local.cloudsql_psc_policy_name
-  service_class = "gcp-cloud-sql"
+  service_class = "google-cloud-sql"
   network       = "projects/${var.project_id}/global/networks/${module.naming.vpc_name}"
 
   psc_config {

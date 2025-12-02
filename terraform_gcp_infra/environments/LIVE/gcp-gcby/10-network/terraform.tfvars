@@ -94,10 +94,8 @@ enable_memorystore_psc_policy = true
 memorystore_psc_connection_limit = 8
 
 # Cloud SQL용 PSC Endpoint 구성 (Private subnet 전용 접근)
-# NOTE: Cloud SQL은 Service Connection Policy를 지원하지 않음
-# Cloud SQL은 VPC Peering 방식 또는 PSC Endpoint(다른 방식)를 사용
-# Service Connection Policy는 Memorystore 등 일부 서비스만 지원
-enable_cloudsql_psc_policy = false
+# Service class: google-cloud-sql
+enable_cloudsql_psc_policy = true
 # cloudsql_psc_region은 terragrunt.hcl에서 region_primary 자동 주입
 # cloudsql_psc_subnet_name은 terragrunt.hcl에서 자동 생성 (기본: private subnet)
 cloudsql_psc_connection_limit = 5  # Master + Read Replicas
