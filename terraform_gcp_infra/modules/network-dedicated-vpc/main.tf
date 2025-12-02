@@ -74,7 +74,8 @@ resource "google_compute_router_nat" "nat" {
   source_subnetwork_ip_ranges_to_nat  = length(var.nat_subnet_self_links) > 0 ? "LIST_OF_SUBNETWORKS" : "ALL_SUBNETWORKS_ALL_IP_RANGES"
   min_ports_per_vm                    = var.nat_min_ports_per_vm
   enable_endpoint_independent_mapping = true
-  depends_on                          = [google_compute_subnetwork.subnets]
+  # depends_on 제거: subnet 삭제 시 NAT 업데이트가 먼저 일어나야 하므로
+  # depends_on                          = [google_compute_subnetwork.subnets]
 
   log_config {
     enable = true
@@ -91,7 +92,6 @@ resource "google_compute_router_nat" "nat" {
 
   lifecycle {
     # NAT 업데이트가 subnet 삭제보다 먼저 일어나도록 보장
-    # subnet 목록 변경 시 NAT를 먼저 교체 (create_before_destroy)
     create_before_destroy = true
   }
 }
