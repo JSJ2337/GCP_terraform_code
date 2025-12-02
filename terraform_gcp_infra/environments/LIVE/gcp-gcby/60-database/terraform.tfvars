@@ -34,10 +34,10 @@ enable_psc          = true  # PSC Endpoint (Private subnet only access)
 authorized_networks = []
 
 # PSC Allowed Consumer Projects
-# mgmt 프로젝트(bastion)에서 이 Cloud SQL에 접근할 수 있도록 허용
+# 자기 프로젝트는 자동으로 포함됩니다 (data source)
+# 여기서는 mgmt 프로젝트(bastion)만 명시
 psc_allowed_consumer_projects = [
-  "gcp-gcby",         # 자기 프로젝트 (Private subnet에서 접근)
-  "delabs-gcp-mgmt"   # mgmt 프로젝트 (bastion에서 접근)
+  var.management_project_id  # mgmt 프로젝트 (bastion에서 접근)
 ]
 
 # Maintenance window

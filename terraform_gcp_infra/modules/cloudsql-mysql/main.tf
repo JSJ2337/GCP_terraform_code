@@ -12,9 +12,20 @@ terraform {
   }
 }
 
+# 현재 프로젝트 정보 (자동 참조)
+data "google_project" "current" {
+  project_id = var.project_id
+}
+
 # Cloud SQL 로깅 플래그 구성
 locals {
   existing_database_flag_names = toset([for flag in var.database_flags : flag.name])
+
+  # PSC allowed projects: 자기 프로젝트는 자동 포함
+  psc_allowed_projects = distinct(concat(
+    [data.google_project.current.project_id],  # 현재 프로젝트 자동 추가
+    var.psc_allowed_consumer_projects          # 사용자가 지정한 추가 프로젝트
+  ))
 
   # 기본 로깅 플래그 구성
   base_logging_flags = concat(
@@ -83,7 +94,7 @@ resource "google_sql_database_instance" "instance" {
         for_each = var.enable_psc ? [1] : []
         content {
           psc_enabled               = true
-          allowed_consumer_projects = var.psc_allowed_consumer_projects
+          allowed_consumer_projects = local.psc_allowed_projects
         }
       }
 
@@ -202,7 +213,7 @@ resource "google_sql_database_instance" "read_replicas" {
           for_each = var.enable_psc ? [1] : []
           content {
             psc_enabled               = true
-            allowed_consumer_projects = var.psc_allowed_consumer_projects
+            allowed_consumer_projects = local.psc_allowed_projects
           }
         }
       }

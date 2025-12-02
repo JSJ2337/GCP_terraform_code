@@ -27,6 +27,9 @@ inputs = {
   org_id          = "1034166519592"  # GCP Organization ID (delabsgames.gg)
   billing_account = "01B77E-0A986D-CB2651"
 
+  # 관리 프로젝트 ID (Cross-Project PSC 등에 사용)
+  management_project_id = "delabs-gcp-mgmt"
+
   # Bootstrap remote state 설정 (00-project에서 사용)
   # bootstrap이 레이어 구조로 되어 있어서 00-foundation을 참조
   bootstrap_state_bucket = local.remote_state_bucket

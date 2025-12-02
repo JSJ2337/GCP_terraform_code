@@ -281,3 +281,8 @@ variable "db_suffix" {
   description = "DB 인스턴스 이름 suffix (예: gdb, ldb, mysql)"
   default     = "mysql"
 }
+
+variable "management_project_id" {
+  type        = string
+  description = "관리 프로젝트 ID (Cross-Project PSC 등에 사용)"
+}

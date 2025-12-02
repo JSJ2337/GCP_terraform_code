@@ -34,11 +34,10 @@ enable_psc          = true  # PSC Endpoint (Private subnet only access)
 authorized_networks = []
 
 # PSC Allowed Consumer Projects
-# mgmt 프로젝트에서 이 Cloud SQL에 PSC 엔드포인트를 생성하려면
-# 프로젝트 ID를 여기에 추가
+# 자기 프로젝트는 자동으로 포함됩니다 (data source)
+# mgmt 프로젝트 접근을 허용하려면 주석 제거
 psc_allowed_consumer_projects = [
-  # "프로젝트ID",           # 자기 프로젝트
-  # "delabs-gcp-mgmt",      # mgmt 프로젝트 (bastion 접근용)
+  # var.management_project_id,  # mgmt 프로젝트 (bastion 접근용)
 ]
 
 # Maintenance window
