@@ -76,12 +76,10 @@ resource "google_compute_router_nat" "mgmt_nat" {
 # Peering to gcp-gcby project
 resource "google_compute_network_peering" "mgmt_to_gcby" {
   name         = "peering-mgmt-to-gcby"
-  network      = google_compute_network.mgmt_vpc.self_link
+  network      = google_compute_network.mgmt_vpc.self_link  # Implicit dependency
   peer_network = "projects/gcp-gcby/global/networks/gcby-live-vpc"
 
   import_custom_routes = true
   export_custom_routes = true
-
-  depends_on = [google_compute_network.mgmt_vpc]
 }
 

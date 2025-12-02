@@ -138,11 +138,9 @@ resource "google_service_networking_connection" "private_vpc_connection" {
   network = google_compute_network.vpc.self_link
   service = var.private_service_connection_service
 
-  reserved_peering_ranges = local.private_service_connection_reserved_ranges
+  reserved_peering_ranges = local.private_service_connection_reserved_ranges  # Implicit dependency
 
   # Terraform Provider Google 5.x 버그 우회: destroy 시 ABANDON으로 설정
   # VPC/프로젝트 삭제 시 자동으로 정리되므로 안전함
   deletion_policy = "ABANDON"
-
-  depends_on = [google_compute_global_address.private_service_connect]
 }

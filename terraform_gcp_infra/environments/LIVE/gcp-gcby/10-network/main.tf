@@ -209,11 +209,9 @@ resource "google_network_connectivity_service_connection_policy" "cloudsql_psc" 
 # VPC Peering to mgmt VPC for DNS resolution
 resource "google_compute_network_peering" "gcby_to_mgmt" {
   name         = "peering-gcby-to-mgmt"
-  network      = module.net.vpc_self_link
+  network      = module.net.vpc_self_link  # Implicit dependency
   peer_network = "projects/delabs-gcp-mgmt/global/networks/delabs-gcp-mgmt-vpc"
 
   import_custom_routes = true
   export_custom_routes = true
-
-  depends_on = [module.net]
 }
