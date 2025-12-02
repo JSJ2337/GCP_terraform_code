@@ -27,7 +27,7 @@ module "naming" {
 }
 
 locals {
-  subnet_types = ["dmz", "private", "db"]
+  subnet_types = ["dmz", "private"]
 
   normalized_subnets = [
     for idx, subnet in var.additional_subnets :

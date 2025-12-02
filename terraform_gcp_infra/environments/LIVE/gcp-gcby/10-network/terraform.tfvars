@@ -17,11 +17,11 @@ additional_subnets = [
 # Subnet 이름은 terragrunt.hcl에서 자동 생성
 # 형식: {project_name}-subnet-dmz, {project_name}-subnet-private
 
-# Private Service Connection (VPC Peering 방식) - DISABLED
-# PSC Endpoint 방식으로 전환하여 더 이상 사용하지 않음
-enable_private_service_connection = false
-# private_service_connection_address = "10.10.12.0"
-# private_service_connection_prefix_length = 24
+# Private Service Connection (VPC Peering 방식)
+# Cloud SQL 등의 관리형 서비스가 사용할 IP 대역
+enable_private_service_connection = true
+private_service_connection_address = "10.10.12.0"
+private_service_connection_prefix_length = 24
 
 # Cloud NAT configuration
 nat_min_ports_per_vm = 1024
