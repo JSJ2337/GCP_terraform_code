@@ -75,11 +75,14 @@ bootstrap/
 
 | 리소스 | 설명 |
 |--------|------|
-| VPC | `jsj-system-mgmt-mgmt-vpc` (auto_create_subnetworks: false) |
-| Subnet | `10.0.0.0/24` (private_ip_google_access: true) |
-| Cloud Router | NAT용 라우터 |
-| Cloud NAT | 아웃바운드 인터넷 액세스 |
+| VPC | `delabs-gcp-mgmt-vpc` (auto_create_subnetworks: false) |
+| Primary Subnet | `10.250.10.0/24` (asia-northeast3, private_ip_google_access: true) |
+| us-west1 Subnet | `10.250.20.0/24` (PSC Endpoint용) |
+| Cloud Router | 리전별 NAT용 라우터 (asia-northeast3, us-west1) |
+| Cloud NAT | 리전별 아웃바운드 인터넷 액세스 |
 | Firewall | IAP SSH, Jenkins 8080/443, 내부 통신 |
+| PSC Endpoints | Cross-Project Cloud SQL 접근용 (Global Access 지원) |
+| VPC Peering | gcp-gcby 프로젝트와 피어링 |
 
 ### 20-storage (스토리지)
 

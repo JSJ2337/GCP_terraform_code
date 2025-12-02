@@ -882,6 +882,109 @@ mysql -h gcby-live-gdb-m1.delabsgames.internal -u user -p
 
 ---
 
+## PSC Global Access (Cross-Region 접근)
+
+### 개요
+
+PSC Endpoint는 Service Attachment와 동일 리전에 있어야 하지만, **Global Access**를 활성화하면 다른 리전에서도 접근할 수 있습니다.
+
+### 아키텍처
+
+```text
+asia-northeast3 (Bastion 위치)
+  └─ bastion (10.250.10.6)
+       ↓ Global Access 활성화
+       ↓
+us-west1 (Cloud SQL 위치)
+  └─ PSC Forwarding Rule (10.250.20.20)
+       ↓ allow_psc_global_access = true
+       ↓
+gcp-gcby Cloud SQL (us-west1)
+```
+
+### 설정 방법
+
+**파일:** `bootstrap/10-network/layer.hcl`
+
+```hcl
+psc_endpoints = {
+  gcby-cloudsql = {
+    region                    = "us-west1"
+    ip_address                = "10.250.20.20"
+    target_service_attachment = "projects/.../serviceAttachments/..."
+    allow_global_access       = true  # Cross-region 활성화 ✅
+  }
+}
+```
+
+**파일:** `bootstrap/10-network/main.tf`
+
+```hcl
+# IP 주소 예약
+resource "google_compute_address" "psc_addresses" {
+  for_each = var.psc_endpoints
+
+  name         = "${each.key}-psc-ip"
+  region       = each.value.region
+  subnetwork   = each.value.region == "us-west1" ? google_compute_subnetwork.mgmt_subnet_us_west1.id : google_compute_subnetwork.mgmt_subnet.id
+  address_type = "INTERNAL"
+  address      = each.value.ip_address
+  purpose      = "GCE_ENDPOINT"
+}
+
+# PSC Forwarding Rule
+resource "google_compute_forwarding_rule" "psc_endpoints" {
+  for_each = var.psc_endpoints
+
+  name                    = "${each.key}-psc-fr"
+  region                  = each.value.region
+  network                 = google_compute_network.mgmt_vpc.id
+  ip_address              = google_compute_address.psc_addresses[each.key].id
+  load_balancing_scheme   = ""
+  target                  = each.value.target_service_attachment
+  allow_psc_global_access = each.value.allow_global_access  # ✅
+}
+```
+
+### 주요 포인트
+
+1. **PSC Endpoint 위치**: Service Attachment와 동일 리전 (us-west1)
+2. **Global Access**: Forwarding Rule에 `allow_psc_global_access = true` 설정
+3. **접근 가능**: 모든 리전의 VM에서 PSC Endpoint IP로 접근 가능
+4. **IP 주소 예약**: `google_compute_address` 리소스로 먼저 예약 (`purpose = "GCE_ENDPOINT"`)
+5. **Forwarding Rule**: 예약된 IP 주소 참조 (문자열 직접 지정 불가)
+
+### 검증
+
+```bash
+# Global Access 확인
+gcloud compute forwarding-rules describe gcby-cloudsql-psc-fr \
+  --region=us-west1 \
+  --project=delabs-gcp-mgmt \
+  --format="value(allowPscGlobalAccess)"
+# 예상 결과: True
+
+# Bastion (asia-northeast3)에서 Cloud SQL (us-west1) 접속 테스트
+gcloud compute ssh delabs-bastion --project=delabs-gcp-mgmt
+nc -zv gcby-live-gdb-m1.delabsgames.internal 3306
+# 예상 결과: Connection succeeded
+```
+
+### 제약사항
+
+- **리전 제약**: Service Attachment는 특정 리전에 고정
+- **Global Access 필수**: Cross-region 접근을 위해서는 활성화 필요
+- **IP 예약 필수**: Forwarding Rule 생성 전 `google_compute_address` 리소스 생성
+- **리소스 참조**: IP 주소는 문자열이 아닌 리소스 ID로 참조
+
+### GCP 공식 문서
+
+> "By using the optional `--allow-psc-global-access` parameter, clients from all regions can access this forwarding rule."
+
+**참고**: https://cloud.google.com/sql/docs/mysql/configure-private-service-connect
+
+---
+
 ## 참고 자료
 
 - [전체 아키텍처](./overview.md)
