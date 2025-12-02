@@ -71,6 +71,12 @@ variable "enable_private_service_connection" {
   default     = true
 }
 
+variable "private_service_connection_address" {
+  type        = string
+  description = "사설 서비스 연결용 예약 IP 범위 시작 주소 (예: 10.3.2.0)"
+  default     = ""
+}
+
 variable "private_service_connection_prefix_length" {
   type        = number
   description = "사설 서비스 연결용 예약 IP 범위 prefix 길이"
