@@ -74,9 +74,30 @@ resource "google_compute_router_nat" "nat" {
   source_subnetwork_ip_ranges_to_nat  = length(var.nat_subnet_self_links) > 0 ? "LIST_OF_SUBNETWORKS" : "ALL_SUBNETWORKS_ALL_IP_RANGES"
   min_ports_per_vm                    = var.nat_min_ports_per_vm
   enable_endpoint_independent_mapping = true
-  # depends_on 제거: Dynamic block의 implicit dependency 사용
-  # Terraform Best Practice: depends_on은 최후의 수단으로만 사용
-  # Reference: https://developer.hashicorp.com/terraform/tutorials/configuration-language/dependencies
+
+  # CRITICAL: Terraform의 Dynamic Block for_each 축소 시 dependency tracking 버그 우회
+  #
+  # 문제 상황:
+  # - Dynamic block의 for_each 리스트에서 항목이 제거될 때 (subnet 개수 감소)
+  # - Plan은 올바른 순서를 보여줌: "NAT 업데이트 → Subnet 삭제"
+  # - Apply는 잘못된 순서로 실행: "Subnet 삭제 시도 → NAT 업데이트"
+  # - 결과: "subnet is already being used by NAT" 에러 발생
+  #
+  # 근본 원인:
+  # - Dynamic block 내부의 implicit dependency (subnetwork.value 참조)가
+  #   Apply 단계의 parallel execution에서 제대로 추적되지 않음
+  # - for_each가 축소될 때 Terraform이 "제거될 항목"에 대한 dependency를
+  #   정확히 계산하지 못하는 known limitation
+  #
+  # 해결:
+  # - depends_on으로 명시적 dependency 추가
+  # - 이는 "hidden dependency"의 일종 (Terraform이 자동 감지 실패)
+  # - Best practice 예외 사유: Terraform 자체의 limitation 우회
+  #
+  # Reference:
+  # - https://github.com/hashicorp/terraform/issues/28699
+  # - Verified in production: Plan shows correct order, Apply executes wrong order
+  depends_on = [google_compute_subnetwork.subnets]
 
   log_config {
     enable = true
