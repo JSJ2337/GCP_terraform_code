@@ -88,6 +88,12 @@ resource "google_compute_router_nat" "nat" {
       source_ip_ranges_to_nat = ["ALL_IP_RANGES"]
     }
   }
+
+  lifecycle {
+    # NAT 업데이트가 subnet 삭제보다 먼저 일어나도록 보장
+    # subnet 목록 변경 시 NAT를 먼저 교체 (create_before_destroy)
+    create_before_destroy = true
+  }
 }
 
 resource "google_compute_firewall" "rules" {
