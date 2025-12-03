@@ -8,6 +8,11 @@
 
 상세한 작업 내역은 아래 날짜별 파일을 참조하세요:
 
+### 2025년 12월
+
+- **[2025-12-03](./2025-12-03.md)** - Cloud SQL 자동 네이밍 및 Password Lifecycle 관리 구현
+- **[2025-12-02](./2025-12-02.md)** - Lock 파일 정리, IPv6 문제 해결, Cross-Project PSC 설정
+
 ### 2025년 11월
 
 - **[2025-11-20](./2025-11-20.md)** - 서브넷·로드밸런서·Cloud SQL 읽기 복제본 자동화
@@ -37,6 +42,24 @@
 ---
 
 ## 📋 최근 작업 요약
+
+### 2025-12-03: Cloud SQL 자동 네이밍 및 Password Lifecycle 관리
+- ✅ PSC Global Access 검증 및 Cross-Region 연결 테스트 (asia-northeast3 → us-west1)
+- ✅ Multi-Region/Multi-Project PSC 스케일링 전략 수립 및 문서화
+- ✅ Cloud SQL Database/User 자동 네이밍 구현 (`{project_name}_gamedb`, `{project_name}_app_user`)
+- ✅ Password lifecycle 관리 구현 (ignore_changes로 수동 변경 허용)
+- ✅ Terraform best practice 리서치 (password vs password_wo)
+- ✅ DBeaver SSH 터널 연결 검증 완료
+- 🔗 커밋: `314197e`, `381bda8`, `0d6c42f`
+
+### 2025-12-02: Lock 파일 정리 및 PSC 설정 최적화
+- ✅ Terraform Lock 파일 정리 및 일관성 확보 (37개 → 통합)
+- ✅ IPv6 네트워킹 문제 해결 (stack_type: IPV4_ONLY)
+- ✅ Cloud SQL PSC allowed_consumer_projects 자동 관리
+- ✅ Private Service Connection IP 대역 사용자 지정 (/29)
+- ✅ Cross-Project PSC 접근 구성 (mgmt → gcp-gcby)
+- ✅ PSC Forwarding Rule Global Access 설정
+- 🔗 커밋: `d127fe3`, `78ea66e`, `7c3fa3d`, `f660ac1`
 
 ### 2025-11-17: Memorystore Enterprise & Cloud SQL 개선
 - ✅ `modules/memorystore-redis`가 Enterprise/Enterprise Plus tiers를 지원하도록 재작성 (google_redis_cluster + PSC 출력)
@@ -95,8 +118,8 @@
 
 ## 📊 통계
 
-- **총 작업 일수**: 16일
-- **세션 수**: 20개
+- **총 작업 일수**: 18일
+- **세션 수**: 22개
 - **주요 마일스톤**:
   - ✅ 초기 인프라 구축 (10/28)
   - ✅ 9개 레이어 완성 (10/29)
@@ -104,6 +127,8 @@
   - ✅ Jenkins CI/CD 통합 (11/06)
   - ✅ GCP 폴더 자동화 (11/09)
   - ✅ 문서 재구성 (11/12)
+  - ✅ PSC 전면 적용 (12/02)
+  - ✅ Cloud SQL 자동화 (12/03)
 
 ## 🔙 돌아가기
 
