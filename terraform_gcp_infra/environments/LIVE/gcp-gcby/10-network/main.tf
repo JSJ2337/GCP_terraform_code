@@ -223,7 +223,7 @@ resource "google_compute_address" "cloudsql_psc" {
   count = length(var.cloudsql_service_attachment) > 0 ? 1 : 0
 
   project      = var.project_id
-  name         = "${var.project_name}-cloudsql-psc"
+  name         = "${var.project_name}-${var.environment}-gdb-m1-psc"
   region       = var.region_primary
   subnetwork   = local.db_subnet_self_link
   address_type = "INTERNAL"
@@ -237,7 +237,7 @@ resource "google_compute_forwarding_rule" "cloudsql_psc" {
   count = length(var.cloudsql_service_attachment) > 0 ? 1 : 0
 
   project               = var.project_id
-  name                  = "${var.project_name}-cloudsql-psc-fr"
+  name                  = "${var.project_name}-${var.environment}-gdb-m1-psc-fr"
   region                = var.region_primary
   network               = module.net.vpc_self_link
   ip_address            = google_compute_address.cloudsql_psc[0].id
@@ -258,7 +258,7 @@ resource "google_compute_address" "redis_psc" {
   count = length(var.redis_service_attachments)
 
   project      = var.project_id
-  name         = "${var.project_name}-redis-psc-${count.index}"
+  name         = "${var.project_name}-${var.environment}-redis-psc-${count.index}"
   region       = var.region_primary
   subnetwork   = local.db_subnet_self_link
   address_type = "INTERNAL"
@@ -272,7 +272,7 @@ resource "google_compute_forwarding_rule" "redis_psc" {
   count = length(var.redis_service_attachments)
 
   project               = var.project_id
-  name                  = "${var.project_name}-redis-psc-fr-${count.index}"
+  name                  = "${var.project_name}-${var.environment}-redis-psc-fr-${count.index}"
   region                = var.region_primary
   network               = module.net.vpc_self_link
   ip_address            = google_compute_address.redis_psc[count.index].id
