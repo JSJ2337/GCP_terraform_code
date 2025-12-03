@@ -10,8 +10,9 @@
 
 locals {
   # common.naming.tfvars에서 설정 읽기
-  parent_dir        = get_terragrunt_dir()
-  raw_common_inputs = read_tfvars_file("${local.parent_dir}/common.naming.tfvars")
+  # root.hcl이 있는 디렉토리 (gcp-gcby/)를 찾아서 common.naming.tfvars 경로 생성
+  root_dir          = dirname(find_in_parent_folders("root.hcl"))
+  raw_common_inputs = read_tfvars_file("${local.root_dir}/common.naming.tfvars")
   common_inputs     = try(jsondecode(local.raw_common_inputs), local.raw_common_inputs)
 
   # 모든 레이어에서 공유하는 원격 상태 버킷과 prefix 기본값
