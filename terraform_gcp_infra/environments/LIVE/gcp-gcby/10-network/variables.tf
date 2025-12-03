@@ -205,3 +205,9 @@ variable "psc_redis_ip" {
   type        = string
   default     = "10.10.12.101"
 }
+
+variable "peer_network_url" {
+  description = "VPC Peering 대상 네트워크 URL (common.naming.tfvars에서 전달)"
+  type        = string
+  default     = ""
+}

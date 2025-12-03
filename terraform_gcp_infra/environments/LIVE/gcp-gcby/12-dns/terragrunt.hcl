@@ -19,9 +19,44 @@ locals {
 
   raw_layer_inputs = try(read_tfvars_file("${get_terragrunt_dir()}/terraform.tfvars"), tomap({}))
   layer_inputs     = try(jsondecode(local.raw_layer_inputs), local.raw_layer_inputs)
+
+  # Network config 추출
+  network_config = try(local.common_inputs.network_config, {})
+
+  # DNS 레코드 동적 생성 (common.naming.tfvars의 network_config에서 IP 가져옴)
+  dns_records = [
+    {
+      name    = "gcby-live-gdb-m1"
+      type    = "A"
+      ttl     = 300
+      rrdatas = [try(local.network_config.psc_endpoints.cloudsql, "10.10.12.51")]
+    },
+    {
+      name    = "gcby-live-redis"
+      type    = "A"
+      ttl     = 300
+      rrdatas = [try(local.network_config.psc_endpoints.redis, "10.10.12.101")]
+    },
+    {
+      name    = "gcby-gs01"
+      type    = "A"
+      ttl     = 300
+      rrdatas = [try(local.network_config.vm_ips.gs01, "10.10.11.3")]
+    },
+    {
+      name    = "gcby-gs02"
+      type    = "A"
+      ttl     = 300
+      rrdatas = [try(local.network_config.vm_ips.gs02, "10.10.11.6")]
+    }
+  ]
 }
 
 inputs = merge(
   local.common_inputs,
-  local.layer_inputs
+  local.layer_inputs,
+  {
+    # DNS 레코드를 동적 생성한 것으로 override
+    dns_records = local.dns_records
+  }
 )

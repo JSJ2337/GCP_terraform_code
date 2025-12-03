@@ -18,26 +18,42 @@ locals {
   project_name   = local.common_inputs.project_name
   region_primary = local.common_inputs.region_primary
 
-  # Subnet 이름 자동 생성
-  subnet_types = ["dmz", "private", "db"]
+  # Network config 추출
+  network_config = try(local.common_inputs.network_config, {})
 
-  # additional_subnets에 name과 region 자동 추가
+  # Subnet 이름 자동 생성
+  subnet_types = ["dmz", "private", "psc"]
+
+  # additional_subnets를 network_config에서 동적 생성
+  # CIDR은 common.naming.tfvars의 network_config.subnets에서 가져옴
   additional_subnets_with_metadata = [
-    for idx, subnet in try(local.layer_inputs.additional_subnets, []) :
-    merge(subnet, {
-      name   = "${local.project_name}-subnet-${local.subnet_types[idx]}"
+    for idx, subnet_type in local.subnet_types :
+    {
+      name   = "${local.project_name}-subnet-${subnet_type}"
       region = local.region_primary
-    })
+      cidr   = try(local.network_config.subnets[subnet_type], "")
+      private_google_access = true
+      secondary_ranges      = []
+    }
   ]
 
   # Subnet 이름들
   dmz_subnet_name     = "${local.project_name}-subnet-dmz"
   private_subnet_name = "${local.project_name}-subnet-private"
-  db_subnet_name      = "${local.project_name}-subnet-db"
+  psc_subnet_name     = "${local.project_name}-subnet-psc"
 
   # Memorystore PSC 설정
   memorystore_psc_region      = local.region_primary
   memorystore_psc_subnet_name = local.private_subnet_name
+
+  # VPC Peering 대상
+  mgmt_project_id = try(local.network_config.peering.mgmt_project_id, "delabs-gcp-mgmt")
+  mgmt_vpc_name   = try(local.network_config.peering.mgmt_vpc_name, "delabs-gcp-mgmt-vpc")
+  peer_network_url = "projects/${local.mgmt_project_id}/global/networks/${local.mgmt_vpc_name}"
+
+  # PSC Endpoint IP
+  psc_cloudsql_ip = try(local.network_config.psc_endpoints.cloudsql, "10.10.12.51")
+  psc_redis_ip    = try(local.network_config.psc_endpoints.redis, "10.10.12.101")
 }
 
 # Cloud SQL dependency (Service Attachment 가져오기)
@@ -68,9 +84,16 @@ inputs = merge(
     additional_subnets          = local.additional_subnets_with_metadata
     dmz_subnet_name             = local.dmz_subnet_name
     private_subnet_name         = local.private_subnet_name
-    db_subnet_name              = local.db_subnet_name
+    db_subnet_name              = local.psc_subnet_name
     memorystore_psc_region      = local.memorystore_psc_region
     memorystore_psc_subnet_name = local.memorystore_psc_subnet_name
+
+    # VPC Peering (common.naming.tfvars에서 가져옴)
+    peer_network_url = local.peer_network_url
+
+    # PSC Endpoint IP (common.naming.tfvars에서 가져옴)
+    psc_cloudsql_ip = local.psc_cloudsql_ip
+    psc_redis_ip    = local.psc_redis_ip
 
     # Service Attachment를 dependency에서 가져옴
     cloudsql_service_attachment = dependency.database.outputs.psc_service_attachment_link

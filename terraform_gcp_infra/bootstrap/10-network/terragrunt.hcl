@@ -53,6 +53,9 @@ inputs = merge(
   local.common_vars.locals,
   local.layer_vars.locals,
   {
+    # VPC Peering 대상 (common.hcl에서 가져옴)
+    gcby_vpc_network_url = local.common_vars.locals.gcby_vpc_network_url
+
     # Service Attachment를 dependency에서 가져옴
     gcby_cloudsql_service_attachment = dependency.gcby_database.outputs.psc_service_attachment_link
     gcby_redis_service_attachment    = dependency.gcby_cache.outputs.psc_service_attachment_link

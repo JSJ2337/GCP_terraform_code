@@ -3,23 +3,12 @@
 routing_mode = "GLOBAL"
 
 # Additional dedicated subnets (DMZ/Private zones)
-# name, region은 terragrunt.hcl에서 project_name, region_primary 기반 자동 생성
-# CIDR만 정의 (네트워크 대역 설계)
-additional_subnets = [
-  {
-    cidr = "10.10.10.0/24"  # DMZ subnet
-  },
-  {
-    cidr = "10.10.11.0/24"  # Private subnet
-  },
-  {
-    cidr = "10.10.12.0/24"  # PSC endpoint subnet
-    name = "gcby-live-subnet-psc"
-  }
-]
+# 이제 common.naming.tfvars의 network_config.subnets에서 중앙 관리됩니다.
+# terragrunt.hcl에서 동적으로 생성하므로 여기서는 정의하지 않습니다.
+# additional_subnets = []  # terragrunt.hcl에서 자동 생성
 
-# Subnet 이름은 terragrunt.hcl에서 자동 생성
-# 형식: {project_name}-subnet-dmz, {project_name}-subnet-private
+# Subnet 이름과 CIDR은 terragrunt.hcl에서 자동 생성
+# 형식: {project_name}-subnet-{type} (dmz, private, psc)
 
 # Private Service Connection (VPC Peering 방식) - PSC 쓰므로 불필요
 enable_private_service_connection = false

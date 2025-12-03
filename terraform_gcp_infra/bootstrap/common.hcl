@@ -30,4 +30,19 @@ locals {
   # 형식: projects/{project}/global/networks/{network}
   vpc_self_link    = "projects/delabs-gcp-mgmt/global/networks/delabs-gcp-mgmt-vpc"
   subnet_self_link = "projects/delabs-gcp-mgmt/regions/asia-northeast3/subnetworks/delabs-gcp-mgmt-subnet"
+
+  # VPC Peering 대상 (gcby VPC)
+  gcby_project_id      = "gcp-gcby"
+  gcby_vpc_name        = "gcby-live-vpc"
+  gcby_vpc_network_url = "projects/gcp-gcby/global/networks/gcby-live-vpc"
+
+  # PSC Endpoint IP (mgmt VPC용)
+  psc_cloudsql_ip = "10.250.20.20"
+  psc_redis_ip    = "10.250.20.101"
+
+  # gcby VM IP (environments/LIVE/gcp-gcby/common.naming.tfvars의 network_config.vm_ips와 동일하게 유지)
+  gcby_vm_ips = {
+    gs01 = "10.10.11.3"
+    gs02 = "10.10.11.6"
+  }
 }

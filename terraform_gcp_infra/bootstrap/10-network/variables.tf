@@ -53,3 +53,21 @@ variable "psc_redis_ip" {
   type        = string
   default     = "10.250.20.101"
 }
+
+variable "gcby_vpc_network_url" {
+  description = "VPC Peering 대상 네트워크 URL (gcby VPC)"
+  type        = string
+  default     = ""
+}
+
+variable "gcby_cloudsql_service_attachment" {
+  description = "gcby Cloud SQL PSC Service Attachment (from dependency)"
+  type        = string
+  default     = ""
+}
+
+variable "gcby_redis_service_attachment" {
+  description = "gcby Redis PSC Service Attachment (from dependency)"
+  type        = string
+  default     = ""
+}

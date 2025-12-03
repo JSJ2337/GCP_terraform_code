@@ -22,3 +22,34 @@ base_labels = {              # naming.common_labels에 병합되는 기본 라�
   team        = "system-team"
 }
 # extra_tags = ["prod", "gcby"]  # 공통 태그
+
+# 네트워크 설계 (중앙 관리)
+network_config = {
+  # Subnet CIDR
+  subnets = {
+    dmz     = "10.10.10.0/24"
+    private = "10.10.11.0/24"
+    psc     = "10.10.12.0/24"
+  }
+
+  # PSC Endpoint IP
+  psc_endpoints = {
+    cloudsql = "10.10.12.51"
+    redis    = "10.10.12.101"
+  }
+
+  # VPC Peering
+  peering = {
+    mgmt_project_id = "delabs-gcp-mgmt"
+    mgmt_vpc_name   = "delabs-gcp-mgmt-vpc"
+  }
+
+  # VM Static IP (선택사항, 비우면 동적 할당)
+  vm_ips = {
+    gs01 = "10.10.11.3"
+    gs02 = "10.10.11.6"
+  }
+}
+
+# 관리 프로젝트 정보
+management_project_id = "delabs-gcp-mgmt"
