@@ -32,6 +32,9 @@ locals {
   # Network config 추출
   network_config = try(local.common_inputs.network_config, {})
 
+  # VM Static IPs 추출 (common.naming.tfvars에서)
+  vm_static_ips = try(local.common_inputs.vm_static_ips, {})
+
   # DNS config 추출 (common.naming.tfvars에서)
   dns_config = try(local.common_inputs.dns_config, {})
 
@@ -58,13 +61,13 @@ locals {
       name    = "${local.project_name}-gs01"
       type    = "A"
       ttl     = 300
-      rrdatas = [local.network_config.vm_ips.gs01]
+      rrdatas = [local.vm_static_ips.gs01]
     },
     {
       name    = "${local.project_name}-gs02"
       type    = "A"
       ttl     = 300
-      rrdatas = [local.network_config.vm_ips.gs02]
+      rrdatas = [local.vm_static_ips.gs02]
     }
   ]
 
