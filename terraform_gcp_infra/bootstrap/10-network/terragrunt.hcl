@@ -49,7 +49,8 @@ dependency "gcby_database" {
   mock_outputs = {
     psc_service_attachment_link = "projects/mock/regions/us-west1/serviceAttachments/mock-gcby-cloudsql"
   }
-  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
+  mock_outputs_merge_strategy_with_state  = "shallow"
 }
 
 dependency "gcby_cache" {
@@ -58,7 +59,8 @@ dependency "gcby_cache" {
   mock_outputs = {
     psc_service_attachment_link = "projects/mock/regions/us-west1/serviceAttachments/mock-gcby-redis"
   }
-  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
+  mock_outputs_merge_strategy_with_state  = "shallow"
 }
 
 # 새 프로젝트 추가 예시 (주석)
@@ -68,7 +70,8 @@ dependency "gcby_cache" {
 #   mock_outputs = {
 #     psc_service_attachment_link = "projects/mock/regions/us-west1/serviceAttachments/mock-abc-cloudsql"
 #   }
-#   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+#   mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
+#   mock_outputs_merge_strategy_with_state  = "shallow"
 # }
 #
 # dependency "abc_cache" {
@@ -77,7 +80,8 @@ dependency "gcby_cache" {
 #   mock_outputs = {
 #     psc_service_attachment_link = "projects/mock/regions/us-west1/serviceAttachments/mock-abc-redis"
 #   }
-#   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+#   mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
+#   mock_outputs_merge_strategy_with_state  = "shallow"
 # }
 
 dependencies {
