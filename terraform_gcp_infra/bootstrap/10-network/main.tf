@@ -8,34 +8,40 @@
 # =============================================================================
 # 서로 다른 Jenkins Job에서 실행되는 프로젝트의 outputs를 GCS State에서 직접 읽음
 # Best Practice: dependency 블록 대신 terraform_remote_state 사용
+#
+# 새 프로젝트 추가 시:
+#   1. common.hcl의 projects에 프로젝트 정보 추가
+#   2. 아래에 data source 블록 추가 (database, cache)
+#   3. locals의 {project}_psc_endpoints 추가
+#   4. psc_endpoints merge에 추가
 
 # gcby 프로젝트 - 60-database
 data "terraform_remote_state" "gcby_database" {
-  count   = var.enable_psc_endpoints ? 1 : 0
+  count   = var.enable_psc_endpoints && contains(keys(var.projects), "gcby") ? 1 : 0
   backend = "gcs"
   config = {
     bucket = var.state_bucket
-    prefix = "gcp-gcby/60-database"
+    prefix = "${var.projects.gcby.project_id}/60-database"
   }
 }
 
 # gcby 프로젝트 - 65-cache
 data "terraform_remote_state" "gcby_cache" {
-  count   = var.enable_psc_endpoints ? 1 : 0
+  count   = var.enable_psc_endpoints && contains(keys(var.projects), "gcby") ? 1 : 0
   backend = "gcs"
   config = {
     bucket = var.state_bucket
-    prefix = "gcp-gcby/65-cache"
+    prefix = "${var.projects.gcby.project_id}/65-cache"
   }
 }
 
 # 새 프로젝트 추가 예시 (주석)
 # data "terraform_remote_state" "abc_database" {
-#   count   = var.enable_psc_endpoints ? 1 : 0
+#   count   = var.enable_psc_endpoints && contains(keys(var.projects), "abc") ? 1 : 0
 #   backend = "gcs"
 #   config = {
 #     bucket = var.state_bucket
-#     prefix = "gcp-abc/60-database"
+#     prefix = "${var.projects.abc.project_id}/60-database"
 #   }
 # }
 
@@ -50,20 +56,21 @@ locals {
   # ==========================================================================
   # PSC Endpoints 동적 생성 (terraform_remote_state에서 Service Attachment 참조)
   # ==========================================================================
-  # Redis Cluster Service Attachments (2개)
-  gcby_redis_service_attachments = var.enable_psc_endpoints ? try(
+
+  # gcby 프로젝트 PSC Endpoints
+  # 프로젝트명, 환경명 모두 common.hcl의 projects에서 가져옴
+  gcby_project_name = try(split("-", var.projects.gcby.project_id)[1], "gcby")  # gcp-gcby → gcby
+  gcby_env = try(var.projects.gcby.environment, "live")
+  gcby_redis_service_attachments = var.enable_psc_endpoints && contains(keys(var.projects), "gcby") ? try(
     data.terraform_remote_state.gcby_cache[0].outputs.psc_service_attachment_links, []
   ) : []
 
-  # gcby 프로젝트 PSC Endpoints
-  # 환경명은 common.hcl의 projects.gcby.environment에서 가져옴
-  gcby_env = try(var.projects.gcby.environment, "live")
-  gcby_psc_endpoints = var.enable_psc_endpoints ? merge(
+  gcby_psc_endpoints = var.enable_psc_endpoints && contains(keys(var.projects), "gcby") ? merge(
     # Cloud SQL PSC Endpoint (1개)
     {
-      "gcby-${local.gcby_env}-gdb-m1" = {
+      "${local.gcby_project_name}-${local.gcby_env}-gdb-m1" = {
         region                    = "us-west1"
-        ip_address                = var.project_psc_ips.gcby.cloudsql
+        ip_address                = try(var.projects.gcby.psc_ips.cloudsql, "")
         target_service_attachment = try(data.terraform_remote_state.gcby_database[0].outputs.psc_service_attachment_link, "")
         allow_global_access       = true
       }
@@ -71,9 +78,9 @@ locals {
     # Redis PSC Endpoints (2개 - Discovery + Shard)
     {
       for idx, sa in local.gcby_redis_service_attachments :
-      "gcby-${local.gcby_env}-redis-${idx}" => {
+      "${local.gcby_project_name}-${local.gcby_env}-redis-${idx}" => {
         region                    = "us-west1"
-        ip_address                = try(var.project_psc_ips.gcby.redis[idx], "")
+        ip_address                = try(var.projects.gcby.psc_ips.redis[idx], "")
         target_service_attachment = sa
         allow_global_access       = true
       }
@@ -81,17 +88,32 @@ locals {
   ) : {}
 
   # 새 프로젝트 추가 예시 (주석)
-  # abc_psc_endpoints = var.enable_psc_endpoints ? {
-  #   "abc-cloudsql" = {
-  #     region                    = "us-west1"
-  #     ip_address                = var.project_psc_ips.abc.cloudsql
-  #     target_service_attachment = try(data.terraform_remote_state.abc_database[0].outputs.psc_service_attachment_link, "")
-  #     allow_global_access       = true
+  # abc_project_name = try(split("-", var.projects.abc.project_id)[1], "abc")
+  # abc_env = try(var.projects.abc.environment, "live")
+  # abc_redis_service_attachments = var.enable_psc_endpoints && contains(keys(var.projects), "abc") ? try(
+  #   data.terraform_remote_state.abc_cache[0].outputs.psc_service_attachment_links, []
+  # ) : []
+  # abc_psc_endpoints = var.enable_psc_endpoints && contains(keys(var.projects), "abc") ? merge(
+  #   {
+  #     "${local.abc_project_name}-${local.abc_env}-gdb-m1" = {
+  #       region                    = "us-west1"
+  #       ip_address                = try(var.projects.abc.psc_ips.cloudsql, "")
+  #       target_service_attachment = try(data.terraform_remote_state.abc_database[0].outputs.psc_service_attachment_link, "")
+  #       allow_global_access       = true
+  #     }
+  #   },
+  #   {
+  #     for idx, sa in local.abc_redis_service_attachments :
+  #     "${local.abc_project_name}-${local.abc_env}-redis-${idx}" => {
+  #       region                    = "us-west1"
+  #       ip_address                = try(var.projects.abc.psc_ips.redis[idx], "")
+  #       target_service_attachment = sa
+  #       allow_global_access       = true
+  #     }
   #   }
-  # } : {}
+  # ) : {}
 
   # 모든 프로젝트 PSC Endpoints 병합
-  # 새 프로젝트 추가 시: 위에 data source + local 추가 후 여기에 merge
   psc_endpoints = merge(
     local.gcby_psc_endpoints,
     # local.abc_psc_endpoints,
