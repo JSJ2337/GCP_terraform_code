@@ -71,6 +71,17 @@ output "psc_service_attachment_links" {
 }
 
 output "cluster_endpoints" {
-  description = "Cluster endpoints with PSC connection details (for cross-project registration)"
-  value       = try(google_redis_cluster.enterprise[0].cluster_endpoints, [])
+  description = "Cluster endpoints with PSC connection details (Discovery endpoint info)"
+  value = try({
+    discovery_endpoints = google_redis_cluster.enterprise[0].discovery_endpoints
+    psc_connections     = google_redis_cluster.enterprise[0].psc_connections
+    psc_service_attachments = [
+      for sa in google_redis_cluster.enterprise[0].psc_service_attachments : sa.service_attachment
+    ]
+  }, null)
+}
+
+output "cross_project_psc_info" {
+  description = "Cross-project PSC connection information for manual registration"
+  value       = local.cross_project_psc_info
 }

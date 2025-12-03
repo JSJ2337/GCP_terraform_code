@@ -116,57 +116,36 @@ resource "google_redis_cluster" "enterprise" {
 # 해당 VPC의 PSC Forwarding Rule을 이 클러스터에 등록해야 함
 #
 # 참고: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/redis_cluster_user_created_connections
+#
+# 중요: google_redis_cluster_user_created_connections 리소스를 사용하면
+# 클러스터의 모든 PSC 연결을 명시적으로 관리해야 합니다.
+# 이 방식 대신 gcloud CLI나 API를 통한 점진적 추가가 더 안전할 수 있습니다.
+#
+# 현재는 cross_project_psc_connections 변수로 연결 정보만 전달받고,
+# 실제 등록은 bootstrap에서 PSC Forwarding Rule 생성 시 자동으로 시도됩니다.
+# 만약 자동 등록이 PENDING 상태로 남으면, 수동으로 gcloud 명령 실행 필요:
+#
+# gcloud redis clusters update <CLUSTER_NAME> \
+#   --region=<REGION> \
+#   --project=<PROJECT_ID> \
+#   --add-cross-cluster-replication-clusters=...
 
-resource "google_redis_cluster_user_created_connections" "cross_project" {
-  count = local.is_enterprise_tier && length(var.cross_project_psc_connections) > 0 ? 1 : 0
-
-  name    = google_redis_cluster.enterprise[0].name
-  region  = local.enterprise_region
-  project = var.project_id
-
-  # 기존 자동 생성된 연결 (authorized_network의 PSC 연결) 유지
-  dynamic "cluster_endpoints" {
-    for_each = google_redis_cluster.enterprise[0].cluster_endpoints
-    content {
-      dynamic "connections" {
-        for_each = cluster_endpoints.value.connections
-        content {
-          psc_connection {
-            psc_connection_id  = connections.value.psc_auto_connection.psc_connection_id
-            address            = connections.value.psc_auto_connection.address
-            forwarding_rule    = connections.value.psc_auto_connection.forwarding_rule
-            network            = connections.value.psc_auto_connection.network
-            project_id         = connections.value.psc_auto_connection.project_id
-            service_attachment = connections.value.psc_auto_connection.service_attachment
-          }
+# Cross-project PSC 연결 정보를 outputs로 노출하여
+# 필요시 외부에서 등록할 수 있도록 함
+locals {
+  cross_project_psc_info = [
+    for conn in var.cross_project_psc_connections : {
+      project_id = conn.project_id
+      network    = conn.network
+      forwarding_rules = [
+        for idx, fr in conn.forwarding_rules : {
+          psc_connection_id  = fr.psc_connection_id
+          name               = fr.name
+          ip_address         = fr.ip_address
+          region             = fr.region
+          service_attachment = try(google_redis_cluster.enterprise[0].psc_service_attachments[idx].service_attachment, "")
         }
-      }
+      ]
     }
-  }
-
-  # Cross-project PSC 연결 추가
-  dynamic "cluster_endpoints" {
-    for_each = var.cross_project_psc_connections
-    content {
-      dynamic "connections" {
-        for_each = [for idx, fr in cluster_endpoints.value.forwarding_rules : {
-          idx = idx
-          fr  = fr
-          sa  = google_redis_cluster.enterprise[0].psc_service_attachments[idx].service_attachment
-        }]
-        content {
-          psc_connection {
-            psc_connection_id  = connections.value.fr.psc_connection_id
-            address            = connections.value.fr.ip_address
-            forwarding_rule    = "projects/${cluster_endpoints.value.project_id}/regions/${connections.value.fr.region}/forwardingRules/${connections.value.fr.name}"
-            network            = cluster_endpoints.value.network
-            project_id         = cluster_endpoints.value.project_id
-            service_attachment = connections.value.sa
-          }
-        }
-      }
-    }
-  }
-
-  depends_on = [google_redis_cluster.enterprise]
+  ]
 }
