@@ -127,6 +127,8 @@ output "psc_redis_forwarding_rules" {
       psc_connection_id = fr.psc_connection_id
       forwarding_rule   = fr.id  # Full URL: projects/{project}/regions/{region}/forwardingRules/{name}
       ip_address        = fr.ip_address
-    } if startswith(key, "gcby-redis-")
+      name              = fr.name
+      region            = fr.region
+    } if can(regex("^gcby-.*-redis-", key))  # gcby-live-redis-0, gcby-live-redis-1 등 매칭
   ]
 }

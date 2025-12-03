@@ -95,9 +95,8 @@ module "cache" {
       forwarding_rules = [
         for fr in local.mgmt_redis_forwarding_rules : {
           psc_connection_id = fr.psc_connection_id
-          name              = fr.name
+          forwarding_rule   = fr.forwarding_rule
           ip_address        = fr.ip_address
-          region            = fr.region
         }
       ]
     }
