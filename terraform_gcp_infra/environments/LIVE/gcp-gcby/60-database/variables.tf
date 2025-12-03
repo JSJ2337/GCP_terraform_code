@@ -286,3 +286,17 @@ variable "management_project_id" {
   type        = string
   description = "관리 프로젝트 ID (Cross-Project PSC 등에 사용)"
 }
+
+variable "db_root_password" {
+  type        = string
+  description = "Root 사용자 비밀번호 (TODO: Secret Manager로 관리)"
+  sensitive   = true
+  default     = "TempPassword123!ChangeMeLater"
+}
+
+variable "db_app_password" {
+  type        = string
+  description = "Application 사용자 비밀번호 (TODO: Secret Manager로 관리)"
+  sensitive   = true
+  default     = "AppPassword456!ChangeMeLater"
+}

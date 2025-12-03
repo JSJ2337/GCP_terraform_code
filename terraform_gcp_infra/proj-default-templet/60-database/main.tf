@@ -48,6 +48,35 @@ locals {
     var.psc_allowed_consumer_projects,
     [var.management_project_id]
   ))
+
+  # Database 자동 생성 (프로젝트명 기반)
+  databases_auto = [
+    {
+      name      = "${var.project_name}_gamedb"
+      charset   = "utf8mb4"
+      collation = "utf8mb4_unicode_ci"
+    }
+  ]
+
+  # 최종 databases: 자동 생성 + 수동 추가
+  databases_final = concat(local.databases_auto, var.databases)
+
+  # Users 자동 생성 (프로젝트명 기반)
+  users_auto = [
+    {
+      name     = "root"
+      password = var.db_root_password  # variables.tf에서 정의
+      host     = "%"
+    },
+    {
+      name     = "${var.project_name}_app_user"
+      password = var.db_app_password  # variables.tf에서 정의
+      host     = "%"
+    }
+  ]
+
+  # 최종 users: 자동 생성 + 수동 추가
+  users_final = concat(local.users_auto, var.users)
 }
 
 provider "google" {
@@ -116,11 +145,11 @@ module "mysql" {
   enable_general_log    = var.enable_general_log
   log_output            = var.log_output
 
-  # Databases
-  databases = var.databases
+  # Databases (자동 생성 + 수동 추가)
+  databases = local.databases_final
 
-  # Users
-  users = var.users
+  # Users (자동 생성 + 수동 추가)
+  users = local.users_final
 
   # Read replicas
   read_replicas = local.read_replicas_with_defaults

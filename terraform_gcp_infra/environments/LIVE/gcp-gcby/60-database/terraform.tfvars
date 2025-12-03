@@ -59,29 +59,15 @@ enable_general_log    = false  # Log all queries (Live: false, qa-dev: true)
 log_output            = "FILE" # FILE (send to Cloud Logging) or TABLE
 
 # Databases to create
-databases = [
-  {
-    name      = "gamedb"
-    charset   = "utf8mb4"
-    collation = "utf8mb4_unicode_ci"
-  }
-]
+# 자동 생성: {project_name}_gamedb (main.tf의 locals에서 생성)
+# 추가 database가 필요한 경우에만 여기에 명시
+databases = []
 
 # Users to create
-# IMPORTANT: Store passwords in Secret Manager
-# TODO: Secret Manager 연동 후 password 필드 제거
-users = [
-  {
-    name     = "root"
-    password = "TempPassword123!ChangeMeLater"  # 임시 비밀번호, 나중에 변경 필요
-    host     = "%"
-  },
-  {
-    name     = "app_user"
-    password = "AppPassword456!ChangeMeLater"  # 임시 비밀번호, 나중에 변경 필요
-    host     = "%"
-  }
-]
+# 자동 생성: root, {project_name}_app_user (main.tf의 locals에서 생성)
+# 추가 user가 필요한 경우에만 여기에 명시
+# IMPORTANT: 비밀번호는 variables.tf에서 관리 (TODO: Secret Manager로 이전)
+users = []
 
 # Read replicas (optional)
 # region은 terragrunt.hcl에서 자동으로 region_primary 사용

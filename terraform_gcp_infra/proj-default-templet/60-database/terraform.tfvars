@@ -59,10 +59,55 @@ enable_general_log    = false  # Log all queries (Live: false, qa-dev: true)
 log_output            = "FILE" # FILE (send to Cloud Logging) or TABLE
 
 # Databases to create
+# Databases to create
+# 자동 생성: {project_name}_gamedb (main.tf의 locals에서 생성)
+# 추가 database가 필요한 경우에만 여기에 명시
 databases = []
 
 # Users to create
-# IMPORTANT: Store passwords in Secret Manager
+# 자동 생성: root, {project_name}_app_user (main.tf의 locals에서 생성)
+# 추가 user가 필요한 경우에만 여기에 명시
+# IMPORTANT: 비밀번호는 variables.tf에서 관리 (TODO: Secret Manager로 이전)
+users = []
+# Databases to create
+# 자동 생성: {project_name}_gamedb (main.tf의 locals에서 생성)
+# 추가 database가 필요한 경우에만 여기에 명시
+databases = []
+
+# Users to create
+# 자동 생성: root, {project_name}_app_user (main.tf의 locals에서 생성)
+# 추가 user가 필요한 경우에만 여기에 명시
+# IMPORTANT: 비밀번호는 variables.tf에서 관리 (TODO: Secret Manager로 이전)
+users = []
+# Databases to create
+# 자동 생성: {project_name}_gamedb (main.tf의 locals에서 생성)
+# 추가 database가 필요한 경우에만 여기에 명시
+databases = []
+
+# Users to create
+# 자동 생성: root, {project_name}_app_user (main.tf의 locals에서 생성)
+# 추가 user가 필요한 경우에만 여기에 명시
+# IMPORTANT: 비밀번호는 variables.tf에서 관리 (TODO: Secret Manager로 이전)
+users = []
+# Databases to create
+# 자동 생성: {project_name}_gamedb (main.tf의 locals에서 생성)
+# 추가 database가 필요한 경우에만 여기에 명시
+databases = []
+
+# Users to create
+# 자동 생성: root, {project_name}_app_user (main.tf의 locals에서 생성)
+# 추가 user가 필요한 경우에만 여기에 명시
+# IMPORTANT: 비밀번호는 variables.tf에서 관리 (TODO: Secret Manager로 이전)
+users = []
+# Databases to create
+# 자동 생성: {project_name}_gamedb (main.tf의 locals에서 생성)
+# 추가 database가 필요한 경우에만 여기에 명시
+databases = []
+
+# Users to create
+# 자동 생성: root, {project_name}_app_user (main.tf의 locals에서 생성)
+# 추가 user가 필요한 경우에만 여기에 명시
+# IMPORTANT: 비밀번호는 variables.tf에서 관리 (TODO: Secret Manager로 이전)
 users = []
 
 # Read replicas (optional)
