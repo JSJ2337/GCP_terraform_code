@@ -11,25 +11,36 @@ locals {
   raw_common_inputs = read_tfvars_file("${local.parent_dir}/common.naming.tfvars")
   common_inputs     = try(jsondecode(local.raw_common_inputs), local.raw_common_inputs)
 
-  raw_layer_inputs = try(read_tfvars_file("${get_terragrunt_dir()}/terraform.tfvars"), tomap({}))
+  # Note: terraform.tfvars는 Terraform이 자동으로 로드하므로, 충돌을 피하기 위해 다른 파일명 사용
+  raw_layer_inputs = try(read_tfvars_file("${get_terragrunt_dir()}/workloads.tfvars"), tomap({}))
   layer_inputs     = try(jsondecode(local.raw_layer_inputs), local.raw_layer_inputs)
 
   # ==========================================================================
   # Best Practice: Terragrunt는 값 전달만, 키 변환은 Terraform 모듈에서 처리
+  # 단, network_ip는 common.naming.tfvars에서 중앙 관리하므로 여기서 주입
   # Reference: https://www.terraform-best-practices.com/naming
   # ==========================================================================
 
-  # common.naming.tfvars에서 region_primary, VM IP 가져오기
+  # common.naming.tfvars에서 region_primary 가져오기
   region_primary = local.common_inputs.region_primary
-  # vm_static_ips는 최상위 레벨 (nested object 접근 문제 회피)
-  vm_ips         = try(local.common_inputs.vm_static_ips, try(local.common_inputs.network_config.vm_ips, {}))
 
-  # instances에 network_ip만 주입 (키 변환은 main.tf에서 처리)
-  # Best Practice: 단순한 값 전달, 복잡한 로직은 Terraform 모듈에서 처리
+  # VM Static IP 맵 (common.naming.tfvars에서 가져오기)
+  # 우선순위: vm_static_ips > network_config.vm_ips
+  vm_ips = try(
+    local.common_inputs.vm_static_ips,
+    try(local.common_inputs.network_config.vm_ips, {})
+  )
+
+  # instances에 network_ip 주입 (terraform.tfvars의 값 또는 common.naming.tfvars의 중앙 관리 IP)
+  # 키 변환은 main.tf에서 처리하므로 여기서는 network_ip만 주입
+  # Note: terragrunt read_tfvars_file은 정의되지 않은 속성을 포함하지 않으므로 try/lookup 사용
   instances_with_network_ip = {
     for k, v in try(local.layer_inputs.instances, {}) :
     k => merge(v, {
-      network_ip = try(local.vm_ips[try(v.vm_ip_key, k)], try(v.network_ip, null))
+      # network_ip 우선순위:
+      # 1. terraform.tfvars에서 직접 지정 (try로 안전하게 접근)
+      # 2. common.naming.tfvars의 vm_static_ips에서 키 이름으로 조회
+      network_ip = try(v.network_ip, lookup(local.vm_ips, k, null))
     })
   }
 

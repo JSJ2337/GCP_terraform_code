@@ -23,42 +23,43 @@ labels = {
 # 역할별 인스턴스 정의
 # subnet_type: "dmz", "private", "db" 중 하나 선택
 # zone_suffix: "a", "b", "c" - common.naming.tfvars의 region_primary와 자동 결합됨 (예: us-west1-a)
-# network_ip: terragrunt.hcl에서 common.naming.tfvars의 vm_ips로부터 동적 주입됨
-# 인스턴스 키: vm_ip_key 값 사용 (예: "gs01") - terragrunt.hcl에서 "${project_name}-${key}" 형태로 변환됨
+# network_ip: 자동으로 common.naming.tfvars의 vm_static_ips에서 동적 주입됨 (키 이름 기준)
+# 인스턴스 키: main.tf에서 "${project_name}-${key}" 형태로 변환됨 (예: gs01 → gcby-gs01)
 instances = {
   # Game Server tier (2대) - Private 서브넷 배치
-  # 실제 VM 이름은 terragrunt.hcl에서 "${project_name}-gs01" 형태로 자동 생성됨
+  # 실제 VM 이름: gcby-gs01, gcby-gs02
+  # network_ip는 common.naming.tfvars의 vm_static_ips["gs01"], vm_static_ips["gs02"]에서 자동 주입
   "gs01" = {
-    zone_suffix  = "a"  # region_primary-a (예: us-west1-a)
-    machine_type = "custom-4-8192"  # 4 vCPUs, 8GB RAM
+    zone_suffix       = "a"  # region_primary-a (예: us-west1-a)
+    machine_type      = "custom-4-8192"  # 4 vCPUs, 8GB RAM
     boot_disk_size_gb = 128  # 128GB SSD
     boot_disk_type    = "pd-ssd"
-    tags         = ["game-server", "ssh-from-iap", "ssh-from-mgmt", "private-zone"]
-    image_family  = "rocky-linux-10-optimized-gcp"
-    image_project = "rocky-linux-cloud"
+    tags              = ["game-server", "ssh-from-iap", "ssh-from-mgmt", "private-zone"]
+    image_family      = "rocky-linux-10-optimized-gcp"
+    image_project     = "rocky-linux-cloud"
     labels = {
       role = "game-server"
       tier = "backend"
     }
     startup_script_file = "scripts/lobby.sh"
     subnet_type         = "private"  # 자동으로 {project_name}-subnet-private 선택
-    vm_ip_key           = "gs01"  # common.naming.tfvars의 vm_ips 키 참조
+    # network_ip는 common.naming.tfvars vm_static_ips["gs01"] = "10.10.11.3"에서 자동 주입
   }
   "gs02" = {
-    zone_suffix  = "b"
-    machine_type = "custom-4-8192"  # 4 vCPUs, 8GB RAM
+    zone_suffix       = "b"
+    machine_type      = "custom-4-8192"  # 4 vCPUs, 8GB RAM
     boot_disk_size_gb = 128  # 128GB SSD
     boot_disk_type    = "pd-ssd"
-    tags         = ["game-server", "ssh-from-iap", "ssh-from-mgmt", "private-zone"]
-    image_family  = "rocky-linux-10-optimized-gcp"
-    image_project = "rocky-linux-cloud"
+    tags              = ["game-server", "ssh-from-iap", "ssh-from-mgmt", "private-zone"]
+    image_family      = "rocky-linux-10-optimized-gcp"
+    image_project     = "rocky-linux-cloud"
     labels = {
       role = "game-server"
       tier = "backend"
     }
     startup_script_file = "scripts/lobby.sh"
     subnet_type         = "private"
-    vm_ip_key           = "gs02"  # common.naming.tfvars의 vm_ips 키 참조
+    # network_ip는 common.naming.tfvars vm_static_ips["gs02"] = "10.10.11.6"에서 자동 주입
   }
 
   # # lobby tier (3대) - DMZ 서브넷 배치 - COMMENTED OUT
