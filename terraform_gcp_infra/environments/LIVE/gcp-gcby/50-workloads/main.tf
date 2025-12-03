@@ -38,9 +38,11 @@ locals {
   tags   = distinct(concat(module.naming.common_tags, var.tags))
   labels = merge(module.naming.common_labels, var.labels)
 
+  # 인스턴스 키 변환: 키가 이미 project_name으로 시작하면 그대로 사용, 아니면 접두어 추가
+  # 예: "gs01" -> "gcby-gs01", "gcby-gs01" -> "gcby-gs01" (중복 방지)
   processed_instances = {
     for name, cfg in var.instances :
-    name => merge(
+    (startswith(name, "${var.project_name}-") ? name : "${var.project_name}-${name}") => merge(
       { for k, v in cfg : k => v if k != "startup_script_file" && k != "subnet_type" && k != "zone_suffix" },
       try(cfg.startup_script_file, null) != null ?
       { startup_script = file("${path.module}/${cfg.startup_script_file}") } :
