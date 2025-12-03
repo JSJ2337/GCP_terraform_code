@@ -7,7 +7,7 @@ include "root" {
 }
 
 # =============================================================================
-# Locals: 모든 로컬 변수 통합 (Terragrunt는 하나의 locals 블록만 허용)
+# Locals: 기본 변수만 정의 (dependency 참조 불가)
 # =============================================================================
 locals {
   parent_dir = abspath("${get_terragrunt_dir()}/..")
@@ -27,48 +27,6 @@ locals {
     for key, project in local.projects :
     key => project.network_url
   }
-
-  # PSC Endpoints 동적 생성 (각 프로젝트의 Cloud SQL, Redis)
-  # 형식: {project_key}-{service} = { psc_ip, service_attachment }
-  #
-  # 주의: dependency는 정적 선언이 필요하므로,
-  # 프로젝트 추가 시 위의 dependency 블록도 함께 추가해야 함
-  psc_endpoints_gcby = {
-    "gcby-cloudsql" = {
-      region                    = "us-west1"
-      ip_address                = local.projects.gcby.psc_ips.cloudsql
-      target_service_attachment = dependency.gcby_database.outputs.psc_service_attachment_link
-      allow_global_access       = true
-    }
-    "gcby-redis" = {
-      region                    = "us-west1"
-      ip_address                = local.projects.gcby.psc_ips.redis
-      target_service_attachment = dependency.gcby_cache.outputs.psc_service_attachment_link
-      allow_global_access       = true
-    }
-  }
-
-  # 새 프로젝트 추가 예시 (주석)
-  # psc_endpoints_abc = {
-  #   "abc-cloudsql" = {
-  #     region                    = "us-west1"
-  #     ip_address                = local.projects.abc.psc_ips.cloudsql
-  #     target_service_attachment = dependency.abc_database.outputs.psc_service_attachment_link
-  #     allow_global_access       = true
-  #   }
-  #   "abc-redis" = {
-  #     region                    = "us-west1"
-  #     ip_address                = local.projects.abc.psc_ips.redis
-  #     target_service_attachment = dependency.abc_cache.outputs.psc_service_attachment_link
-  #     allow_global_access       = true
-  #   }
-  # }
-
-  # 모든 프로젝트의 PSC endpoints 병합
-  all_psc_endpoints = merge(
-    local.psc_endpoints_gcby,
-    # local.psc_endpoints_abc,  # 새 프로젝트 추가 시 주석 해제
-  )
 }
 
 # 00-foundation 의존성 (실행 순서 보장용)
@@ -126,7 +84,9 @@ dependencies {
   paths = ["../00-foundation"]
 }
 
-# common.hcl + layer.hcl + 동적 생성된 PSC endpoints
+# =============================================================================
+# Inputs: common.hcl + layer.hcl + PSC Endpoints (dependency 참조)
+# =============================================================================
 inputs = merge(
   local.common_vars.locals,
   local.layer_vars.locals,
@@ -134,7 +94,39 @@ inputs = merge(
     # VPC Peering 대상 목록 (자동 생성)
     project_vpc_network_urls = local.project_vpc_peerings
 
-    # PSC Endpoints (모든 프로젝트 통합)
-    psc_endpoints = local.all_psc_endpoints
+    # PSC Endpoints (dependency 참조는 inputs에서만 가능)
+    # 새 프로젝트 추가 시: dependency 블록 추가 후 여기에도 추가
+    psc_endpoints = merge(
+      # gcby 프로젝트
+      {
+        "gcby-cloudsql" = {
+          region                    = "us-west1"
+          ip_address                = local.projects.gcby.psc_ips.cloudsql
+          target_service_attachment = dependency.gcby_database.outputs.psc_service_attachment_link
+          allow_global_access       = true
+        }
+        "gcby-redis" = {
+          region                    = "us-west1"
+          ip_address                = local.projects.gcby.psc_ips.redis
+          target_service_attachment = dependency.gcby_cache.outputs.psc_service_attachment_link
+          allow_global_access       = true
+        }
+      },
+      # 새 프로젝트 추가 예시 (주석)
+      # {
+      #   "abc-cloudsql" = {
+      #     region                    = "us-west1"
+      #     ip_address                = local.projects.abc.psc_ips.cloudsql
+      #     target_service_attachment = dependency.abc_database.outputs.psc_service_attachment_link
+      #     allow_global_access       = true
+      #   }
+      #   "abc-redis" = {
+      #     region                    = "us-west1"
+      #     ip_address                = local.projects.abc.psc_ips.redis
+      #     target_service_attachment = dependency.abc_cache.outputs.psc_service_attachment_link
+      #     allow_global_access       = true
+      #   }
+      # },
+    )
   }
 )
