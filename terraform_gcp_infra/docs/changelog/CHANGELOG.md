@@ -7,6 +7,48 @@
 
 <!-- markdownlint-disable MD005 MD007 MD013 MD024 -->
 
+## [미배포] - 2025-12-04
+
+### 수정 (Fixed)
+
+- **50-workloads network_ip 주입 문제 해결**
+  - 문제: VM Static IP가 `(known after apply)`로 표시되어 설정값 적용 안됨
+  - 원인1: terragrunt.hcl에서 `instances_with_network_ip` local 정의 누락
+  - 원인2: terraform.tfvars 자동 로드와 terragrunt inputs 충돌
+  - 해결: local 재정의 + terraform.tfvars → workloads.tfvars 파일명 변경
+  - 파일: `environments/LIVE/gcp-gcby/50-workloads/terragrunt.hcl`, `workloads.tfvars`
+  - 커밋: 9d8bb51
+
+- **12-dns vm_static_ips 참조 수정**
+  - 문제: `network_config.vm_ips` 속성 없음 에러
+  - 원인: common.naming.tfvars에서 중복 vm_ips 제거 후 참조 누락
+  - 해결: `vm_static_ips` 최상위 레벨 변수 사용
+  - 파일: `environments/LIVE/gcp-gcby/12-dns/terragrunt.hcl`
+  - 커밋: ae1a845
+
+### 개선 (Improved)
+
+- **gcp-gcby 환경 하드코딩 제거**
+  - root.hcl: 환경변수 지원 (TG_STATE_BUCKET, TG_ORG_ID 등)
+  - 10-network: PSC IP 기본값 제거 (common.naming.tfvars에서 주입)
+  - 50-workloads: VM 이름 동적화 (`${project_name}-${key}` 패턴)
+  - 파일: `root.hcl`, `10-network/variables.tf`, `50-workloads/`
+  - 커밋: 363ee19
+
+- **common.naming.tfvars 중복 설정 정리**
+  - `network_config.vm_ips` 제거 (중복)
+  - `vm_static_ips` 최상위 레벨만 사용
+  - 파일: `environments/LIVE/gcp-gcby/common.naming.tfvars`
+  - 커밋: 112ca7a
+
+### 문서화 (Documentation)
+
+- **Work History 추가**
+  - 2025-12-04.md: 하드코딩 제거, network_ip 문제 해결 전체 과정 기록
+  - 파일: `docs/changelog/work_history/2025-12-04.md`
+
+---
+
 ## [미배포] - 2025-12-01
 
 ### 추가 (Added)
