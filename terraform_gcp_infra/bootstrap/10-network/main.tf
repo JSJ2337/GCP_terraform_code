@@ -53,6 +53,11 @@ locals {
   # 형식: { project_key = "projects/{id}/global/networks/{name}" }
   project_vpc_peerings = var.project_vpc_network_urls
 
+  # Primary가 아닌 리전 (게임 프로젝트용 - us-west1)
+  # subnets에서 is_primary = false인 첫 번째 항목의 region 사용
+  non_primary_subnets = { for k, v in var.subnets : k => v if !v.is_primary }
+  psc_region = length(local.non_primary_subnets) > 0 ? values(local.non_primary_subnets)[0].region : var.region_primary
+
   # ==========================================================================
   # PSC Endpoints 동적 생성 (terraform_remote_state에서 Service Attachment 참조)
   # ==========================================================================
@@ -69,7 +74,7 @@ locals {
     # Cloud SQL PSC Endpoint (1개)
     {
       "${local.gcby_project_name}-${local.gcby_env}-gdb-m1" = {
-        region                    = var.region_secondary
+        region                    = local.psc_region
         ip_address                = try(var.projects.gcby.psc_ips.cloudsql, "")
         target_service_attachment = try(data.terraform_remote_state.gcby_database[0].outputs.psc_service_attachment_link, "")
         allow_global_access       = true
@@ -79,7 +84,7 @@ locals {
     {
       for idx, sa in local.gcby_redis_service_attachments :
       "${local.gcby_project_name}-${local.gcby_env}-redis-${idx}" => {
-        region                    = var.region_secondary
+        region                    = local.psc_region
         ip_address                = try(var.projects.gcby.psc_ips.redis[idx], "")
         target_service_attachment = sa
         allow_global_access       = true
@@ -132,31 +137,15 @@ resource "google_compute_network" "mgmt_vpc" {
 }
 
 # -----------------------------------------------------------------------------
-# 2) Subnets
+# 2) Subnets (for_each로 동적 생성)
 # -----------------------------------------------------------------------------
-# Primary subnet (asia-northeast3)
-resource "google_compute_subnetwork" "mgmt_subnet" {
+resource "google_compute_subnetwork" "mgmt_subnets" {
+  for_each = var.subnets
+
   project       = var.management_project_id
-  name          = local.subnet_name
-  ip_cidr_range = var.subnet_cidr
-  region        = var.region_primary
-  network       = google_compute_network.mgmt_vpc.id
-
-  private_ip_google_access = true
-
-  log_config {
-    aggregation_interval = "INTERVAL_5_SEC"
-    flow_sampling        = 0.5
-    metadata             = "INCLUDE_ALL_METADATA"
-  }
-}
-
-# 보조 리전 subnet (PSC Endpoint용 - 게임 프로젝트 리전)
-resource "google_compute_subnetwork" "mgmt_subnet_secondary" {
-  project       = var.management_project_id
-  name          = "${var.management_project_id}-subnet-${var.region_secondary}"
-  ip_cidr_range = var.subnet_cidr_secondary
-  region        = var.region_secondary
+  name          = each.value.is_primary ? local.subnet_name : "${var.management_project_id}-subnet-${each.value.region}"
+  ip_cidr_range = each.value.cidr
+  region        = each.value.region
   network       = google_compute_network.mgmt_vpc.id
 
   private_ip_google_access = true
@@ -169,57 +158,32 @@ resource "google_compute_subnetwork" "mgmt_subnet_secondary" {
 }
 
 # -----------------------------------------------------------------------------
-# 3) Cloud Routers (NAT용, 리전별)
+# 3) Cloud Routers (NAT용, 리전별 - for_each로 동적 생성)
 # -----------------------------------------------------------------------------
-# Primary region (asia-northeast3) Router
-resource "google_compute_router" "mgmt_router" {
+resource "google_compute_router" "mgmt_routers" {
+  for_each = var.subnets
+
   project = var.management_project_id
-  name    = "${var.management_project_id}-router"
-  region  = var.region_primary
+  name    = each.value.is_primary ? "${var.management_project_id}-router" : "${var.management_project_id}-router-${each.value.region}"
+  region  = each.value.region
   network = google_compute_network.mgmt_vpc.id
 
   bgp {
-    asn = 64514
-  }
-}
-
-# 보조 리전 Router (게임 프로젝트 리전)
-resource "google_compute_router" "mgmt_router_secondary" {
-  project = var.management_project_id
-  name    = "${var.management_project_id}-router-${var.region_secondary}"
-  region  = var.region_secondary
-  network = google_compute_network.mgmt_vpc.id
-
-  bgp {
-    asn = 64515
+    # Primary는 64514, 그 외는 64515부터 순차 증가
+    asn = each.value.is_primary ? 64514 : 64515
   }
 }
 
 # -----------------------------------------------------------------------------
-# 4) Cloud NATs (리전별)
+# 4) Cloud NATs (리전별 - for_each로 동적 생성)
 # -----------------------------------------------------------------------------
-# Primary region (asia-northeast3) NAT
-resource "google_compute_router_nat" "mgmt_nat" {
+resource "google_compute_router_nat" "mgmt_nats" {
+  for_each = var.subnets
+
   project = var.management_project_id
-  name    = "${var.management_project_id}-nat"
-  router  = google_compute_router.mgmt_router.name
-  region  = var.region_primary
-
-  nat_ip_allocate_option             = "AUTO_ONLY"
-  source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
-
-  log_config {
-    enable = true
-    filter = "ALL"  # 모든 NAT 로그 수집 (트러블슈팅용)
-  }
-}
-
-# 보조 리전 NAT (게임 프로젝트 리전)
-resource "google_compute_router_nat" "mgmt_nat_secondary" {
-  project = var.management_project_id
-  name    = "${var.management_project_id}-nat-${var.region_secondary}"
-  router  = google_compute_router.mgmt_router_secondary.name
-  region  = var.region_secondary
+  name    = each.value.is_primary ? "${var.management_project_id}-nat" : "${var.management_project_id}-nat-${each.value.region}"
+  router  = google_compute_router.mgmt_routers[each.key].name
+  region  = each.value.region
 
   nat_ip_allocate_option             = "AUTO_ONLY"
   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
@@ -256,7 +220,8 @@ resource "google_compute_address" "psc_addresses" {
   project      = var.management_project_id
   name         = "${each.key}-psc"
   region       = each.value.region
-  subnetwork   = each.value.region == var.region_secondary ? google_compute_subnetwork.mgmt_subnet_secondary.id : google_compute_subnetwork.mgmt_subnet.id
+  # 해당 리전의 subnet 찾기 (region으로 매칭)
+  subnetwork   = [for k, v in google_compute_subnetwork.mgmt_subnets : v.id if v.region == each.value.region][0]
   address_type = "INTERNAL"
   address      = each.value.ip_address
   purpose      = "GCE_ENDPOINT"

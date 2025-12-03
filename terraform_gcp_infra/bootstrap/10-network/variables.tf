@@ -13,22 +13,24 @@ variable "region_primary" {
   default     = "asia-northeast3"
 }
 
-variable "subnet_cidr" {
-  description = "관리용 Subnet CIDR (asia-northeast3)"
-  type        = string
-  default     = "10.0.0.0/24"
-}
-
-variable "subnet_cidr_secondary" {
-  description = "보조 리전 Subnet CIDR (PSC Endpoint용)"
-  type        = string
-  default     = "10.0.1.0/24"
-}
-
-variable "region_secondary" {
-  description = "보조 리전 (PSC Endpoint용, 게임 프로젝트가 위치한 리전)"
-  type        = string
-  default     = "us-west1"
+# =============================================================================
+# Subnets 동적 생성 (for_each)
+# layer.hcl에서 정의하고, 새 리전 추가 시 layer.hcl에만 추가하면 됨
+# =============================================================================
+variable "subnets" {
+  description = "Subnet 정의 (for_each로 Subnet, Router, NAT 동적 생성)"
+  type = map(object({
+    region     = string
+    cidr       = string
+    is_primary = bool
+  }))
+  default = {
+    primary = {
+      region     = "asia-northeast3"
+      cidr       = "10.250.10.0/24"
+      is_primary = true
+    }
+  }
 }
 
 variable "labels" {

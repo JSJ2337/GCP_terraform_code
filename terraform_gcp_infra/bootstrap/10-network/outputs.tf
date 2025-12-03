@@ -17,50 +17,91 @@ output "vpc_self_link" {
   value       = google_compute_network.mgmt_vpc.self_link
 }
 
+# =============================================================================
+# Subnets (for_each 기반 - 모든 subnet 정보)
+# =============================================================================
+output "subnets" {
+  description = "모든 Subnet 정보"
+  value = {
+    for k, v in google_compute_subnetwork.mgmt_subnets : k => {
+      id        = v.id
+      name      = v.name
+      self_link = v.self_link
+      cidr      = v.ip_cidr_range
+      region    = v.region
+    }
+  }
+}
+
+# 하위 호환성을 위한 Primary subnet outputs
 output "subnet_id" {
-  description = "Subnet ID"
-  value       = google_compute_subnetwork.mgmt_subnet.id
+  description = "Primary Subnet ID"
+  value       = google_compute_subnetwork.mgmt_subnets["primary"].id
 }
 
 output "subnet_name" {
-  description = "Subnet 이름"
-  value       = google_compute_subnetwork.mgmt_subnet.name
+  description = "Primary Subnet 이름"
+  value       = google_compute_subnetwork.mgmt_subnets["primary"].name
 }
 
 output "subnet_self_link" {
-  description = "Subnet Self Link"
-  value       = google_compute_subnetwork.mgmt_subnet.self_link
+  description = "Primary Subnet Self Link"
+  value       = google_compute_subnetwork.mgmt_subnets["primary"].self_link
 }
 
 output "subnet_cidr" {
-  description = "Subnet CIDR"
-  value       = google_compute_subnetwork.mgmt_subnet.ip_cidr_range
+  description = "Primary Subnet CIDR"
+  value       = google_compute_subnetwork.mgmt_subnets["primary"].ip_cidr_range
 }
 
+# =============================================================================
+# Routers & NATs (for_each 기반)
+# =============================================================================
+output "routers" {
+  description = "모든 Cloud Router 정보"
+  value = {
+    for k, v in google_compute_router.mgmt_routers : k => {
+      name   = v.name
+      region = v.region
+    }
+  }
+}
+
+output "nats" {
+  description = "모든 Cloud NAT 정보"
+  value = {
+    for k, v in google_compute_router_nat.mgmt_nats : k => {
+      name   = v.name
+      region = v.region
+    }
+  }
+}
+
+# 하위 호환성을 위한 Primary router/nat outputs
 output "router_name" {
-  description = "Cloud Router 이름"
-  value       = google_compute_router.mgmt_router.name
+  description = "Primary Cloud Router 이름"
+  value       = google_compute_router.mgmt_routers["primary"].name
 }
 
 output "nat_name" {
-  description = "Cloud NAT 이름"
-  value       = google_compute_router_nat.mgmt_nat.name
+  description = "Primary Cloud NAT 이름"
+  value       = google_compute_router_nat.mgmt_nats["primary"].name
 }
 
-# Secondary region subnet outputs (게임 프로젝트 리전용)
+# 하위 호환성을 위한 Secondary region subnet outputs
 output "subnet_secondary_id" {
-  description = "Secondary region Subnet ID"
-  value       = google_compute_subnetwork.mgmt_subnet_secondary.id
+  description = "Secondary region Subnet ID (us-west1)"
+  value       = google_compute_subnetwork.mgmt_subnets["us-west1"].id
 }
 
 output "subnet_secondary_name" {
-  description = "Secondary region Subnet 이름"
-  value       = google_compute_subnetwork.mgmt_subnet_secondary.name
+  description = "Secondary region Subnet 이름 (us-west1)"
+  value       = google_compute_subnetwork.mgmt_subnets["us-west1"].name
 }
 
 output "subnet_secondary_self_link" {
-  description = "Secondary region Subnet Self Link"
-  value       = google_compute_subnetwork.mgmt_subnet_secondary.self_link
+  description = "Secondary region Subnet Self Link (us-west1)"
+  value       = google_compute_subnetwork.mgmt_subnets["us-west1"].self_link
 }
 
 # =============================================================================

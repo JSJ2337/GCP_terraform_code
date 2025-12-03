@@ -1,11 +1,31 @@
 # 10-network 레이어 설정
 
 locals {
-  # Primary Subnet CIDR (asia-northeast3)
-  subnet_cidr = "10.250.10.0/24"
+  # ==========================================================================
+  # Subnet 정의 (for_each 동적 생성)
+  # 새 리전 추가 시 여기에만 추가하면 자동으로 Subnet, Router, NAT 생성
+  # ==========================================================================
+  subnets = {
+    primary = {
+      region     = "asia-northeast3"
+      cidr       = "10.250.10.0/24"
+      is_primary = true  # Primary subnet 여부 (naming 구분용)
+    }
+    us-west1 = {
+      region     = "us-west1"
+      cidr       = "10.250.20.0/24"
+      is_primary = false
+    }
+    # 새 리전 추가 예시:
+    # eu-west1 = {
+    #   region     = "europe-west1"
+    #   cidr       = "10.250.30.0/24"
+    #   is_primary = false
+    # }
+  }
 
-  # Secondary Subnet CIDR (us-west1, PSC Endpoint용)
-  subnet_cidr_secondary = "10.250.20.0/24"
+  # Primary 리전 (기본 리전)
+  region_primary = "asia-northeast3"
 
   # Jenkins 접근 허용 CIDR (회사 IP로 제한)
   # TODO: 실제 회사 IP로 변경 필요
