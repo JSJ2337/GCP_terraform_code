@@ -103,6 +103,12 @@ module "net" {
 
   firewall_rules = var.firewall_rules
 
+  # Private Service Connection (VPC Peering)
+  enable_private_service_connection        = var.enable_private_service_connection
+  private_service_connection_address       = var.private_service_connection_address
+  private_service_connection_prefix_length = var.private_service_connection_prefix_length
+  private_service_connection_name          = local.private_service_connection_name
+
   # Ensure all required APIs are enabled and propagated
   depends_on = [time_sleep.wait_servicenetworking_api]
 }
