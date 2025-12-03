@@ -43,9 +43,9 @@ locals {
   private_subnet_name = "${local.project_name}-live-subnet-private"
   psc_subnet_name     = "${local.project_name}-live-subnet-psc"
 
-  # Memorystore PSC 설정
+  # Memorystore PSC 설정 - PSC subnet (10.10.12.x)을 사용해야 함
   memorystore_psc_region      = local.region_primary
-  memorystore_psc_subnet_name = local.private_subnet_name
+  memorystore_psc_subnet_name = local.psc_subnet_name  # PSC 서브넷 사용 (private 아님!)
 
   # VPC Peering 대상
   mgmt_project_id = try(local.network_config.peering.mgmt_project_id, "delabs-gcp-mgmt")
