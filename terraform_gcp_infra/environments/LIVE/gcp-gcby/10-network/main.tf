@@ -220,25 +220,29 @@ resource "google_compute_network_peering" "gcby_to_mgmt" {
 # PSC Forwarding Rule for Cloud SQL (consumer VPC에서 생성)
 # -----------------------------------------------------------------------------
 resource "google_compute_address" "cloudsql_psc" {
+  count = length(var.cloudsql_service_attachment) > 0 ? 1 : 0
+
   project      = var.project_id
-  name         = "gcby-cloudsql-psc"
-  region       = "us-west1"
-  subnetwork   = "projects/${var.project_id}/regions/us-west1/subnetworks/gcby-live-subnet-psc"
+  name         = "${var.project_name}-cloudsql-psc"
+  region       = var.region_primary
+  subnetwork   = "projects/${var.project_id}/regions/${var.region_primary}/subnetworks/${var.project_name}-subnet-psc"
   address_type = "INTERNAL"
-  address      = "10.10.12.51"
+  address      = var.psc_cloudsql_ip
   purpose      = "GCE_ENDPOINT"
 
   depends_on = [module.net]
 }
 
 resource "google_compute_forwarding_rule" "cloudsql_psc" {
+  count = length(var.cloudsql_service_attachment) > 0 ? 1 : 0
+
   project               = var.project_id
-  name                  = "gcby-cloudsql-psc-fr"
-  region                = "us-west1"
+  name                  = "${var.project_name}-cloudsql-psc-fr"
+  region                = var.region_primary
   network               = module.net.vpc_self_link
-  ip_address            = google_compute_address.cloudsql_psc.id
+  ip_address            = google_compute_address.cloudsql_psc[0].id
   load_balancing_scheme = ""
-  target                = "projects/va89486946f7d978dp-tp/regions/us-west1/serviceAttachments/a-ddb66ab8241d-psc-service-attachment-e4480ecfda9f3356"
+  target                = var.cloudsql_service_attachment
 
   # Cross-region access 활성화
   allow_psc_global_access = true
@@ -250,25 +254,29 @@ resource "google_compute_forwarding_rule" "cloudsql_psc" {
 # PSC Forwarding Rule for Redis (consumer VPC에서 생성)
 # -----------------------------------------------------------------------------
 resource "google_compute_address" "redis_psc" {
+  count = length(var.redis_service_attachment) > 0 ? 1 : 0
+
   project      = var.project_id
-  name         = "gcby-redis-psc"
-  region       = "us-west1"
-  subnetwork   = "projects/${var.project_id}/regions/us-west1/subnetworks/gcby-live-subnet-psc"
+  name         = "${var.project_name}-redis-psc"
+  region       = var.region_primary
+  subnetwork   = "projects/${var.project_id}/regions/${var.region_primary}/subnetworks/${var.project_name}-subnet-psc"
   address_type = "INTERNAL"
-  address      = "10.10.12.101"
+  address      = var.psc_redis_ip
   purpose      = "GCE_ENDPOINT"
 
   depends_on = [module.net]
 }
 
 resource "google_compute_forwarding_rule" "redis_psc" {
+  count = length(var.redis_service_attachment) > 0 ? 1 : 0
+
   project               = var.project_id
-  name                  = "gcby-redis-psc-fr"
-  region                = "us-west1"
+  name                  = "${var.project_name}-redis-psc-fr"
+  region                = var.region_primary
   network               = module.net.vpc_self_link
-  ip_address            = google_compute_address.redis_psc.id
+  ip_address            = google_compute_address.redis_psc[0].id
   load_balancing_scheme = ""
-  target                = "projects/165759898169/regions/us-west1/serviceAttachments/gcp-memorystore-auto-dca169a8dca37220-psc-sa"
+  target                = var.redis_service_attachment
 
   # Cross-region access 활성화
   allow_psc_global_access = true

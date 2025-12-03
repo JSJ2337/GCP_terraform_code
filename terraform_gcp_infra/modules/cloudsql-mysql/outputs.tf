@@ -65,3 +65,8 @@ output "read_replica_ip_addresses" {
   description = "읽기 복제본 IP 주소"
   value       = { for k, replica in google_sql_database_instance.read_replicas : k => replica.first_ip_address }
 }
+
+output "psc_service_attachment_link" {
+  description = "PSC Service Attachment Link (for PSC endpoints)"
+  value       = google_sql_database_instance.instance.psc_service_attachment_link
+}

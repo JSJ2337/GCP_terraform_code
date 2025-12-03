@@ -41,3 +41,15 @@ variable "psc_endpoints" {
   }))
   default = {}
 }
+
+variable "psc_cloudsql_ip" {
+  description = "PSC endpoint IP for Cloud SQL"
+  type        = string
+  default     = "10.250.20.20"
+}
+
+variable "psc_redis_ip" {
+  description = "PSC endpoint IP for Redis"
+  type        = string
+  default     = "10.250.20.101"
+}

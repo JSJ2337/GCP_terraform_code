@@ -6,6 +6,29 @@
 locals {
   network_name = "${var.management_project_id}-vpc"
   subnet_name  = "${var.management_project_id}-subnet"
+
+  # PSC Endpoints 동적 생성 (Service Attachment를 dependency에서 가져옴)
+  psc_endpoints = merge(
+    var.psc_endpoints,
+    # Cloud SQL
+    length(var.gcby_cloudsql_service_attachment) > 0 ? {
+      gcby-cloudsql = {
+        region                    = "us-west1"
+        ip_address                = var.psc_cloudsql_ip
+        target_service_attachment = var.gcby_cloudsql_service_attachment
+        allow_global_access       = true
+      }
+    } : {},
+    # Redis
+    length(var.gcby_redis_service_attachment) > 0 ? {
+      gcby-redis = {
+        region                    = "us-west1"
+        ip_address                = var.psc_redis_ip
+        target_service_attachment = var.gcby_redis_service_attachment
+        allow_global_access       = true
+      }
+    } : {}
+  )
 }
 
 # -----------------------------------------------------------------------------
@@ -136,7 +159,7 @@ resource "google_compute_network_peering" "mgmt_to_gcby" {
 # -----------------------------------------------------------------------------
 # Internal IP 주소 예약
 resource "google_compute_address" "psc_addresses" {
-  for_each = var.psc_endpoints
+  for_each = local.psc_endpoints
 
   project      = var.management_project_id
   name         = "${each.key}-psc"
@@ -149,7 +172,7 @@ resource "google_compute_address" "psc_addresses" {
 
 # PSC Forwarding Rule
 resource "google_compute_forwarding_rule" "psc_endpoints" {
-  for_each = var.psc_endpoints
+  for_each = local.psc_endpoints
 
   project               = var.management_project_id
   name                  = "${each.key}-psc-fr"

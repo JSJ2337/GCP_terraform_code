@@ -181,3 +181,27 @@ variable "cloudsql_psc_connection_limit" {
   description = "Cloud SQL PSC 서비스 연결 정책에서 허용할 최대 연결 수"
   default     = 5
 }
+
+variable "cloudsql_service_attachment" {
+  description = "Cloud SQL PSC Service Attachment (from dependency)"
+  type        = string
+  default     = ""
+}
+
+variable "redis_service_attachment" {
+  description = "Redis PSC Service Attachment (from dependency)"
+  type        = string
+  default     = ""
+}
+
+variable "psc_cloudsql_ip" {
+  description = "PSC endpoint IP for Cloud SQL"
+  type        = string
+  default     = "10.10.12.51"
+}
+
+variable "psc_redis_ip" {
+  description = "PSC endpoint IP for Redis"
+  type        = string
+  default     = "10.10.12.101"
+}

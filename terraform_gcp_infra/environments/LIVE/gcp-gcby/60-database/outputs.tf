@@ -27,3 +27,8 @@ output "user_names" {
   description = "생성된 사용자 이름 목록"
   value       = module.mysql.user_names
 }
+
+output "psc_service_attachment_link" {
+  description = "PSC Service Attachment Link"
+  value       = module.mysql.psc_service_attachment_link
+}

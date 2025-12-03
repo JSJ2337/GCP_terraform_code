@@ -40,6 +40,26 @@ locals {
   memorystore_psc_subnet_name = local.private_subnet_name
 }
 
+# Cloud SQL dependency (Service Attachment 가져오기)
+dependency "database" {
+  config_path = "../60-database"
+
+  mock_outputs = {
+    psc_service_attachment_link = "projects/mock/regions/us-west1/serviceAttachments/mock-cloudsql"
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+}
+
+# Redis dependency (Service Attachment 가져오기)
+dependency "cache" {
+  config_path = "../65-cache"
+
+  mock_outputs = {
+    psc_service_attachment_link = "projects/mock/regions/us-west1/serviceAttachments/mock-redis"
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+}
+
 inputs = merge(
   local.common_inputs,
   local.layer_inputs,
@@ -51,6 +71,10 @@ inputs = merge(
     db_subnet_name              = local.db_subnet_name
     memorystore_psc_region      = local.memorystore_psc_region
     memorystore_psc_subnet_name = local.memorystore_psc_subnet_name
+
+    # Service Attachment를 dependency에서 가져옴
+    cloudsql_service_attachment = dependency.database.outputs.psc_service_attachment_link
+    redis_service_attachment    = dependency.cache.outputs.psc_service_attachment_link
   }
 )
 
