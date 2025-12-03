@@ -8,8 +8,14 @@ variable "management_project_id" {
 }
 
 variable "vpc_self_link" {
-  description = "VPC Self Link (10-network에서 전달)"
+  description = "VPC Self Link (10-network에서 전달) - mgmt VPC"
   type        = string
+}
+
+variable "additional_networks" {
+  description = "DNS Zone에 추가로 연결할 VPC 네트워크 URL 목록 (프로젝트 VPC들)"
+  type        = list(string)
+  default     = []
 }
 
 variable "dns_zone_name" {

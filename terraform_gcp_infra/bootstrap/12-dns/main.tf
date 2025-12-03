@@ -8,6 +8,11 @@
 # -----------------------------------------------------------------------------
 # 1) Private DNS Zone
 # -----------------------------------------------------------------------------
+locals {
+  # mgmt VPC + 추가 네트워크들을 하나의 리스트로 결합
+  all_networks = concat([var.vpc_self_link], var.additional_networks)
+}
+
 resource "google_dns_managed_zone" "private" {
   project     = var.management_project_id
   name        = var.dns_zone_name
@@ -16,8 +21,11 @@ resource "google_dns_managed_zone" "private" {
   visibility  = "private"
 
   private_visibility_config {
-    networks {
-      network_url = var.vpc_self_link
+    dynamic "networks" {
+      for_each = local.all_networks
+      content {
+        network_url = networks.value
+      }
     }
   }
 
