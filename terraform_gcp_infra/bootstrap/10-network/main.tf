@@ -249,7 +249,7 @@ resource "google_compute_network_peering" "mgmt_to_projects" {
 # -----------------------------------------------------------------------------
 # 6) PSC Endpoints for Cloud SQL (mgmt VPC용)
 # -----------------------------------------------------------------------------
-# Internal IP 주소 예약
+# Internal IP 주소 예약 (PSC Endpoint용)
 resource "google_compute_address" "psc_addresses" {
   for_each = local.psc_endpoints
 
@@ -260,6 +260,12 @@ resource "google_compute_address" "psc_addresses" {
   address_type = "INTERNAL"
   address      = each.value.ip_address
   purpose      = "GCE_ENDPOINT"
+
+  # Address가 forwarding rule에서 사용 중일 때 변경 방지
+  # 변경이 필요한 경우 먼저 forwarding rule 삭제 후 진행해야 함
+  lifecycle {
+    ignore_changes = [subnetwork]
+  }
 }
 
 # PSC Forwarding Rule
