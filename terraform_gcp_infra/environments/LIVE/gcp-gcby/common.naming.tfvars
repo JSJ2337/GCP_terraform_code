@@ -66,6 +66,5 @@ dns_config = {
 # 보안 주의: 비밀번호는 초기 배포 후 반드시 변경 필요!
 vm_admin_config = {
   username = "delabs-adm"
-  # 비밀번호는 Secret Manager 또는 환경변수로 관리 권장
-  # startup script에서 TF_VAR_vm_admin_password 환경변수 참조
+  password = "REDACTED_PASSWORD"
 }

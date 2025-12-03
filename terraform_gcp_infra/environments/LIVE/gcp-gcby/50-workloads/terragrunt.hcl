@@ -85,6 +85,11 @@ inputs = merge(
     # network_ip도 common.naming.tfvars의 vm_ips에서 동적 주입
     instances       = local.instances_with_zones
     instance_groups = local.instance_groups_with_zones
+
+    # VM 메타데이터 - common.naming.tfvars의 vm_admin_config에서 주입
+    metadata = {
+      admin-password = try(local.common_inputs.vm_admin_config.password, "")
+    }
   }
 )
 

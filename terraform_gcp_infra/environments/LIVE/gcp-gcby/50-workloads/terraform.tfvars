@@ -20,11 +20,6 @@ labels = {
   component   = "game-server"
 }
 
-# VM 메타데이터 (startup script에서 참조)
-metadata = {
-  admin-password = "REDACTED_PASSWORD"
-}
-
 # 역할별 인스턴스 정의
 # subnet_type: "dmz", "private", "db" 중 하나 선택
 # zone_suffix: "a", "b", "c" - common.naming.tfvars의 region_primary와 자동 결합됨 (예: us-west1-a)
