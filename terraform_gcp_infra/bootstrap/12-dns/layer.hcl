@@ -32,14 +32,13 @@ locals {
       rrdatas = ["10.10.11.6"]
     }
 
-    # Cloud SQL PSC endpoint (mgmt VPC용)
-    "gcby-live-gdb-m1" = {
-      type    = "A"
-      ttl     = 300
-      rrdatas = ["10.250.20.20"]  # mgmt VPC의 PSC FR IP
-    }
-
     # 새 서버 추가 시 여기에 추가
+    # Cloud SQL PSC endpoint는 PSC FR 생성 후 추가
+    # "gcby-live-gdb-m1" = {
+    #   type    = "A"
+    #   ttl     = 300
+    #   rrdatas = ["10.250.20.20"]
+    # }
     # "gitlab" = {
     #   type    = "A"
     #   ttl     = 300
