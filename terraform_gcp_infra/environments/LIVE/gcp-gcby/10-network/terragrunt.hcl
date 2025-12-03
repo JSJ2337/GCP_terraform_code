@@ -51,9 +51,9 @@ locals {
   mgmt_vpc_name   = try(local.network_config.peering.mgmt_vpc_name, "delabs-gcp-mgmt-vpc")
   peer_network_url = "projects/${local.mgmt_project_id}/global/networks/${local.mgmt_vpc_name}"
 
-  # PSC Endpoint IP
+  # PSC Endpoint IPs
   psc_cloudsql_ip = try(local.network_config.psc_endpoints.cloudsql, "10.10.12.51")
-  psc_redis_ip    = try(local.network_config.psc_endpoints.redis, "10.10.12.101")
+  psc_redis_ips   = try(local.network_config.psc_endpoints.redis, ["10.10.12.101", "10.10.12.102"])
 }
 
 # Cloud SQL dependency (Service Attachment 가져오기)
@@ -66,12 +66,15 @@ dependency "database" {
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
 
-# Redis dependency (Service Attachment 가져오기)
+# Redis dependency (Service Attachments 가져오기 - Discovery + Shard)
 dependency "cache" {
   config_path = "../65-cache"
 
   mock_outputs = {
-    psc_service_attachment_link = "projects/mock/regions/us-west1/serviceAttachments/mock-redis"
+    psc_service_attachment_links = [
+      "projects/mock/regions/us-west1/serviceAttachments/mock-redis-discovery",
+      "projects/mock/regions/us-west1/serviceAttachments/mock-redis-shard"
+    ]
   }
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
@@ -91,13 +94,13 @@ inputs = merge(
     # VPC Peering (common.naming.tfvars에서 가져옴)
     peer_network_url = local.peer_network_url
 
-    # PSC Endpoint IP (common.naming.tfvars에서 가져옴)
+    # PSC Endpoint IPs (common.naming.tfvars에서 가져옴)
     psc_cloudsql_ip = local.psc_cloudsql_ip
-    psc_redis_ip    = local.psc_redis_ip
+    psc_redis_ips   = local.psc_redis_ips
 
     # Service Attachment를 dependency에서 가져옴
     cloudsql_service_attachment = dependency.database.outputs.psc_service_attachment_link
-    redis_service_attachment    = dependency.cache.outputs.psc_service_attachment_link
+    redis_service_attachments   = dependency.cache.outputs.psc_service_attachment_links
   }
 )
 

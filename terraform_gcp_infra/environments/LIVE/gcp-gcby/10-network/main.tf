@@ -251,32 +251,33 @@ resource "google_compute_forwarding_rule" "cloudsql_psc" {
 }
 
 # -----------------------------------------------------------------------------
-# PSC Forwarding Rule for Redis (consumer VPC에서 생성)
+# PSC Forwarding Rules for Redis (consumer VPC에서 생성)
+# Redis Cluster는 2개의 Service Attachment (Discovery + Shard)가 있으므로 2개 Endpoint 필요
 # -----------------------------------------------------------------------------
 resource "google_compute_address" "redis_psc" {
-  count = length(var.redis_service_attachment) > 0 ? 1 : 0
+  count = length(var.redis_service_attachments)
 
   project      = var.project_id
-  name         = "${var.project_name}-redis-psc"
+  name         = "${var.project_name}-redis-psc-${count.index}"
   region       = var.region_primary
   subnetwork   = "projects/${var.project_id}/regions/${var.region_primary}/subnetworks/${var.project_name}-subnet-psc"
   address_type = "INTERNAL"
-  address      = var.psc_redis_ip
+  address      = var.psc_redis_ips[count.index]
   purpose      = "GCE_ENDPOINT"
 
   depends_on = [module.net]
 }
 
 resource "google_compute_forwarding_rule" "redis_psc" {
-  count = length(var.redis_service_attachment) > 0 ? 1 : 0
+  count = length(var.redis_service_attachments)
 
   project               = var.project_id
-  name                  = "${var.project_name}-redis-psc-fr"
+  name                  = "${var.project_name}-redis-psc-fr-${count.index}"
   region                = var.region_primary
   network               = module.net.vpc_self_link
-  ip_address            = google_compute_address.redis_psc[0].id
+  ip_address            = google_compute_address.redis_psc[count.index].id
   load_balancing_scheme = ""
-  target                = var.redis_service_attachment
+  target                = var.redis_service_attachments[count.index]
 
   # Cross-region access 활성화
   allow_psc_global_access = true

@@ -188,10 +188,10 @@ variable "cloudsql_service_attachment" {
   default     = ""
 }
 
-variable "redis_service_attachment" {
-  description = "Redis PSC Service Attachment (from dependency)"
-  type        = string
-  default     = ""
+variable "redis_service_attachments" {
+  description = "Redis PSC Service Attachments list (Discovery + Shard from dependency)"
+  type        = list(string)
+  default     = []
 }
 
 variable "psc_cloudsql_ip" {
@@ -200,10 +200,10 @@ variable "psc_cloudsql_ip" {
   default     = "10.10.12.51"
 }
 
-variable "psc_redis_ip" {
-  description = "PSC endpoint IP for Redis"
-  type        = string
-  default     = "10.10.12.101"
+variable "psc_redis_ips" {
+  description = "PSC endpoint IPs for Redis (Discovery + Shard)"
+  type        = list(string)
+  default     = ["10.10.12.101", "10.10.12.102"]
 }
 
 variable "peer_network_url" {

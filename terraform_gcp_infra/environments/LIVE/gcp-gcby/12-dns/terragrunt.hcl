@@ -35,7 +35,7 @@ locals {
       name    = "gcby-live-redis"
       type    = "A"
       ttl     = 300
-      rrdatas = [try(local.network_config.psc_endpoints.redis, "10.10.12.101")]
+      rrdatas = [try(local.network_config.psc_endpoints.redis[0], "10.10.12.101")]
     },
     {
       name    = "gcby-gs01"

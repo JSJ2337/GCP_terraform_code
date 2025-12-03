@@ -33,9 +33,10 @@ network_config = {
   }
 
   # PSC Endpoint IP
+  # Redis Cluster는 2개의 Service Attachment (Discovery + Shard)가 있으므로 2개 IP 필요
   psc_endpoints = {
     cloudsql = "10.10.12.51"
-    redis    = "10.10.12.101"
+    redis    = ["10.10.12.101", "10.10.12.102"]
   }
 
   # VPC Peering
