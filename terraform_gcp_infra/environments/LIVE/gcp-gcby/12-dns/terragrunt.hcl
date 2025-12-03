@@ -12,6 +12,16 @@ dependencies {
   ]
 }
 
+# 10-network에서 VPC self_link 가져오기
+dependency "network" {
+  config_path = "../10-network"
+
+  mock_outputs = {
+    vpc_self_link = "projects/gcp-gcby/global/networks/gcby-live-vpc"
+  }
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
+}
+
 locals {
   parent_dir        = abspath("${get_terragrunt_dir()}/..")
   raw_common_inputs = read_tfvars_file("${local.parent_dir}/common.naming.tfvars")
@@ -58,5 +68,8 @@ inputs = merge(
   {
     # DNS 레코드를 동적 생성한 것으로 override
     dns_records = local.dns_records
+
+    # Private DNS Zone이 연결될 VPC (10-network에서 동적으로 가져옴)
+    private_networks = [dependency.network.outputs.vpc_self_link]
   }
 )
