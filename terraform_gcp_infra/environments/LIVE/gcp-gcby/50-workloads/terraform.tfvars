@@ -24,9 +24,11 @@ labels = {
 # subnet_type: "dmz", "private", "db" 중 하나 선택
 # zone_suffix: "a", "b", "c" - common.naming.tfvars의 region_primary와 자동 결합됨 (예: us-west1-a)
 # network_ip: terragrunt.hcl에서 common.naming.tfvars의 vm_ips로부터 동적 주입됨
+# 인스턴스 키: vm_ip_key 값 사용 (예: "gs01") - terragrunt.hcl에서 "${project_name}-${key}" 형태로 변환됨
 instances = {
   # Game Server tier (2대) - Private 서브넷 배치
-  "gcby-gs01" = {
+  # 실제 VM 이름은 terragrunt.hcl에서 "${project_name}-gs01" 형태로 자동 생성됨
+  "gs01" = {
     zone_suffix  = "a"  # region_primary-a (예: us-west1-a)
     machine_type = "custom-4-8192"  # 4 vCPUs, 8GB RAM
     boot_disk_size_gb = 128  # 128GB SSD
@@ -39,10 +41,10 @@ instances = {
       tier = "backend"
     }
     startup_script_file = "scripts/lobby.sh"
-    subnet_type         = "private"  # 자동으로 gcby-subnet-private 선택
+    subnet_type         = "private"  # 자동으로 {project_name}-subnet-private 선택
     vm_ip_key           = "gs01"  # common.naming.tfvars의 vm_ips 키 참조
   }
-  "gcby-gs02" = {
+  "gs02" = {
     zone_suffix  = "b"
     machine_type = "custom-4-8192"  # 4 vCPUs, 8GB RAM
     boot_disk_size_gb = 128  # 128GB SSD

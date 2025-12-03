@@ -195,15 +195,15 @@ variable "redis_service_attachments" {
 }
 
 variable "psc_cloudsql_ip" {
-  description = "PSC endpoint IP for Cloud SQL"
+  description = "PSC endpoint IP for Cloud SQL (common.naming.tfvars에서 주입)"
   type        = string
-  default     = "10.10.12.51"
+  default     = ""  # terragrunt.hcl에서 network_config.psc_endpoints.cloudsql 주입
 }
 
 variable "psc_redis_ips" {
-  description = "PSC endpoint IPs for Redis (Discovery + Shard)"
+  description = "PSC endpoint IPs for Redis (Discovery + Shard, common.naming.tfvars에서 주입)"
   type        = list(string)
-  default     = ["10.10.12.101", "10.10.12.102"]
+  default     = []  # terragrunt.hcl에서 network_config.psc_endpoints.redis 주입
 }
 
 variable "peer_network_url" {

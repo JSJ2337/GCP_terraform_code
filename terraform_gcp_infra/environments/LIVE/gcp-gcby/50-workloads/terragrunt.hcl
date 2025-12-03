@@ -17,23 +17,25 @@ locals {
   # region_primary에서 자동으로 zone 생성
   region_primary = local.common_inputs.region_primary
 
-  # common.naming.tfvars에서 VM IP 가져오기
-  vm_ips = try(local.common_inputs.network_config.vm_ips, {})
+  # common.naming.tfvars에서 VM IP 및 project_name 가져오기
+  vm_ips       = try(local.common_inputs.network_config.vm_ips, {})
+  project_name = local.common_inputs.project_name
 
-  # instances의 zone을 region_primary 기반으로 자동 변환
+  # instances의 키를 "${project_name}-${key}" 형태로 변환하고
+  # zone을 region_primary 기반으로 자동 변환
   # vm_ip_key가 있으면 common.naming.tfvars의 vm_ips에서 network_ip 자동 주입
   instances_with_zones = {
     for k, v in try(local.layer_inputs.instances, {}) :
-    k => merge(v, {
+    "${local.project_name}-${k}" => merge(v, {
       zone       = "${local.region_primary}-${v.zone_suffix}"
       network_ip = try(local.vm_ips[v.vm_ip_key], try(v.network_ip, null))
     })
   }
 
-  # instance_groups의 zone도 자동 변환
+  # instance_groups의 키도 "${project_name}-${key}" 형태로 변환하고 zone 자동 생성
   instance_groups_with_zones = {
     for k, v in try(local.layer_inputs.instance_groups, {}) :
-    k => merge(v, {
+    "${local.project_name}-${k}" => merge(v, {
       zone = "${local.region_primary}-${v.zone_suffix}"
     })
   }
