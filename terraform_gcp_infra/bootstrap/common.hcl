@@ -46,7 +46,7 @@ locals {
       # PSC Endpoint IP (mgmt VPC에서 접근용)
       # Redis Cluster는 2개의 Service Attachment가 있으므로 2개의 IP 필요
       psc_ips = {
-        cloudsql = "10.10.12.20"
+        cloudsql = "10.10.12.51"
         redis    = ["10.10.12.101", "10.10.12.102"]  # Discovery + Shard
       }
 
