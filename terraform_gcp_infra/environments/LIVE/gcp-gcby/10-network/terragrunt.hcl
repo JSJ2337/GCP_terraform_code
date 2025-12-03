@@ -48,14 +48,20 @@ locals {
   memorystore_psc_region      = local.region_primary
   memorystore_psc_subnet_name = local.psc_subnet_name  # PSC 서브넷 사용 (private 아님!)
 
-  # VPC Peering 대상
-  mgmt_project_id = try(local.network_config.peering.mgmt_project_id, "delabs-gcp-mgmt")
-  mgmt_vpc_name   = try(local.network_config.peering.mgmt_vpc_name, "delabs-gcp-mgmt-vpc")
+  # VPC Peering 대상 (common.naming.tfvars의 network_config.peering 또는 management_project_id에서 가져옴)
+  mgmt_project_id = try(
+    local.network_config.peering.mgmt_project_id,
+    local.common_inputs.management_project_id
+  )
+  mgmt_vpc_name = try(
+    local.network_config.peering.mgmt_vpc_name,
+    "${local.mgmt_project_id}-vpc"
+  )
   peer_network_url = "projects/${local.mgmt_project_id}/global/networks/${local.mgmt_vpc_name}"
 
-  # PSC Endpoint IPs
-  psc_cloudsql_ip = try(local.network_config.psc_endpoints.cloudsql, "10.10.12.51")
-  psc_redis_ips   = try(local.network_config.psc_endpoints.redis, ["10.10.12.101", "10.10.12.102"])
+  # PSC Endpoint IPs (common.naming.tfvars의 network_config.psc_endpoints에서 가져옴 - 필수)
+  psc_cloudsql_ip = local.network_config.psc_endpoints.cloudsql
+  psc_redis_ips   = local.network_config.psc_endpoints.redis
 }
 
 # Cloud SQL dependency (Service Attachment 가져오기)
@@ -63,7 +69,7 @@ dependency "database" {
   config_path = "../60-database"
 
   mock_outputs = {
-    psc_service_attachment_link = "projects/mock/regions/us-west1/serviceAttachments/mock-cloudsql"
+    psc_service_attachment_link = "projects/mock/regions/${local.region_primary}/serviceAttachments/mock-cloudsql"
   }
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
@@ -74,8 +80,8 @@ dependency "cache" {
 
   mock_outputs = {
     psc_service_attachment_links = [
-      "projects/mock/regions/us-west1/serviceAttachments/mock-redis-discovery",
-      "projects/mock/regions/us-west1/serviceAttachments/mock-redis-shard"
+      "projects/mock/regions/${local.region_primary}/serviceAttachments/mock-redis-discovery",
+      "projects/mock/regions/${local.region_primary}/serviceAttachments/mock-redis-shard"
     ]
   }
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]

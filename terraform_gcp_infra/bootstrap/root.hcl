@@ -1,9 +1,17 @@
 # Bootstrap Root Configuration
 # 모든 Bootstrap 레이어에서 공통으로 사용하는 설정
+#
+# 환경 변수:
+#   - TG_BOOTSTRAP_STATE_BUCKET: State 버킷 이름 (기본값: delabs-terraform-state-live)
+#   - TG_BOOTSTRAP_STATE_PROJECT: State 버킷이 있는 프로젝트 (기본값: delabs-gcp-mgmt)
+#   - TG_BOOTSTRAP_STATE_LOCATION: State 버킷 위치 (기본값: ASIA)
+#   - TG_USE_LOCAL_BACKEND: 로컬 백엔드 사용 여부 (기본값: false)
 
 locals {
   # 환경 변수에서 state bucket 이름을 가져오거나 기본값 사용
-  state_bucket = get_env("TG_BOOTSTRAP_STATE_BUCKET", "delabs-terraform-state-live")
+  state_bucket   = get_env("TG_BOOTSTRAP_STATE_BUCKET", "delabs-terraform-state-live")
+  state_project  = get_env("TG_BOOTSTRAP_STATE_PROJECT", "delabs-gcp-mgmt")
+  state_location = get_env("TG_BOOTSTRAP_STATE_LOCATION", "ASIA")
 
   # 로컬 백엔드 사용 여부 (초기 부트스트랩 시 true로 설정)
   # 사용법: TG_USE_LOCAL_BACKEND=true terragrunt apply
@@ -19,8 +27,8 @@ remote_state {
   } : {
     bucket   = local.state_bucket
     prefix   = "bootstrap/${path_relative_to_include()}"
-    project  = "delabs-gcp-mgmt"
-    location = "ASIA"
+    project  = local.state_project
+    location = local.state_location
   }
 
   generate = {

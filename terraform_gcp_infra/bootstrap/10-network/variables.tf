@@ -19,10 +19,16 @@ variable "subnet_cidr" {
   default     = "10.0.0.0/24"
 }
 
-variable "subnet_cidr_us_west1" {
-  description = "us-west1 Subnet CIDR (PSC Endpoint용)"
+variable "subnet_cidr_secondary" {
+  description = "보조 리전 Subnet CIDR (PSC Endpoint용)"
   type        = string
   default     = "10.0.1.0/24"
+}
+
+variable "region_secondary" {
+  description = "보조 리전 (PSC Endpoint용, 게임 프로젝트가 위치한 리전)"
+  type        = string
+  default     = "us-west1"
 }
 
 variable "labels" {

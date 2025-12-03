@@ -21,18 +21,18 @@ authorized_network = ""
 # Enterprise는 PSC만 지원
 connect_mode = "PRIVATE_SERVICE_CONNECT"
 
-# Display name (옵션)
-display_name = "gcby live redis"
+# Display name
+# terragrunt.hcl에서 "{project_name}-{environment}-redis" 형식으로 동적 생성됨
+display_name = ""
 
 # Maintenance window (옵션)
 maintenance_window_day          = "SUNDAY"
 maintenance_window_start_hour   = 2
 maintenance_window_start_minute = 0
 
-# 추가 라벨
+# 추가 라벨 (app은 terragrunt.hcl에서 project_name으로 override됨)
 labels = {
   tier = "cache"
-  app  = "gcby"
 }
 
 # =============================================================================

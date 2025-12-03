@@ -17,11 +17,16 @@ locals {
   # region_primary에서 자동으로 zone 생성
   region_primary = local.common_inputs.region_primary
 
+  # common.naming.tfvars에서 VM IP 가져오기
+  vm_ips = try(local.common_inputs.network_config.vm_ips, {})
+
   # instances의 zone을 region_primary 기반으로 자동 변환
+  # vm_ip_key가 있으면 common.naming.tfvars의 vm_ips에서 network_ip 자동 주입
   instances_with_zones = {
     for k, v in try(local.layer_inputs.instances, {}) :
     k => merge(v, {
-      zone = "${local.region_primary}-${v.zone_suffix}"
+      zone       = "${local.region_primary}-${v.zone_suffix}"
+      network_ip = try(local.vm_ips[v.vm_ip_key], try(v.network_ip, null))
     })
   }
 
@@ -43,19 +48,19 @@ dependency "network" {
     subnets = {
       dmz = {
         self_link  = "mock-dmz-subnet"
-        region     = "asia-northeast3"
+        region     = local.region_primary
         project_id = "mock-project"
         name       = "mock-dmz"
       }
       private = {
         self_link  = "mock-private-subnet"
-        region     = "asia-northeast3"
+        region     = local.region_primary
         project_id = "mock-project"
         name       = "mock-private"
       }
       db = {
         self_link  = "mock-db-subnet"
-        region     = "asia-northeast3"
+        region     = local.region_primary
         project_id = "mock-project"
         name       = "mock-db"
       }
@@ -75,6 +80,7 @@ inputs = merge(
     # 네트워크 레이어에서 서브넷 정보 가져오기
     subnets = dependency.network.outputs.subnets
     # region_primary 기반으로 zone 자동 생성된 instances와 instance_groups
+    # network_ip도 common.naming.tfvars의 vm_ips에서 동적 주입
     instances       = local.instances_with_zones
     instance_groups = local.instance_groups_with_zones
   }

@@ -23,6 +23,7 @@ labels = {
 # 역할별 인스턴스 정의
 # subnet_type: "dmz", "private", "db" 중 하나 선택
 # zone_suffix: "a", "b", "c" - common.naming.tfvars의 region_primary와 자동 결합됨 (예: us-west1-a)
+# network_ip: terragrunt.hcl에서 common.naming.tfvars의 vm_ips로부터 동적 주입됨
 instances = {
   # Game Server tier (2대) - Private 서브넷 배치
   "gcby-gs01" = {
@@ -39,7 +40,7 @@ instances = {
     }
     startup_script_file = "scripts/lobby.sh"
     subnet_type         = "private"  # 자동으로 gcby-subnet-private 선택
-    network_ip          = "10.10.11.3"  # 고정 IP (common.naming.tfvars의 vm_ips.gs01)
+    vm_ip_key           = "gs01"  # common.naming.tfvars의 vm_ips 키 참조
   }
   "gcby-gs02" = {
     zone_suffix  = "b"
@@ -55,7 +56,7 @@ instances = {
     }
     startup_script_file = "scripts/lobby.sh"
     subnet_type         = "private"
-    network_ip          = "10.10.11.6"  # 고정 IP (common.naming.tfvars의 vm_ips.gs02)
+    vm_ip_key           = "gs02"  # common.naming.tfvars의 vm_ips 키 참조
   }
 
   # # lobby tier (3대) - DMZ 서브넷 배치 - COMMENTED OUT

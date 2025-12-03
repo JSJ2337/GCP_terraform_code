@@ -20,33 +20,10 @@ target_name_servers = []
 # DNS Peering 설정 (사용하지 않음 - 전용 zone으로 변경)
 peering_network = ""
 
-# DNS 레코드 목록 (gcby VPC용)
-dns_records = [
-  {
-    name    = "gcby-live-gdb-m1"
-    type    = "A"
-    ttl     = 300
-    rrdatas = ["10.10.12.51"]  # gcby VPC의 Cloud SQL PSC FR IP
-  },
-  {
-    name    = "gcby-live-redis"
-    type    = "A"
-    ttl     = 300
-    rrdatas = ["10.10.12.101"]  # gcby VPC의 Redis PSC FR IP
-  },
-  {
-    name    = "gcby-gs01"
-    type    = "A"
-    ttl     = 300
-    rrdatas = ["10.10.11.3"]
-  },
-  {
-    name    = "gcby-gs02"
-    type    = "A"
-    ttl     = 300
-    rrdatas = ["10.10.11.6"]
-  }
-]
+# DNS 레코드 목록
+# terragrunt.hcl에서 common.naming.tfvars 값으로 동적 생성됨
+# (project_name, environment, network_config.psc_endpoints, vm_ips 사용)
+dns_records = []
 
 # DNS Policy 설정 (사용하지 않음)
 create_dns_policy = false
@@ -65,9 +42,8 @@ alternative_name_servers = []
 # DNS Policy가 적용될 VPC 네트워크 목록
 dns_policy_networks = []
 
-# 추가 라벨
+# 추가 라벨 (app은 terragrunt.hcl에서 project_name으로 override됨)
 labels = {
-  tier = "dns"
-  app  = "gcby"
-  dns_type = "peering"
+  tier     = "dns"
+  dns_type = "private"
 }

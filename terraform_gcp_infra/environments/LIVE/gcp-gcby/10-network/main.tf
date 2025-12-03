@@ -207,8 +207,8 @@ resource "google_network_connectivity_service_connection_policy" "cloudsql_psc" 
 }
 
 # VPC Peering to mgmt VPC for DNS resolution
-resource "google_compute_network_peering" "gcby_to_mgmt" {
-  name         = "peering-gcby-to-mgmt"
+resource "google_compute_network_peering" "to_mgmt" {
+  name         = "peering-${var.project_name}-to-mgmt"
   network      = module.net.vpc_self_link  # Implicit dependency
   peer_network = var.peer_network_url
 

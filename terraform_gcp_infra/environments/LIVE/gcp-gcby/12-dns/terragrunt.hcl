@@ -32,33 +32,39 @@ locals {
   # Network config 추출
   network_config = try(local.common_inputs.network_config, {})
 
-  # DNS 레코드 동적 생성 (common.naming.tfvars의 network_config에서 IP 가져옴)
+  # DNS 레코드 동적 생성 (common.naming.tfvars의 network_config에서 IP 가져옴 - 필수)
   dns_records = [
     {
       name    = "${local.project_name}-${local.environment}-gdb-m1"
       type    = "A"
       ttl     = 300
-      rrdatas = [try(local.network_config.psc_endpoints.cloudsql, "10.10.12.51")]
+      rrdatas = [local.network_config.psc_endpoints.cloudsql]
     },
     {
       name    = "${local.project_name}-${local.environment}-redis"
       type    = "A"
       ttl     = 300
-      rrdatas = [try(local.network_config.psc_endpoints.redis[0], "10.10.12.101")]
+      rrdatas = [local.network_config.psc_endpoints.redis[0]]
     },
     {
       name    = "${local.project_name}-gs01"
       type    = "A"
       ttl     = 300
-      rrdatas = [try(local.network_config.vm_ips.gs01, "10.10.11.3")]
+      rrdatas = [local.network_config.vm_ips.gs01]
     },
     {
       name    = "${local.project_name}-gs02"
       type    = "A"
       ttl     = 300
-      rrdatas = [try(local.network_config.vm_ips.gs02, "10.10.11.6")]
+      rrdatas = [local.network_config.vm_ips.gs02]
     }
   ]
+
+  # 기존 labels에 app 추가
+  merged_labels = merge(
+    try(local.layer_inputs.labels, {}),
+    { app = local.project_name }
+  )
 }
 
 # 10-network에서 VPC self_link 가져오기
@@ -80,5 +86,8 @@ inputs = merge(
 
     # Private DNS Zone이 연결될 VPC (10-network에서 동적으로 가져옴)
     private_networks = [dependency.network.outputs.vpc_self_link]
+
+    # labels에 app 추가
+    labels = local.merged_labels
   }
 )

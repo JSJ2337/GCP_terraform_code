@@ -69,7 +69,7 @@ locals {
     # Cloud SQL PSC Endpoint (1개)
     {
       "${local.gcby_project_name}-${local.gcby_env}-gdb-m1" = {
-        region                    = "us-west1"
+        region                    = var.region_secondary
         ip_address                = try(var.projects.gcby.psc_ips.cloudsql, "")
         target_service_attachment = try(data.terraform_remote_state.gcby_database[0].outputs.psc_service_attachment_link, "")
         allow_global_access       = true
@@ -79,7 +79,7 @@ locals {
     {
       for idx, sa in local.gcby_redis_service_attachments :
       "${local.gcby_project_name}-${local.gcby_env}-redis-${idx}" => {
-        region                    = "us-west1"
+        region                    = var.region_secondary
         ip_address                = try(var.projects.gcby.psc_ips.redis[idx], "")
         target_service_attachment = sa
         allow_global_access       = true
@@ -151,12 +151,12 @@ resource "google_compute_subnetwork" "mgmt_subnet" {
   }
 }
 
-# us-west1 subnet (PSC Endpoint용)
-resource "google_compute_subnetwork" "mgmt_subnet_us_west1" {
+# 보조 리전 subnet (PSC Endpoint용 - 게임 프로젝트 리전)
+resource "google_compute_subnetwork" "mgmt_subnet_secondary" {
   project       = var.management_project_id
-  name          = "${var.management_project_id}-subnet-us-west1"
-  ip_cidr_range = var.subnet_cidr_us_west1
-  region        = "us-west1"
+  name          = "${var.management_project_id}-subnet-${var.region_secondary}"
+  ip_cidr_range = var.subnet_cidr_secondary
+  region        = var.region_secondary
   network       = google_compute_network.mgmt_vpc.id
 
   private_ip_google_access = true
@@ -183,11 +183,11 @@ resource "google_compute_router" "mgmt_router" {
   }
 }
 
-# us-west1 Router
-resource "google_compute_router" "mgmt_router_us_west1" {
+# 보조 리전 Router (게임 프로젝트 리전)
+resource "google_compute_router" "mgmt_router_secondary" {
   project = var.management_project_id
-  name    = "${var.management_project_id}-router-us-west1"
-  region  = "us-west1"
+  name    = "${var.management_project_id}-router-${var.region_secondary}"
+  region  = var.region_secondary
   network = google_compute_network.mgmt_vpc.id
 
   bgp {
@@ -214,12 +214,12 @@ resource "google_compute_router_nat" "mgmt_nat" {
   }
 }
 
-# us-west1 NAT
-resource "google_compute_router_nat" "mgmt_nat_us_west1" {
+# 보조 리전 NAT (게임 프로젝트 리전)
+resource "google_compute_router_nat" "mgmt_nat_secondary" {
   project = var.management_project_id
-  name    = "${var.management_project_id}-nat-us-west1"
-  router  = google_compute_router.mgmt_router_us_west1.name
-  region  = "us-west1"
+  name    = "${var.management_project_id}-nat-${var.region_secondary}"
+  router  = google_compute_router.mgmt_router_secondary.name
+  region  = var.region_secondary
 
   nat_ip_allocate_option             = "AUTO_ONLY"
   source_subnetwork_ip_ranges_to_nat = "ALL_SUBNETWORKS_ALL_IP_RANGES"
@@ -256,7 +256,7 @@ resource "google_compute_address" "psc_addresses" {
   project      = var.management_project_id
   name         = "${each.key}-psc"
   region       = each.value.region
-  subnetwork   = each.value.region == "us-west1" ? google_compute_subnetwork.mgmt_subnet_us_west1.id : google_compute_subnetwork.mgmt_subnet.id
+  subnetwork   = each.value.region == var.region_secondary ? google_compute_subnetwork.mgmt_subnet_secondary.id : google_compute_subnetwork.mgmt_subnet.id
   address_type = "INTERNAL"
   address      = each.value.ip_address
   purpose      = "GCE_ENDPOINT"

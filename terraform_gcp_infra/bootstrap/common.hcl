@@ -1,18 +1,23 @@
 # Bootstrap 공통 설정
 # 모든 레이어에서 공유하는 값들
+#
+# 환경 변수로 민감한 정보 관리:
+#   - TG_BOOTSTRAP_ORG_ID: GCP 조직 ID
+#   - TG_BOOTSTRAP_BILLING_ACCOUNT: GCP 빌링 계정 ID
+#   - TG_BOOTSTRAP_MGMT_PROJECT: 관리 프로젝트 ID (기본값: delabs-gcp-mgmt)
 
 locals {
-  # GCP 조직 정보 (delabsgames.gg)
-  organization_id = "1034166519592"
-  billing_account = "01B77E-0A986D-CB2651"
+  # GCP 조직 정보 (환경 변수에서 가져오거나 기본값 사용)
+  organization_id = get_env("TG_BOOTSTRAP_ORG_ID", "1034166519592")
+  billing_account = get_env("TG_BOOTSTRAP_BILLING_ACCOUNT", "01B77E-0A986D-CB2651")
 
-  # 관리 프로젝트 정보
-  management_project_id   = "delabs-gcp-mgmt"
-  management_project_name = "delabs-gcp-mgmt"
+  # 관리 프로젝트 정보 (환경 변수에서 가져오거나 기본값 사용)
+  management_project_id   = get_env("TG_BOOTSTRAP_MGMT_PROJECT", "delabs-gcp-mgmt")
+  management_project_name = local.management_project_id  # project_id와 동일하게 유지
 
-  # Jenkins Service Account (00-foundation에서 생성됨)
+  # Jenkins Service Account (동적 생성: 00-foundation에서 생성됨)
   # 패턴: {account_id}@{project_id}.iam.gserviceaccount.com
-  jenkins_service_account_email = "jenkins-terraform-admin@delabs-gcp-mgmt.iam.gserviceaccount.com"
+  jenkins_service_account_email = "jenkins-terraform-admin@${local.management_project_id}.iam.gserviceaccount.com"
 
   # 공통 레이블
   labels = {
@@ -26,10 +31,10 @@ locals {
   region_primary = "asia-northeast3"
   region_backup  = "asia-northeast3"
 
-  # 네트워크 정보 (10-network에서 생성됨)
+  # 네트워크 정보 (10-network에서 생성됨 - 동적 생성)
   # 형식: projects/{project}/global/networks/{network}
-  vpc_self_link    = "projects/delabs-gcp-mgmt/global/networks/delabs-gcp-mgmt-vpc"
-  subnet_self_link = "projects/delabs-gcp-mgmt/regions/asia-northeast3/subnetworks/delabs-gcp-mgmt-subnet"
+  vpc_self_link    = "projects/${local.management_project_id}/global/networks/${local.management_project_id}-vpc"
+  subnet_self_link = "projects/${local.management_project_id}/regions/${local.region_primary}/subnetworks/${local.management_project_id}-subnet"
 
   # ========================================================================
   # 프로젝트별 네트워크 설정 (확장 가능한 구조)

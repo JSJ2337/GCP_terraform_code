@@ -1,6 +1,12 @@
 # 00-foundation 레이어 설정
+#
+# 환경 변수:
+#   - TG_BOOTSTRAP_ADMIN_EMAIL: 관리자 이메일 (IAP/OSLogin용, 기본값: itinfra@delabsgames.gg)
 
 locals {
+  # 관리자 이메일 (환경 변수에서 가져오거나 기본값 사용)
+  admin_email = get_env("TG_BOOTSTRAP_ADMIN_EMAIL", "itinfra@delabsgames.gg")
+
   # 폴더 구조 관리 (게임/리전/환경)
   manage_folders = true
 
@@ -20,11 +26,11 @@ locals {
   # Folder ID (조직 최상위에 생성시 null)
   folder_id = null
 
-  # IAP 터널 접근 권한 멤버
-  iap_tunnel_members = ["user:itinfra@delabsgames.gg"]
+  # IAP 터널 접근 권한 멤버 (동적 생성)
+  iap_tunnel_members = ["user:${local.admin_email}"]
 
-  # OS Login 관리자 (sudo 권한)
-  os_login_admins = ["user:itinfra@delabsgames.gg"]
+  # OS Login 관리자 (sudo 권한, 동적 생성)
+  os_login_admins = ["user:${local.admin_email}"]
 
   # OS Login 일반 사용자
   os_login_users = []
