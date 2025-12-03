@@ -59,6 +59,115 @@ bootstrap/
 20-storage              50-compute (Jenkins VM)
 ```
 
+## Projects 구조 (다중 프로젝트 관리)
+
+Bootstrap은 `common.hcl`의 **projects 맵**을 통해 여러 프로젝트를 중앙에서 관리합니다.
+
+### common.hcl - Projects 맵 구조
+
+```hcl
+locals {
+  projects = {
+    gcby = {
+      project_id   = "gcp-gcby"
+      environment  = "live"
+      vpc_name     = "gcby-live-vpc"
+      network_url  = "projects/gcp-gcby/global/networks/gcby-live-vpc"
+
+      # PSC Endpoint IP (mgmt VPC용)
+      psc_ips = {
+        cloudsql = "10.250.20.20"
+        redis    = "10.250.20.101"
+      }
+
+      # VM Static IP
+      vm_ips = {
+        gs01 = "10.10.11.3"
+        gs02 = "10.10.11.6"
+      }
+
+      # Dependency 경로
+      database_path = "../../environments/LIVE/gcp-gcby/60-database"
+      cache_path    = "../../environments/LIVE/gcp-gcby/65-cache"
+    }
+    # 새 프로젝트 추가 시 여기에 추가
+  }
+}
+```
+
+### 자동 생성되는 리소스
+
+| 리소스 타입 | 생성 위치 | 동작 방식 |
+|------------|----------|----------|
+| **VPC Peering** | 10-network/main.tf | `for_each`로 모든 프로젝트 자동 순회 |
+| **PSC Endpoints** | 10-network/terragrunt.hcl | projects.*.psc_ips에서 동적 생성 |
+| **DNS 레코드 (VM)** | 12-dns/layer.hcl | projects.*.vm_ips에서 동적 생성 |
+| **DNS 레코드 (PSC)** | 12-dns/layer.hcl | projects.*.psc_ips에서 동적 생성 |
+
+### 새 프로젝트 추가 방법
+
+**예시: abc 프로젝트 추가**
+
+#### 1. common.hcl에 프로젝트 추가 (5분)
+
+```hcl
+projects = {
+  gcby = { ... }  # 기존
+  abc = {         # 신규
+    project_id   = "gcp-abc"
+    environment  = "live"
+    vpc_name     = "abc-live-vpc"
+    network_url  = "projects/gcp-abc/global/networks/abc-live-vpc"
+    psc_ips = {
+      cloudsql = "10.250.21.20"
+      redis    = "10.250.21.101"
+    }
+    vm_ips = {
+      web01 = "10.20.11.10"
+    }
+    database_path = "../../environments/LIVE/gcp-abc/60-database"
+    cache_path    = "../../environments/LIVE/gcp-abc/65-cache"
+  }
+}
+```
+
+#### 2. 10-network/terragrunt.hcl에 Dependency 추가 (10분)
+
+```hcl
+# Dependencies 블록
+dependency "abc_database" {
+  config_path = local.common_vars.locals.projects.abc.database_path
+  ...
+}
+dependency "abc_cache" {
+  config_path = local.common_vars.locals.projects.abc.cache_path
+  ...
+}
+
+# PSC Endpoints 로컬 변수
+locals {
+  psc_endpoints_abc = {
+    "abc-cloudsql" = { ... }
+    "abc-redis" = { ... }
+  }
+
+  all_psc_endpoints = merge(
+    local.psc_endpoints_gcby,
+    local.psc_endpoints_abc,  # 추가
+  )
+}
+```
+
+#### 3. 자동 반영 (추가 작업 없음!)
+
+- ✅ VPC Peering `mgmt ↔ abc` 자동 생성
+- ✅ DNS 레코드 `abc-web01`, `abc-live-gdb-m1`, `abc-live-redis` 자동 생성
+- ✅ PSC Endpoints 자동 생성
+
+**상세 가이드**: [docs/guides/adding-new-project.md](../docs/guides/adding-new-project.md)
+
+---
+
 ## 각 레이어 상세
 
 ### 00-foundation (기본 인프라)
@@ -81,8 +190,13 @@ bootstrap/
 | Cloud Router | 리전별 NAT용 라우터 (asia-northeast3, us-west1) |
 | Cloud NAT | 리전별 아웃바운드 인터넷 액세스 |
 | Firewall | IAP SSH, Jenkins 8080/443, 내부 통신 |
-| PSC Endpoints | Cross-Project Cloud SQL 접근용 (Global Access 지원) |
-| VPC Peering | gcp-gcby 프로젝트와 피어링 |
+| PSC Endpoints | Cross-Project Cloud SQL/Redis 접근용 (Global Access 지원) |
+| VPC Peering | 모든 프로젝트 VPC와 자동 피어링 (common.hcl의 projects 기반) |
+
+**다중 프로젝트 지원 (일반화 구조)**:
+- VPC Peering: `for_each`로 모든 프로젝트 자동 생성
+- PSC Endpoints: projects 구조에서 동적 추출
+- Dependency: 각 프로젝트의 Database/Cache 경로 참조
 
 ### 20-storage (스토리지)
 
