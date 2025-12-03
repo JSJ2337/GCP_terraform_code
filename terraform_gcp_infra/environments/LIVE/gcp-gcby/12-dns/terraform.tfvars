@@ -1,30 +1,46 @@
-# DNS Peering Zone 설정 (mgmt VPC의 DNS Zone과 연결)
+# Private DNS Zone 설정 (gcby VPC 전용)
 # zone_name은 비워두면 자동으로 "{project_name}-{environment}-zone" 형식으로 생성됩니다
-zone_name   = "gcby-dns-peering-to-mgmt"
+zone_name   = "gcby-delabsgames-internal"
 dns_name    = "delabsgames.internal."
-description = "DNS Peering to mgmt VPC for internal name resolution"
+description = "Private DNS zone for gcby VPC (delabsgames.internal.)"
 
 # DNS Zone 가시성 (private)
-# mgmt VPC의 DNS Zone과 peering하므로 private
 visibility = "private"
 
 # Private DNS Zone 설정
-# gcby VPC에서 사용 (비우면 naming 모듈의 VPC 사용)
-private_networks = []
+# gcby VPC에서 사용
+private_networks = ["projects/gcp-gcby/global/networks/gcby-live-vpc"]
 
-# DNSSEC 설정 (Peering Zone에서는 사용 불가)
+# DNSSEC 설정
 enable_dnssec = false
 
 # DNS Forwarding 설정 (사용하지 않음)
 target_name_servers = []
 
-# DNS Peering 설정 (mgmt VPC의 DNS Zone과 연결)
-# mgmt VPC의 delabs-gcp-mgmt-vpc를 peering 대상으로 설정
-peering_network = "projects/delabs-gcp-mgmt/global/networks/delabs-gcp-mgmt-vpc"
+# DNS Peering 설정 (사용하지 않음 - 전용 zone으로 변경)
+peering_network = ""
 
-# DNS 레코드 목록
-# Peering Zone이므로 레코드는 mgmt의 bootstrap/12-dns에서 관리
-dns_records = []
+# DNS 레코드 목록 (gcby VPC용)
+dns_records = [
+  {
+    name    = "gcby-live-gdb-m1"
+    type    = "A"
+    ttl     = 300
+    rrdatas = ["10.10.12.51"]  # gcby VPC의 PSC FR IP
+  },
+  {
+    name    = "gcby-gs01"
+    type    = "A"
+    ttl     = 300
+    rrdatas = ["10.10.11.3"]
+  },
+  {
+    name    = "gcby-gs02"
+    type    = "A"
+    ttl     = 300
+    rrdatas = ["10.10.11.6"]
+  }
+]
 
 # DNS Policy 설정 (사용하지 않음)
 create_dns_policy = false
