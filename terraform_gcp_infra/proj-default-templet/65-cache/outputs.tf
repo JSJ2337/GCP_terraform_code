@@ -43,7 +43,7 @@ output "cluster_endpoints" {
   value       = module.cache.cluster_endpoints
 }
 
-output "cross_project_psc_info" {
-  description = "Cross-project PSC connection information for manual registration"
-  value       = module.cache.cross_project_psc_info
+output "cross_project_psc_connections" {
+  description = "Cross-project PSC user-created connections resource"
+  value       = module.cache.cross_project_psc_connections
 }

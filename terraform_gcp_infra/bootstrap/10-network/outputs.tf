@@ -80,13 +80,12 @@ output "psc_forwarding_rules" {
 }
 
 output "psc_redis_forwarding_rules" {
-  description = "Redis PSC Forwarding Rules (for user_created_connections)"
+  description = "Redis PSC Forwarding Rules (for google_redis_cluster_user_created_connections)"
   value = [
     for key, fr in google_compute_forwarding_rule.psc_endpoints : {
-      name              = fr.name
-      region            = fr.region
-      ip_address        = fr.ip_address
       psc_connection_id = fr.psc_connection_id
+      forwarding_rule   = fr.id  # Full URL: projects/{project}/regions/{region}/forwardingRules/{name}
+      ip_address        = fr.ip_address
     } if startswith(key, "gcby-redis-")
   ]
 }

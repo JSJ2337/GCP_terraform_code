@@ -81,7 +81,7 @@ output "cluster_endpoints" {
   }, null)
 }
 
-output "cross_project_psc_info" {
-  description = "Cross-project PSC connection information for manual registration"
-  value       = local.cross_project_psc_info
+output "cross_project_psc_connections" {
+  description = "Cross-project PSC user-created connections resource"
+  value       = try(google_redis_cluster_user_created_connections.cross_project[0], null)
 }

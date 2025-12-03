@@ -179,9 +179,8 @@ variable "cross_project_psc_connections" {
     network          = string  # PSC Endpoint가 있는 VPC (projects/{project}/global/networks/{name})
     forwarding_rules = list(object({
       psc_connection_id = string  # Forwarding Rule의 psc_connection_id 속성
-      name              = string  # Forwarding rule name
+      forwarding_rule   = string  # Full forwarding rule URL (projects/{project}/regions/{region}/forwardingRules/{name})
       ip_address        = string  # Reserved IP address
-      region            = string  # Region of the forwarding rule
     }))
   }))
   description = <<-EOT
