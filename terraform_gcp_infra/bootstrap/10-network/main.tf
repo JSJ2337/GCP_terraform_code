@@ -3,17 +3,85 @@
 # Firewall 규칙은 15-firewall 레이어로 분리됨
 # =============================================================================
 
+# =============================================================================
+# Remote State Data Sources (Cross-Project)
+# =============================================================================
+# 서로 다른 Jenkins Job에서 실행되는 프로젝트의 outputs를 GCS State에서 직접 읽음
+# Best Practice: dependency 블록 대신 terraform_remote_state 사용
+
+# gcby 프로젝트 - 60-database
+data "terraform_remote_state" "gcby_database" {
+  count   = var.enable_psc_endpoints ? 1 : 0
+  backend = "gcs"
+  config = {
+    bucket = var.state_bucket
+    prefix = "gcp-gcby/60-database"
+  }
+}
+
+# gcby 프로젝트 - 65-cache
+data "terraform_remote_state" "gcby_cache" {
+  count   = var.enable_psc_endpoints ? 1 : 0
+  backend = "gcs"
+  config = {
+    bucket = var.state_bucket
+    prefix = "gcp-gcby/65-cache"
+  }
+}
+
+# 새 프로젝트 추가 예시 (주석)
+# data "terraform_remote_state" "abc_database" {
+#   count   = var.enable_psc_endpoints ? 1 : 0
+#   backend = "gcs"
+#   config = {
+#     bucket = var.state_bucket
+#     prefix = "gcp-abc/60-database"
+#   }
+# }
+
 locals {
   network_name = "${var.management_project_id}-vpc"
   subnet_name  = "${var.management_project_id}-subnet"
 
-  # PSC Endpoints는 terragrunt.hcl에서 동적으로 생성되어 전달됨
-  # (projects 구조를 순회하며 자동 생성)
-  psc_endpoints = var.psc_endpoints
-
-  # VPC Peering 대상 목록도 terragrunt.hcl에서 전달됨
+  # VPC Peering 대상 목록 (terragrunt.hcl에서 전달됨)
   # 형식: { project_key = "projects/{id}/global/networks/{name}" }
   project_vpc_peerings = var.project_vpc_network_urls
+
+  # ==========================================================================
+  # PSC Endpoints 동적 생성 (terraform_remote_state에서 Service Attachment 참조)
+  # ==========================================================================
+  # gcby 프로젝트 PSC Endpoints
+  gcby_psc_endpoints = var.enable_psc_endpoints ? {
+    "gcby-cloudsql" = {
+      region                    = "us-west1"
+      ip_address                = var.project_psc_ips.gcby.cloudsql
+      target_service_attachment = try(data.terraform_remote_state.gcby_database[0].outputs.psc_service_attachment_link, "")
+      allow_global_access       = true
+    }
+    "gcby-redis" = {
+      region                    = "us-west1"
+      ip_address                = var.project_psc_ips.gcby.redis
+      target_service_attachment = try(data.terraform_remote_state.gcby_cache[0].outputs.psc_service_attachment_link, "")
+      allow_global_access       = true
+    }
+  } : {}
+
+  # 새 프로젝트 추가 예시 (주석)
+  # abc_psc_endpoints = var.enable_psc_endpoints ? {
+  #   "abc-cloudsql" = {
+  #     region                    = "us-west1"
+  #     ip_address                = var.project_psc_ips.abc.cloudsql
+  #     target_service_attachment = try(data.terraform_remote_state.abc_database[0].outputs.psc_service_attachment_link, "")
+  #     allow_global_access       = true
+  #   }
+  # } : {}
+
+  # 모든 프로젝트 PSC Endpoints 병합
+  # 새 프로젝트 추가 시: 위에 data source + local 추가 후 여기에 merge
+  psc_endpoints = merge(
+    local.gcby_psc_endpoints,
+    # local.abc_psc_endpoints,
+  )
 }
 
 # -----------------------------------------------------------------------------

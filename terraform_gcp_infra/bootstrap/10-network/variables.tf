@@ -31,19 +31,42 @@ variable "labels" {
   default     = {}
 }
 
-variable "psc_endpoints" {
-  description = "PSC Endpoints for all projects (동적으로 terragrunt에서 생성됨)"
-  type = map(object({
-    region                    = string
-    ip_address                = string
-    target_service_attachment = string
-    allow_global_access       = bool
-  }))
-  default = {}
-}
-
 variable "project_vpc_network_urls" {
   description = "모든 프로젝트의 VPC Peering 대상 URL (동적으로 terragrunt에서 생성됨)"
   type        = map(string)
   default     = {}
+}
+
+# =============================================================================
+# PSC Endpoints 관련 변수 (terraform_remote_state 방식)
+# =============================================================================
+variable "enable_psc_endpoints" {
+  description = "PSC Endpoints 생성 여부 (gcp-gcby 등 프로젝트가 배포된 후 true로 설정)"
+  type        = bool
+  default     = false
+}
+
+variable "state_bucket" {
+  description = "Terraform State 버킷 이름 (terraform_remote_state용)"
+  type        = string
+  default     = "delabs-terraform-state-live"
+}
+
+variable "project_psc_ips" {
+  description = "프로젝트별 PSC Endpoint IP 주소"
+  type = map(object({
+    cloudsql = string
+    redis    = string
+  }))
+  default = {
+    gcby = {
+      cloudsql = "10.250.20.20"
+      redis    = "10.250.20.101"
+    }
+    # 새 프로젝트 추가 시:
+    # abc = {
+    #   cloudsql = "10.250.21.20"
+    #   redis    = "10.250.21.101"
+    # }
+  }
 }
