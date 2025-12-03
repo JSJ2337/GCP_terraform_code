@@ -225,7 +225,7 @@ resource "google_compute_address" "cloudsql_psc" {
   project      = var.project_id
   name         = "${var.project_name}-cloudsql-psc"
   region       = var.region_primary
-  subnetwork   = "projects/${var.project_id}/regions/${var.region_primary}/subnetworks/${var.project_name}-live-subnet-psc"
+  subnetwork   = local.db_subnet_self_link
   address_type = "INTERNAL"
   address      = var.psc_cloudsql_ip
   purpose      = "GCE_ENDPOINT"
@@ -260,7 +260,7 @@ resource "google_compute_address" "redis_psc" {
   project      = var.project_id
   name         = "${var.project_name}-redis-psc-${count.index}"
   region       = var.region_primary
-  subnetwork   = "projects/${var.project_id}/regions/${var.region_primary}/subnetworks/${var.project_name}-live-subnet-psc"
+  subnetwork   = local.db_subnet_self_link
   address_type = "INTERNAL"
   address      = var.psc_redis_ips[count.index]
   purpose      = "GCE_ENDPOINT"

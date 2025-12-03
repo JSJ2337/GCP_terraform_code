@@ -14,8 +14,9 @@ locals {
   raw_layer_inputs = try(read_tfvars_file("${get_terragrunt_dir()}/terraform.tfvars"), tomap({}))
   layer_inputs     = try(jsondecode(local.raw_layer_inputs), local.raw_layer_inputs)
 
-  # 프로젝트명과 리전 추출
+  # 프로젝트명, 환경, 리전 추출
   project_name   = local.common_inputs.project_name
+  environment    = local.common_inputs.environment  # "live", "stg", "dev" 등
   region_primary = local.common_inputs.region_primary
 
   # Network config 추출
@@ -26,11 +27,11 @@ locals {
 
   # additional_subnets를 network_config에서 동적 생성
   # CIDR은 common.naming.tfvars의 network_config.subnets에서 가져옴
-  # 기존 인프라와 일치하도록 {project_name}-live-subnet-{type} 형태 유지
+  # 서브넷 이름 형식: {project_name}-{environment}-subnet-{type}
   additional_subnets_with_metadata = [
     for idx, subnet_type in local.subnet_types :
     {
-      name   = "${local.project_name}-live-subnet-${subnet_type}"
+      name   = "${local.project_name}-${local.environment}-subnet-${subnet_type}"
       region = local.region_primary
       cidr   = try(local.network_config.subnets[subnet_type], "")
       private_google_access = true
@@ -38,10 +39,10 @@ locals {
     }
   ]
 
-  # Subnet 이름들 (기존 인프라와 일치)
-  dmz_subnet_name     = "${local.project_name}-live-subnet-dmz"
-  private_subnet_name = "${local.project_name}-live-subnet-private"
-  psc_subnet_name     = "${local.project_name}-live-subnet-psc"
+  # Subnet 이름들 (environment 변수 사용)
+  dmz_subnet_name     = "${local.project_name}-${local.environment}-subnet-dmz"
+  private_subnet_name = "${local.project_name}-${local.environment}-subnet-private"
+  psc_subnet_name     = "${local.project_name}-${local.environment}-subnet-psc"
 
   # Memorystore PSC 설정 - PSC subnet (10.10.12.x)을 사용해야 함
   memorystore_psc_region      = local.region_primary
