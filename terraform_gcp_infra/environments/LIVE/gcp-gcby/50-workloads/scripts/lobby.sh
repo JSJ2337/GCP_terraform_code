@@ -19,6 +19,9 @@ echo "Starting startup script with user: ${ADMIN_USER}"
 sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
 sed -i 's/^#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
 
+# UsePAM yes 설정 (Rocky Linux 10에서 PAM 인증 필수)
+sed -i 's/^#UsePAM.*/UsePAM yes/' /etc/ssh/sshd_config
+
 # sshd_config.d 디렉토리 파일도 수정 (Rocky Linux)
 if [ -d /etc/ssh/sshd_config.d ]; then
   for f in /etc/ssh/sshd_config.d/*.conf; do
@@ -48,6 +51,6 @@ echo "SSH password authentication enabled for user: ${ADMIN_USER}"
 dnf update -y
 
 # Install basic utilities
-dnf install -y curl wget vim net-tools
+dnf install -y curl wget vim net-tools nmap-ncat bind-utils
 
 echo "Lobby instance initialization complete"

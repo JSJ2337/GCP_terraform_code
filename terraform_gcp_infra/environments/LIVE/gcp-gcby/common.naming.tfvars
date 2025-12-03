@@ -33,10 +33,10 @@ network_config = {
   }
 
   # PSC Endpoint IP
-  # Redis Cluster는 2개의 Service Attachment (Discovery + Shard)가 있으므로 2개 IP 필요
+  # Redis Cluster PSC는 자동 생성되므로 실제 IP 사용 (10.10.12.3 Discovery, 10.10.12.2 Shard)
   psc_endpoints = {
     cloudsql = "10.10.12.51"
-    redis    = ["10.10.12.101", "10.10.12.102"]
+    redis    = ["10.10.12.3", "10.10.12.2"]
   }
 
   # VPC Peering
@@ -64,6 +64,7 @@ dns_config = {
 
 # VM Admin 사용자 설정 (startup script에서 사용)
 # 보안 주의: 비밀번호는 초기 배포 후 반드시 변경 필요!
+# 참고: 비밀번호에 ! 문자는 bash history expansion 충돌로 SSH 접속 시 문제 발생
 vm_admin_config = {
   username = "delabs-adm"
   password = "REDACTED_PASSWORD"
