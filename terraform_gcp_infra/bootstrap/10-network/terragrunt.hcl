@@ -6,6 +6,9 @@ include "root" {
   path = find_in_parent_folders("root.hcl")
 }
 
+# =============================================================================
+# Locals: 모든 로컬 변수 통합 (Terragrunt는 하나의 locals 블록만 허용)
+# =============================================================================
 locals {
   parent_dir = abspath("${get_terragrunt_dir()}/..")
 
@@ -14,6 +17,58 @@ locals {
 
   # 레이어 입력 읽기
   layer_vars = read_terragrunt_config("${get_terragrunt_dir()}/layer.hcl")
+
+  # projects map에서 추출
+  projects = local.common_vars.locals.projects
+
+  # 각 프로젝트별 VPC Peering 정보 (key = network_url)
+  # 새 프로젝트 추가 시: common.hcl의 projects에 추가하면 자동 반영
+  project_vpc_peerings = {
+    for key, project in local.projects :
+    key => project.network_url
+  }
+
+  # PSC Endpoints 동적 생성 (각 프로젝트의 Cloud SQL, Redis)
+  # 형식: {project_key}-{service} = { psc_ip, service_attachment }
+  #
+  # 주의: dependency는 정적 선언이 필요하므로,
+  # 프로젝트 추가 시 위의 dependency 블록도 함께 추가해야 함
+  psc_endpoints_gcby = {
+    "gcby-cloudsql" = {
+      region                    = "us-west1"
+      ip_address                = local.projects.gcby.psc_ips.cloudsql
+      target_service_attachment = dependency.gcby_database.outputs.psc_service_attachment_link
+      allow_global_access       = true
+    }
+    "gcby-redis" = {
+      region                    = "us-west1"
+      ip_address                = local.projects.gcby.psc_ips.redis
+      target_service_attachment = dependency.gcby_cache.outputs.psc_service_attachment_link
+      allow_global_access       = true
+    }
+  }
+
+  # 새 프로젝트 추가 예시 (주석)
+  # psc_endpoints_abc = {
+  #   "abc-cloudsql" = {
+  #     region                    = "us-west1"
+  #     ip_address                = local.projects.abc.psc_ips.cloudsql
+  #     target_service_attachment = dependency.abc_database.outputs.psc_service_attachment_link
+  #     allow_global_access       = true
+  #   }
+  #   "abc-redis" = {
+  #     region                    = "us-west1"
+  #     ip_address                = local.projects.abc.psc_ips.redis
+  #     target_service_attachment = dependency.abc_cache.outputs.psc_service_attachment_link
+  #     allow_global_access       = true
+  #   }
+  # }
+
+  # 모든 프로젝트의 PSC endpoints 병합
+  all_psc_endpoints = merge(
+    local.psc_endpoints_gcby,
+    # local.psc_endpoints_abc,  # 새 프로젝트 추가 시 주석 해제
+  )
 }
 
 # 00-foundation 의존성 (실행 순서 보장용)
@@ -69,63 +124,6 @@ dependency "gcby_cache" {
 
 dependencies {
   paths = ["../00-foundation"]
-}
-
-# =============================================================================
-# Inputs: projects 구조에서 동적으로 생성
-# =============================================================================
-locals {
-  # projects map에서 추출
-  projects = local.common_vars.locals.projects
-
-  # 각 프로젝트별 VPC Peering 정보 (key = network_url)
-  # 새 프로젝트 추가 시: common.hcl의 projects에 추가하면 자동 반영
-  project_vpc_peerings = {
-    for key, project in local.projects :
-    key => project.network_url
-  }
-
-  # PSC Endpoints 동적 생성 (각 프로젝트의 Cloud SQL, Redis)
-  # 형식: {project_key}-{service} = { psc_ip, service_attachment }
-  #
-  # 주의: dependency는 정적 선언이 필요하므로,
-  # 프로젝트 추가 시 위의 dependency 블록도 함께 추가해야 함
-  psc_endpoints_gcby = {
-    "gcby-cloudsql" = {
-      region                    = "us-west1"
-      ip_address                = local.projects.gcby.psc_ips.cloudsql
-      target_service_attachment = dependency.gcby_database.outputs.psc_service_attachment_link
-      allow_global_access       = true
-    }
-    "gcby-redis" = {
-      region                    = "us-west1"
-      ip_address                = local.projects.gcby.psc_ips.redis
-      target_service_attachment = dependency.gcby_cache.outputs.psc_service_attachment_link
-      allow_global_access       = true
-    }
-  }
-
-  # 새 프로젝트 추가 예시 (주석)
-  # psc_endpoints_abc = {
-  #   "abc-cloudsql" = {
-  #     region                    = "us-west1"
-  #     ip_address                = local.projects.abc.psc_ips.cloudsql
-  #     target_service_attachment = dependency.abc_database.outputs.psc_service_attachment_link
-  #     allow_global_access       = true
-  #   }
-  #   "abc-redis" = {
-  #     region                    = "us-west1"
-  #     ip_address                = local.projects.abc.psc_ips.redis
-  #     target_service_attachment = dependency.abc_cache.outputs.psc_service_attachment_link
-  #     allow_global_access       = true
-  #   }
-  # }
-
-  # 모든 프로젝트의 PSC endpoints 병합
-  all_psc_endpoints = merge(
-    local.psc_endpoints_gcby,
-    # local.psc_endpoints_abc,  # 새 프로젝트 추가 시 주석 해제
-  )
 }
 
 # common.hcl + layer.hcl + 동적 생성된 PSC endpoints
