@@ -163,6 +163,12 @@ resource "google_sql_user" "users" {
   password = each.value.password
   host     = lookup(each.value, "host", "%")
   project  = var.project_id
+
+  # 비밀번호 변경 시 Terraform이 되돌리지 않도록 설정
+  # 초기 생성 후 사용자가 GCP Console/gcloud로 직접 관리 가능
+  lifecycle {
+    ignore_changes = [password]
+  }
 }
 
 # 읽기 복제본 (옵션)
