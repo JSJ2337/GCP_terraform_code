@@ -129,6 +129,6 @@ output "psc_redis_forwarding_rules" {
       ip_address        = fr.ip_address
       name              = fr.name
       region            = fr.region
-    } if can(regex("^gcby-.*-redis-", key))  # gcby-live-redis-0, gcby-live-redis-1 등 매칭
+    } if can(regex("-redis-\\d+$", key))  # {project}-{env}-redis-0, {project}-{env}-redis-1 등 매칭
   ]
 }
