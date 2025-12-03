@@ -46,8 +46,8 @@ locals {
       # PSC Endpoint IP (mgmt VPC에서 접근용)
       # Redis Cluster는 2개의 Service Attachment가 있으므로 2개의 IP 필요
       psc_ips = {
-        cloudsql = "10.10.12.20"
-        redis    = ["10.10.12.101", "10.10.12.102"]  # Discovery + Shard
+        cloudsql = "10.250.20.20"
+        redis    = ["10.250.20.101", "10.250.20.102"]  # Discovery + Shard
       }
 
       # VM Static IP
@@ -70,8 +70,8 @@ locals {
     #   network_url  = "projects/gcp-abc/global/networks/abc-live-vpc"
     #
     #   psc_ips = {
-    #     cloudsql = "10.10.13.20"
-    #     redis    = ["10.10.13.101", "10.10.13.102"]  # Redis Cluster는 2개 IP 필요
+    #     cloudsql = "10.250.21.20"
+    #     redis    = ["10.250.21.101", "10.250.21.102"]  # Redis Cluster는 2개 IP 필요
     #   }
     #
     #   vm_ips = {
