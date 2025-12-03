@@ -133,27 +133,50 @@ projects = {
 
 #### 2. 10-network/terragrunt.hcl에 Dependency 추가 (10분)
 
+**⚠️ 주의: Terragrunt 제약사항**
+- `locals` 블록에서는 `dependency` 참조 불가 (다른 local 변수만 참조 가능)
+- PSC Endpoints는 **inputs 블록**에서 생성해야 함
+
 ```hcl
-# Dependencies 블록
+# A) Dependencies 블록 추가
 dependency "abc_database" {
   config_path = local.common_vars.locals.projects.abc.database_path
-  ...
+  mock_outputs = {
+    psc_service_attachment_link = "projects/mock/regions/us-west1/serviceAttachments/mock-abc-cloudsql"
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
 dependency "abc_cache" {
   config_path = local.common_vars.locals.projects.abc.cache_path
-  ...
+  mock_outputs = {
+    psc_service_attachment_link = "projects/mock/regions/us-west1/serviceAttachments/mock-abc-redis"
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
 
-# PSC Endpoints 로컬 변수
-locals {
-  psc_endpoints_abc = {
-    "abc-cloudsql" = { ... }
-    "abc-redis" = { ... }
-  }
-
-  all_psc_endpoints = merge(
-    local.psc_endpoints_gcby,
-    local.psc_endpoints_abc,  # 추가
+# B) inputs 블록의 psc_endpoints에 추가 (dependency 참조는 inputs에서만 가능)
+inputs = {
+  psc_endpoints = merge(
+    # gcby 프로젝트 (기존)
+    {
+      "gcby-cloudsql" = { ... }
+      "gcby-redis" = { ... }
+    },
+    # abc 프로젝트 (신규 추가)
+    {
+      "abc-cloudsql" = {
+        region                    = "us-west1"
+        ip_address                = local.projects.abc.psc_ips.cloudsql
+        target_service_attachment = dependency.abc_database.outputs.psc_service_attachment_link
+        allow_global_access       = true
+      }
+      "abc-redis" = {
+        region                    = "us-west1"
+        ip_address                = local.projects.abc.psc_ips.redis
+        target_service_attachment = dependency.abc_cache.outputs.psc_service_attachment_link
+        allow_global_access       = true
+      }
+    }
   )
 }
 ```
@@ -391,6 +414,41 @@ gcloud beta billing accounts add-iam-policy-binding REDACTED_BILLING_ACCOUNT \
 - **State 백업**: GCS 버킷에 versioning이 활성화되어 있어 최근 10개 버전이 보관됩니다
 - **Jenkins 초기화**: VM 생성 후 startup script 완료까지 5-10분 소요됩니다
 - **보안**: 운영 환경에서는 `jenkins_allowed_cidrs`를 제한하세요
+
+### Terragrunt 제약사항 (중요!)
+
+**10-network/terragrunt.hcl 수정 시 주의**:
+- `locals` 블록에서는 `dependency.*` 참조 불가
+- PSC Endpoints는 반드시 `inputs` 블록에서 생성
+- `locals` 블록은 파일당 하나만 허용
+
+**블록별 참조 규칙**:
+| 블록 | 참조 가능 | 참조 불가 |
+|------|---------|---------|
+| `locals` | local 변수, read_terragrunt_config() | dependency outputs |
+| `inputs` | local 변수, dependency outputs | - |
+
+**잘못된 예시** (에러 발생):
+```hcl
+locals {
+  psc_endpoints = {
+    "gcby-cloudsql" = {
+      target_service_attachment = dependency.gcby_database.outputs...  # ❌ 에러!
+    }
+  }
+}
+```
+
+**올바른 예시**:
+```hcl
+inputs = {
+  psc_endpoints = {
+    "gcby-cloudsql" = {
+      target_service_attachment = dependency.gcby_database.outputs...  # ✅ 정상
+    }
+  }
+}
+```
 
 ## 기존 단일 파일 구조 (레거시)
 

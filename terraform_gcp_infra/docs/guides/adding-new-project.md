@@ -258,35 +258,52 @@ dependency "abc_cache" {
 
 ### 3. bootstrap/10-network/terragrunt.hcl - PSC Endpoints 추가
 
-같은 파일의 `locals` 섹션:
+**⚠️ 중요: Terragrunt 제약사항**
+- `locals` 블록에서는 `dependency.*` 참조 불가 (다른 local 변수만 참조 가능)
+- PSC Endpoints는 **inputs 블록**에서 생성해야 함
+
+같은 파일의 `inputs` 섹션 (파일 하단):
 
 ```hcl
-locals {
-  projects = local.common_vars.locals.projects
+inputs = merge(
+  local.common_vars.locals,
+  local.layer_vars.locals,
+  {
+    project_vpc_network_urls = local.project_vpc_peerings
 
-  # ... 기존 gcby PSC endpoints ...
-
-  # ⚠️ abc PSC endpoints (신규)
-  psc_endpoints_abc = {
-    "abc-cloudsql" = {
-      region                    = "us-west1"
-      ip_address                = local.projects.abc.psc_ips.cloudsql
-      target_service_attachment = dependency.abc_database.outputs.psc_service_attachment_link
-      allow_global_access       = true
-    }
-    "abc-redis" = {
-      region                    = "us-west1"
-      ip_address                = local.projects.abc.psc_ips.redis
-      target_service_attachment = dependency.abc_cache.outputs.psc_service_attachment_link
-      allow_global_access       = true
-    }
-  }
-
-  # 모든 프로젝트의 PSC endpoints 병합
-  all_psc_endpoints = merge(
-    local.psc_endpoints_gcby,
-    local.psc_endpoints_abc,  # ⚠️ 추가
-  )
+    # PSC Endpoints (dependency 참조는 inputs에서만 가능)
+    psc_endpoints = merge(
+      # gcby 프로젝트 (기존)
+      {
+        "gcby-cloudsql" = {
+          region                    = "us-west1"
+          ip_address                = local.projects.gcby.psc_ips.cloudsql
+          target_service_attachment = dependency.gcby_database.outputs.psc_service_attachment_link
+          allow_global_access       = true
+        }
+        "gcby-redis" = {
+          region                    = "us-west1"
+          ip_address                = local.projects.gcby.psc_ips.redis
+          target_service_attachment = dependency.gcby_cache.outputs.psc_service_attachment_link
+          allow_global_access       = true
+        }
+      },
+      # ⚠️ abc 프로젝트 (신규 추가)
+      {
+        "abc-cloudsql" = {
+          region                    = "us-west1"
+          ip_address                = local.projects.abc.psc_ips.cloudsql
+          target_service_attachment = dependency.abc_database.outputs.psc_service_attachment_link
+          allow_global_access       = true
+        }
+        "abc-redis" = {
+          region                    = "us-west1"
+          ip_address                = local.projects.abc.psc_ips.redis
+          target_service_attachment = dependency.abc_cache.outputs.psc_service_attachment_link
+          allow_global_access       = true
+        }
+      }
+    )
 }
 ```
 
@@ -623,12 +640,90 @@ Error: Dependency abc_database has no outputs
 
 ---
 
+## Terragrunt 제약사항 및 주의사항
+
+### 블록별 참조 규칙
+
+| 블록 타입 | 참조 가능 대상 | 참조 불가 대상 |
+|----------|--------------|--------------|
+| **locals** | • 다른 local 변수<br>• read_terragrunt_config()<br>• Terraform 내장 함수 | • dependency outputs |
+| **inputs** | • local 변수<br>• dependency outputs<br>• 모든 Terragrunt 함수 | - |
+| **dependency** | • local 변수 (config_path에서만) | • 다른 dependency |
+
+### 평가 순서
+
+```
+1. dependency 블록 평가
+   ↓
+2. locals 블록 평가 (local 변수만 사용 가능)
+   ↓
+3. inputs 블록 평가 (local + dependency 모두 사용 가능)
+```
+
+### 일반적인 에러
+
+#### 에러 1: "Multiple locals block"
+```
+Multiple locals block; Terragrunt currently does not support
+multiple locals blocks in a single config.
+```
+
+**원인**: terragrunt.hcl 파일에 2개 이상의 locals 블록 존재
+
+**해결**: 하나의 locals 블록으로 통합
+
+#### 에러 2: "dependency is not defined"
+```
+You can only reference to other local variables here, but it looks like you're
+referencing something else ("dependency" is not defined)
+```
+
+**원인**: locals 블록에서 dependency.* 참조 시도
+
+**해결**: PSC Endpoints 생성 로직을 inputs 블록으로 이동
+
+**잘못된 예시**:
+```hcl
+locals {
+  psc_endpoints = {
+    "abc-cloudsql" = {
+      target_service_attachment = dependency.abc_database.outputs...  # ❌ 에러!
+    }
+  }
+}
+```
+
+**올바른 예시**:
+```hcl
+inputs = {
+  psc_endpoints = merge(
+    {
+      "abc-cloudsql" = {
+        target_service_attachment = dependency.abc_database.outputs...  # ✅ 정상
+      }
+    }
+  )
+}
+```
+
+### 체크리스트
+
+새 프로젝트 추가 시 반드시 확인:
+
+- [ ] locals 블록은 파일당 하나만 존재
+- [ ] locals 블록에서 dependency 참조 없음
+- [ ] PSC Endpoints는 inputs 블록에서 생성
+- [ ] dependency 블록은 mock_outputs 포함
+
+---
+
 ## 참고 자료
 
 - [Bootstrap README](../../bootstrap/README.md) - Bootstrap 구조 상세
 - [Terragrunt 사용법](./terragrunt-usage.md) - Terragrunt 명령어
 - [네트워크 설계](../architecture/network-design.md) - PSC 아키텍처
 - [트러블슈팅](../troubleshooting/common-errors.md) - 일반 오류 해결
+- [Terragrunt Documentation](https://terragrunt.gruntwork.io/docs/) - 공식 문서
 
 ---
 
