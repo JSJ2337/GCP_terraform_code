@@ -39,6 +39,13 @@ locals {
       rrdatas = ["10.250.20.20"]
     }
 
+    # Redis PSC endpoint (mgmt VPC용)
+    "gcby-live-redis" = {
+      type    = "A"
+      ttl     = 300
+      rrdatas = ["10.250.20.101"]
+    }
+
     # 새 서버 추가 시 여기에 추가
     # "gitlab" = {
     #   type    = "A"

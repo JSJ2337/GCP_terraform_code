@@ -26,7 +26,13 @@ dns_records = [
     name    = "gcby-live-gdb-m1"
     type    = "A"
     ttl     = 300
-    rrdatas = ["10.10.12.51"]  # gcby VPC의 PSC FR IP
+    rrdatas = ["10.10.12.51"]  # gcby VPC의 Cloud SQL PSC FR IP
+  },
+  {
+    name    = "gcby-live-redis"
+    type    = "A"
+    ttl     = 300
+    rrdatas = ["10.10.11.5"]  # gcby VPC의 Redis PSC endpoint IP
   },
   {
     name    = "gcby-gs01"
