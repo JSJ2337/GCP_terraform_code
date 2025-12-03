@@ -45,13 +45,6 @@ network_config = {
     mgmt_vpc_name    = "delabs-gcp-mgmt-vpc"
     mgmt_subnet_cidr = "10.250.10.0/24"  # mgmt VPC subnet CIDR (firewall rule용)
   }
-
-  # VM Static IP (선택사항, 비우면 동적 할당)
-  # Note: 이 값은 vm_static_ips에서도 참조 가능
-  vm_ips = {
-    gs01 = "10.10.11.3"
-    gs02 = "10.10.11.6"
-  }
 }
 
 # VM Static IP (최상위 레벨 - terragrunt에서 쉽게 접근하기 위함)
