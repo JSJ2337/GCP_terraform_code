@@ -50,11 +50,11 @@ locals {
         ttl     = 300
         rrdatas = [project.psc_ips.cloudsql]
       }
-      # Redis PSC endpoint
+      # Redis PSC endpoint (첫 번째 IP = Discovery endpoint)
       "${project_key}-${project.environment}-redis" = {
         type    = "A"
         ttl     = 300
-        rrdatas = [project.psc_ips.redis]
+        rrdatas = [project.psc_ips.redis[0]]
       }
     }
   ]...)
