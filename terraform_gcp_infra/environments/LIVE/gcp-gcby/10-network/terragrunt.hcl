@@ -26,10 +26,11 @@ locals {
 
   # additional_subnets를 network_config에서 동적 생성
   # CIDR은 common.naming.tfvars의 network_config.subnets에서 가져옴
+  # 기존 인프라와 일치하도록 {project_name}-live-subnet-{type} 형태 유지
   additional_subnets_with_metadata = [
     for idx, subnet_type in local.subnet_types :
     {
-      name   = "${local.project_name}-subnet-${subnet_type}"
+      name   = "${local.project_name}-live-subnet-${subnet_type}"
       region = local.region_primary
       cidr   = try(local.network_config.subnets[subnet_type], "")
       private_google_access = true
@@ -37,10 +38,10 @@ locals {
     }
   ]
 
-  # Subnet 이름들
-  dmz_subnet_name     = "${local.project_name}-subnet-dmz"
-  private_subnet_name = "${local.project_name}-subnet-private"
-  psc_subnet_name     = "${local.project_name}-subnet-psc"
+  # Subnet 이름들 (기존 인프라와 일치)
+  dmz_subnet_name     = "${local.project_name}-live-subnet-dmz"
+  private_subnet_name = "${local.project_name}-live-subnet-private"
+  psc_subnet_name     = "${local.project_name}-live-subnet-psc"
 
   # Memorystore PSC 설정
   memorystore_psc_region      = local.region_primary
