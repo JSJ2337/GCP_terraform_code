@@ -165,6 +165,7 @@ variable "instances" {
     machine_type          = optional(string)
     subnet_type           = optional(string)  # "dmz", "private", "db" 중 하나 (subnets 맵 키)
     subnetwork_self_link  = optional(string)  # 하위 호환성을 위해 유지 (subnet_type 우선)
+    network_ip            = optional(string)  # 고정 내부 IP 주소
     enable_public_ip      = optional(bool)
     enable_os_login       = optional(bool)
     preemptible           = optional(bool)
