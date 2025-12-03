@@ -103,6 +103,7 @@ inputs = merge(
 
     # VM 메타데이터 - common.naming.tfvars의 vm_admin_config에서 주입
     metadata = {
+      admin-username = try(local.common_inputs.vm_admin_config.username, "admin")
       admin-password = try(local.common_inputs.vm_admin_config.password, "")
     }
   }
