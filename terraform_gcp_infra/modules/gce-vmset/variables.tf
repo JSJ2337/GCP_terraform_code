@@ -30,6 +30,7 @@ variable "instances" {
     zone                  = optional(string)
     machine_type          = optional(string)
     subnetwork_self_link  = optional(string)
+    network_ip            = optional(string)  # 고정 내부 IP 주소
     enable_public_ip      = optional(bool)
     enable_os_login       = optional(bool)
     preemptible           = optional(bool)
@@ -39,6 +40,7 @@ variable "instances" {
     labels                = optional(map(string))
     boot_disk_size_gb     = optional(number)
     boot_disk_type        = optional(string)
+    boot_disk_name        = optional(string)  # 부트 디스크 이름 (지정 안하면 {instance_name}-boot)
     image_family          = optional(string)
     image_project         = optional(string)
     service_account_email = optional(string)
