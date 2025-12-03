@@ -43,10 +43,11 @@ locals {
   # 형식: project_key = { project_id, vpc_name, psc_ips, vm_ips }
   projects = {
     gcby = {
-      project_id   = "gcp-gcby"
-      environment  = "live"
-      vpc_name     = "gcby-live-vpc"
-      network_url  = "projects/gcp-gcby/global/networks/gcby-live-vpc"
+      project_id       = "gcp-gcby"
+      environment      = "live"
+      vpc_name         = "gcby-live-vpc"
+      network_url      = "projects/gcp-gcby/global/networks/gcby-live-vpc"
+      has_own_dns_zone = true  # 자체 DNS Zone 있음 - mgmt DNS Zone에서 제외
 
       # PSC Endpoint IP (mgmt VPC에서 접근용 - mgmt subnet CIDR: 10.250.20.0/24)
       # Redis Cluster는 2개의 Service Attachment가 있으므로 2개의 IP 필요

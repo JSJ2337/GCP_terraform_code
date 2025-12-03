@@ -37,10 +37,11 @@ inputs = merge(
   {
     vpc_self_link = dependency.network.outputs.vpc_self_link
 
-    # projects map에서 모든 프로젝트의 network_url 추출하여 DNS Zone에 추가
-    # 이렇게 하면 gcby VPC 등 다른 프로젝트 VPC에서도 DNS 쿼리가 가능
+    # projects map에서 프로젝트의 network_url 추출하여 DNS Zone에 추가
+    # 단, 자체 DNS Zone이 있는 프로젝트(gcby 등)는 제외 (같은 DNS 이름 충돌 방지)
     additional_networks = [
       for key, project in local.common_vars.locals.projects : project.network_url
+      if try(project.has_own_dns_zone, false) == false
     ]
   }
 )
