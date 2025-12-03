@@ -21,7 +21,8 @@ locals {
 
   # common.naming.tfvars에서 region_primary, VM IP 가져오기
   region_primary = local.common_inputs.region_primary
-  vm_ips         = try(local.common_inputs.network_config.vm_ips, {})
+  # vm_static_ips는 최상위 레벨 (nested object 접근 문제 회피)
+  vm_ips         = try(local.common_inputs.vm_static_ips, try(local.common_inputs.network_config.vm_ips, {}))
 
   # instances에 network_ip만 주입 (키 변환은 main.tf에서 처리)
   # Best Practice: 단순한 값 전달, 복잡한 로직은 Terraform 모듈에서 처리
