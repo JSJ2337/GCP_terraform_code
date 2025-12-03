@@ -84,7 +84,8 @@ resource "google_dns_record_set" "records" {
   project      = var.project_id
   managed_zone = google_dns_managed_zone.zone.name
 
-  name    = each.value.name
+  # name이 이미 FQDN(trailing dot)이면 그대로, 아니면 dns_name을 붙임
+  name    = endswith(each.value.name, ".") ? each.value.name : "${each.value.name}.${var.dns_name}"
   type    = each.value.type
   ttl     = lookup(each.value, "ttl", 300)
   rrdatas = each.value.rrdatas
