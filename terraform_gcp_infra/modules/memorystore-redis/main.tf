@@ -108,3 +108,65 @@ resource "google_redis_cluster" "enterprise" {
     }
   }
 }
+
+# =============================================================================
+# Cross-Project PSC Connections (User Created)
+# =============================================================================
+# 다른 프로젝트/VPC에서 이 Redis Cluster에 PSC로 접근하려면
+# 해당 VPC의 PSC Forwarding Rule을 이 클러스터에 등록해야 함
+#
+# 참고: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/redis_cluster_user_created_connections
+
+resource "google_redis_cluster_user_created_connections" "cross_project" {
+  count = local.is_enterprise_tier && length(var.cross_project_psc_connections) > 0 ? 1 : 0
+
+  name    = google_redis_cluster.enterprise[0].name
+  region  = local.enterprise_region
+  project = var.project_id
+
+  # 기존 자동 생성된 연결 (authorized_network의 PSC 연결) 유지
+  dynamic "cluster_endpoints" {
+    for_each = google_redis_cluster.enterprise[0].cluster_endpoints
+    content {
+      dynamic "connections" {
+        for_each = cluster_endpoints.value.connections
+        content {
+          psc_connection {
+            psc_connection_id  = connections.value.psc_auto_connection.psc_connection_id
+            address            = connections.value.psc_auto_connection.address
+            forwarding_rule    = connections.value.psc_auto_connection.forwarding_rule
+            network            = connections.value.psc_auto_connection.network
+            project_id         = connections.value.psc_auto_connection.project_id
+            service_attachment = connections.value.psc_auto_connection.service_attachment
+          }
+        }
+      }
+    }
+  }
+
+  # Cross-project PSC 연결 추가
+  dynamic "cluster_endpoints" {
+    for_each = var.cross_project_psc_connections
+    content {
+      dynamic "connections" {
+        for_each = [for idx, fr in cluster_endpoints.value.forwarding_rules : {
+          idx = idx
+          fr  = fr
+          sa  = google_redis_cluster.enterprise[0].psc_service_attachments[idx].service_attachment
+        }]
+        content {
+          psc_connection {
+            psc_connection_id  = connections.value.fr.psc_connection_id
+            address            = connections.value.fr.ip_address
+            forwarding_rule    = "projects/${cluster_endpoints.value.project_id}/regions/${connections.value.fr.region}/forwardingRules/${connections.value.fr.name}"
+            network            = cluster_endpoints.value.network
+            project_id         = cluster_endpoints.value.project_id
+            service_attachment = connections.value.sa
+          }
+        }
+      }
+    }
+  }
+
+  depends_on = [google_redis_cluster.enterprise]
+}

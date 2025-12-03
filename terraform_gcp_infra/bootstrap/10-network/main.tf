@@ -50,21 +50,33 @@ locals {
   # ==========================================================================
   # PSC Endpoints 동적 생성 (terraform_remote_state에서 Service Attachment 참조)
   # ==========================================================================
+  # Redis Cluster Service Attachments (2개)
+  gcby_redis_service_attachments = var.enable_psc_endpoints ? try(
+    data.terraform_remote_state.gcby_cache[0].outputs.psc_service_attachment_links, []
+  ) : []
+
   # gcby 프로젝트 PSC Endpoints
-  gcby_psc_endpoints = var.enable_psc_endpoints ? {
-    "gcby-cloudsql" = {
-      region                    = "us-west1"
-      ip_address                = var.project_psc_ips.gcby.cloudsql
-      target_service_attachment = try(data.terraform_remote_state.gcby_database[0].outputs.psc_service_attachment_link, "")
-      allow_global_access       = true
+  gcby_psc_endpoints = var.enable_psc_endpoints ? merge(
+    # Cloud SQL PSC Endpoint (1개)
+    {
+      "gcby-cloudsql" = {
+        region                    = "us-west1"
+        ip_address                = var.project_psc_ips.gcby.cloudsql
+        target_service_attachment = try(data.terraform_remote_state.gcby_database[0].outputs.psc_service_attachment_link, "")
+        allow_global_access       = true
+      }
+    },
+    # Redis PSC Endpoints (2개 - Discovery + Shard)
+    {
+      for idx, sa in local.gcby_redis_service_attachments :
+      "gcby-redis-${idx}" => {
+        region                    = "us-west1"
+        ip_address                = try(var.project_psc_ips.gcby.redis[idx], "")
+        target_service_attachment = sa
+        allow_global_access       = true
+      }
     }
-    "gcby-redis" = {
-      region                    = "us-west1"
-      ip_address                = var.project_psc_ips.gcby.redis
-      target_service_attachment = try(data.terraform_remote_state.gcby_cache[0].outputs.psc_service_attachment_link, "")
-      allow_global_access       = true
-    }
-  } : {}
+  ) : {}
 
   # 새 프로젝트 추가 예시 (주석)
   # abc_psc_endpoints = var.enable_psc_endpoints ? {

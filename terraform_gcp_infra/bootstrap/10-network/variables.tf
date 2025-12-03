@@ -53,20 +53,20 @@ variable "state_bucket" {
 }
 
 variable "project_psc_ips" {
-  description = "프로젝트별 PSC Endpoint IP 주소"
+  description = "프로젝트별 PSC Endpoint IP 주소 (Redis는 2개의 Service Attachment 필요)"
   type = map(object({
     cloudsql = string
-    redis    = string
+    redis    = list(string)  # Redis Cluster는 2개의 PSC IP 필요 (Discovery + Shard)
   }))
   default = {
     gcby = {
       cloudsql = "10.250.20.20"
-      redis    = "10.250.20.101"
+      redis    = ["10.250.20.101", "10.250.20.102"]  # 2개의 PSC endpoint
     }
     # 새 프로젝트 추가 시:
     # abc = {
     #   cloudsql = "10.250.21.20"
-    #   redis    = "10.250.21.101"
+    #   redis    = ["10.250.21.101", "10.250.21.102"]
     # }
   }
 }

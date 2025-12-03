@@ -62,3 +62,31 @@ output "subnet_us_west1_self_link" {
   description = "us-west1 Subnet Self Link"
   value       = google_compute_subnetwork.mgmt_subnet_us_west1.self_link
 }
+
+# =============================================================================
+# PSC Endpoints Outputs (for cross-project registration)
+# =============================================================================
+output "psc_forwarding_rules" {
+  description = "PSC Forwarding Rules 정보 (cross-project PSC 연결 등록용)"
+  value = {
+    for key, fr in google_compute_forwarding_rule.psc_endpoints : key => {
+      name              = fr.name
+      region            = fr.region
+      ip_address        = fr.ip_address
+      psc_connection_id = fr.psc_connection_id
+      self_link         = fr.self_link
+    }
+  }
+}
+
+output "psc_redis_forwarding_rules" {
+  description = "Redis PSC Forwarding Rules (for user_created_connections)"
+  value = [
+    for key, fr in google_compute_forwarding_rule.psc_endpoints : {
+      name              = fr.name
+      region            = fr.region
+      ip_address        = fr.ip_address
+      psc_connection_id = fr.psc_connection_id
+    } if startswith(key, "gcby-redis-")
+  ]
+}

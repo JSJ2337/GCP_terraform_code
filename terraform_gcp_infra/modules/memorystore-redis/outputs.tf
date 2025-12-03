@@ -59,6 +59,18 @@ output "psc_service_attachments" {
 }
 
 output "psc_service_attachment_link" {
-  description = "Primary PSC Service Attachment Link (for PSC endpoints)"
+  description = "Primary PSC Service Attachment Link (for PSC endpoints - Discovery)"
   value       = try(google_redis_cluster.enterprise[0].psc_service_attachments[0].service_attachment, null)
+}
+
+output "psc_service_attachment_links" {
+  description = "All PSC Service Attachment Links as a list (for cross-project PSC endpoints)"
+  value = try([
+    for sa in google_redis_cluster.enterprise[0].psc_service_attachments : sa.service_attachment
+  ], [])
+}
+
+output "cluster_endpoints" {
+  description = "Cluster endpoints with PSC connection details (for cross-project registration)"
+  value       = try(google_redis_cluster.enterprise[0].cluster_endpoints, [])
 }

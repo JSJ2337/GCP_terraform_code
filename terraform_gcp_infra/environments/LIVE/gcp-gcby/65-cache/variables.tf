@@ -163,3 +163,30 @@ variable "enterprise_redis_configs" {
   description = "Enterprise 클러스터용 추가 Redis 설정"
   default     = {}
 }
+
+# =============================================================================
+# Cross-Project PSC Connections (mgmt VPC 등 다른 프로젝트에서 접근 허용)
+# =============================================================================
+variable "enable_cross_project_psc" {
+  type        = bool
+  description = "Cross-project PSC 연결 활성화 (bootstrap 배포 후 true로 설정)"
+  default     = false
+}
+
+variable "state_bucket" {
+  type        = string
+  description = "Terraform State 버킷 이름 (terraform_remote_state용)"
+  default     = "delabs-terraform-state-live"
+}
+
+variable "mgmt_project_id" {
+  type        = string
+  description = "Management 프로젝트 ID (PSC Endpoint가 있는 프로젝트)"
+  default     = "delabs-gcp-mgmt"
+}
+
+variable "mgmt_vpc_network" {
+  type        = string
+  description = "Management VPC Network URL"
+  default     = "projects/delabs-gcp-mgmt/global/networks/delabs-gcp-mgmt-vpc"
+}

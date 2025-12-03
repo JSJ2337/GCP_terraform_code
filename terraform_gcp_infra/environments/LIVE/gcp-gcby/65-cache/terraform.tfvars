@@ -34,3 +34,10 @@ labels = {
   tier = "cache"
   app  = "gcby"
 }
+
+# =============================================================================
+# Cross-Project PSC Connections (mgmt VPC에서 접근 허용)
+# =============================================================================
+# bootstrap/10-network 배포 후 true로 설정하면
+# mgmt VPC의 PSC Endpoint가 이 Redis Cluster에 등록됨
+enable_cross_project_psc = true

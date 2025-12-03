@@ -44,9 +44,10 @@ locals {
       network_url  = "projects/gcp-gcby/global/networks/gcby-live-vpc"
 
       # PSC Endpoint IP (mgmt VPC에서 접근용)
+      # Redis Cluster는 2개의 Service Attachment가 있으므로 2개의 IP 필요
       psc_ips = {
         cloudsql = "10.250.20.20"
-        redis    = "10.250.20.101"
+        redis    = ["10.250.20.101", "10.250.20.102"]  # Discovery + Shard
       }
 
       # VM Static IP
@@ -70,7 +71,7 @@ locals {
     #
     #   psc_ips = {
     #     cloudsql = "10.250.21.20"
-    #     redis    = "10.250.21.101"
+    #     redis    = ["10.250.21.101", "10.250.21.102"]  # Redis Cluster는 2개 IP 필요
     #   }
     #
     #   vm_ips = {

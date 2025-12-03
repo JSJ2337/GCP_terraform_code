@@ -29,6 +29,16 @@ output "psc_service_attachments" {
 }
 
 output "psc_service_attachment_link" {
-  description = "Primary PSC Service Attachment Link (for PSC endpoints)"
+  description = "Primary PSC Service Attachment Link (for PSC endpoints - Discovery)"
   value       = module.cache.psc_service_attachment_link
+}
+
+output "psc_service_attachment_links" {
+  description = "All PSC Service Attachment Links as a list (for cross-project PSC endpoints)"
+  value       = module.cache.psc_service_attachment_links
+}
+
+output "cluster_endpoints" {
+  description = "Cluster endpoints with PSC connection details"
+  value       = module.cache.cluster_endpoints
 }

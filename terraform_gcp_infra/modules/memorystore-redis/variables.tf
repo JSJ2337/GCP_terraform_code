@@ -169,3 +169,27 @@ variable "deletion_protection" {
   description = "Deletion protection 활성화 여부 (true: 삭제 방지, false: 삭제 허용)"
   default     = true
 }
+
+# =============================================================================
+# Cross-Project PSC Connections (for multi-VPC access)
+# =============================================================================
+variable "cross_project_psc_connections" {
+  type = list(object({
+    project_id       = string  # PSC Endpoint가 있는 프로젝트 ID
+    network          = string  # PSC Endpoint가 있는 VPC (projects/{project}/global/networks/{name})
+    forwarding_rules = list(object({
+      psc_connection_id = string  # Forwarding Rule의 psc_connection_id 속성
+      name              = string  # Forwarding rule name
+      ip_address        = string  # Reserved IP address
+      region            = string  # Region of the forwarding rule
+    }))
+  }))
+  description = <<-EOT
+    Cross-project PSC connections for multi-VPC access.
+    Redis Cluster Enterprise requires registering PSC connections from other VPCs.
+    Each connection requires forwarding rules for all service attachments (typically 2).
+
+    Note: psc_connection_id is obtained from the google_compute_forwarding_rule resource output.
+  EOT
+  default = []
+}
