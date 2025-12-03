@@ -32,6 +32,14 @@ locals {
   # Network config 추출
   network_config = try(local.common_inputs.network_config, {})
 
+  # DNS config 추출 (common.naming.tfvars에서)
+  dns_config = try(local.common_inputs.dns_config, {})
+
+  # DNS Zone 동적 생성
+  zone_name   = "${local.project_name}-${local.dns_config.zone_suffix}"
+  dns_name    = local.dns_config.domain
+  description = "Private DNS zone for ${local.project_name} VPC (${trimsuffix(local.dns_config.domain, ".")})"
+
   # DNS 레코드 동적 생성 (common.naming.tfvars의 network_config에서 IP 가져옴 - 필수)
   dns_records = [
     {
@@ -81,6 +89,11 @@ inputs = merge(
   local.common_inputs,
   local.layer_inputs,
   {
+    # DNS Zone 설정 동적 주입
+    zone_name   = local.zone_name
+    dns_name    = local.dns_name
+    description = local.description
+
     # DNS 레코드를 동적 생성한 것으로 override
     dns_records = local.dns_records
 

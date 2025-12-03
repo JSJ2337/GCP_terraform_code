@@ -62,6 +62,71 @@ locals {
   # PSC Endpoint IPs (common.naming.tfvars의 network_config.psc_endpoints에서 가져옴 - 필수)
   psc_cloudsql_ip = local.network_config.psc_endpoints.cloudsql
   psc_redis_ips   = local.network_config.psc_endpoints.redis
+
+  # Mgmt VPC subnet CIDR (firewall rule용)
+  mgmt_subnet_cidr = try(local.network_config.peering.mgmt_subnet_cidr, "")
+
+  # Subnet CIDRs
+  dmz_cidr     = local.network_config.subnets.dmz
+  private_cidr = local.network_config.subnets.private
+
+  # Firewall rules 동적 생성
+  firewall_rules = [
+    {
+      name           = "allow-ssh-from-iap"
+      direction      = "INGRESS"
+      ranges         = ["35.235.240.0/20"]
+      allow_protocol = "tcp"
+      allow_ports    = ["22"]
+      target_tags    = ["ssh-from-iap"]
+      description    = "Allow SSH from Identity-Aware Proxy"
+    },
+    {
+      name           = "allow-ssh-from-mgmt"
+      direction      = "INGRESS"
+      ranges         = [local.mgmt_subnet_cidr]
+      allow_protocol = "tcp"
+      allow_ports    = ["22"]
+      target_tags    = ["ssh-from-mgmt"]
+      description    = "Allow SSH from mgmt VPC (jenkins, bastion)"
+    },
+    {
+      name           = "allow-dmz-internal"
+      direction      = "INGRESS"
+      ranges         = [local.dmz_cidr]
+      allow_protocol = "all"
+      allow_ports    = []
+      target_tags    = ["dmz-zone"]
+      description    = "Allow all traffic within DMZ subnet (${local.dmz_cidr})"
+    },
+    {
+      name           = "allow-private-internal"
+      direction      = "INGRESS"
+      ranges         = [local.private_cidr]
+      allow_protocol = "all"
+      allow_ports    = []
+      target_tags    = ["private-zone"]
+      description    = "Allow all traffic within Private subnet (${local.private_cidr})"
+    },
+    {
+      name           = "allow-dmz-to-private"
+      direction      = "INGRESS"
+      ranges         = [local.dmz_cidr]
+      allow_protocol = "tcp"
+      allow_ports    = ["8080", "9090", "3000", "5000"]
+      target_tags    = ["private-zone"]
+      description    = "Allow DMZ to Private zone (frontend to backend APIs)"
+    },
+    {
+      name           = "allow-health-check"
+      direction      = "INGRESS"
+      ranges         = ["130.211.0.0/22", "35.191.0.0/16"]
+      allow_protocol = "tcp"
+      allow_ports    = ["80", "8080"]
+      target_tags    = ["dmz-zone", "private-zone"]
+      description    = "Allow health checks from Google Load Balancer"
+    }
+  ]
 }
 
 # Cloud SQL dependency (Service Attachment 가져오기)
@@ -109,6 +174,9 @@ inputs = merge(
     # Service Attachment를 dependency에서 가져옴
     cloudsql_service_attachment = dependency.database.outputs.psc_service_attachment_link
     redis_service_attachments   = dependency.cache.outputs.psc_service_attachment_links
+
+    # Firewall rules 동적 주입
+    firewall_rules = local.firewall_rules
   }
 )
 

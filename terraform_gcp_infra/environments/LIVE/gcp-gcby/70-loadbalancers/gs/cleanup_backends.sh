@@ -5,8 +5,19 @@ set -e
 # Purpose: Remove Instance Groups from Backend Service before terraform apply
 # This solves the "resourceInUseByAnotherResource" error
 
-PROJECT_ID="gcp-gcby"
-BACKEND_SERVICE_NAME="gcby-gs-backend"
+# 환경변수에서 가져오거나 common.naming.tfvars에서 추출
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+COMMON_TFVARS="${SCRIPT_DIR}/../../common.naming.tfvars"
+
+# common.naming.tfvars에서 값 추출
+PROJECT_ID="${TF_VAR_project_id:-$(grep -E '^project_id\s*=' "$COMMON_TFVARS" | sed 's/.*=\s*"\([^"]*\)".*/\1/')}"
+PROJECT_NAME="${TF_VAR_project_name:-$(grep -E '^project_name\s*=' "$COMMON_TFVARS" | sed 's/.*=\s*"\([^"]*\)".*/\1/')}"
+
+# Layer 이름 추출 (현재 디렉토리명: gs)
+LAYER_NAME=$(basename "$SCRIPT_DIR")
+
+# Backend Service 이름 동적 생성: {project_name}-{layer_name}-backend
+BACKEND_SERVICE_NAME="${PROJECT_NAME}-${LAYER_NAME}-backend"
 TFVARS_FILE="terraform.tfvars"
 
 echo "🧹 Backend Service Cleanup Script"

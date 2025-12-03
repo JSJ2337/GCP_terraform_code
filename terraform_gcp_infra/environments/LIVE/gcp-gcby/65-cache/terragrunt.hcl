@@ -20,7 +20,7 @@ locals {
 
   # Management 프로젝트 정보 (common.naming.tfvars에서 가져옴)
   mgmt_project_id = local.common_inputs.management_project_id
-  state_bucket    = get_env("TG_STATE_BUCKET", "delabs-terraform-state-live")
+  state_bucket    = get_env("TG_STATE_BUCKET")  # 환경변수 필수
 
   # 기존 labels에 app 추가
   merged_labels = merge(

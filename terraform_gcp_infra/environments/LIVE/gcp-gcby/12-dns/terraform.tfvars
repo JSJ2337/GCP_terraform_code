@@ -1,8 +1,8 @@
-# Private DNS Zone 설정 (gcby VPC 전용)
-# zone_name은 비워두면 자동으로 "{project_name}-{environment}-zone" 형식으로 생성됩니다
-zone_name   = "gcby-delabsgames-internal"
-dns_name    = "delabsgames.internal."
-description = "Private DNS zone for gcby VPC (delabsgames.internal.)"
+# Private DNS Zone 설정
+# zone_name, dns_name, description은 terragrunt.hcl에서 common.naming.tfvars 값으로 동적 생성됨
+zone_name   = ""
+dns_name    = ""
+description = ""
 
 # DNS Zone 가시성 (private)
 visibility = "private"

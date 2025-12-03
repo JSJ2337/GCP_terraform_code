@@ -41,8 +41,9 @@ network_config = {
 
   # VPC Peering
   peering = {
-    mgmt_project_id = "delabs-gcp-mgmt"
-    mgmt_vpc_name   = "delabs-gcp-mgmt-vpc"
+    mgmt_project_id  = "delabs-gcp-mgmt"
+    mgmt_vpc_name    = "delabs-gcp-mgmt-vpc"
+    mgmt_subnet_cidr = "10.250.10.0/24"  # mgmt VPC subnet CIDR (firewall rule용)
   }
 
   # VM Static IP (선택사항, 비우면 동적 할당)
@@ -54,3 +55,17 @@ network_config = {
 
 # 관리 프로젝트 정보
 management_project_id = "delabs-gcp-mgmt"
+
+# DNS 설정
+dns_config = {
+  domain      = "delabsgames.internal."  # Private DNS 도메인 (trailing dot 필수)
+  zone_suffix = "delabsgames-internal"   # Zone 이름 접미사
+}
+
+# VM Admin 사용자 설정 (startup script에서 사용)
+# 보안 주의: 비밀번호는 초기 배포 후 반드시 변경 필요!
+vm_admin_config = {
+  username = "delabs-adm"
+  # 비밀번호는 Secret Manager 또는 환경변수로 관리 권장
+  # startup script에서 TF_VAR_vm_admin_password 환경변수 참조
+}

@@ -35,8 +35,24 @@ locals {
   raw_layer_inputs = try(read_tfvars_file("${get_terragrunt_dir()}/terraform.tfvars"), tomap({}))
   layer_inputs     = try(jsondecode(local.raw_layer_inputs), local.raw_layer_inputs)
 
-  layer_name = basename(get_terragrunt_dir())
-  lb_prefix  = "${local.common_inputs.project_name}-${local.layer_name}"
+  project_name = local.common_inputs.project_name
+  layer_name   = basename(get_terragrunt_dir())
+  lb_prefix    = "${local.project_name}-${local.layer_name}"
+
+  # Instance Groups 동적 생성
+  # {project_name}-{layer_name}-ig-{zone_suffix} 형식
+  instance_groups = {
+    "${local.project_name}-${local.layer_name}-ig-a" = {
+      instances   = ["${local.project_name}-gs01"]
+      zone_suffix = "a"
+      named_ports = [{ name = "http", port = 80 }]
+    }
+    "${local.project_name}-${local.layer_name}-ig-b" = {
+      instances   = ["${local.project_name}-gs02"]
+      zone_suffix = "b"
+      named_ports = [{ name = "http", port = 80 }]
+    }
+  }
 
   layer_backend_service_name   = try(local.layer_inputs.backend_service_name, "")
   layer_url_map_name           = try(local.layer_inputs.url_map_name, "")
@@ -62,5 +78,8 @@ inputs = merge(
   {
     # 50-workloads에서 VM 정보 가져오기
     vm_details = try(dependency.workloads.outputs.vm_details, {})
+
+    # Instance Groups 동적 주입
+    instance_groups = local.instance_groups
   }
 )

@@ -17,65 +17,9 @@ enable_private_service_connection = false
 nat_min_ports_per_vm = 1024
 
 # Firewall rules
-firewall_rules = [
-  {
-    name           = "allow-ssh-from-iap"
-    direction      = "INGRESS"
-    ranges         = ["35.235.240.0/20"] # IAP range
-    allow_protocol = "tcp"
-    allow_ports    = ["22"]
-    target_tags    = ["ssh-from-iap"]
-    description    = "Allow SSH from Identity-Aware Proxy"
-  },
-  {
-    name           = "allow-ssh-from-mgmt"
-    direction      = "INGRESS"
-    ranges         = ["10.250.10.0/24"] # mgmt VPC subnet
-    allow_protocol = "tcp"
-    allow_ports    = ["22"]
-    target_tags    = ["ssh-from-mgmt"]
-    description    = "Allow SSH from mgmt VPC (jenkins, bastion)"
-  },
-  # DMZ zone internal communication
-  {
-    name           = "allow-dmz-internal"
-    direction      = "INGRESS"
-    ranges         = ["10.10.10.0/24"] # DMZ subnet only
-    allow_protocol = "all"
-    allow_ports    = []
-    target_tags    = ["dmz-zone"]
-    description    = "Allow all traffic within DMZ subnet (10.10.10.0/24)"
-  },
-  # Private zone internal communication
-  {
-    name           = "allow-private-internal"
-    direction      = "INGRESS"
-    ranges         = ["10.10.11.0/24"] # Private subnet only
-    allow_protocol = "all"
-    allow_ports    = []
-    target_tags    = ["private-zone"]
-    description    = "Allow all traffic within Private subnet (10.10.11.0/24)"
-  },
-  # DMZ to Private communication (frontend -> backend)
-  {
-    name           = "allow-dmz-to-private"
-    direction      = "INGRESS"
-    ranges         = ["10.10.10.0/24"] # From DMZ
-    allow_protocol = "tcp"
-    allow_ports    = ["8080", "9090", "3000", "5000"]
-    target_tags    = ["private-zone"]
-    description    = "Allow DMZ to Private zone (frontend to backend APIs)"
-  },
-  {
-    name           = "allow-health-check"
-    direction      = "INGRESS"
-    ranges         = ["130.211.0.0/22", "35.191.0.0/16"] # Health check ranges
-    allow_protocol = "tcp"
-    allow_ports    = ["80", "8080"]
-    target_tags    = ["dmz-zone", "private-zone"]
-    description    = "Allow health checks from Google Load Balancer"
-  }
-]
+# terragrunt.hcl에서 common.naming.tfvars의 network_config를 사용해 동적 생성됩니다.
+# (mgmt_subnet_cidr, dmz, private CIDR 자동 참조)
+firewall_rules = []
 
 # Memorystore Enterprise용 PSC 자동 구성
 enable_memorystore_psc_policy = true
