@@ -65,42 +65,5 @@ resource "google_dns_record_set" "records" {
 # }
 
 # -----------------------------------------------------------------------------
-# 3) Private Service Connect Endpoints (다른 프로젝트 Cloud SQL 접근용)
+# 3) DNS Records (자동 생성 from dns_records variable)
 # -----------------------------------------------------------------------------
-# mgmt VPC에서 다른 프로젝트의 Cloud SQL로 PSC를 통해 접근
-
-resource "google_compute_address" "psc_endpoints" {
-  for_each = var.psc_endpoints
-
-  project      = var.management_project_id
-  name         = each.value.name
-  address_type = "INTERNAL"
-  purpose      = "GCE_ENDPOINT"
-  region       = each.value.region
-  subnetwork   = each.value.subnetwork
-  address      = try(each.value.ip_address, null)
-}
-
-resource "google_compute_forwarding_rule" "psc_endpoints" {
-  for_each = var.psc_endpoints
-
-  project               = var.management_project_id
-  name                  = "${each.value.name}-fr"
-  region                = each.value.region
-  network               = var.vpc_self_link
-  ip_address            = google_compute_address.psc_endpoints[each.key].id
-  load_balancing_scheme = ""
-  target                = each.value.service_attachment
-}
-
-# PSC Endpoint를 위한 DNS 레코드 자동 생성
-resource "google_dns_record_set" "psc_endpoint_records" {
-  for_each = var.psc_endpoints
-
-  project      = var.management_project_id
-  managed_zone = google_dns_managed_zone.private.name
-  name         = "${each.value.dns_name}.${var.dns_domain}"
-  type         = "A"
-  ttl          = 300
-  rrdatas      = [google_compute_address.psc_endpoints[each.key].address]
-}

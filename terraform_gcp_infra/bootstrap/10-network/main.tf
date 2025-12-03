@@ -132,14 +132,14 @@ resource "google_compute_network_peering" "mgmt_to_gcby" {
 }
 
 # -----------------------------------------------------------------------------
-# 6) PSC Endpoints for Cloud SQL
+# 6) PSC Endpoints for Cloud SQL (mgmt VPC용)
 # -----------------------------------------------------------------------------
 # Internal IP 주소 예약
 resource "google_compute_address" "psc_addresses" {
   for_each = var.psc_endpoints
 
   project      = var.management_project_id
-  name         = "${each.key}-psc"  # 기존 리소스 이름과 일치 (gcby-cloudsql-psc)
+  name         = "${each.key}-psc"
   region       = each.value.region
   subnetwork   = each.value.region == "us-west1" ? google_compute_subnetwork.mgmt_subnet_us_west1.id : google_compute_subnetwork.mgmt_subnet.id
   address_type = "INTERNAL"

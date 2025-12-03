@@ -103,12 +103,6 @@ module "net" {
 
   firewall_rules = var.firewall_rules
 
-  # Private Service Connection (VPC Peering)
-  enable_private_service_connection        = var.enable_private_service_connection
-  private_service_connection_address       = var.private_service_connection_address
-  private_service_connection_prefix_length = var.private_service_connection_prefix_length
-  private_service_connection_name          = local.private_service_connection_name
-
   # Ensure all required APIs are enabled and propagated
   depends_on = [time_sleep.wait_servicenetworking_api]
 }
@@ -220,4 +214,34 @@ resource "google_compute_network_peering" "gcby_to_mgmt" {
 
   import_custom_routes = true
   export_custom_routes = true
+}
+
+# -----------------------------------------------------------------------------
+# PSC Forwarding Rule for Cloud SQL (consumer VPC에서 생성)
+# -----------------------------------------------------------------------------
+resource "google_compute_address" "cloudsql_psc" {
+  project      = var.project_id
+  name         = "gcby-cloudsql-psc"
+  region       = "us-west1"
+  subnetwork   = "projects/${var.project_id}/regions/us-west1/subnetworks/gcby-live-subnet-psc"
+  address_type = "INTERNAL"
+  address      = "10.10.12.51"
+  purpose      = "GCE_ENDPOINT"
+
+  depends_on = [module.net]
+}
+
+resource "google_compute_forwarding_rule" "cloudsql_psc" {
+  project               = var.project_id
+  name                  = "gcby-cloudsql-psc-fr"
+  region                = "us-west1"
+  network               = module.net.vpc_self_link
+  ip_address            = google_compute_address.cloudsql_psc.id
+  load_balancing_scheme = ""
+  target                = "projects/va89486946f7d978dp-tp/regions/us-west1/serviceAttachments/a-ddb66ab8241d-psc-service-attachment-e4480ecfda9f3356"
+
+  # Cross-region access 활성화
+  allow_psc_global_access = true
+
+  depends_on = [module.net]
 }

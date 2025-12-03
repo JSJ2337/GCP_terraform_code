@@ -14,10 +14,10 @@ locals {
   # PSC Endpoints for Cloud SQL
   psc_endpoints = {
     gcby-cloudsql = {
-      region                   = "us-west1"
-      ip_address               = "10.250.20.20"
+      region                    = "us-west1"
+      ip_address                = "10.250.20.20"
       target_service_attachment = "projects/va89486946f7d978dp-tp/regions/us-west1/serviceAttachments/a-ddb66ab8241d-psc-service-attachment-e4480ecfda9f3356"
-      allow_global_access      = true  # Cross-region access 활성화
+      allow_global_access       = true
     }
   }
 }
