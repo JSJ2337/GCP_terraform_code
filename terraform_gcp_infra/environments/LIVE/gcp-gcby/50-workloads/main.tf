@@ -27,6 +27,14 @@ module "naming" {
 }
 
 locals {
+  # ==========================================================================
+  # Best Practice: 모든 변환 로직을 Terraform 모듈에서 처리
+  # - Terragrunt는 단순한 값 전달만 수행
+  # - 키 변환, zone 변환 등 복잡한 로직은 여기서 처리
+  # Reference: https://www.terraform-best-practices.com/naming
+  # Reference: https://cloud.google.com/docs/terraform/best-practices/general-style-structure
+  # ==========================================================================
+
   zone = length(trimspace(var.zone)) > 0 ? var.zone : module.naming.default_zone
 
   subnetwork_self_link = trimspace(var.subnetwork_self_link)
@@ -38,27 +46,28 @@ locals {
   tags   = distinct(concat(module.naming.common_tags, var.tags))
   labels = merge(module.naming.common_labels, var.labels)
 
-  # 인스턴스 키 변환: 키가 이미 project_name으로 시작하면 그대로 사용, 아니면 접두어 추가
-  # 예: "gs01" -> "gcby-gs01", "gcby-gs01" -> "gcby-gs01" (중복 방지)
+  # ==========================================================================
+  # Instance 키 변환 및 설정 처리
+  # Best Practice: 키 네이밍은 모듈에서 일관되게 처리
+  # ==========================================================================
   processed_instances = {
     for name, cfg in var.instances :
+    # 키 변환: project_name 접두어가 없으면 추가 (멱등성 보장)
     (startswith(name, "${var.project_name}-") ? name : "${var.project_name}-${name}") => merge(
-      { for k, v in cfg : k => v if k != "startup_script_file" && k != "subnet_type" && k != "zone_suffix" },
-      try(cfg.startup_script_file, null) != null ?
-      { startup_script = file("${path.module}/${cfg.startup_script_file}") } :
-      {},
-      # subnet_type이 지정되면 subnets 맵에서 self_link 가져오기
-      # 하위 호환성: subnet_type이 없으면 subnetwork_self_link 그대로 사용
-      try(cfg.subnet_type, null) != null ?
-      { subnetwork_self_link = var.subnets[cfg.subnet_type].self_link } :
-      {},
-      # zone 결정 우선순위: 1. zone (직접 지정) 2. zone_suffix (region과 결합) 3. 기본값
-      # zone이 이미 있으면 zone 사용, 없으면 zone_suffix를 region_primary와 결합
-      try(cfg.zone, null) != null && length(trimspace(cfg.zone)) > 0 ?
-      {} : # zone이 직접 지정되어 있으면 그대로 사용 (위 필터링에서 통과됨)
-      try(cfg.zone_suffix, null) != null && length(trimspace(cfg.zone_suffix)) > 0 ?
-      { zone = "${module.naming.region_primary}-${trimspace(cfg.zone_suffix)}" } :
-      {}
+      # 내부 처리용 키 제거 (startup_script_file, subnet_type, zone_suffix, vm_ip_key)
+      { for k, v in cfg : k => v if !contains(["startup_script_file", "subnet_type", "zone_suffix", "vm_ip_key"], k) },
+      # startup_script_file → startup_script 변환
+      try(cfg.startup_script_file, null) != null ? {
+        startup_script = file("${path.module}/${cfg.startup_script_file}")
+      } : {},
+      # subnet_type → subnetwork_self_link 변환
+      try(cfg.subnet_type, null) != null ? {
+        subnetwork_self_link = var.subnets[cfg.subnet_type].self_link
+      } : {},
+      # zone_suffix → zone 변환 (zone이 직접 지정되지 않은 경우)
+      try(cfg.zone, null) == null && try(cfg.zone_suffix, null) != null ? {
+        zone = "${var.region_primary}-${cfg.zone_suffix}"
+      } : {}
     )
   }
 

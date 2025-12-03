@@ -14,31 +14,25 @@ locals {
   raw_layer_inputs = try(read_tfvars_file("${get_terragrunt_dir()}/terraform.tfvars"), tomap({}))
   layer_inputs     = try(jsondecode(local.raw_layer_inputs), local.raw_layer_inputs)
 
-  # region_primary에서 자동으로 zone 생성
-  region_primary = local.common_inputs.region_primary
+  # ==========================================================================
+  # Best Practice: Terragrunt는 값 전달만, 키 변환은 Terraform 모듈에서 처리
+  # Reference: https://www.terraform-best-practices.com/naming
+  # ==========================================================================
 
-  # common.naming.tfvars에서 VM IP 및 project_name 가져오기
-  vm_ips       = try(local.common_inputs.network_config.vm_ips, {})
-  project_name = local.common_inputs.project_name
+  # common.naming.tfvars에서 VM IP 가져오기
+  vm_ips = try(local.common_inputs.network_config.vm_ips, {})
 
-  # instances의 키를 "${project_name}-${key}" 형태로 변환하고
-  # zone을 region_primary 기반으로 자동 변환
-  # vm_ip_key가 있으면 common.naming.tfvars의 vm_ips에서 network_ip 자동 주입
-  instances_with_zones = {
+  # instances에 network_ip만 주입 (키 변환은 main.tf에서 처리)
+  # Best Practice: 단순한 값 전달, 복잡한 로직은 Terraform 모듈에서 처리
+  instances_with_network_ip = {
     for k, v in try(local.layer_inputs.instances, {}) :
-    "${local.project_name}-${k}" => merge(v, {
-      zone       = "${local.region_primary}-${v.zone_suffix}"
-      network_ip = try(local.vm_ips[v.vm_ip_key], try(v.network_ip, null))
+    k => merge(v, {
+      network_ip = try(local.vm_ips[try(v.vm_ip_key, k)], try(v.network_ip, null))
     })
   }
 
-  # instance_groups의 키도 "${project_name}-${key}" 형태로 변환하고 zone 자동 생성
-  instance_groups_with_zones = {
-    for k, v in try(local.layer_inputs.instance_groups, {}) :
-    "${local.project_name}-${k}" => merge(v, {
-      zone = "${local.region_primary}-${v.zone_suffix}"
-    })
-  }
+  # instance_groups (키 변환 없이 전달)
+  instance_groups_raw = try(local.layer_inputs.instance_groups, {})
 }
 
 # 네트워크 레이어 의존성 설정
@@ -79,12 +73,20 @@ inputs = merge(
   local.common_inputs,
   local.layer_inputs,
   {
+    # ==========================================================================
+    # Best Practice: inputs는 단순한 값 전달만
+    # 복잡한 변환 로직은 Terraform 모듈 (main.tf)에서 처리
+    # Reference: https://terragrunt.gruntwork.io/docs/features/inputs/
+    # ==========================================================================
+
     # 네트워크 레이어에서 서브넷 정보 가져오기
     subnets = dependency.network.outputs.subnets
-    # region_primary 기반으로 zone 자동 생성된 instances와 instance_groups
-    # network_ip도 common.naming.tfvars의 vm_ips에서 동적 주입
-    instances       = local.instances_with_zones
-    instance_groups = local.instance_groups_with_zones
+
+    # instances: network_ip만 주입, 키 변환/zone 변환은 main.tf에서 처리
+    instances = local.instances_with_network_ip
+
+    # instance_groups: 그대로 전달, 키 변환/zone 변환은 main.tf에서 처리
+    instance_groups = local.instance_groups_raw
 
     # VM 메타데이터 - common.naming.tfvars의 vm_admin_config에서 주입
     metadata = {
