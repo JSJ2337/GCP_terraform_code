@@ -39,6 +39,7 @@ instances = {
     }
     startup_script_file = "scripts/lobby.sh"
     subnet_type         = "private"  # 자동으로 gcby-subnet-private 선택
+    network_ip          = "10.10.11.3"  # 고정 IP (common.naming.tfvars의 vm_ips.gs01)
   }
   "gcby-gs02" = {
     zone_suffix  = "b"
@@ -54,6 +55,7 @@ instances = {
     }
     startup_script_file = "scripts/lobby.sh"
     subnet_type         = "private"
+    network_ip          = "10.10.11.6"  # 고정 IP (common.naming.tfvars의 vm_ips.gs02)
   }
 
   # # lobby tier (3대) - DMZ 서브넷 배치 - COMMENTED OUT

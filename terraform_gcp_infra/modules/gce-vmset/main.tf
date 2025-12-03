@@ -111,6 +111,7 @@ resource "google_compute_instance" "vm_map" {
 
   network_interface {
     subnetwork = coalesce(each.value.subnetwork_self_link, var.subnetwork_self_link)
+    network_ip = try(each.value.network_ip, null)
 
     dynamic "access_config" {
       for_each = coalesce(each.value.enable_public_ip, var.enable_public_ip) ? [1] : []
