@@ -52,3 +52,13 @@ output "psc_connections" {
   description = "PSC connection metadata for Enterprise tiers"
   value       = try(google_redis_cluster.enterprise[0].psc_connections, [])
 }
+
+output "psc_service_attachments" {
+  description = "PSC Service Attachments for Enterprise tiers (use this for PSC Endpoint target)"
+  value       = try(google_redis_cluster.enterprise[0].psc_service_attachments, [])
+}
+
+output "psc_service_attachment_link" {
+  description = "Primary PSC Service Attachment Link (for PSC endpoints)"
+  value       = try(google_redis_cluster.enterprise[0].psc_service_attachments[0].service_attachment, null)
+}

@@ -23,7 +23,12 @@ output "psc_connections" {
   value       = module.cache.psc_connections
 }
 
+output "psc_service_attachments" {
+  description = "PSC Service Attachments (use this for PSC Endpoint target)"
+  value       = module.cache.psc_service_attachments
+}
+
 output "psc_service_attachment_link" {
   description = "Primary PSC Service Attachment Link (for PSC endpoints)"
-  value       = length(module.cache.psc_connections) > 0 ? module.cache.psc_connections[0].service_attachment : null
+  value       = module.cache.psc_service_attachment_link
 }

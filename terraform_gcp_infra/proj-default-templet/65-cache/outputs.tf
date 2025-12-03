@@ -17,3 +17,18 @@ output "authorized_network" {
   description = "접근 허용된 VPC self link"
   value       = module.cache.authorized_network
 }
+
+output "psc_connections" {
+  description = "PSC connection metadata"
+  value       = module.cache.psc_connections
+}
+
+output "psc_service_attachments" {
+  description = "PSC Service Attachments (use this for PSC Endpoint target)"
+  value       = module.cache.psc_service_attachments
+}
+
+output "psc_service_attachment_link" {
+  description = "Primary PSC Service Attachment Link (for PSC endpoints)"
+  value       = module.cache.psc_service_attachment_link
+}
