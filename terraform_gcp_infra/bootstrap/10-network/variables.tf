@@ -32,7 +32,7 @@ variable "labels" {
 }
 
 variable "psc_endpoints" {
-  description = "PSC Endpoints for Cloud SQL instances"
+  description = "PSC Endpoints for all projects (동적으로 terragrunt에서 생성됨)"
   type = map(object({
     region                    = string
     ip_address                = string
@@ -42,32 +42,8 @@ variable "psc_endpoints" {
   default = {}
 }
 
-variable "psc_cloudsql_ip" {
-  description = "PSC endpoint IP for Cloud SQL"
-  type        = string
-  default     = "10.250.20.20"
-}
-
-variable "psc_redis_ip" {
-  description = "PSC endpoint IP for Redis"
-  type        = string
-  default     = "10.250.20.101"
-}
-
-variable "gcby_vpc_network_url" {
-  description = "VPC Peering 대상 네트워크 URL (gcby VPC)"
-  type        = string
-  default     = ""
-}
-
-variable "gcby_cloudsql_service_attachment" {
-  description = "gcby Cloud SQL PSC Service Attachment (from dependency)"
-  type        = string
-  default     = ""
-}
-
-variable "gcby_redis_service_attachment" {
-  description = "gcby Redis PSC Service Attachment (from dependency)"
-  type        = string
-  default     = ""
+variable "project_vpc_network_urls" {
+  description = "모든 프로젝트의 VPC Peering 대상 URL (동적으로 terragrunt에서 생성됨)"
+  type        = map(string)
+  default     = {}
 }

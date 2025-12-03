@@ -31,18 +31,54 @@ locals {
   vpc_self_link    = "projects/delabs-gcp-mgmt/global/networks/delabs-gcp-mgmt-vpc"
   subnet_self_link = "projects/delabs-gcp-mgmt/regions/asia-northeast3/subnetworks/delabs-gcp-mgmt-subnet"
 
-  # VPC Peering 대상 (gcby VPC)
-  gcby_project_id      = "gcp-gcby"
-  gcby_vpc_name        = "gcby-live-vpc"
-  gcby_vpc_network_url = "projects/gcp-gcby/global/networks/gcby-live-vpc"
+  # ========================================================================
+  # 프로젝트별 네트워크 설정 (확장 가능한 구조)
+  # ========================================================================
+  # 새 프로젝트 추가 시 이 map에 추가하면 됩니다.
+  # 형식: project_key = { project_id, vpc_name, psc_ips, vm_ips }
+  projects = {
+    gcby = {
+      project_id   = "gcp-gcby"
+      environment  = "live"
+      vpc_name     = "gcby-live-vpc"
+      network_url  = "projects/gcp-gcby/global/networks/gcby-live-vpc"
 
-  # PSC Endpoint IP (mgmt VPC용)
-  psc_cloudsql_ip = "10.250.20.20"
-  psc_redis_ip    = "10.250.20.101"
+      # PSC Endpoint IP (mgmt VPC에서 접근용)
+      psc_ips = {
+        cloudsql = "10.250.20.20"
+        redis    = "10.250.20.101"
+      }
 
-  # gcby VM IP (environments/LIVE/gcp-gcby/common.naming.tfvars의 network_config.vm_ips와 동일하게 유지)
-  gcby_vm_ips = {
-    gs01 = "10.10.11.3"
-    gs02 = "10.10.11.6"
+      # VM Static IP
+      # environments/LIVE/gcp-gcby/common.naming.tfvars의 network_config.vm_ips와 동일하게 유지
+      vm_ips = {
+        gs01 = "10.10.11.3"
+        gs02 = "10.10.11.6"
+      }
+
+      # Database/Cache 설정 경로 (dependency용)
+      database_path = "../../environments/LIVE/gcp-gcby/60-database"
+      cache_path    = "../../environments/LIVE/gcp-gcby/65-cache"
+    }
+
+    # 새 프로젝트 추가 예시 (주석)
+    # abc = {
+    #   project_id   = "gcp-abc"
+    #   environment  = "live"
+    #   vpc_name     = "abc-live-vpc"
+    #   network_url  = "projects/gcp-abc/global/networks/abc-live-vpc"
+    #
+    #   psc_ips = {
+    #     cloudsql = "10.250.21.20"
+    #     redis    = "10.250.21.101"
+    #   }
+    #
+    #   vm_ips = {
+    #     web01 = "10.20.11.10"
+    #   }
+    #
+    #   database_path = "../../environments/LIVE/gcp-abc/60-database"
+    #   cache_path    = "../../environments/LIVE/gcp-abc/65-cache"
+    # }
   }
 }

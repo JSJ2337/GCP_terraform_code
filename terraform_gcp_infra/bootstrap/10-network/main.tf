@@ -7,28 +7,13 @@ locals {
   network_name = "${var.management_project_id}-vpc"
   subnet_name  = "${var.management_project_id}-subnet"
 
-  # PSC Endpoints 동적 생성 (Service Attachment를 dependency에서 가져옴)
-  psc_endpoints = merge(
-    var.psc_endpoints,
-    # Cloud SQL
-    length(var.gcby_cloudsql_service_attachment) > 0 ? {
-      gcby-cloudsql = {
-        region                    = "us-west1"
-        ip_address                = var.psc_cloudsql_ip
-        target_service_attachment = var.gcby_cloudsql_service_attachment
-        allow_global_access       = true
-      }
-    } : {},
-    # Redis
-    length(var.gcby_redis_service_attachment) > 0 ? {
-      gcby-redis = {
-        region                    = "us-west1"
-        ip_address                = var.psc_redis_ip
-        target_service_attachment = var.gcby_redis_service_attachment
-        allow_global_access       = true
-      }
-    } : {}
-  )
+  # PSC Endpoints는 terragrunt.hcl에서 동적으로 생성되어 전달됨
+  # (projects 구조를 순회하며 자동 생성)
+  psc_endpoints = var.psc_endpoints
+
+  # VPC Peering 대상 목록도 terragrunt.hcl에서 전달됨
+  # 형식: { project_key = "projects/{id}/global/networks/{name}" }
+  project_vpc_peerings = var.project_vpc_network_urls
 }
 
 # -----------------------------------------------------------------------------
@@ -144,11 +129,14 @@ resource "google_compute_router_nat" "mgmt_nat_us_west1" {
 # -----------------------------------------------------------------------------
 # 5) VPC Peering to project VPCs (for DNS resolution and private connectivity)
 # -----------------------------------------------------------------------------
-# Peering to gcp-gcby project
-resource "google_compute_network_peering" "mgmt_to_gcby" {
-  name         = "peering-mgmt-to-gcby"
-  network      = google_compute_network.mgmt_vpc.self_link  # Implicit dependency
-  peer_network = var.gcby_vpc_network_url
+# 동적으로 모든 프로젝트 VPC와 Peering 생성
+# 새 프로젝트 추가 시: bootstrap/common.hcl의 projects에 추가하면 자동 반영
+resource "google_compute_network_peering" "mgmt_to_projects" {
+  for_each = local.project_vpc_peerings
+
+  name         = "peering-mgmt-to-${each.key}"
+  network      = google_compute_network.mgmt_vpc.self_link
+  peer_network = each.value
 
   import_custom_routes = true
   export_custom_routes = true
