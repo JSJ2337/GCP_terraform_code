@@ -1022,6 +1022,57 @@ gsutil cp gs://jsj-terraform-state-prod/bootstrap/default.tfstate \
 
 ---
 
+## DNS Zone 관련 오류
+
+### dnsNameInUse 에러 (DNS Zone 충돌)
+
+**증상:**
+
+```text
+Error: Error updating ManagedZone "projects/delabs-gcp-mgmt/managedZones/delabsgames-internal":
+googleapi: Error 400: The DNS name 'delabsgames.internal.' is already being used on network 'gcby-live-vpc'., dnsNameInUse
+```
+
+**원인:**
+
+- mgmt DNS Zone이 게임 프로젝트의 VPC를 `additional_networks`로 추가하려고 시도
+- 그러나 해당 프로젝트에 이미 동일한 도메인(`delabsgames.internal.`)의 DNS Zone이 존재
+- GCP에서는 같은 VPC에 동일 DNS 이름의 Zone을 중복 연결할 수 없음
+
+**해결 (2025-12-04 적용):**
+
+`has_own_dns_zone` 플래그 패턴을 사용하여 자체 DNS Zone이 있는 프로젝트 제외:
+
+```hcl
+# bootstrap/common.hcl
+projects = {
+  gcby = {
+    project_id       = "gcp-gcby"
+    has_own_dns_zone = true  # 자체 DNS Zone 있음 - mgmt DNS Zone에서 제외
+    # ...
+  }
+}
+```
+
+```hcl
+# bootstrap/12-dns/terragrunt.hcl
+additional_networks = [
+  for key, project in local.common_vars.locals.projects : project.network_url
+  if try(project.has_own_dns_zone, false) == false
+]
+```
+
+**새 프로젝트 추가 시:**
+
+1. **자체 DNS Zone이 있는 프로젝트**: `has_own_dns_zone = true` 추가
+2. **자체 DNS Zone이 없는 프로젝트**: 플래그 생략 또는 `false`
+
+**관련 문서:**
+
+- [작업 이력 (2025-12-04)](../changelog/work_history/2025-12-04.md#session-3-cross-project-psc-redis-연결-및-dns-zone-충돌-해결)
+
+---
+
 ## Backend Service 삭제 순서 문제
 
 ### resourceInUseByAnotherResource 에러

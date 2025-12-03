@@ -985,9 +985,117 @@ nc -zv gcby-live-gdb-m1.delabsgames.internal 3306
 
 ---
 
+## Per-VPC Private DNS Zone 패턴
+
+### 개요
+
+동일한 DNS 도메인(`delabsgames.internal.`)에 대해 VPC별로 다른 IP를 반환하여, 각 네트워크 환경에 맞는 접근 경로를 제공합니다.
+
+### 아키텍처
+
+```text
+┌─────────────────────────────────────────────────────────────────────┐
+│  gcby-live-vpc (게임 서버 VPC)                                       │
+│  ─────────────────────────────────────────────────────────────────  │
+│  DNS Zone: delabsgames.internal. (gcby 프로젝트 소유)                │
+│                                                                     │
+│  GS01/GS02 → gcby-live-gdb-m1.delabsgames.internal                  │
+│           → 10.10.12.51 (Cloud SQL 내부 IP)                         │
+│                                                                     │
+│  GS01/GS02 → gcby-live-cache.delabsgames.internal                   │
+│           → 10.10.12.3 (Redis Cluster 내부 IP)                      │
+└─────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────┐
+│  mgmt VPC (Jenkins/Bastion VPC)                                     │
+│  ─────────────────────────────────────────────────────────────────  │
+│  DNS Zone: delabsgames.internal. (mgmt 프로젝트 소유)                │
+│                                                                     │
+│  Bastion → gcby-live-gdb-m1.delabsgames.internal                    │
+│         → 10.250.20.51 (PSC Endpoint IP)                            │
+│                                                                     │
+│  Bastion → gcby-live-redis.delabsgames.internal                     │
+│         → 10.250.20.101 (Redis PSC Endpoint IP)                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### 장점
+
+| 장점 | 설명 |
+|------|------|
+| **네트워크 최적화** | 각 VPC에서 최적 경로로 접근 |
+| **보안** | PSC Endpoint로 제어된 cross-project 접근 |
+| **유연성** | 프로젝트별 독립적인 DNS 관리 |
+| **확장성** | 새 프로젝트 추가 시 기존 구조 영향 없음 |
+
+### has_own_dns_zone 플래그 패턴
+
+자체 DNS Zone이 있는 프로젝트를 mgmt DNS Zone에서 자동으로 제외합니다.
+
+**파일:** `bootstrap/common.hcl`
+
+```hcl
+projects = {
+  gcby = {
+    project_id       = "gcp-gcby"
+    vpc_name         = "gcby-live-vpc"
+    network_url      = "projects/gcp-gcby/global/networks/gcby-live-vpc"
+    has_own_dns_zone = true  # 자체 DNS Zone 있음 - mgmt DNS Zone에서 제외
+    # ...
+  }
+
+  # 자체 DNS Zone이 없는 프로젝트 예시
+  # abc = {
+  #   project_id       = "gcp-abc"
+  #   network_url      = "projects/gcp-abc/global/networks/abc-live-vpc"
+  #   # has_own_dns_zone 생략 → mgmt DNS Zone에 추가됨
+  # }
+}
+```
+
+**파일:** `bootstrap/12-dns/terragrunt.hcl`
+
+```hcl
+inputs = merge(
+  local.common_vars.locals,
+  local.layer_vars.locals,
+  {
+    # 자체 DNS Zone이 없는 프로젝트만 mgmt DNS Zone에 추가
+    additional_networks = [
+      for key, project in local.common_vars.locals.projects : project.network_url
+      if try(project.has_own_dns_zone, false) == false
+    ]
+  }
+)
+```
+
+### 새 프로젝트 추가 가이드
+
+| 케이스 | has_own_dns_zone | 결과 |
+|--------|------------------|------|
+| **자체 DNS Zone 있음** | `true` | mgmt DNS Zone에서 제외 (충돌 방지) |
+| **자체 DNS Zone 없음** | 생략 또는 `false` | mgmt DNS Zone의 additional_networks에 추가 |
+
+### 주의사항
+
+⚠️ **DNS Zone 이름 충돌:**
+- 같은 VPC에 동일한 DNS 이름의 Zone을 중복 연결할 수 없음
+- `has_own_dns_zone = true` 설정으로 충돌 방지
+
+⚠️ **DNS 레코드 관리:**
+- 자체 DNS Zone이 있는 프로젝트는 해당 프로젝트에서 레코드 관리
+- mgmt DNS Zone의 레코드와 동기화 불필요 (동일 DNS 이름, 다른 IP)
+
+### 관련 문서
+
+- [Work History 2025-12-04](../changelog/work_history/2025-12-04.md#session-3-cross-project-psc-redis-연결-및-dns-zone-충돌-해결) - DNS Zone 충돌 해결
+
+---
+
 ## 참고 자료
 
 - [전체 아키텍처](./overview.md)
 - [network-dedicated-vpc 모듈](../../modules/network-dedicated-vpc/README.md)
 - [네트워크 문제 해결](../troubleshooting/network-issues.md)
 - [Work History 2025-12-01](../changelog/work_history/2025-12-01.md) - DNS Peering 및 PSC Endpoint 전환
+- [Work History 2025-12-04](../changelog/work_history/2025-12-04.md) - Per-VPC DNS Zone 패턴
