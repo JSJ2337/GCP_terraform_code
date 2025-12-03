@@ -32,7 +32,7 @@ dns_records = [
     name    = "gcby-live-redis"
     type    = "A"
     ttl     = 300
-    rrdatas = ["10.10.11.5"]  # gcby VPC의 Redis PSC endpoint IP
+    rrdatas = ["10.10.12.101"]  # gcby VPC의 Redis PSC FR IP
   },
   {
     name    = "gcby-gs01"

@@ -245,3 +245,33 @@ resource "google_compute_forwarding_rule" "cloudsql_psc" {
 
   depends_on = [module.net]
 }
+
+# -----------------------------------------------------------------------------
+# PSC Forwarding Rule for Redis (consumer VPC에서 생성)
+# -----------------------------------------------------------------------------
+resource "google_compute_address" "redis_psc" {
+  project      = var.project_id
+  name         = "gcby-redis-psc"
+  region       = "us-west1"
+  subnetwork   = "projects/${var.project_id}/regions/us-west1/subnetworks/gcby-live-subnet-psc"
+  address_type = "INTERNAL"
+  address      = "10.10.12.101"
+  purpose      = "GCE_ENDPOINT"
+
+  depends_on = [module.net]
+}
+
+resource "google_compute_forwarding_rule" "redis_psc" {
+  project               = var.project_id
+  name                  = "gcby-redis-psc-fr"
+  region                = "us-west1"
+  network               = module.net.vpc_self_link
+  ip_address            = google_compute_address.redis_psc.id
+  load_balancing_scheme = ""
+  target                = "projects/165759898169/regions/us-west1/serviceAttachments/gcp-memorystore-auto-dca169a8dca37220-psc-sa"
+
+  # Cross-region access 활성화
+  allow_psc_global_access = true
+
+  depends_on = [module.net]
+}
