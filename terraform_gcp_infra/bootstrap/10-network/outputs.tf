@@ -47,20 +47,20 @@ output "nat_name" {
   value       = google_compute_router_nat.mgmt_nat.name
 }
 
-# us-west1 subnet outputs
-output "subnet_us_west1_id" {
-  description = "us-west1 Subnet ID"
-  value       = google_compute_subnetwork.mgmt_subnet_us_west1.id
+# Secondary region subnet outputs (게임 프로젝트 리전용)
+output "subnet_secondary_id" {
+  description = "Secondary region Subnet ID"
+  value       = google_compute_subnetwork.mgmt_subnet_secondary.id
 }
 
-output "subnet_us_west1_name" {
-  description = "us-west1 Subnet 이름"
-  value       = google_compute_subnetwork.mgmt_subnet_us_west1.name
+output "subnet_secondary_name" {
+  description = "Secondary region Subnet 이름"
+  value       = google_compute_subnetwork.mgmt_subnet_secondary.name
 }
 
-output "subnet_us_west1_self_link" {
-  description = "us-west1 Subnet Self Link"
-  value       = google_compute_subnetwork.mgmt_subnet_us_west1.self_link
+output "subnet_secondary_self_link" {
+  description = "Secondary region Subnet Self Link"
+  value       = google_compute_subnetwork.mgmt_subnet_secondary.self_link
 }
 
 # =============================================================================
