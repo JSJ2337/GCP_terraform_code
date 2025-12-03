@@ -8,8 +8,10 @@ description = "Private DNS zone for gcby VPC (delabsgames.internal.)"
 visibility = "private"
 
 # Private DNS Zone 설정
-# gcby VPC에서 사용 (비우면 자동으로 현재 프로젝트 VPC 사용)
-private_networks = []
+# gcby VPC에서 사용
+private_networks = [
+  "projects/gcp-gcby/global/networks/gcby-live-vpc"
+]
 
 # DNSSEC 설정
 enable_dnssec = false
