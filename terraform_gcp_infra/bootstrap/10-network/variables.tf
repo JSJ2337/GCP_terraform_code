@@ -60,7 +60,7 @@ variable "project_psc_ips" {
   }))
   default = {
     gcby = {
-      cloudsql = "10.250.20.20"
+      cloudsql = "10.250.20.51"
       redis    = ["10.250.20.101", "10.250.20.102"]  # 2개의 PSC endpoint
     }
     # 새 프로젝트 추가 시:
@@ -69,4 +69,22 @@ variable "project_psc_ips" {
     #   redis    = ["10.250.21.101", "10.250.21.102"]
     # }
   }
+}
+
+variable "projects" {
+  description = "프로젝트별 설정 (common.hcl에서 전달)"
+  type = map(object({
+    project_id  = string
+    environment = string
+    vpc_name    = string
+    network_url = string
+    psc_ips = object({
+      cloudsql = string
+      redis    = list(string)
+    })
+    vm_ips        = map(string)
+    database_path = string
+    cache_path    = string
+  }))
+  default = {}
 }
