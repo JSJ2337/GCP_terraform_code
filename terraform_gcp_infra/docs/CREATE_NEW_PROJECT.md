@@ -22,7 +22,7 @@
 ### 프로젝트 생성 플로우
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'secondaryTextColor': '#000000', 'tertiaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
+%%{init: {'theme': 'default'}}%%
 flowchart TB
     subgraph Input["📝 입력"]
         PARAMS["PROJECT_ID<br/>PROJECT_NAME<br/>ORGANIZATION<br/>ENVIRONMENT<br/>REGION_PRIMARY"]
@@ -66,12 +66,7 @@ flowchart TB
     MANUAL --> RUN
     RUN --> GCP
 
-    style Input fill:#e3f2fd,color:#000000
-    style Script fill:#fff3e0,color:#000000
-    style Files fill:#f3e5f5,color:#000000
-    style Deploy fill:#e8f5e9,color:#000000
-    style Result fill:#c8e6c9,color:#000000
-```
+    style Input fill:#e3f2fd    style Script fill:#fff3e0    style Files fill:#f3e5f5    style Deploy fill:#e8f5e9    style Result fill:#c8e6c9```
 
 신규 프로젝트 생성 시 다음 작업이 자동으로 수행됩니다:
 

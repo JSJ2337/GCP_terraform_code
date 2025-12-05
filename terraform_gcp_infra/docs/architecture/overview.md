@@ -5,30 +5,28 @@
 ## 시스템 구성
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'secondaryTextColor': '#000000', 'tertiaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
+%%{init: {'theme': 'default'}}%%
 flowchart TB
     subgraph Bootstrap["🏗️ Bootstrap Layer"]
-        MGMT["jsj-system-mgmt<br/>+ jsj-terraform-state-prod"]
-        DESC1["중앙 State 관리 + Jenkins SA"]
+        MGMT[jsj-system-mgmt + State Bucket]
+        DESC1[중앙 State 관리 + Jenkins SA]
     end
 
     subgraph Modules["📦 Reusable Modules"]
-        MOD["12개 모듈"]
-        MOD_LIST["naming, gcs-root, project-base,<br/>network, iam, observability,<br/>gce-vmset, cloudsql, redis, lb, dns, gcs-bucket"]
+        MOD[12개 모듈]
     end
 
     subgraph Environments["🚀 Environment Deployments"]
-        ENV["9개 레이어"]
-        ENV_LIST["00-project → 10-network → 12-dns<br/>→ 20-storage → 30-security<br/>→ 40-observability → 50-workloads<br/>→ 60-database → 65-cache → 70-lb"]
-        STATE["각 환경별 독립적인 State 파일"]
+        ENV[9개 레이어]
+        STATE[환경별 독립 State]
     end
 
     Bootstrap --> Modules
     Modules --> Environments
 
-    style Bootstrap fill:#e3f2fd,color:#000000
-    style Modules fill:#fff3e0,color:#000000
-    style Environments fill:#e8f5e9,color:#000000
+    style Bootstrap fill:#e3f2fd
+    style Modules fill:#fff3e0
+    style Environments fill:#e8f5e9
 ```
 
 ## 3-Tier 구조
@@ -57,7 +55,7 @@ flowchart TB
 #### 모듈 관계도
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'secondaryTextColor': '#000000', 'tertiaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
+%%{init: {'theme': 'default'}}%%
 graph TB
     subgraph Core["Core Modules"]
         NAMING[naming]
@@ -112,11 +110,7 @@ graph TB
     %% Workload dependencies
     VM --> LB
 
-    style Core fill:#e3f2fd,color:#000000
-    style Infra fill:#fff3e0,color:#000000
-    style Security fill:#f3e5f5,color:#000000
-    style Workload fill:#e8f5e9,color:#000000
-    style NAMING fill:#e1f5fe
+    style Core fill:#e3f2fd    style Infra fill:#fff3e0    style Security fill:#f3e5f5    style Workload fill:#e8f5e9    style NAMING fill:#e1f5fe
     style PROJECT fill:#fff3e0
     style NETWORK fill:#f3e5f5
     style VM fill:#e8f5e9
@@ -185,27 +179,27 @@ environments/LIVE/jsj-game-k/
 ### DMZ / Private / DB 서브넷 구조
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'secondaryTextColor': '#000000', 'tertiaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
+%%{init: {'theme': 'default'}}%%
 flowchart TB
     INET[🌐 Internet]
 
     subgraph GCP["GCP Project"]
-        LB["⚖️ Load Balancer<br/>(Public IP)"]
-        NAT["🔀 Cloud NAT<br/>(Outbound)"]
+        LB[⚖️ Load Balancer]
+        NAT[🔀 Cloud NAT]
 
-        subgraph DMZ["DMZ Subnet - 10.0.1.0/24 (Web Tier)"]
+        subgraph DMZ["DMZ - 10.0.1.0/24"]
             WEB1[🖥️ Web VM 1]
             WEB2[🖥️ Web VM 2]
         end
 
-        subgraph Private["Private Subnet - 10.0.2.0/24 (App Tier)"]
+        subgraph Private["Private - 10.0.2.0/24"]
             APP1[⚙️ App VM 1]
             APP2[⚙️ App VM 2]
             REDIS[(🔴 Redis)]
         end
 
-        subgraph DB["DB Subnet - 10.0.3.0/24 (Data Tier)"]
-            SQL[(🐬 Cloud SQL MySQL<br/>Private IP Only)]
+        subgraph DB["DB - 10.0.3.0/24"]
+            SQL[(🐬 Cloud SQL)]
         end
     end
 
@@ -216,17 +210,17 @@ flowchart TB
     WEB2 -.-> NAT
     NAT -.-> INET
 
-    WEB1 -->|Internal Only| APP1
-    WEB2 -->|Internal Only| APP2
+    WEB1 --> APP1
+    WEB2 --> APP2
     APP1 --> REDIS
     APP2 --> REDIS
-    APP1 -->|Private IP Only| SQL
-    APP2 -->|Private IP Only| SQL
+    APP1 --> SQL
+    APP2 --> SQL
 
-    style GCP fill:#fafafa,color:#000000
-    style DMZ fill:#e3f2fd,color:#000000
-    style Private fill:#f3e5f5,color:#000000
-    style DB fill:#fce4ec,color:#000000
+    style GCP fill:#fafafa
+    style DMZ fill:#e3f2fd
+    style Private fill:#f3e5f5
+    style DB fill:#fce4ec
     style LB fill:#fff9c4
     style NAT fill:#c8e6c9
 ```
@@ -283,7 +277,7 @@ common_labels = {
 ### 중앙 집중식 + 레이어별 분리
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'secondaryTextColor': '#000000', 'tertiaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
+%%{init: {'theme': 'default'}}%%
 flowchart TB
     subgraph Bootstrap["🏗️ Bootstrap Project (jsj-system-mgmt)"]
         subgraph GCS["📦 jsj-terraform-state-prod (GCS)"]
@@ -309,12 +303,7 @@ flowchart TB
         end
     end
 
-    style Bootstrap fill:#e3f2fd,color:#000000
-    style GCS fill:#fff3e0,color:#000000
-    style GAMEK fill:#e8f5e9,color:#000000
-    style GAMEL fill:#f3e5f5,color:#000000
-    style TEMPLET fill:#fce4ec,color:#000000
-```
+    style Bootstrap fill:#e3f2fd    style GCS fill:#fff3e0    style GAMEK fill:#e8f5e9    style GAMEL fill:#f3e5f5    style TEMPLET fill:#fce4ec```
 
 **특징**:
 

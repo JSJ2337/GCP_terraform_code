@@ -16,7 +16,7 @@
 ## 1. 전체 시스템 구조
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'secondaryTextColor': '#000000', 'tertiaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
+%%{init: {'theme': 'default'}}%%
 graph TB
     subgraph Bootstrap["Bootstrap (중앙 관리)"]
         B[bootstrap/]
@@ -71,10 +71,7 @@ graph TB
     E7 --> M10
     E8 --> M9
 
-    style Bootstrap fill:#e1f5ff,color:#000000
-    style Modules fill:#ffffff,color:#000000
-    style Layers fill:#ffffff,color:#000000
-    style B fill:#e1f5ff
+    style Bootstrap fill:#e1f5ff    style Modules fill:#ffffff    style Layers fill:#ffffff    style B fill:#e1f5ff
     style B_BUCKET fill:#fff3cd
     style E0 fill:#d4edda
     style E1 fill:#d4edda
@@ -99,7 +96,7 @@ graph TB
 ## 2. State 관리 아키텍처
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'secondaryTextColor': '#000000', 'tertiaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
+%%{init: {'theme': 'default'}}%%
 graph LR
     subgraph LocalEnv["로컬 개발 환경"]
         DEV[개발자 PC]
@@ -134,10 +131,7 @@ graph LR
     BUCKET --> S9
     BUCKET --> S8
 
-    style LocalEnv fill:#e1f5ff,color:#000000
-    style BootstrapProj fill:#ffffff,color:#000000
-    style StateFiles fill:#ffffff,color:#000000
-    style BUCKET fill:#fff3cd
+    style LocalEnv fill:#e1f5ff    style BootstrapProj fill:#ffffff    style StateFiles fill:#ffffff    style BUCKET fill:#fff3cd
     style DEV fill:#e1f5ff
 ```
 
@@ -263,7 +257,7 @@ graph LR
 ## 5. 실제 GCP 리소스 구조
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'secondaryTextColor': '#000000', 'tertiaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
+%%{init: {'theme': 'default'}}%%
 graph TB
     subgraph GCP_Project["GCP Project"]
         subgraph Network_Layer["Network Layer"]
@@ -347,16 +341,7 @@ graph TB
     REDIS -.모니터링.-> MON
     MON --> ALERT
 
-    style GCP_Project fill:#ffffff,color:#000000
-    style Network_Layer fill:#ffffff,color:#000000
-    style Storage_Layer fill:#ffffff,color:#000000
-    style Compute_Layer fill:#ffffff,color:#000000
-    style Database_Layer fill:#ffffff,color:#000000
-    style Cache_Layer fill:#ffffff,color:#000000
-    style LB_Layer fill:#ffffff,color:#000000
-    style Security_IAM fill:#ffffff,color:#000000
-    style Observability_Layer fill:#ffffff,color:#000000
-    style VPC fill:#d4edda
+    style GCP_Project fill:#ffffff    style Network_Layer fill:#ffffff    style Storage_Layer fill:#ffffff    style Compute_Layer fill:#ffffff    style Database_Layer fill:#ffffff    style Cache_Layer fill:#ffffff    style LB_Layer fill:#ffffff    style Security_IAM fill:#ffffff    style Observability_Layer fill:#ffffff    style VPC fill:#d4edda
     style SQL fill:#74b9ff
     style REDIS fill:#ffeaa7
     style LB fill:#a29bfe
@@ -381,7 +366,7 @@ graph TB
 ## 6. 네트워크 아키텍처
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'secondaryTextColor': '#000000', 'tertiaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
+%%{init: {'theme': 'default'}}%%
 graph LR
     subgraph Internet_Zone["인터넷"]
         USER[사용자]
@@ -432,13 +417,7 @@ graph LR
     APP2 -.Outbound.-> NAT_GW
     NAT_GW -.-> INTERNET
 
-    style Internet_Zone fill:#ffffff,color:#000000
-    style GCP_VPC fill:#ffffff,color:#000000
-    style Public_Subnet fill:#ffffff,color:#000000
-    style Web_Subnet fill:#ffffff,color:#000000
-    style App_Subnet fill:#ffffff,color:#000000
-    style DB_Subnet fill:#ffffff,color:#000000
-    style LB fill:#a29bfe
+    style Internet_Zone fill:#ffffff    style GCP_VPC fill:#ffffff    style Public_Subnet fill:#ffffff    style Web_Subnet fill:#ffffff    style App_Subnet fill:#ffffff    style DB_Subnet fill:#ffffff    style LB fill:#a29bfe
     style WEB1 fill:#fab1a0
     style WEB2 fill:#fab1a0
     style APP1 fill:#fab1a0
@@ -510,7 +489,7 @@ sequenceDiagram
 ## 8. 모듈 재사용 예제
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'secondaryTextColor': '#000000', 'tertiaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
+%%{init: {'theme': 'default'}}%%
 graph TB
     subgraph MODULE_DEF["모듈 정의"]
         MODULE[cloudsql-mysql<br/>main.tf, variables.tf, outputs.tf]
@@ -537,11 +516,7 @@ graph TB
         S_VARS -.설정.-> S_LAYER
     end
 
-    style MODULE_DEF fill:#ffffff,color:#000000
-    style PROD fill:#ffffff,color:#000000
-    style DEV fill:#ffffff,color:#000000
-    style STAGE fill:#ffffff,color:#000000
-    style MODULE fill:#74b9ff
+    style MODULE_DEF fill:#ffffff    style PROD fill:#ffffff    style DEV fill:#ffffff    style STAGE fill:#ffffff    style MODULE fill:#74b9ff
     style P_LAYER fill:#d4edda
     style D_LAYER fill:#fff3cd
     style S_LAYER fill:#ffeaa7
