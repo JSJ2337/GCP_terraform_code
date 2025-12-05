@@ -10,7 +10,7 @@ cd bootstrap
 terraform init && terraform apply
 
 # 인증 설정
-gcloud auth application-default set-quota-project jsj-system-mgmt
+gcloud auth application-default set-quota-project YOUR_MGMT_PROJECT
 ```
 📖 [Bootstrap 상세 가이드](./docs/getting-started/bootstrap-setup.md)
 
@@ -25,7 +25,7 @@ ENABLE_OBSERVABILITY: true
 
 **수동 배포**
 ```bash
-cd environments/LIVE/jsj-game-n/00-project
+cd environments/LIVE/gcp-gcby/00-project
 terragrunt init --non-interactive
 terragrunt plan
 terragrunt apply
@@ -46,7 +46,7 @@ terraform_gcp_infra/
 ├── modules/                # 재사용 가능한 모듈 (12개)
 ├── environments/           # 환경별 배포
 │   └── LIVE/
-│       └── jsj-game-n/    # 프로덕션 환경
+│       └── gcp-gcby/    # 프로덕션 환경
 └── proj-default-templet/   # 새 환경용 템플릿 (Jenkins에서 복사)
 ```
 
@@ -78,7 +78,7 @@ Jenkins CI/CD는 8개 Phase로 인프라를 순차 배포하여 의존성을 자
 ### 1. 서브넷 자동 매핑 (50-workloads)
 ```hcl
 # ❌ 기존 방식 (하드코딩)
-subnetwork_self_link = "projects/jsj-game-n/regions/asia-northeast3/subnetworks/game-n-subnet-dmz"
+subnetwork_self_link = "projects/gcp-gcby/regions/us-west1/subnetworks/gcby-subnet-dmz"
 
 # ✅ 새로운 방식 (subnet_type만 지정)
 subnet_type = "dmz"  # 10-network outputs에서 자동 매핑
@@ -87,10 +87,10 @@ subnet_type = "dmz"  # 10-network outputs에서 자동 매핑
 ### 2. Zone 자동 변환 (50-workloads)
 ```hcl
 # ❌ 기존 방식 (전체 zone 경로 입력)
-zone = "asia-northeast3-a"
+zone = "us-west1-a"
 
 # ✅ 새로운 방식 (zone_suffix만 지정)
-zone_suffix = "a"  # region_primary와 자동 결합 → asia-northeast3-a
+zone_suffix = "a"  # region_primary와 자동 결합 → us-west1-a
 ```
 
 **멀티 존 고가용성 구성 예시**:
@@ -119,7 +119,7 @@ instances = {
 
 ### 의존성 그래프
 ```
-Bootstrap (jsj-system-mgmt)
+Bootstrap (delabs-gcp-mgmt)
     ↓
 00-project → 10-network → 12-dns
                 ↓           ↓
@@ -216,7 +216,7 @@ Internet → Global Load Balancer (HTTPS)
 - ✅ Private Service Connect (Cloud SQL, Redis Enterprise)
 
 ### 중앙 집중식 관리
-- ✅ Bootstrap 기반 State 관리 (jsj-system-mgmt)
+- ✅ Bootstrap 기반 State 관리 (delabs-gcp-mgmt)
 - ✅ `modules/naming`으로 일관된 네이밍 규칙
 - ✅ Terragrunt로 DRY 원칙 적용
 - ✅ 환경별 독립된 State 파일
@@ -262,13 +262,13 @@ ACTION: plan
 ### 수동 배포 (Terragrunt 0.93+)
 ```bash
 # 단일 레이어
-cd environments/LIVE/jsj-game-n/00-project
+cd environments/LIVE/gcp-gcby/00-project
 terragrunt init --non-interactive
 terragrunt plan
 terragrunt apply
 
 # 전체 스택
-cd environments/LIVE/jsj-game-n
+cd environments/LIVE/gcp-gcby
 terragrunt run --all -- plan
 terragrunt run --all -- apply
 
@@ -310,18 +310,20 @@ terragrunt graph-dependencies | dot -Tpng > graph.png
 
 | 모듈 | 기능 | 주요 특징 | 문서 |
 |------|------|----------|------|
-| **naming** | 중앙 집중식 네이밍 | 일관된 리소스명 자동 생성 | [README](./modules/naming/README.md) |
-| **project-base** | GCP 프로젝트 생성 | API 활성화, Billing, 예산 알림 | [README](./modules/project-base/README.md) |
-| **network-dedicated-vpc** | VPC 네트워킹 | DMZ/Private/DB 서브넷, Firewall, Cloud NAT, PSC | [README](./modules/network-dedicated-vpc/README.md) |
-| **gcs-root** | 다중 버킷 관리 | Assets/Logs/Backups 버킷, Lifecycle | [README](./modules/gcs-root/README.md) |
-| **gcs-bucket** | 단일 버킷 설정 | CORS, Versioning, IAM | [README](./modules/gcs-bucket/README.md) |
-| **iam** | IAM 관리 | Non-authoritative 바인딩, 서비스 계정 | [README](./modules/iam/README.md) |
-| **observability** | Logging/Monitoring | Log Sink, Dashboard, Alert, Slack | [README](./modules/observability/README.md) |
-| **gce-vmset** | VM 인스턴스 | Shielded VM, Instance Groups, subnet_type | [README](./modules/gce-vmset/README.md) |
-| **cloudsql-mysql** | MySQL DB | Regional HA, PITR, Private IP, 읽기 복제본 | [README](./modules/cloudsql-mysql/README.md) |
-| **memorystore-redis** | Redis 캐시 | Standard HA / Enterprise (PSC) | [README](./modules/memorystore-redis/README.md) |
-| **load-balancer** | Load Balancer | Global LB, Backend Service, Health Check | [README](./modules/load-balancer/README.md) |
-| **cloud-dns** | Cloud DNS | Public/Private Zone, DNSSEC, DNS Peering | [README](./modules/cloud-dns/README.md) |
+| **naming** | 중앙 집중식 네이밍 | 일관된 리소스명 자동 생성 | [문서](./docs/modules/naming.md) |
+| **project-base** | GCP 프로젝트 생성 | API 활성화, Billing, 예산 알림 | [문서](./docs/modules/project-base.md) |
+| **network-dedicated-vpc** | VPC 네트워킹 | DMZ/Private/DB 서브넷, Firewall, Cloud NAT, PSC | [문서](./docs/modules/network-dedicated-vpc.md) |
+| **cloud-dns** | Cloud DNS | Public/Private Zone, DNSSEC, DNS Peering | [문서](./docs/modules/cloud-dns.md) |
+| **gcs-root** | 다중 버킷 관리 | Assets/Logs/Backups 버킷, Lifecycle | [문서](./docs/modules/gcs-root.md) |
+| **gcs-bucket** | 단일 버킷 설정 | CORS, Versioning, IAM | [문서](./docs/modules/gcs-bucket.md) |
+| **iam** | IAM 관리 | Non-authoritative 바인딩, 서비스 계정 | [문서](./docs/modules/iam.md) |
+| **observability** | Logging/Monitoring | Log Sink, Dashboard, Alert, Slack | [문서](./docs/modules/observability.md) |
+| **gce-vmset** | VM 인스턴스 | Shielded VM, Instance Groups, subnet_type | [문서](./docs/modules/gce-vmset.md) |
+| **cloudsql-mysql** | MySQL DB | Regional HA, PITR, Private IP, 읽기 복제본 | [문서](./docs/modules/cloudsql-mysql.md) |
+| **memorystore-redis** | Redis 캐시 | Standard HA / Enterprise (PSC) | [문서](./docs/modules/memorystore-redis.md) |
+| **load-balancer** | Load Balancer | Global LB, Backend Service, Health Check | [문서](./docs/modules/load-balancer.md) |
+
+> 전체 모듈 목록: [docs/modules/README.md](./docs/modules/README.md)
 
 ## 🆕 새 환경 추가
 
@@ -366,7 +368,7 @@ cd ../70-loadbalancers/gs && terragrunt apply
 
 ### State 관리
 - ✅ 환경별 독립된 State 파일 유지
-- ✅ `gcloud auth application-default set-quota-project jsj-system-mgmt` 인증 설정
+- ✅ `gcloud auth application-default set-quota-project YOUR_MGMT_PROJECT` 인증 설정
 - ✅ State Lock은 자동 처리 (GCS Object Lock)
 
 ### 보안 원칙
@@ -387,7 +389,7 @@ cd ../70-loadbalancers/gs && terragrunt apply
 ```bash
 # 원인: Bootstrap State 버킷 접근 권한 없음
 # 해결: ADC 인증 설정
-gcloud auth application-default set-quota-project jsj-system-mgmt
+gcloud auth application-default set-quota-project YOUR_MGMT_PROJECT
 ```
 
 ### State Lock 발생
@@ -478,4 +480,4 @@ terragrunt apply       # 안전하게 apply
 ---
 
 **Made by 433 IT_infra_dept**
-**Last Updated: 2025-11-28**
+**Last Updated: 2025-12-05**

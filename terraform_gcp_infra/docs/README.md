@@ -80,10 +80,8 @@
 |------|------|
 | [CHANGELOG](./changelog/CHANGELOG.md) | 버전별 변경 내역 및 마이그레이션 가이드 |
 | [작업 이력](./changelog/work_history/README.md) | 날짜별 작업 요약 및 마일스톤 |
-| [2025-11-21](./changelog/work_history/2025-11-21.md) | 최신: Jenkinsfile Phase 기반 구조 전환 + 서브넷/스토리지 자동화 |
-| [2025-11-20](./changelog/work_history/2025-11-20.md) | 10-network 서브넷 이름/리전 동적 생성 |
-| [2025-11-19](./changelog/work_history/2025-11-19.md) | jsj-game-n 환경 생성 및 State 관리 안정화 |
-| [2025-11-18](./changelog/work_history/2025-11-18.md) | Memorystore PSC 구성 완료 |
+| [2025-12-05](./changelog/work_history/2025-12-05.md) | 최신: proj-default-templet 재구성, 문서 정리 |
+| [2025-12-04](./changelog/work_history/2025-12-04.md) | gcp-gcby 환경 구성 |
 | [전체 이력](./changelog/work_history/README.md) | 전체 작업 이력 조회 |
 
 ---
@@ -141,8 +139,8 @@
 
 ## 문서 버전 정보
 
-- **최종 업데이트**: 2025-11-13
-- **문서 버전**: 2.1
+- **최종 업데이트**: 2025-12-05
+- **문서 버전**: 3.0
 - **프로젝트 상태**: 운영 중
 
 ---
