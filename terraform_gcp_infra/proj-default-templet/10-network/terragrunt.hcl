@@ -130,8 +130,10 @@ locals {
 }
 
 # Cloud SQL dependency (Service Attachment 가져오기)
+# skip_outputs = true: 새 환경 배포 시 dependency가 없어도 mock_outputs 사용
 dependency "database" {
-  config_path = "../60-database"
+  config_path  = "../60-database"
+  skip_outputs = true
 
   mock_outputs = {
     psc_service_attachment_link = "projects/mock/regions/${local.region_primary}/serviceAttachments/mock-cloudsql"
@@ -140,8 +142,10 @@ dependency "database" {
 }
 
 # Redis dependency (Service Attachments 가져오기 - Discovery + Shard)
+# skip_outputs = true: 새 환경 배포 시 dependency가 없어도 mock_outputs 사용
 dependency "cache" {
-  config_path = "../65-cache"
+  config_path  = "../65-cache"
+  skip_outputs = true
 
   mock_outputs = {
     psc_service_attachment_links = [
