@@ -6,7 +6,7 @@
 # ⚠️ 아래 값들은 create_project.sh에서 자동 치환됨
 
 project_id     = "gcp-nft"
-project_name   = "nft-live"
+project_name   = "web3"
 environment    = "live"
 organization   = "delabs"
 region_primary = "us-west1"

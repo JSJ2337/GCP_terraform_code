@@ -71,8 +71,8 @@ locals {
     nft = {
       project_id       = "gcp-nft"
       environment      = "live"
-      vpc_name         = "nft-live-vpc"
-      network_url      = "projects/gcp-nft/global/networks/nft-live-vpc"
+      vpc_name         = "web3-live-vpc"
+      network_url      = "projects/gcp-nft/global/networks/web3-live-vpc"
       has_own_dns_zone = true  # 자체 DNS Zone 있음 - mgmt DNS Zone에서 제외
 
       # PSC Endpoint IP (mgmt VPC에서 접근용 - mgmt subnet CIDR: 10.250.20.0/24)
