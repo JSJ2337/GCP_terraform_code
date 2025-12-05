@@ -491,29 +491,39 @@ ${phaseList}
 
 // Phase Plan 실행
 def runPhasePlan(phase, phaseDirs) {
+    // 공백/특수문자가 있는 WORKSPACE 경로 문제 회피를 위해 디렉토리 이동 후 상대경로 사용
+    def workDir = "${env.WORKSPACE}/${TG_WORKING_DIR}"
+
     phase.dirs.each { dir ->
         sh """
-            rm -rf '${env.WORKSPACE}/${TG_WORKING_DIR}/${dir}/.terragrunt-cache' || true
-            rm -rf '${env.WORKSPACE}/${TG_WORKING_DIR}/${dir}/.terraform' || true
-            rm -f '${env.WORKSPACE}/${TG_WORKING_DIR}/${dir}/tfplan-${phase.id}' || true
+            rm -rf '${workDir}/${dir}/.terragrunt-cache' || true
+            rm -rf '${workDir}/${dir}/.terraform' || true
+            rm -f '${workDir}/${dir}/tfplan-${phase.id}' || true
         """
     }
 
-    def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
-    sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- plan -out=tfplan-${phase.id}"
+    // 상대 경로 사용: working-dir로 이동 후 상대 경로로 include
+    def includeArgs = phase.dirs.collect { "--queue-include-dir ./${it}" }.join(' ')
+    sh """
+        cd '${workDir}' && terragrunt run --all ${includeArgs} --queue-strict-include -- plan -out=tfplan-${phase.id}
+    """
 
     archiveArtifacts artifacts: "**/tfplan-${phase.id}", allowEmptyArchive: true
 }
 
 // Phase Apply 실행
 def runPhaseApply(phase, phaseDirs) {
-    def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
-    sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- apply tfplan-${phase.id}"
+    def workDir = "${env.WORKSPACE}/${TG_WORKING_DIR}"
+    def includeArgs = phase.dirs.collect { "--queue-include-dir ./${it}" }.join(' ')
+    sh """
+        cd '${workDir}' && terragrunt run --all ${includeArgs} --queue-strict-include -- apply tfplan-${phase.id}
+    """
 }
 
 // Phase Destroy 실행
 def runPhaseDestroy(phase, phaseDirs) {
-    def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
+    def workDir = "${env.WORKSPACE}/${TG_WORKING_DIR}"
+    def includeArgs = phase.dirs.collect { "--queue-include-dir ./${it}" }.join(' ')
 
     // Phase 6 (Database & Cache)의 경우 deletion protection 먼저 비활성화
     if (phase.id == 'phase6') {
@@ -558,7 +568,9 @@ def runPhaseDestroy(phase, phaseDirs) {
     if (phase.id == 'phase2') {
         retry(3) {
             try {
-                sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- destroy -auto-approve"
+                sh """
+                    cd '${workDir}' && terragrunt run --all ${includeArgs} --queue-strict-include -- destroy -auto-approve
+                """
             } catch (Exception e) {
                 if (e.message.contains("ServiceConnectionPolicy") && e.message.contains("PSC Connections")) {
                     echo "⚠️  PSC connections still exist. Waiting 60 seconds before retry..."
@@ -570,6 +582,8 @@ def runPhaseDestroy(phase, phaseDirs) {
             }
         }
     } else {
-        sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- destroy -auto-approve"
+        sh """
+            cd '${workDir}' && terragrunt run --all ${includeArgs} --queue-strict-include -- destroy -auto-approve
+        """
     }
 }
