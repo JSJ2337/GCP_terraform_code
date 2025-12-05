@@ -58,16 +58,34 @@ locals {
       rrdatas = [local.network_config.psc_endpoints.redis[0]]
     },
     {
-      name    = "${local.project_name}-gs01"
+      name    = "${local.project_name}-www01"
       type    = "A"
       ttl     = 300
-      rrdatas = [local.vm_static_ips.gs01]
+      rrdatas = [local.vm_static_ips.www01]
     },
     {
-      name    = "${local.project_name}-gs02"
+      name    = "${local.project_name}-www02"
       type    = "A"
       ttl     = 300
-      rrdatas = [local.vm_static_ips.gs02]
+      rrdatas = [local.vm_static_ips.www02]
+    },
+    {
+      name    = "${local.project_name}-www03"
+      type    = "A"
+      ttl     = 300
+      rrdatas = [local.vm_static_ips.www03]
+    },
+    {
+      name    = "${local.project_name}-mint01"
+      type    = "A"
+      ttl     = 300
+      rrdatas = [local.vm_static_ips.mint01]
+    },
+    {
+      name    = "${local.project_name}-mint02"
+      type    = "A"
+      ttl     = 300
+      rrdatas = [local.vm_static_ips.mint02]
     }
   ]
 
@@ -83,7 +101,7 @@ dependency "network" {
   config_path = "../10-network"
 
   mock_outputs = {
-    vpc_self_link = local.vpc_self_link_mock
+    vpc_self_link = "projects/gcp-nft/global/networks/nft-live-vpc"
   }
   mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
 }
