@@ -5,6 +5,7 @@
 ## 시스템 구성
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 flowchart TB
     subgraph Bootstrap["🏗️ Bootstrap Layer"]
         MGMT["jsj-system-mgmt<br/>+ jsj-terraform-state-prod"]
@@ -25,9 +26,9 @@ flowchart TB
     Bootstrap --> Modules
     Modules --> Environments
 
-    style Bootstrap fill:#e3f2fd
-    style Modules fill:#fff3e0
-    style Environments fill:#e8f5e9
+    style Bootstrap fill:#e3f2fd,color:#000000
+    style Modules fill:#fff3e0,color:#000000
+    style Environments fill:#e8f5e9,color:#000000
 ```
 
 ## 3-Tier 구조
@@ -56,25 +57,26 @@ flowchart TB
 #### 모듈 관계도
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 graph TB
-    subgraph "Core Modules"
+    subgraph Core["Core Modules"]
         NAMING[naming]
         PROJECT[project-base]
     end
 
-    subgraph "Infrastructure Modules"
+    subgraph Infra["Infrastructure Modules"]
         NETWORK[network-dedicated-vpc]
         DNS[cloud-dns]
         STORAGE[gcs-root]
         BUCKET[gcs-bucket]
     end
 
-    subgraph "Security & Observability"
+    subgraph Security["Security & Observability"]
         IAM[iam]
         OBS[observability]
     end
 
-    subgraph "Workload Modules"
+    subgraph Workload["Workload Modules"]
         VM[gce-vmset]
         SQL[cloudsql-mysql]
         REDIS[memorystore-redis]
@@ -110,6 +112,10 @@ graph TB
     %% Workload dependencies
     VM --> LB
 
+    style Core fill:#e3f2fd,color:#000000
+    style Infra fill:#fff3e0,color:#000000
+    style Security fill:#f3e5f5,color:#000000
+    style Workload fill:#e8f5e9,color:#000000
     style NAMING fill:#e1f5fe
     style PROJECT fill:#fff3e0
     style NETWORK fill:#f3e5f5
@@ -179,6 +185,7 @@ environments/LIVE/jsj-game-k/
 ### DMZ / Private / DB 서브넷 구조
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 flowchart TB
     INET[🌐 Internet]
 
@@ -216,9 +223,10 @@ flowchart TB
     APP1 -->|Private IP Only| SQL
     APP2 -->|Private IP Only| SQL
 
-    style DMZ fill:#e3f2fd
-    style Private fill:#f3e5f5
-    style DB fill:#fce4ec
+    style GCP fill:#fafafa,color:#000000
+    style DMZ fill:#e3f2fd,color:#000000
+    style Private fill:#f3e5f5,color:#000000
+    style DB fill:#fce4ec,color:#000000
     style LB fill:#fff9c4
     style NAT fill:#c8e6c9
 ```
@@ -275,6 +283,7 @@ common_labels = {
 ### 중앙 집중식 + 레이어별 분리
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 flowchart TB
     subgraph Bootstrap["🏗️ Bootstrap Project (jsj-system-mgmt)"]
         subgraph GCS["📦 jsj-terraform-state-prod (GCS)"]
@@ -300,11 +309,11 @@ flowchart TB
         end
     end
 
-    style Bootstrap fill:#e3f2fd
-    style GCS fill:#fff3e0
-    style GAMEK fill:#e8f5e9
-    style GAMEL fill:#f3e5f5
-    style TEMPLET fill:#fce4ec
+    style Bootstrap fill:#e3f2fd,color:#000000
+    style GCS fill:#fff3e0,color:#000000
+    style GAMEK fill:#e8f5e9,color:#000000
+    style GAMEL fill:#f3e5f5,color:#000000
+    style TEMPLET fill:#fce4ec,color:#000000
 ```
 
 **특징**:

@@ -16,8 +16,9 @@
 ## 1. 전체 시스템 구조
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 graph TB
-    subgraph "Bootstrap (중앙 관리)"
+    subgraph Bootstrap["Bootstrap (중앙 관리)"]
         B[bootstrap/]
         B_PROJ[jsj-system-mgmt<br/>관리용 프로젝트]
         B_BUCKET[jsj-terraform-state-prod<br/>중앙 State 버킷]
@@ -25,7 +26,7 @@ graph TB
         B_PROJ --> B_BUCKET
     end
 
-    subgraph "재사용 가능한 모듈"
+    subgraph Modules["재사용 가능한 모듈"]
         M1[gcs-root]
         M2[gcs-bucket]
         M3[project-base]
@@ -38,7 +39,7 @@ graph TB
         M10[memorystore-redis]
     end
 
-    subgraph "환경별 배포 레이어"
+    subgraph Layers["환경별 배포 레이어"]
         E0[00-project<br/>프로젝트]
         E1[10-network<br/>네트워크]
         E2[20-storage<br/>스토리지]
@@ -70,6 +71,9 @@ graph TB
     E7 --> M10
     E8 --> M9
 
+    style Bootstrap fill:#e1f5ff,color:#000000
+    style Modules fill:#ffffff,color:#000000
+    style Layers fill:#ffffff,color:#000000
     style B fill:#e1f5ff
     style B_BUCKET fill:#fff3cd
     style E0 fill:#d4edda
@@ -95,15 +99,16 @@ graph TB
 ## 2. State 관리 아키텍처
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 graph LR
-    subgraph "로컬 개발 환경"
+    subgraph LocalEnv["로컬 개발 환경"]
         DEV[개발자 PC]
     end
 
-    subgraph "Bootstrap Project (jsj-system-mgmt)"
+    subgraph BootstrapProj["Bootstrap Project (jsj-system-mgmt)"]
         BUCKET[GCS Bucket<br/>jsj-terraform-state-prod]
 
-        subgraph "State 파일 구조"
+        subgraph StateFiles["State 파일 구조"]
             S1[proj-default-templet/<br/>00-project/default.tfstate]
             S2[proj-default-templet/<br/>10-network/default.tfstate]
             S3[proj-default-templet/<br/>20-storage/default.tfstate]
@@ -129,6 +134,9 @@ graph LR
     BUCKET --> S9
     BUCKET --> S8
 
+    style LocalEnv fill:#e1f5ff,color:#000000
+    style BootstrapProj fill:#ffffff,color:#000000
+    style StateFiles fill:#ffffff,color:#000000
     style BUCKET fill:#fff3cd
     style DEV fill:#e1f5ff
 ```
@@ -145,6 +153,7 @@ graph LR
 ## 3. 배포 순서 및 의존성
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000' }}}%%
 graph TD
     START([시작]) --> B[0. Bootstrap 배포<br/>중앙 State 관리]
 
@@ -197,6 +206,7 @@ graph TD
 ## 4. 모듈 구조
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000' }}}%%
 graph LR
     M1[project-base<br/>프로젝트 생성]
     M2[network-dedicated-vpc<br/>VPC 네트워킹]
@@ -253,9 +263,10 @@ graph LR
 ## 5. 실제 GCP 리소스 구조
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 graph TB
-    subgraph "GCP Project"
-        subgraph "Network Layer"
+    subgraph GCP_Project["GCP Project"]
+        subgraph Network_Layer["Network Layer"]
             VPC[VPC Network]
             SUBNET1[Subnet: web<br/>10.0.1.0/24]
             SUBNET2[Subnet: app<br/>10.0.2.0/24]
@@ -272,13 +283,13 @@ graph TB
             ROUTER --> NAT
         end
 
-        subgraph "Storage Layer"
+        subgraph Storage_Layer["Storage Layer"]
             GCS1[GCS: assets-bucket]
             GCS2[GCS: logs-bucket]
             GCS3[GCS: backups-bucket]
         end
 
-        subgraph "Compute Layer"
+        subgraph Compute_Layer["Compute Layer"]
             VM1[VM Instance 1<br/>web-server]
             VM2[VM Instance 2<br/>app-server]
             IG[Instance Group]
@@ -289,7 +300,7 @@ graph TB
             IG --> VM2
         end
 
-        subgraph "Database Layer"
+        subgraph Database_Layer["Database Layer"]
             SQL[Cloud SQL MySQL<br/>Private IP]
             REPLICA[Read Replica<br/>Optional]
 
@@ -297,13 +308,13 @@ graph TB
             SQL -.복제.-> REPLICA
         end
 
-        subgraph "Cache Layer"
+        subgraph Cache_Layer["Cache Layer"]
             REDIS[Memorystore Redis<br/>Private IP]
         end
 
         REDIS --> SUBNET2
 
-        subgraph "Load Balancer Layer"
+        subgraph LB_Layer["Load Balancer Layer"]
             LB[Load Balancer]
             HC[Health Check]
             BE[Backend Service]
@@ -317,13 +328,13 @@ graph TB
             BE --> IG
         end
 
-        subgraph "Security & IAM"
+        subgraph Security_IAM["Security & IAM"]
             SA1[Service Account: web]
             SA2[Service Account: app]
             SA3[Service Account: db]
         end
 
-        subgraph "Observability"
+        subgraph Observability_Layer["Observability"]
             LOG[Cloud Logging]
             MON[Cloud Monitoring]
             ALERT[Alert Policies]
@@ -336,6 +347,15 @@ graph TB
     REDIS -.모니터링.-> MON
     MON --> ALERT
 
+    style GCP_Project fill:#ffffff,color:#000000
+    style Network_Layer fill:#ffffff,color:#000000
+    style Storage_Layer fill:#ffffff,color:#000000
+    style Compute_Layer fill:#ffffff,color:#000000
+    style Database_Layer fill:#ffffff,color:#000000
+    style Cache_Layer fill:#ffffff,color:#000000
+    style LB_Layer fill:#ffffff,color:#000000
+    style Security_IAM fill:#ffffff,color:#000000
+    style Observability_Layer fill:#ffffff,color:#000000
     style VPC fill:#d4edda
     style SQL fill:#74b9ff
     style REDIS fill:#ffeaa7
@@ -361,29 +381,30 @@ graph TB
 ## 6. 네트워크 아키텍처
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 graph LR
-    subgraph "인터넷"
+    subgraph Internet_Zone["인터넷"]
         USER[사용자]
         INTERNET[Internet]
     end
 
-    subgraph "GCP VPC (10.0.0.0/16)"
-        subgraph "Public Subnet (10.0.1.0/24)"
+    subgraph GCP_VPC["GCP VPC (10.0.0.0/16)"]
+        subgraph Public_Subnet["Public Subnet (10.0.1.0/24)"]
             LB[Load Balancer<br/>외부 IP]
         end
 
-        subgraph "Web Subnet (10.0.1.0/24)"
+        subgraph Web_Subnet["Web Subnet (10.0.1.0/24)"]
             WEB1[Web VM 1<br/>10.0.1.10]
             WEB2[Web VM 2<br/>10.0.1.11]
         end
 
-        subgraph "App Subnet (10.0.2.0/24)"
+        subgraph App_Subnet["App Subnet (10.0.2.0/24)"]
             APP1[App VM 1<br/>10.0.2.10]
             APP2[App VM 2<br/>10.0.2.11]
             CACHE[Redis Cache<br/>Private IP<br/>10.0.2.25]
         end
 
-        subgraph "DB Subnet (10.0.3.0/24)"
+        subgraph DB_Subnet["DB Subnet (10.0.3.0/24)"]
             DB[Cloud SQL<br/>Private IP<br/>10.0.3.5]
         end
 
@@ -411,6 +432,12 @@ graph LR
     APP2 -.Outbound.-> NAT_GW
     NAT_GW -.-> INTERNET
 
+    style Internet_Zone fill:#ffffff,color:#000000
+    style GCP_VPC fill:#ffffff,color:#000000
+    style Public_Subnet fill:#ffffff,color:#000000
+    style Web_Subnet fill:#ffffff,color:#000000
+    style App_Subnet fill:#ffffff,color:#000000
+    style DB_Subnet fill:#ffffff,color:#000000
     style LB fill:#a29bfe
     style WEB1 fill:#fab1a0
     style WEB2 fill:#fab1a0
@@ -444,6 +471,7 @@ graph LR
 ## 7. Terragrunt 실행 흐름
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000' }}}%%
 sequenceDiagram
     participant Dev as 개발자
     participant TG as Terragrunt CLI
@@ -482,6 +510,7 @@ sequenceDiagram
 ## 8. 모듈 재사용 예제
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 graph TB
     subgraph MODULE_DEF["모듈 정의"]
         MODULE[cloudsql-mysql<br/>main.tf, variables.tf, outputs.tf]
@@ -508,6 +537,10 @@ graph TB
         S_VARS -.설정.-> S_LAYER
     end
 
+    style MODULE_DEF fill:#ffffff,color:#000000
+    style PROD fill:#ffffff,color:#000000
+    style DEV fill:#ffffff,color:#000000
+    style STAGE fill:#ffffff,color:#000000
     style MODULE fill:#74b9ff
     style P_LAYER fill:#d4edda
     style D_LAYER fill:#fff3cd
@@ -554,6 +587,7 @@ graph TB
 
 <!-- markdownlint-disable MD013 -->
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000' }}}%%
 graph LR
     CURRENT[현재: 9개 모듈<br/>8개 레이어] --> PHASE1[Phase 1<br/>PostgreSQL<br/>Redis<br/>Secret Manager]
 

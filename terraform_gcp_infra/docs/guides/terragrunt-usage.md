@@ -268,6 +268,7 @@ terragrunt run --all \
 Terragrunt는 Phase 기반 배포의 핵심 도구입니다:
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000' }}}%%
 graph TD
     P1[Phase 1: 00-project] --> P2[Phase 2: 10-network]
     P2 --> P3A[Phase 3: 20-storage]

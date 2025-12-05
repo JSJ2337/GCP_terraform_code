@@ -5,6 +5,7 @@ GCP VPC 네트워크의 DMZ/Private/DB 3-Tier 아키텍처 설계입니다.
 ## 아키텍처 개요
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 flowchart TB
     INET[🌐 Internet]
     LB["⚖️ Load Balancer<br/>(Public IP)"]
@@ -26,9 +27,9 @@ flowchart TB
     DMZ -->|Internal Only| Private
     Private -->|Private IP Only| DB
 
-    style DMZ fill:#e3f2fd
-    style Private fill:#f3e5f5
-    style DB fill:#fce4ec
+    style DMZ fill:#e3f2fd,color:#000000
+    style Private fill:#f3e5f5,color:#000000
+    style DB fill:#fce4ec,color:#000000
     style LB fill:#fff9c4
 ```
 
@@ -194,8 +195,9 @@ ingress {
 ### 데이터 흐름도 (Mermaid)
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 flowchart TB
-    subgraph Internet
+    subgraph Internet["Internet"]
         USER[👤 User]
         API[🌐 External API]
     end
@@ -236,9 +238,11 @@ flowchart TB
     WEB2 -.->|Outbound| NAT
     NAT -.->|HTTPS| API
 
-    style DMZ fill:#e3f2fd
-    style Private fill:#f3e5f5
-    style DB fill:#fce4ec
+    style Internet fill:#fafafa,color:#000000
+    style GCP fill:#fafafa,color:#000000
+    style DMZ fill:#e3f2fd,color:#000000
+    style Private fill:#f3e5f5,color:#000000
+    style DB fill:#fce4ec,color:#000000
     style LB fill:#fff9c4
     style NAT fill:#c8e6c9
 ```
@@ -246,6 +250,7 @@ flowchart TB
 ### 보안 경계 다이어그램 (Firewall Rules)
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 flowchart LR
     subgraph External["🌍 External Zone"]
         INET[Internet]
@@ -295,13 +300,13 @@ flowchart LR
     R5 --> SQL
     APP --> REDIS
 
-    style External fill:#ffebee
-    style DMZ fill:#e3f2fd
-    style Private fill:#f3e5f5
-    style DB_Zone fill:#fce4ec
-    style FW1 fill:#fff3e0
-    style FW2 fill:#fff3e0
-    style FW3 fill:#fff3e0
+    style External fill:#ffebee,color:#000000
+    style DMZ fill:#e3f2fd,color:#000000
+    style Private fill:#f3e5f5,color:#000000
+    style DB_Zone fill:#fce4ec,color:#000000
+    style FW1 fill:#fff3e0,color:#000000
+    style FW2 fill:#fff3e0,color:#000000
+    style FW3 fill:#fff3e0,color:#000000
 ```
 
 ### 외부 → 내부 (Ingress)
@@ -440,6 +445,7 @@ zones = [
 ### 아키텍처
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 flowchart LR
     subgraph MGMT["mgmt VPC (delabs-gcp-mgmt-vpc)"]
         DNS_ZONE["📋 DNS Zone: delabsgames.internal."]
@@ -455,8 +461,8 @@ flowchart LR
 
     MGMT <-->|VPC Peering| GCBY
 
-    style MGMT fill:#e3f2fd
-    style GCBY fill:#f3e5f5
+    style MGMT fill:#e3f2fd,color:#000000
+    style GCBY fill:#f3e5f5,color:#000000
 ```
 
 ### 구성 요소
@@ -582,6 +588,7 @@ PSC Endpoint 방식은 Cloud SQL을 특정 subnet에만 노출하여 3-tier 네�
 #### Before (VPC Peering 방식)
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 flowchart BT
     SQL_BEFORE["🐬 Cloud SQL<br/>(10.201.3.2)"]
 
@@ -595,6 +602,7 @@ flowchart BT
     PRIV_B -->|VPC Peering| SQL_BEFORE
     MGMT_B -->|VPC Peering| SQL_BEFORE
 
+    style VPC_BEFORE fill:#fafafa,color:#000000
     style DMZ_B fill:#ffcdd2
     style SQL_BEFORE fill:#fce4ec
 ```
@@ -602,6 +610,7 @@ flowchart BT
 #### After (PSC Endpoint 방식)
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 flowchart BT
     SQL_AFTER["🐬 Cloud SQL<br/>(PSC Endpoint)"]
 
@@ -615,6 +624,7 @@ flowchart BT
     PRIV_A -->|PSC| SQL_AFTER
     MGMT_A -->|VPC Peering| SQL_AFTER
 
+    style VPC_AFTER fill:#fafafa,color:#000000
     style DMZ_A fill:#c8e6c9
     style PRIV_A fill:#c8e6c9
     style SQL_AFTER fill:#e8f5e9
@@ -825,6 +835,7 @@ mgmt VPC의 bastion 호스트에서 다른 프로젝트의 Cloud SQL에 PSC를 �
 ### 아키텍처
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 flowchart TB
     subgraph MGMT_VPC["mgmt VPC (delabs-gcp-mgmt)"]
         BASTION["🖥️ bastion<br/>(10.250.10.6)"]
@@ -841,8 +852,8 @@ flowchart TB
     PSC --> SA
     SA --> SQL_PSC
 
-    style MGMT_VPC fill:#e3f2fd
-    style GCBY_PROJ fill:#f3e5f5
+    style MGMT_VPC fill:#e3f2fd,color:#000000
+    style GCBY_PROJ fill:#f3e5f5,color:#000000
     style PSC fill:#fff9c4
 ```
 
@@ -1041,6 +1052,7 @@ PSC Endpoint는 Service Attachment와 동일 리전에 있어야 하지만, **Gl
 ### 아키텍처
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 flowchart TB
     subgraph ASIA["asia-northeast3 (Bastion 위치)"]
         BASTION_G["🖥️ bastion<br/>(10.250.10.6)"]
@@ -1057,8 +1069,8 @@ flowchart TB
     GLOBAL --> PSC_FR
     PSC_FR --> SQL_G
 
-    style ASIA fill:#e3f2fd
-    style USWEST fill:#f3e5f5
+    style ASIA fill:#e3f2fd,color:#000000
+    style USWEST fill:#f3e5f5,color:#000000
     style GLOBAL fill:#fff9c4
 ```
 
@@ -1154,6 +1166,7 @@ nc -zv gcby-live-gdb-m1.delabsgames.internal 3306
 ### 아키텍처
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 flowchart TB
     subgraph GCBY_VPC["gcby-live-vpc (게임 서버 VPC)"]
         GCBY_DNS["📋 DNS Zone: delabsgames.internal.<br/>(gcby 프로젝트 소유)"]
@@ -1167,8 +1180,8 @@ flowchart TB
         MGMT_REDIS["Bastion → gcby-live-redis.delabsgames.internal<br/>→ 10.250.20.101 (Redis PSC Endpoint IP)"]
     end
 
-    style GCBY_VPC fill:#e3f2fd
-    style MGMT_VPC2 fill:#f3e5f5
+    style GCBY_VPC fill:#e3f2fd,color:#000000
+    style MGMT_VPC2 fill:#f3e5f5,color:#000000
 ```
 
 ### 장점
