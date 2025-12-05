@@ -19,6 +19,59 @@
 
 `proj-default-templet`은 `gcp-gcby` 환경을 기반으로 구성된 템플릿입니다.
 
+### 프로젝트 생성 플로우
+
+```mermaid
+flowchart TB
+    subgraph Input["📝 입력"]
+        PARAMS["PROJECT_ID<br/>PROJECT_NAME<br/>ORGANIZATION<br/>ENVIRONMENT<br/>REGION_PRIMARY"]
+    end
+
+    subgraph Script["🔧 create_project.sh"]
+        COPY[/"1️⃣ 템플릿 복사<br/>proj-default-templet → environments/"/]
+        REPLACE[/"2️⃣ 플레이스홀더 치환<br/>REPLACE_*, YOUR_*"/]
+        COMMIT[/"3️⃣ Git 커밋"/]
+    end
+
+    subgraph Files["📁 생성된 파일"]
+        ROOT["root.hcl<br/>(State 설정)"]
+        NAMING["common.naming.tfvars<br/>(네이밍/네트워크)"]
+        JENKINS["Jenkinsfile<br/>(CI/CD 경로)"]
+        LAYERS["00-project/ ~ 70-loadbalancers/"]
+    end
+
+    subgraph Deploy["🚀 배포"]
+        JOB["Jenkins Job 생성"]
+        MANUAL["수동 설정<br/>(GCP 값 입력)"]
+        RUN["Jenkins 실행<br/>ACTION: apply"]
+    end
+
+    subgraph Result["✅ 결과"]
+        GCP["GCP 인프라<br/>VPC, VM, DB, LB..."]
+    end
+
+    PARAMS --> COPY
+    COPY --> REPLACE
+    REPLACE --> COMMIT
+    COMMIT --> ROOT
+    COMMIT --> NAMING
+    COMMIT --> JENKINS
+    COMMIT --> LAYERS
+
+    ROOT --> JOB
+    NAMING --> MANUAL
+    JENKINS --> JOB
+    JOB --> MANUAL
+    MANUAL --> RUN
+    RUN --> GCP
+
+    style Input fill:#e3f2fd
+    style Script fill:#fff3e0
+    style Files fill:#f3e5f5
+    style Deploy fill:#e8f5e9
+    style Result fill:#c8e6c9
+```
+
 신규 프로젝트 생성 시 다음 작업이 자동으로 수행됩니다:
 
 1. `proj-default-templet` 디렉토리 복사

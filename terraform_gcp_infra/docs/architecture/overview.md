@@ -49,6 +49,72 @@
 
 **목적**: 재사용 가능한 인프라 컴포넌트
 
+#### 모듈 관계도
+
+```mermaid
+graph TB
+    subgraph "Core Modules"
+        NAMING[naming]
+        PROJECT[project-base]
+    end
+
+    subgraph "Infrastructure Modules"
+        NETWORK[network-dedicated-vpc]
+        DNS[cloud-dns]
+        STORAGE[gcs-root]
+        BUCKET[gcs-bucket]
+    end
+
+    subgraph "Security & Observability"
+        IAM[iam]
+        OBS[observability]
+    end
+
+    subgraph "Workload Modules"
+        VM[gce-vmset]
+        SQL[cloudsql-mysql]
+        REDIS[memorystore-redis]
+        LB[load-balancer]
+    end
+
+    %% Core dependencies
+    NAMING --> PROJECT
+    NAMING --> NETWORK
+    NAMING --> DNS
+    NAMING --> STORAGE
+    NAMING --> IAM
+    NAMING --> OBS
+    NAMING --> VM
+    NAMING --> SQL
+    NAMING --> REDIS
+    NAMING --> LB
+
+    %% Infrastructure dependencies
+    PROJECT --> NETWORK
+    NETWORK --> DNS
+    NETWORK --> VM
+    NETWORK --> SQL
+    NETWORK --> REDIS
+    NETWORK --> LB
+
+    STORAGE --> BUCKET
+
+    %% Security dependencies
+    IAM --> VM
+    IAM --> OBS
+
+    %% Workload dependencies
+    VM --> LB
+
+    style NAMING fill:#e1f5fe
+    style PROJECT fill:#fff3e0
+    style NETWORK fill:#f3e5f5
+    style VM fill:#e8f5e9
+    style SQL fill:#fce4ec
+    style REDIS fill:#fce4ec
+    style LB fill:#e8f5e9
+```
+
 **모듈 목록**:
 
 | 모듈 | 주요 기능 | 카테고리 |

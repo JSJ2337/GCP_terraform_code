@@ -189,6 +189,119 @@ ingress {
 
 ## 트래픽 흐름
 
+### 데이터 흐름도 (Mermaid)
+
+```mermaid
+flowchart TB
+    subgraph Internet
+        USER[👤 User]
+        API[🌐 External API]
+    end
+
+    subgraph GCP["GCP Project"]
+        LB[⚖️ Global Load Balancer<br/>Public IP]
+        NAT[🔀 Cloud NAT]
+
+        subgraph DMZ["DMZ Subnet (10.0.1.0/24)"]
+            WEB1[🖥️ Web VM 1]
+            WEB2[🖥️ Web VM 2]
+        end
+
+        subgraph Private["Private Subnet (10.0.2.0/24)"]
+            APP1[⚙️ App VM 1]
+            APP2[⚙️ App VM 2]
+            REDIS[(🔴 Redis)]
+        end
+
+        subgraph DB["DB Subnet (10.0.3.0/24)"]
+            SQL[(🐬 Cloud SQL<br/>MySQL)]
+        end
+    end
+
+    %% Ingress Flow
+    USER -->|HTTPS:443| LB
+    LB -->|HTTP:80| WEB1
+    LB -->|HTTP:80| WEB2
+    WEB1 -->|TCP:8080| APP1
+    WEB2 -->|TCP:8080| APP2
+    APP1 -->|TCP:6379| REDIS
+    APP2 -->|TCP:6379| REDIS
+    APP1 -->|TCP:3306| SQL
+    APP2 -->|TCP:3306| SQL
+
+    %% Egress Flow
+    WEB1 -.->|Outbound| NAT
+    WEB2 -.->|Outbound| NAT
+    NAT -.->|HTTPS| API
+
+    style DMZ fill:#e3f2fd
+    style Private fill:#f3e5f5
+    style DB fill:#fce4ec
+    style LB fill:#fff9c4
+    style NAT fill:#c8e6c9
+```
+
+### 보안 경계 다이어그램 (Firewall Rules)
+
+```mermaid
+flowchart LR
+    subgraph External["🌍 External Zone"]
+        INET[Internet]
+        LB_RANGE["LB Health Check<br/>130.211.0.0/22<br/>35.191.0.0/16"]
+        IAP["IAP Range<br/>35.235.240.0/20"]
+    end
+
+    subgraph FW1["🔥 Firewall Layer 1"]
+        direction TB
+        R1[/"Allow TCP:80,443<br/>from LB ranges"/]
+        R2[/"Allow TCP:22<br/>from IAP"/]
+    end
+
+    subgraph DMZ["🟦 DMZ (10.0.1.0/24)"]
+        WEB[Web VMs]
+    end
+
+    subgraph FW2["🔥 Firewall Layer 2"]
+        direction TB
+        R3[/"Allow TCP:8080,9090<br/>from DMZ"/]
+        R4[/"Deny all<br/>from External"/]
+    end
+
+    subgraph Private["🟪 Private (10.0.2.0/24)"]
+        APP[App VMs]
+        REDIS[Redis]
+    end
+
+    subgraph FW3["🔥 Firewall Layer 3"]
+        direction TB
+        R5[/"Allow TCP:3306<br/>from Private"/]
+        R6[/"Deny all<br/>from DMZ"/]
+    end
+
+    subgraph DB_Zone["🟥 DB (10.0.3.0/24)"]
+        SQL[Cloud SQL]
+    end
+
+    INET --> LB_RANGE
+    LB_RANGE --> R1
+    IAP --> R2
+    R1 --> WEB
+    R2 --> WEB
+    WEB --> R3
+    R3 --> APP
+    APP --> R5
+    R5 --> SQL
+    APP --> REDIS
+
+    style External fill:#ffebee
+    style DMZ fill:#e3f2fd
+    style Private fill:#f3e5f5
+    style DB_Zone fill:#fce4ec
+    style FW1 fill:#fff3e0
+    style FW2 fill:#fff3e0
+    style FW3 fill:#fff3e0
+```
+
 ### 외부 → 내부 (Ingress)
 
 ```text
