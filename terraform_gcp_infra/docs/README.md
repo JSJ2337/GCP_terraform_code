@@ -57,17 +57,20 @@
 
 | 모듈 | 기능 | 문서 |
 |------|------|------|
-| naming | 중앙 집중식 네이밍 규칙 관리 | [README](../modules/naming/README.md) |
-| project-base | GCP 프로젝트 생성 및 기본 설정 | [README](../modules/project-base/README.md) |
-| network-dedicated-vpc | VPC 네트워크 구성 | [README](../modules/network-dedicated-vpc/README.md) |
-| gcs-root | 다중 GCS 버킷 관리 | [README](../modules/gcs-root/README.md) |
-| gcs-bucket | 단일 GCS 버킷 상세 설정 | [README](../modules/gcs-bucket/README.md) |
-| iam | IAM 바인딩 및 서비스 계정 관리 | [README](../modules/iam/README.md) |
-| observability | Logging 및 Monitoring 구성 | [README](../modules/observability/README.md) |
-| gce-vmset | Compute Engine VM 인스턴스 관리 | [README](../modules/gce-vmset/README.md) |
-| cloudsql-mysql | Cloud SQL MySQL 데이터베이스 | [README](../modules/cloudsql-mysql/README.md) |
-| memorystore-redis | Memorystore Redis 캐시 | [README](../modules/memorystore-redis/README.md) |
-| load-balancer | HTTP(S) 및 Internal Load Balancer | [README](../modules/load-balancer/README.md) |
+| naming | 중앙 집중식 네이밍 규칙 관리 | [naming.md](./modules/naming.md) |
+| project-base | GCP 프로젝트 생성 및 기본 설정 | [project-base.md](./modules/project-base.md) |
+| network-dedicated-vpc | VPC 네트워크 구성 | [network-dedicated-vpc.md](./modules/network-dedicated-vpc.md) |
+| cloud-dns | Cloud DNS Zone 및 레코드 관리 | [cloud-dns.md](./modules/cloud-dns.md) |
+| gcs-root | 다중 GCS 버킷 관리 | [gcs-root.md](./modules/gcs-root.md) |
+| gcs-bucket | 단일 GCS 버킷 상세 설정 | [gcs-bucket.md](./modules/gcs-bucket.md) |
+| iam | IAM 바인딩 및 서비스 계정 관리 | [iam.md](./modules/iam.md) |
+| observability | Logging 및 Monitoring 구성 | [observability.md](./modules/observability.md) |
+| gce-vmset | Compute Engine VM 인스턴스 관리 | [gce-vmset.md](./modules/gce-vmset.md) |
+| cloudsql-mysql | Cloud SQL MySQL 데이터베이스 | [cloudsql-mysql.md](./modules/cloudsql-mysql.md) |
+| memorystore-redis | Memorystore Redis 캐시 | [memorystore-redis.md](./modules/memorystore-redis.md) |
+| load-balancer | HTTP(S) 및 Internal Load Balancer | [load-balancer.md](./modules/load-balancer.md) |
+
+> 전체 모듈 목록: [modules/README.md](./modules/README.md)
 
 ### 6. 변경 이력
 
