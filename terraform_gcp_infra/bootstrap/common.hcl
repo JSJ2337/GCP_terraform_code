@@ -68,6 +68,33 @@ locals {
       cache_path    = "../../environments/LIVE/gcp-gcby/65-cache"
     }
 
+    nft = {
+      project_id       = "gcp-nft"
+      environment      = "live"
+      vpc_name         = "nft-live-vpc"
+      network_url      = "projects/gcp-nft/global/networks/nft-live-vpc"
+      has_own_dns_zone = true  # 자체 DNS Zone 있음 - mgmt DNS Zone에서 제외
+
+      # PSC Endpoint IP (mgmt VPC에서 접근용 - mgmt subnet CIDR: 10.250.20.0/24)
+      psc_ips = {
+        cloudsql = "10.250.20.52"
+        redis    = ["10.250.20.111", "10.250.20.112"]
+      }
+
+      # VM Static IP
+      vm_ips = {
+        www01  = "10.10.21.11"
+        www02  = "10.10.21.12"
+        www03  = "10.10.21.13"
+        mint01 = "10.10.21.14"
+        mint02 = "10.10.21.15"
+      }
+
+      # Database/Cache 설정 경로 (dependency용)
+      database_path = "../../environments/LIVE/gcp-nft/60-database"
+      cache_path    = "../../environments/LIVE/gcp-nft/65-cache"
+    }
+
     # 새 프로젝트 추가 예시 (주석)
     # abc = {
     #   project_id   = "gcp-abc"
