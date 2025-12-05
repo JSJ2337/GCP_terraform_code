@@ -101,7 +101,7 @@ dependency "network" {
   config_path = "../10-network"
 
   mock_outputs = {
-    vpc_self_link = "projects/gcp-nft/global/networks/nft-live-vpc"
+    vpc_self_link = local.vpc_self_link_mock
   }
   mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
 }
