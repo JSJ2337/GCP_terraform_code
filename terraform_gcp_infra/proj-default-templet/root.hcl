@@ -2,60 +2,38 @@ locals {
   # ============================================================================
   # 원격 상태 버킷 설정
   # ============================================================================
-  # ⚠️ 템플릿 기본값 - 반드시 실제 값으로 변경 필요!
-  # 방법 1: 이 파일에서 직접 수정
-  # 방법 2: 환경변수 사용 (export TG_REMOTE_STATE_BUCKET=your-bucket)
+  # ⚠️ 템플릿 기본값 - create_project.sh에서 자동 치환됨
+  # 수동 수정 시 아래 값들을 직접 변경하거나 환경변수 사용
 
-  template_defaults = {
-    bucket   = "my-terraform-state-prod"
-    project  = "my-system-mgmt"
-    prefix   = "my-project-prod"
-  }
-
-  # 환경변수 우선, 없으면 기본값 사용
-  remote_state_bucket   = get_env("TG_REMOTE_STATE_BUCKET", local.template_defaults.bucket)
-  remote_state_project  = get_env("TG_REMOTE_STATE_PROJECT", local.template_defaults.project)
-  remote_state_location = get_env("TG_REMOTE_STATE_LOCATION", "US")
-  project_state_prefix  = get_env("TG_PROJECT_STATE_PREFIX", local.template_defaults.prefix)
+  # sed 치환용 변수 (create_project.sh에서 치환)
+  remote_state_bucket   = "REPLACE_REMOTE_STATE_BUCKET"
+  remote_state_project  = "REPLACE_REMOTE_STATE_PROJECT"
+  remote_state_location = "REPLACE_REMOTE_STATE_LOCATION"
+  project_state_prefix  = "REPLACE_PROJECT_STATE_PREFIX"
 
   # ============================================================================
   # 플레이스홀더 검증 로직
   # ============================================================================
-  # 템플릿 기본값이나 플레이스홀더 패턴을 감지
-  placeholder_patterns = ["REPLACE_ME", "YOUR_", "my-.*-prod", "my-system-mgmt"]
+  # REPLACE_ 접두사가 남아있으면 치환이 안 된 것
+  placeholder_patterns = ["REPLACE_", "YOUR_"]
 
   detected_placeholders = flatten([
     for key, value in {
-      "remote_state_bucket"  = local.remote_state_bucket
-      "remote_state_project" = local.remote_state_project
-      "project_state_prefix" = local.project_state_prefix
+      "remote_state_bucket"   = local.remote_state_bucket
+      "remote_state_project"  = local.remote_state_project
+      "remote_state_location" = local.remote_state_location
+      "project_state_prefix"  = local.project_state_prefix
     } : [
       for pattern in local.placeholder_patterns :
       "${key}=${value}" if can(regex(pattern, value))
     ]
   ])
 
-  # 템플릿 기본값과 정확히 일치하는 경우 감지 (수정된 로직)
-  exact_template_matches = flatten([
-    for config_key, config_value in {
-      "remote_state_bucket"  = local.remote_state_bucket
-      "remote_state_project" = local.remote_state_project
-      "project_state_prefix" = local.project_state_prefix
-    } : [
-      "${config_key}=${config_value}"
-      if contains([
-        local.template_defaults.bucket,
-        local.template_defaults.project,
-        local.template_defaults.prefix
-      ], config_value)
-    ]
-  ])
+  all_violations = local.detected_placeholders
 
-  all_violations = distinct(concat(local.detected_placeholders, local.exact_template_matches))
-
-  # inputs 값을 locals에 저장 (hook에서 사용)
-  resolved_org_id          = get_env("TG_ORG_ID", "YOUR_ORG_ID")
-  resolved_billing_account = get_env("TG_BILLING_ACCOUNT", "YOUR_BILLING_ACCOUNT_ID")
+  # inputs 값 (sed 치환용)
+  org_id          = "REPLACE_ORG_ID"
+  billing_account = "REPLACE_BILLING_ACCOUNT"
 }
 
 # Terragrunt 원격 상태 구성: 각 레이어별로 고유 prefix를 자동 부여한다.
@@ -77,17 +55,15 @@ remote_state {
 # ============================================================================
 # 환경별 공통 입력
 # ============================================================================
-# ⚠️ 템플릿 플레이스홀더 - 반드시 실제 값으로 변경 필요!
+# ⚠️ 템플릿 플레이스홀더 - create_project.sh에서 자동 치환됨
 inputs = {
-  org_id          = local.resolved_org_id
-  billing_account = local.resolved_billing_account
+  org_id          = local.org_id
+  billing_account = local.billing_account
 
   # 관리 프로젝트 ID (Cross-Project PSC 등에 사용)
-  # ⚠️ 실제 관리 프로젝트 ID로 변경 필요 (예: delabs-gcp-mgmt)
-  management_project_id = get_env("TG_MANAGEMENT_PROJECT_ID", "YOUR_MANAGEMENT_PROJECT_ID")
+  management_project_id = local.remote_state_project
 
   # Bootstrap remote state 설정 (00-project에서 사용)
-  # bootstrap이 레이어 구조로 되어 있어서 00-foundation을 참조
   bootstrap_state_bucket = local.remote_state_bucket
   bootstrap_state_prefix = "bootstrap/00-foundation"
 }
@@ -105,7 +81,7 @@ terraform {
       # 원격 상태 설정 검증
       if [ ${length(local.all_violations)} -gt 0 ]; then
         echo "=========================================================================="
-        echo "❌ ERROR: Terraform 원격 상태가 템플릿 기본값을 사용 중입니다!"
+        echo "❌ ERROR: 플레이스홀더 값이 치환되지 않았습니다!"
         echo "=========================================================================="
         echo ""
         echo "발견된 문제:"
@@ -114,43 +90,28 @@ terraform {
         %{endfor~}
         echo ""
         echo "해결 방법:"
-        echo "1. terraform_gcp_infra/proj-default-templet/root.hcl을 실제 값으로 수정"
-        echo "2. 또는 환경변수 설정:"
-        echo "   export TG_REMOTE_STATE_BUCKET=your-actual-bucket"
-        echo "   export TG_REMOTE_STATE_PROJECT=your-actual-project"
-        echo "   export TG_PROJECT_STATE_PREFIX=your-project-prefix"
+        echo "  create_project.sh 스크립트로 프로젝트를 생성하세요."
         echo ""
         echo "⚠️  다른 프로젝트의 상태 파일을 오염시킬 수 있으므로 진행할 수 없습니다!"
         echo "=========================================================================="
         exit 1
       fi
 
-      # inputs 검증 (resolved 값 사용)
-      if echo "${local.resolved_org_id}" | grep -qE "YOUR_|REPLACE_"; then
+      # org_id 검증
+      if echo "${local.org_id}" | grep -qE "REPLACE_"; then
         echo "=========================================================================="
         echo "❌ ERROR: org_id가 플레이스홀더 값입니다!"
         echo "=========================================================================="
-        echo ""
-        echo "발견된 값: ${local.resolved_org_id}"
-        echo ""
-        echo "해결 방법:"
-        echo "1. terraform_gcp_infra/proj-default-templet/root.hcl의 locals에서 수정"
-        echo "2. 또는: export TG_ORG_ID=your-actual-org-id"
-        echo ""
+        echo "발견된 값: ${local.org_id}"
         exit 1
       fi
 
-      if echo "${local.resolved_billing_account}" | grep -qE "YOUR_|REPLACE_"; then
+      # billing_account 검증
+      if echo "${local.billing_account}" | grep -qE "REPLACE_"; then
         echo "=========================================================================="
         echo "❌ ERROR: billing_account가 플레이스홀더 값입니다!"
         echo "=========================================================================="
-        echo ""
-        echo "발견된 값: ${local.resolved_billing_account}"
-        echo ""
-        echo "해결 방법:"
-        echo "1. terraform_gcp_infra/proj-default-templet/root.hcl의 locals에서 수정"
-        echo "2. 또는: export TG_BILLING_ACCOUNT=your-actual-billing-account-id"
-        echo ""
+        echo "발견된 값: ${local.billing_account}"
         exit 1
       fi
 

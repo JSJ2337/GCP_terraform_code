@@ -67,6 +67,19 @@ log_error() {
 }
 
 # =============================================================================
+# 크로스 플랫폼 sed 함수 (macOS/Linux 호환)
+# =============================================================================
+# macOS의 BSD sed는 -i '' 필요, Linux GNU sed는 -i만 사용
+# -E 옵션으로 확장 정규식 사용 (\s, \d 등)
+sedi() {
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' -E "$@"
+    else
+        sed -i -E "$@"
+    fi
+}
+
+# =============================================================================
 # 파라미터 검증
 # =============================================================================
 
@@ -179,54 +192,80 @@ log_info "설정 파일 치환 시작..."
 # -----------------------------------------------------------------------------
 # 1. root.hcl
 # -----------------------------------------------------------------------------
-log_info "[1/4] root.hcl 치환 중..."
+log_info "[1/5] root.hcl 치환 중..."
 ROOT_HCL="${TARGET_DIR}/root.hcl"
 
-sed -i "s|remote_state_bucket\s*=\s*\"[^\"]*\"|remote_state_bucket   = \"${REMOTE_STATE_BUCKET}\"|g" "${ROOT_HCL}"
-sed -i "s|remote_state_project\s*=\s*\"[^\"]*\"|remote_state_project  = \"${REMOTE_STATE_PROJECT}\"|g" "${ROOT_HCL}"
-sed -i "s|remote_state_location\s*=\s*\"[^\"]*\"|remote_state_location = \"${REMOTE_STATE_LOCATION}\"|g" "${ROOT_HCL}"
-sed -i "s|project_state_prefix\s*=\s*\"[^\"]*\"|project_state_prefix  = \"${PROJECT_ID}\"|g" "${ROOT_HCL}"
-sed -i "s|org_id\s*=\s*\"[^\"]*\"|org_id          = \"${ORG_ID}\"|g" "${ROOT_HCL}"
-sed -i "s|billing_account\s*=\s*\"[^\"]*\"|billing_account = \"${BILLING_ACCOUNT}\"|g" "${ROOT_HCL}"
+# 플레이스홀더를 실제 값으로 치환
+sedi "s|REPLACE_REMOTE_STATE_BUCKET|${REMOTE_STATE_BUCKET}|g" "${ROOT_HCL}"
+sedi "s|REPLACE_REMOTE_STATE_PROJECT|${REMOTE_STATE_PROJECT}|g" "${ROOT_HCL}"
+sedi "s|REPLACE_REMOTE_STATE_LOCATION|${REMOTE_STATE_LOCATION}|g" "${ROOT_HCL}"
+sedi "s|REPLACE_PROJECT_STATE_PREFIX|${PROJECT_ID}|g" "${ROOT_HCL}"
+sedi "s|REPLACE_ORG_ID|${ORG_ID}|g" "${ROOT_HCL}"
+sedi "s|REPLACE_BILLING_ACCOUNT|${BILLING_ACCOUNT}|g" "${ROOT_HCL}"
 
 log_success "root.hcl 치환 완료"
 
 # -----------------------------------------------------------------------------
 # 2. common.naming.tfvars
 # -----------------------------------------------------------------------------
-log_info "[2/4] common.naming.tfvars 치환 중..."
+log_info "[2/5] common.naming.tfvars 치환 중..."
 COMMON_TFVARS="${TARGET_DIR}/common.naming.tfvars"
 
-sed -i "s|^project_id\s*=\s*\"[^\"]*\"|project_id     = \"${PROJECT_ID}\"|g" "${COMMON_TFVARS}"
-sed -i "s|^project_name\s*=\s*\"[^\"]*\"|project_name   = \"${PROJECT_NAME}\"|g" "${COMMON_TFVARS}"
-sed -i "s|^organization\s*=\s*\"[^\"]*\"|organization   = \"${ORGANIZATION}\"|g" "${COMMON_TFVARS}"
-sed -i "s|^region_primary\s*=\s*\"[^\"]*\"|region_primary = \"${REGION_PRIMARY}\"|g" "${COMMON_TFVARS}"
-sed -i "s|^region_backup\s*=\s*\"[^\"]*\"|region_backup  = \"${REGION_BACKUP}\"|g" "${COMMON_TFVARS}"
+# environment 값 변환 (LIVE -> live, QA -> qa, STG -> stg)
+ENVIRONMENT_LOWER=$(echo "${ENVIRONMENT}" | tr '[:upper:]' '[:lower:]')
+
+sedi "s|^project_id[[:space:]]*=.*|project_id     = \"${PROJECT_ID}\"|g" "${COMMON_TFVARS}"
+sedi "s|^project_name[[:space:]]*=.*|project_name   = \"${PROJECT_NAME}\"|g" "${COMMON_TFVARS}"
+sedi "s|^environment[[:space:]]*=.*|environment    = \"${ENVIRONMENT_LOWER}\"|g" "${COMMON_TFVARS}"
+sedi "s|^organization[[:space:]]*=.*|organization   = \"${ORGANIZATION}\"|g" "${COMMON_TFVARS}"
+sedi "s|^region_primary[[:space:]]*=.*|region_primary = \"${REGION_PRIMARY}\"|g" "${COMMON_TFVARS}"
+sedi "s|^region_backup[[:space:]]*=.*|region_backup  = \"${REGION_BACKUP}\"|g" "${COMMON_TFVARS}"
+
+# folder 설정 치환 (Bootstrap 폴더 조회용)
+sedi "s|^folder_env[[:space:]]*=.*|folder_env     = \"${ENVIRONMENT}\"|g" "${COMMON_TFVARS}"
 
 log_success "common.naming.tfvars 치환 완료"
 
 # -----------------------------------------------------------------------------
 # 3. Jenkinsfile
 # -----------------------------------------------------------------------------
-log_info "[3/4] Jenkinsfile 치환 중..."
+log_info "[3/5] Jenkinsfile 치환 중..."
 JENKINSFILE="${TARGET_DIR}/Jenkinsfile"
 
-# TG_WORKING_DIR 패턴 치환 (LIVE, QA, STG 모두 대응)
-sed -i "s|TG_WORKING_DIR = '${TF_GCP_INFRA_DIR_NAME}/${ENVIRONMENTS_DIR_NAME}/[^/]*/[^']*'|TG_WORKING_DIR = '${TF_GCP_INFRA_DIR_NAME}/${ENVIRONMENTS_DIR_NAME}/${ENVIRONMENT}/${PROJECT_ID}'|g" "${JENKINSFILE}"
+# TG_WORKING_DIR 플레이스홀더 치환
+# 템플릿: terraform_gcp_infra/environments/LIVE/YOUR_PROJECT_NAME
+sedi "s|YOUR_PROJECT_NAME|${PROJECT_ID}|g" "${JENKINSFILE}"
+# LIVE가 아닌 경우 환경 디렉토리도 치환
+sedi "s|/${ENVIRONMENTS_DIR_NAME}/LIVE/|/${ENVIRONMENTS_DIR_NAME}/${ENVIRONMENT}/|g" "${JENKINSFILE}"
 
 log_success "Jenkinsfile 치환 완료"
 
 # -----------------------------------------------------------------------------
 # 4. 50-workloads/terraform.tfvars - VM/IG 이름 접두사 치환
 # -----------------------------------------------------------------------------
-log_info "[4/4] 50-workloads/terraform.tfvars 치환 중..."
+log_info "[4/5] 50-workloads/terraform.tfvars 치환 중..."
 WORKLOADS_TFVARS="${TARGET_DIR}/50-workloads/terraform.tfvars"
 
 # VM 및 Instance Group 이름의 "jsj-" 접두사를 organization으로 치환
 # 예: "jsj-lobby-01" → "myorg-lobby-01", ["jsj-web-01"] → ["myorg-web-01"]
-sed -i "s|\"jsj-|\"${ORGANIZATION}-|g" "${WORKLOADS_TFVARS}"
+sedi "s|\"jsj-|\"${ORGANIZATION}-|g" "${WORKLOADS_TFVARS}"
 
 log_success "50-workloads/terraform.tfvars 치환 완료"
+
+# -----------------------------------------------------------------------------
+# 5. 70-loadbalancers 하위 terraform.tfvars - IG 이름 접두사 치환
+# -----------------------------------------------------------------------------
+log_info "[5/5] 70-loadbalancers 하위 terraform.tfvars 치환 중..."
+
+# 70-loadbalancers 하위의 모든 terraform.tfvars 파일 치환
+for LB_TFVARS in "${TARGET_DIR}"/70-loadbalancers/*/terraform.tfvars; do
+    if [ -f "${LB_TFVARS}" ]; then
+        sedi "s|\"jsj-|\"${ORGANIZATION}-|g" "${LB_TFVARS}"
+        log_info "  치환 완료: $(basename $(dirname ${LB_TFVARS}))/terraform.tfvars"
+    fi
+done
+
+log_success "70-loadbalancers 치환 완료"
 
 # =============================================================================
 # Git 작업
