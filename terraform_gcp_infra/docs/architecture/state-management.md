@@ -22,7 +22,11 @@ flowchart TB
         end
     end
 
-    style Bootstrap fill:#e3f2fd    style GCS fill:#fff3e0    style GAMEK fill:#e8f5e9    style GAMEL fill:#f3e5f5```
+    style Bootstrap fill:#e3f2fd
+    style GCS fill:#fff3e0
+    style GAMEK fill:#e8f5e9
+    style GAMEL fill:#f3e5f5
+```
 
 ## 핵심 원칙
 

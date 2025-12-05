@@ -71,7 +71,10 @@ graph TB
     E7 --> M10
     E8 --> M9
 
-    style Bootstrap fill:#e1f5ff    style Modules fill:#ffffff    style Layers fill:#ffffff    style B fill:#e1f5ff
+    style Bootstrap fill:#e1f5ff
+    style Modules fill:#ffffff
+    style Layers fill:#ffffff
+    style B fill:#e1f5ff
     style B_BUCKET fill:#fff3cd
     style E0 fill:#d4edda
     style E1 fill:#d4edda
@@ -131,7 +134,10 @@ graph LR
     BUCKET --> S9
     BUCKET --> S8
 
-    style LocalEnv fill:#e1f5ff    style BootstrapProj fill:#ffffff    style StateFiles fill:#ffffff    style BUCKET fill:#fff3cd
+    style LocalEnv fill:#e1f5ff
+    style BootstrapProj fill:#ffffff
+    style StateFiles fill:#ffffff
+    style BUCKET fill:#fff3cd
     style DEV fill:#e1f5ff
 ```
 
@@ -341,7 +347,16 @@ graph TB
     REDIS -.모니터링.-> MON
     MON --> ALERT
 
-    style GCP_Project fill:#ffffff    style Network_Layer fill:#ffffff    style Storage_Layer fill:#ffffff    style Compute_Layer fill:#ffffff    style Database_Layer fill:#ffffff    style Cache_Layer fill:#ffffff    style LB_Layer fill:#ffffff    style Security_IAM fill:#ffffff    style Observability_Layer fill:#ffffff    style VPC fill:#d4edda
+    style GCP_Project fill:#ffffff
+    style Network_Layer fill:#ffffff
+    style Storage_Layer fill:#ffffff
+    style Compute_Layer fill:#ffffff
+    style Database_Layer fill:#ffffff
+    style Cache_Layer fill:#ffffff
+    style LB_Layer fill:#ffffff
+    style Security_IAM fill:#ffffff
+    style Observability_Layer fill:#ffffff
+    style VPC fill:#d4edda
     style SQL fill:#74b9ff
     style REDIS fill:#ffeaa7
     style LB fill:#a29bfe
@@ -417,7 +432,13 @@ graph LR
     APP2 -.Outbound.-> NAT_GW
     NAT_GW -.-> INTERNET
 
-    style Internet_Zone fill:#ffffff    style GCP_VPC fill:#ffffff    style Public_Subnet fill:#ffffff    style Web_Subnet fill:#ffffff    style App_Subnet fill:#ffffff    style DB_Subnet fill:#ffffff    style LB fill:#a29bfe
+    style Internet_Zone fill:#ffffff
+    style GCP_VPC fill:#ffffff
+    style Public_Subnet fill:#ffffff
+    style Web_Subnet fill:#ffffff
+    style App_Subnet fill:#ffffff
+    style DB_Subnet fill:#ffffff
+    style LB fill:#a29bfe
     style WEB1 fill:#fab1a0
     style WEB2 fill:#fab1a0
     style APP1 fill:#fab1a0
@@ -516,7 +537,11 @@ graph TB
         S_VARS -.설정.-> S_LAYER
     end
 
-    style MODULE_DEF fill:#ffffff    style PROD fill:#ffffff    style DEV fill:#ffffff    style STAGE fill:#ffffff    style MODULE fill:#74b9ff
+    style MODULE_DEF fill:#ffffff
+    style PROD fill:#ffffff
+    style DEV fill:#ffffff
+    style STAGE fill:#ffffff
+    style MODULE fill:#74b9ff
     style P_LAYER fill:#d4edda
     style D_LAYER fill:#fff3cd
     style S_LAYER fill:#ffeaa7

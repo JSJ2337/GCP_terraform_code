@@ -66,7 +66,12 @@ flowchart TB
     MANUAL --> RUN
     RUN --> GCP
 
-    style Input fill:#e3f2fd    style Script fill:#fff3e0    style Files fill:#f3e5f5    style Deploy fill:#e8f5e9    style Result fill:#c8e6c9```
+    style Input fill:#e3f2fd
+    style Script fill:#fff3e0
+    style Files fill:#f3e5f5
+    style Deploy fill:#e8f5e9
+    style Result fill:#c8e6c9
+```
 
 신규 프로젝트 생성 시 다음 작업이 자동으로 수행됩니다:
 

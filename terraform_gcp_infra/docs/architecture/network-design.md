@@ -241,7 +241,12 @@ flowchart TB
     WEB2 -.->|Outbound| NAT
     NAT -.->|HTTPS| API
 
-    style Internet fill:#fafafa    style GCP fill:#fafafa    style DMZ fill:#e3f2fd    style Private fill:#f3e5f5    style DB fill:#fce4ec    style LB fill:#fff9c4
+    style Internet fill:#fafafa
+    style GCP fill:#fafafa
+    style DMZ fill:#e3f2fd
+    style Private fill:#f3e5f5
+    style DB fill:#fce4ec
+    style LB fill:#fff9c4
     style NAT fill:#c8e6c9
 ```
 
@@ -298,7 +303,14 @@ flowchart LR
     R5 --> SQL
     APP --> REDIS
 
-    style External fill:#ffebee    style DMZ fill:#e3f2fd    style Private fill:#f3e5f5    style DB_Zone fill:#fce4ec    style FW1 fill:#fff3e0    style FW2 fill:#fff3e0    style FW3 fill:#fff3e0```
+    style External fill:#ffebee
+    style DMZ fill:#e3f2fd
+    style Private fill:#f3e5f5
+    style DB_Zone fill:#fce4ec
+    style FW1 fill:#fff3e0
+    style FW2 fill:#fff3e0
+    style FW3 fill:#fff3e0
+```
 
 ### 외부 → 내부 (Ingress)
 
@@ -452,7 +464,9 @@ flowchart LR
 
     MGMT <-->|VPC Peering| GCBY
 
-    style MGMT fill:#e3f2fd    style GCBY fill:#f3e5f5```
+    style MGMT fill:#e3f2fd
+    style GCBY fill:#f3e5f5
+```
 
 ### 구성 요소
 
@@ -591,7 +605,8 @@ flowchart BT
     PRIV_B -->|VPC Peering| SQL_BEFORE
     MGMT_B -->|VPC Peering| SQL_BEFORE
 
-    style VPC_BEFORE fill:#fafafa    style DMZ_B fill:#ffcdd2
+    style VPC_BEFORE fill:#fafafa
+    style DMZ_B fill:#ffcdd2
     style SQL_BEFORE fill:#fce4ec
 ```
 
@@ -612,7 +627,8 @@ flowchart BT
     PRIV_A -->|PSC| SQL_AFTER
     MGMT_A -->|VPC Peering| SQL_AFTER
 
-    style VPC_AFTER fill:#fafafa    style DMZ_A fill:#c8e6c9
+    style VPC_AFTER fill:#fafafa
+    style DMZ_A fill:#c8e6c9
     style PRIV_A fill:#c8e6c9
     style SQL_AFTER fill:#e8f5e9
 
@@ -839,7 +855,9 @@ flowchart TB
     PSC --> SA
     SA --> SQL_PSC
 
-    style MGMT_VPC fill:#e3f2fd    style GCBY_PROJ fill:#f3e5f5    style PSC fill:#fff9c4
+    style MGMT_VPC fill:#e3f2fd
+    style GCBY_PROJ fill:#f3e5f5
+    style PSC fill:#fff9c4
 ```
 
 ### 1. Cloud SQL 설정 (gcp-gcby)
@@ -1054,7 +1072,9 @@ flowchart TB
     GLOBAL --> PSC_FR
     PSC_FR --> SQL_G
 
-    style ASIA fill:#e3f2fd    style USWEST fill:#f3e5f5    style GLOBAL fill:#fff9c4
+    style ASIA fill:#e3f2fd
+    style USWEST fill:#f3e5f5
+    style GLOBAL fill:#fff9c4
 ```
 
 ### 설정 방법
@@ -1163,7 +1183,9 @@ flowchart TB
         MGMT_REDIS["Bastion → gcby-live-redis.delabsgames.internal<br/>→ 10.250.20.101 (Redis PSC Endpoint IP)"]
     end
 
-    style GCBY_VPC fill:#e3f2fd    style MGMT_VPC2 fill:#f3e5f5```
+    style GCBY_VPC fill:#e3f2fd
+    style MGMT_VPC2 fill:#f3e5f5
+```
 
 ### 장점
 

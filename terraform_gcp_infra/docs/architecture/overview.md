@@ -110,7 +110,11 @@ graph TB
     %% Workload dependencies
     VM --> LB
 
-    style Core fill:#e3f2fd    style Infra fill:#fff3e0    style Security fill:#f3e5f5    style Workload fill:#e8f5e9    style NAMING fill:#e1f5fe
+    style Core fill:#e3f2fd
+    style Infra fill:#fff3e0
+    style Security fill:#f3e5f5
+    style Workload fill:#e8f5e9
+    style NAMING fill:#e1f5fe
     style PROJECT fill:#fff3e0
     style NETWORK fill:#f3e5f5
     style VM fill:#e8f5e9
@@ -303,7 +307,12 @@ flowchart TB
         end
     end
 
-    style Bootstrap fill:#e3f2fd    style GCS fill:#fff3e0    style GAMEK fill:#e8f5e9    style GAMEL fill:#f3e5f5    style TEMPLET fill:#fce4ec```
+    style Bootstrap fill:#e3f2fd
+    style GCS fill:#fff3e0
+    style GAMEK fill:#e8f5e9
+    style GAMEL fill:#f3e5f5
+    style TEMPLET fill:#fce4ec
+```
 
 **특징**:
 
