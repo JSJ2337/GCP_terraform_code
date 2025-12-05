@@ -32,6 +32,24 @@
 - 승인 프로세스
 - 트러블슈팅
 
+### [Jenkins GitHub 연동](./jenkins-github-setup.md) - 보통
+
+- GitHub Webhook 설정
+- Jenkins Pipeline 연동
+- Credential 구성
+
+### [모니터링 설정](./monitoring-setup.md) - 보통
+
+- Cloud Monitoring 알림 정책
+- Slack Webhook 연동
+- 임계값 설정 가이드
+
+### [Jenkins 템플릿 가이드](./jenkins-template.md) - 보통
+
+- Jenkinsfile 구조 설명
+- Phase 기반 배포 구성
+- 변수 설정 방법
+
 ### [리소스 삭제](./destroy-guide.md) - 보통
 
 - 안전한 삭제 순서

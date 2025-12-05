@@ -39,6 +39,8 @@
 | [신규 프로젝트 추가](./guides/adding-new-project.md) | 템플릿 기반 환경 생성 절차 | 하 |
 | [Terragrunt 운영](./guides/terragrunt-usage.md) | Terragrunt 기반 인프라 관리 방법 | 중 |
 | [Jenkins CI/CD 구성](./guides/jenkins-cicd.md) | 자동화 파이프라인 구축 및 운영 | 상 |
+| [Jenkins GitHub 연동](./guides/jenkins-github-setup.md) | Jenkins와 GitHub 통합 설정 | 중 |
+| [모니터링 설정](./guides/monitoring-setup.md) | Cloud Monitoring 및 Slack 알림 | 중 |
 | [인프라 삭제 절차](./guides/destroy-guide.md) | 리소스 안전 제거 가이드 | 중 |
 
 ### 4. 장애 대응

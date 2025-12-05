@@ -195,7 +195,8 @@ Internet → Global Load Balancer (HTTPS)
 - [리소스 삭제 가이드](./docs/guides/destroy-guide.md) - Phase 역순 삭제 방법
 
 ### 운영
-- [모니터링 설정 (Slack)](./docs/operations/monitoring-setup.md) - Alert 정책 및 Slack 통합
+- [모니터링 설정 (Slack)](./docs/guides/monitoring-setup.md) - Alert 정책 및 Slack 통합
+- [Jenkins GitHub 연동](./docs/guides/jenkins-github-setup.md) - Jenkins + GitHub 통합 설정
 
 ### 트러블슈팅
 - [일반적인 오류](./docs/troubleshooting/common-errors.md) - Phase 기반 배포 문제 해결
@@ -468,7 +469,6 @@ terragrunt apply       # 안전하게 apply
 
 ### 내부 문서
 - [CREATE_NEW_PROJECT.md](./docs/CREATE_NEW_PROJECT.md) - 프로젝트 생성 상세 가이드
-- [JENKINS_GITHUB_SETUP.md](./docs/JENKINS_GITHUB_SETUP.md) - Jenkins + GitHub 통합
 - [REORGANIZATION_SUMMARY.md](./docs/REORGANIZATION_SUMMARY.md) - 문서 재구성 히스토리
 
 ## 📞 지원
