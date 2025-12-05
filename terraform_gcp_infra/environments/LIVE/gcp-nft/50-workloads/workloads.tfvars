@@ -36,59 +36,88 @@ labels = {
 
 instances = {
   # =============================================================================
-  # Game Server 예시 (필요에 따라 수정)
+  # WWW Server (3대) - DMZ 배치
   # =============================================================================
-  # 실제 VM 이름: {project_name}-gs01, {project_name}-gs02
-  # network_ip는 common.naming.tfvars의 vm_static_ips["gs01"], vm_static_ips["gs02"]에서 자동 주입
+  "www01" = {
+    zone_suffix       = "a"
+    machine_type      = "custom-4-8192"
+    boot_disk_size_gb = 128
+    boot_disk_type    = "pd-ssd"
+    tags              = ["www", "ssh-from-iap", "ssh-from-mgmt", "dmz-zone"]
+    image_family      = "rocky-linux-10-optimized-gcp"
+    image_project     = "rocky-linux-cloud"
+    labels = {
+      role = "www"
+      tier = "frontend"
+    }
+    startup_script_file = "scripts/was.sh"
+    subnet_type         = "dmz"
+  }
 
-  # "gs01" = {
-  #   zone_suffix       = "a"
-  #   machine_type      = "custom-4-8192"
-  #   boot_disk_size_gb = 128
-  #   boot_disk_type    = "pd-ssd"
-  #   tags              = ["game-server", "ssh-from-iap", "ssh-from-mgmt", "private-zone"]
-  #   image_family      = "rocky-linux-10-optimized-gcp"
-  #   image_project     = "rocky-linux-cloud"
-  #   labels = {
-  #     role = "game-server"
-  #     tier = "backend"
-  #   }
-  #   startup_script_file = "scripts/game.sh"
-  #   subnet_type         = "private"
-  # }
+  "www02" = {
+    zone_suffix       = "b"
+    machine_type      = "custom-4-8192"
+    boot_disk_size_gb = 128
+    boot_disk_type    = "pd-ssd"
+    tags              = ["www", "ssh-from-iap", "ssh-from-mgmt", "dmz-zone"]
+    image_family      = "rocky-linux-10-optimized-gcp"
+    image_project     = "rocky-linux-cloud"
+    labels = {
+      role = "www"
+      tier = "frontend"
+    }
+    startup_script_file = "scripts/was.sh"
+    subnet_type         = "dmz"
+  }
 
-  # "gs02" = {
-  #   zone_suffix       = "b"
-  #   machine_type      = "custom-4-8192"
-  #   boot_disk_size_gb = 128
-  #   boot_disk_type    = "pd-ssd"
-  #   tags              = ["game-server", "ssh-from-iap", "ssh-from-mgmt", "private-zone"]
-  #   image_family      = "rocky-linux-10-optimized-gcp"
-  #   image_project     = "rocky-linux-cloud"
-  #   labels = {
-  #     role = "game-server"
-  #     tier = "backend"
-  #   }
-  #   startup_script_file = "scripts/game.sh"
-  #   subnet_type         = "private"
-  # }
+  "www03" = {
+    zone_suffix       = "c"
+    machine_type      = "custom-4-8192"
+    boot_disk_size_gb = 128
+    boot_disk_type    = "pd-ssd"
+    tags              = ["www", "ssh-from-iap", "ssh-from-mgmt", "dmz-zone"]
+    image_family      = "rocky-linux-10-optimized-gcp"
+    image_project     = "rocky-linux-cloud"
+    labels = {
+      role = "www"
+      tier = "frontend"
+    }
+    startup_script_file = "scripts/was.sh"
+    subnet_type         = "dmz"
+  }
 
   # =============================================================================
-  # Web/Lobby Server 예시 (DMZ 배치)
+  # Mint Server (2대) - Private 배치
   # =============================================================================
-  # "web01" = {
-  #   zone_suffix       = "a"
-  #   machine_type      = "custom-2-4096"
-  #   boot_disk_size_gb = 64
-  #   boot_disk_type    = "pd-ssd"
-  #   tags              = ["web", "ssh-from-iap", "dmz-zone"]
-  #   image_family      = "rocky-linux-10-optimized-gcp"
-  #   image_project     = "rocky-linux-cloud"
-  #   labels = {
-  #     role = "web"
-  #     tier = "frontend"
-  #   }
-  #   startup_script_file = "scripts/web.sh"
-  #   subnet_type         = "dmz"
-  # }
+  "mint01" = {
+    zone_suffix       = "a"
+    machine_type      = "custom-4-8192"
+    boot_disk_size_gb = 128
+    boot_disk_type    = "pd-ssd"
+    tags              = ["mint", "ssh-from-iap", "ssh-from-mgmt", "private-zone"]
+    image_family      = "rocky-linux-10-optimized-gcp"
+    image_project     = "rocky-linux-cloud"
+    labels = {
+      role = "mint"
+      tier = "backend"
+    }
+    startup_script_file = "scripts/was.sh"
+    subnet_type         = "private"
+  }
+
+  "mint02" = {
+    zone_suffix       = "b"
+    machine_type      = "custom-4-8192"
+    boot_disk_size_gb = 128
+    boot_disk_type    = "pd-ssd"
+    tags              = ["mint", "ssh-from-iap", "ssh-from-mgmt", "private-zone"]
+    image_family      = "rocky-linux-10-optimized-gcp"
+    image_project     = "rocky-linux-cloud"
+    labels = {
+      role = "mint"
+      tier = "backend"
+    }
+    startup_script_file = "scripts/was.sh"
+    subnet_type         = "private"
+  }
 }

@@ -9,13 +9,13 @@ project_id     = "gcp-nft"
 project_name   = "nft"
 environment    = "live"
 organization   = "delabs"
-region_primary = "asia-northeast3"
-region_backup  = "asia-northeast1"
+region_primary = "us-west1"
+region_backup  = "us-west2"
 
 # Bootstrap 폴더 설정 (environment_folder_ids 키 조회용)
 # 형식: product/region/env → "my-project/asia-northeast3/LIVE"
 folder_product = "gcp-nft"
-folder_region  = "asia-northeast3"
+folder_region  = "us-west1"
 folder_env     = "LIVE"
 
 # =============================================================================
@@ -26,7 +26,7 @@ folder_env     = "LIVE"
 base_labels = {
   managed-by  = "terraform"
   project     = "nft"
-  team        = "delabs-team"
+  team        = "system-team"
 }
 
 # extra_tags = ["prod", "game"]  # 공통 태그
@@ -37,22 +37,22 @@ base_labels = {
 network_config = {
   # Subnet CIDR - 프로젝트별로 중복되지 않게 설계
   subnets = {
-    dmz     = "10.X.X.0/24"   # 예: 10.10.10.0/24
-    private = "10.X.X.0/24"   # 예: 10.10.11.0/24
-    psc     = "10.X.X.0/24"   # 예: 10.10.12.0/24
+    dmz     = "10.10.20.0/24"   # 예: 10.10.10.0/24
+    private = "10.10.21.0/24"   # 예: 10.10.11.0/24
+    psc     = "10.10.22.0/24"   # 예: 10.10.12.0/24
   }
 
   # PSC Endpoint IP
   # Redis Cluster PSC는 자동 생성되므로 실제 IP 사용
   psc_endpoints = {
-    cloudsql = "10.X.X.51"
-    redis    = ["10.X.X.3", "10.X.X.2"]
+    cloudsql = "10.10.22.51"
+    redis    = ["10.10.22.101", "10.10.22.102"]
   }
 
   # VPC Peering
   peering = {
-    mgmt_project_id  = "jsj-system-mgmt"
-    mgmt_vpc_name    = "YOUR_MGMT_VPC_NAME"
+    mgmt_project_id  = "delabs-gcp-mgmt"
+    mgmt_vpc_name    = "delabs-gcp-mgmt-vpc"
     mgmt_subnet_cidr = "10.250.10.0/24"  # mgmt VPC subnet CIDR (firewall rule용)
   }
 }
@@ -62,19 +62,24 @@ network_config = {
 # =============================================================================
 vm_static_ips = {
   # 예시: game01 = "10.10.11.3"
+  www01 = "10.10.21.11"
+  www02 = "10.10.21.12"
+  www03 = "10.10.21.13"
+  mint01 = "10.10.21.14"
+  mint02 = "10.10.21.15"
 }
 
 # =============================================================================
 # 관리 프로젝트 정보
 # =============================================================================
-management_project_id = "jsj-system-mgmt"
+management_project_id = "delabs-gcp-mgmt"
 
 # =============================================================================
 # DNS 설정
 # =============================================================================
 dns_config = {
-  domain      = "YOUR_DOMAIN.internal."  # Private DNS 도메인 (trailing dot 필수)
-  zone_suffix = "YOUR_ZONE_SUFFIX"       # Zone 이름 접미사
+  domain      = "delabsgames.internal."  # Private DNS 도메인 (trailing dot 필수)
+  zone_suffix = "delabsgames-internal"   # Zone 이름 접미사
 }
 
 # =============================================================================
@@ -83,6 +88,6 @@ dns_config = {
 # 보안 주의: 비밀번호는 초기 배포 후 반드시 변경 필요!
 # 참고: 비밀번호에 ! 문자는 bash history expansion 충돌로 SSH 접속 시 문제 발생
 vm_admin_config = {
-  username = "YOUR_ADMIN_USERNAME"
-  password = "YOUR_ADMIN_PASSWORD"
+  username = "delabs-adm"
+  password = "REDACTED_PASSWORD"
 }

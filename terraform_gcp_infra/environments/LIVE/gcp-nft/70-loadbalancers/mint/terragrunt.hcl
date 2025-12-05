@@ -43,12 +43,12 @@ locals {
   # {project_name}-{layer_name}-ig-{zone_suffix} 형식
   instance_groups = {
     "${local.project_name}-${local.layer_name}-ig-a" = {
-      instances   = ["${local.project_name}-gs01"]
+      instances   = ["${local.project_name}-mint01"]
       zone_suffix = "a"
       named_ports = [{ name = "http", port = 80 }]
     }
     "${local.project_name}-${local.layer_name}-ig-b" = {
-      instances   = ["${local.project_name}-gs02"]
+      instances   = ["${local.project_name}-mint02"]
       zone_suffix = "b"
       named_ports = [{ name = "http", port = 80 }]
     }

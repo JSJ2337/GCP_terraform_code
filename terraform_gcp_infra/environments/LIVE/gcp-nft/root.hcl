@@ -18,9 +18,9 @@ locals {
   # 모든 레이어에서 공유하는 원격 상태 버킷과 prefix 기본값
   # 환경변수 > common.naming.tfvars 순으로 우선순위
   # ⚠️ 아래 기본값은 create_project.sh에서 자동 치환됨
-  remote_state_bucket   = get_env("TG_STATE_BUCKET", "jsj-terraform-state-prod")
-  remote_state_project  = get_env("TG_STATE_PROJECT", try(local.common_inputs.management_project_id, "jsj-system-mgmt"))
-  remote_state_location = get_env("TG_STATE_LOCATION", "US")
+  remote_state_bucket   = get_env("TG_STATE_BUCKET", "delabs-terraform-state-live")
+  remote_state_project  = get_env("TG_STATE_PROJECT", try(local.common_inputs.management_project_id, "delabs-gcp-mgmt"))
+  remote_state_location = get_env("TG_STATE_LOCATION", "ASIA")
   project_state_prefix  = local.common_inputs.project_id
 }
 
@@ -44,8 +44,8 @@ remote_state {
 inputs = {
   # GCP Organization/Billing 설정 (환경변수 또는 기본값)
   # ⚠️ 아래 기본값은 create_project.sh에서 자동 치환됨
-  org_id          = get_env("TG_ORG_ID", "REDACTED_ORG_ID")
-  billing_account = get_env("TG_BILLING_ACCOUNT", "REDACTED_BILLING_ACCOUNT")
+  org_id          = get_env("TG_ORG_ID", "1034166519592")
+  billing_account = get_env("TG_BILLING_ACCOUNT", "01B77E-0A986D-CB2651")
 
   # 관리 프로젝트 ID (common.naming.tfvars에서 가져옴)
   management_project_id = try(local.common_inputs.management_project_id, "")

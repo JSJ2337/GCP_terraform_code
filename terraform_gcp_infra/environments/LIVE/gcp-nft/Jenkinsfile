@@ -17,7 +17,7 @@ def PHASES = [
     [id: 'phase5', label: 'Phase 5 - Observability', dirs: ['40-observability'], optional: true],
     [id: 'phase6', label: 'Phase 6 - Workloads (50-workloads)', dirs: ['50-workloads'], optional: false],
     [id: 'phase7', label: 'Phase 7 - Database & Cache', dirs: ['60-database', '65-cache'], optional: false],
-    [id: 'phase8', label: 'Phase 8 - Load Balancers', dirs: ['70-loadbalancers/gs'], optional: false]
+    [id: 'phase8', label: 'Phase 8 - Load Balancers', dirs: ['70-loadbalancers/www', '70-loadbalancers/mint'], optional: false]
 ]
 
 pipeline {
@@ -60,7 +60,8 @@ pipeline {
                 '50-workloads',
                 '60-database',
                 '65-cache',
-                '70-loadbalancers/gs'
+                '70-loadbalancers/www',
+                '70-loadbalancers/mint'
             ],
             description: '실행할 레이어 (all = 전체 스택)'
         )
