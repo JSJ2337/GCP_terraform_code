@@ -364,7 +364,6 @@ ${phaseList}
 
 // Phase Plan 실행
 def runPhasePlan(phase, phaseDirs) {
-    // 공백/특수문자가 있는 WORKSPACE 경로 문제 회피를 위해 디렉토리 이동 후 상대경로 사용
     def workDir = "${env.WORKSPACE}/${TG_WORKING_DIR}"
 
     phase.dirs.each { dir ->
@@ -375,11 +374,12 @@ def runPhasePlan(phase, phaseDirs) {
         """
     }
 
-    // 상대 경로 사용: working-dir로 이동 후 상대 경로로 include
-    def includeArgs = phase.dirs.collect { "--queue-include-dir ./${it}" }.join(' ')
-    sh """
-        cd '${workDir}' && terragrunt run --all ${includeArgs} --queue-strict-include -- plan -out=tfplan-${phase.id}
-    """
+    // 각 디렉토리를 개별적으로 plan 실행
+    phase.dirs.each { dir ->
+        sh """
+            cd '${workDir}/${dir}' && terragrunt plan -out=tfplan-${phase.id}
+        """
+    }
 
     archiveArtifacts artifacts: "**/tfplan-${phase.id}", allowEmptyArchive: true
 }
@@ -387,17 +387,23 @@ def runPhasePlan(phase, phaseDirs) {
 // Phase Apply 실행
 def runPhaseApply(phase, phaseDirs) {
     def workDir = "${env.WORKSPACE}/${TG_WORKING_DIR}"
-    def includeArgs = phase.dirs.collect { "--queue-include-dir ./${it}" }.join(' ')
-    sh """
-        cd '${workDir}' && terragrunt run --all ${includeArgs} --queue-strict-include -- apply tfplan-${phase.id}
-    """
+
+    // 각 디렉토리를 개별적으로 apply 실행
+    phase.dirs.each { dir ->
+        sh """
+            cd '${workDir}/${dir}' && terragrunt apply tfplan-${phase.id}
+        """
+    }
 }
 
 // Phase Destroy 실행
 def runPhaseDestroy(phase, phaseDirs) {
     def workDir = "${env.WORKSPACE}/${TG_WORKING_DIR}"
-    def includeArgs = phase.dirs.collect { "--queue-include-dir ./${it}" }.join(' ')
-    sh """
-        cd '${workDir}' && terragrunt run --all ${includeArgs} --queue-strict-include -- destroy -auto-approve
-    """
+
+    // 각 디렉토리를 개별적으로 destroy 실행
+    phase.dirs.each { dir ->
+        sh """
+            cd '${workDir}/${dir}' && terragrunt destroy -auto-approve
+        """
+    }
 }
