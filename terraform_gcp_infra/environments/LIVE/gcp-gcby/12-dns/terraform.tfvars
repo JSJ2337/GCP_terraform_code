@@ -1,15 +1,10 @@
 # Private DNS Zone 설정
-# zone_name, dns_name, description은 terragrunt.hcl에서 common.naming.tfvars 값으로 동적 생성됨
-zone_name   = ""
-dns_name    = ""
-description = ""
+# zone_name, dns_name, description, private_networks, dns_records는
+# terragrunt.hcl에서 common.naming.tfvars 값으로 동적 생성됨
+# 아래 변수들은 terragrunt inputs로 주입되므로 여기서 정의하지 않음
 
 # DNS Zone 가시성 (private)
 visibility = "private"
-
-# Private DNS Zone 설정
-# gcby VPC에서 사용 (terragrunt.hcl에서 10-network dependency로 주입)
-private_networks = []
 
 # DNSSEC 설정
 enable_dnssec = false
@@ -23,7 +18,6 @@ peering_network = ""
 # DNS 레코드 목록
 # terragrunt.hcl에서 common.naming.tfvars 값으로 동적 생성됨
 # (project_name, environment, network_config.psc_endpoints, vm_ips 사용)
-dns_records = []
 
 # DNS Policy 설정 (사용하지 않음)
 create_dns_policy = false
