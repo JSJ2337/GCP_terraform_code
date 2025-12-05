@@ -4,30 +4,32 @@ GCP VPC 네트워크의 DMZ/Private/DB 3-Tier 아키텍처 설계입니다.
 
 ## 아키텍처 개요
 
-```text
-Internet
-   ↓
-Load Balancer (Public IP)
-   ↓
-┌─────────────────────────────────────────┐
-│           DMZ Subnet (10.0.1.0/24)      │
-│  - Web VMs (Public facing)              │
-│  - Cloud NAT (Outbound only)            │
-└──────────────┬──────────────────────────┘
-               ↓ (Internal Only)
-┌─────────────────────────────────────────┐
-│         Private Subnet (10.0.2.0/24)    │
-│  - Application VMs                      │
-│  - Redis Cache (Private IP)             │
-│  - No Public IP                         │
-└──────────────┬──────────────────────────┘
-               ↓ (Private IP Only)
-┌─────────────────────────────────────────┐
-│           DB Subnet (10.0.3.0/24)       │
-│  - Cloud SQL MySQL (Private IP)         │
-│  - Private Service Connect              │
-│  - Complete Isolation                   │
-└─────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    INET[🌐 Internet]
+    LB["⚖️ Load Balancer<br/>(Public IP)"]
+
+    subgraph DMZ["DMZ Subnet (10.0.1.0/24)"]
+        DMZ_DESC["• Web VMs (Public facing)<br/>• Cloud NAT (Outbound only)"]
+    end
+
+    subgraph Private["Private Subnet (10.0.2.0/24)"]
+        PRIV_DESC["• Application VMs<br/>• Redis Cache (Private IP)<br/>• No Public IP"]
+    end
+
+    subgraph DB["DB Subnet (10.0.3.0/24)"]
+        DB_DESC["• Cloud SQL MySQL (Private IP)<br/>• Private Service Connect<br/>• Complete Isolation"]
+    end
+
+    INET --> LB
+    LB --> DMZ
+    DMZ -->|Internal Only| Private
+    Private -->|Private IP Only| DB
+
+    style DMZ fill:#e3f2fd
+    style Private fill:#f3e5f5
+    style DB fill:#fce4ec
+    style LB fill:#fff9c4
 ```
 
 ## 서브넷 설계
@@ -437,17 +439,24 @@ zones = [
 
 ### 아키텍처
 
-```text
-mgmt VPC (delabs-gcp-mgmt-vpc)
-  ├─ DNS Zone: delabsgames.internal.
-  │   ├─ jenkins: 10.250.10.7
-  │   ├─ bastion: 10.250.10.6
-  │   ├─ gcby-gs01: 10.10.11.3
-  │   └─ gcby-gs02: 10.10.11.6
-  │
-  └─ VPC Peering ←→ gcby VPC (gcby-live-vpc)
-                       └─ DNS Peering Zone
-                          └─ delabsgames.internal. → mgmt VPC
+```mermaid
+flowchart LR
+    subgraph MGMT["mgmt VPC (delabs-gcp-mgmt-vpc)"]
+        DNS_ZONE["📋 DNS Zone: delabsgames.internal."]
+        JENKINS["jenkins: 10.250.10.7"]
+        BASTION["bastion: 10.250.10.6"]
+        GCBY_GS01["gcby-gs01: 10.10.11.3"]
+        GCBY_GS02["gcby-gs02: 10.10.11.6"]
+    end
+
+    subgraph GCBY["gcby VPC (gcby-live-vpc)"]
+        DNS_PEER["🔗 DNS Peering Zone<br/>delabsgames.internal. → mgmt VPC"]
+    end
+
+    MGMT <-->|VPC Peering| GCBY
+
+    style MGMT fill:#e3f2fd
+    style GCBY fill:#f3e5f5
 ```
 
 ### 구성 요소
@@ -571,29 +580,46 @@ PSC Endpoint 방식은 Cloud SQL을 특정 subnet에만 노출하여 3-tier 네�
 ### 아키텍처 변화
 
 #### Before (VPC Peering 방식)
-```text
-Cloud SQL (10.201.3.2)
-  ↑
-  | VPC Peering (Private Service Connection)
-  | → 전체 VPC에서 접근 가능
-  |
-gcby VPC
-  ├─ DMZ zone (10.10.10.0/24) ✅ 접근 가능 (보안 취약!)
-  ├─ Private zone (10.10.11.0/24) ✅ 접근 가능
-  └─ mgmt VPC (10.250.10.0/24) ✅ 접근 가능
+
+```mermaid
+flowchart BT
+    SQL_BEFORE["🐬 Cloud SQL<br/>(10.201.3.2)"]
+
+    subgraph VPC_BEFORE["gcby VPC"]
+        DMZ_B["DMZ zone<br/>10.10.10.0/24<br/>✅ 접근 가능 ⚠️"]
+        PRIV_B["Private zone<br/>10.10.11.0/24<br/>✅ 접근 가능"]
+        MGMT_B["mgmt VPC<br/>10.250.10.0/24<br/>✅ 접근 가능"]
+    end
+
+    DMZ_B -->|VPC Peering| SQL_BEFORE
+    PRIV_B -->|VPC Peering| SQL_BEFORE
+    MGMT_B -->|VPC Peering| SQL_BEFORE
+
+    style DMZ_B fill:#ffcdd2
+    style SQL_BEFORE fill:#fce4ec
 ```
 
 #### After (PSC Endpoint 방식)
-```text
-Cloud SQL (PSC Endpoint)
-  ↑
-  | Service Connection Policy
-  | → Private subnet에만 Endpoint 생성
-  |
-gcby VPC
-  ├─ DMZ zone (10.10.10.0/24) ❌ 접근 불가 (3-tier 격리)
-  ├─ Private zone (10.10.11.0/24) ✅ 접근 가능
-  └─ mgmt VPC (10.250.10.0/24) ✅ 접근 가능 (VPC Peering 통해)
+
+```mermaid
+flowchart BT
+    SQL_AFTER["🐬 Cloud SQL<br/>(PSC Endpoint)"]
+
+    subgraph VPC_AFTER["gcby VPC"]
+        DMZ_A["DMZ zone<br/>10.10.10.0/24<br/>❌ 접근 불가"]
+        PRIV_A["Private zone<br/>10.10.11.0/24<br/>✅ 접근 가능"]
+        MGMT_A["mgmt VPC<br/>10.250.10.0/24<br/>✅ 접근 가능"]
+    end
+
+    DMZ_A -.->|차단| SQL_AFTER
+    PRIV_A -->|PSC| SQL_AFTER
+    MGMT_A -->|VPC Peering| SQL_AFTER
+
+    style DMZ_A fill:#c8e6c9
+    style PRIV_A fill:#c8e6c9
+    style SQL_AFTER fill:#e8f5e9
+
+    linkStyle 0 stroke:#f44336,stroke-dasharray:5
 ```
 
 ### Service Connection Policy 구성
@@ -798,15 +824,26 @@ mgmt VPC의 bastion 호스트에서 다른 프로젝트의 Cloud SQL에 PSC를 �
 
 ### 아키텍처
 
-```text
-mgmt VPC (delabs-gcp-mgmt)
-  └─ bastion (10.250.10.6)
-      ↓ PSC Endpoint
-      ↓ Forwarding Rule → Service Attachment
-      ↓
-gcp-gcby 프로젝트
-  └─ Cloud SQL (PSC Endpoint)
-      └─ allowed_consumer_projects = ["delabs-gcp-mgmt"]
+```mermaid
+flowchart TB
+    subgraph MGMT_VPC["mgmt VPC (delabs-gcp-mgmt)"]
+        BASTION["🖥️ bastion<br/>(10.250.10.6)"]
+    end
+
+    PSC["🔗 PSC Endpoint<br/>Forwarding Rule"]
+    SA["📎 Service Attachment"]
+
+    subgraph GCBY_PROJ["gcp-gcby 프로젝트"]
+        SQL_PSC["🐬 Cloud SQL (PSC Endpoint)<br/>allowed_consumer_projects =<br/>[delabs-gcp-mgmt]"]
+    end
+
+    BASTION --> PSC
+    PSC --> SA
+    SA --> SQL_PSC
+
+    style MGMT_VPC fill:#e3f2fd
+    style GCBY_PROJ fill:#f3e5f5
+    style PSC fill:#fff9c4
 ```
 
 ### 1. Cloud SQL 설정 (gcp-gcby)
@@ -1003,16 +1040,26 @@ PSC Endpoint는 Service Attachment와 동일 리전에 있어야 하지만, **Gl
 
 ### 아키텍처
 
-```text
-asia-northeast3 (Bastion 위치)
-  └─ bastion (10.250.10.6)
-       ↓ Global Access 활성화
-       ↓
-us-west1 (Cloud SQL 위치)
-  └─ PSC Forwarding Rule (10.250.20.20)
-       ↓ allow_psc_global_access = true
-       ↓
-gcp-gcby Cloud SQL (us-west1)
+```mermaid
+flowchart TB
+    subgraph ASIA["asia-northeast3 (Bastion 위치)"]
+        BASTION_G["🖥️ bastion<br/>(10.250.10.6)"]
+    end
+
+    GLOBAL["🌍 Global Access 활성화"]
+
+    subgraph USWEST["us-west1 (Cloud SQL 위치)"]
+        PSC_FR["🔗 PSC Forwarding Rule<br/>(10.250.20.20)<br/>allow_psc_global_access = true"]
+        SQL_G["🐬 gcp-gcby Cloud SQL"]
+    end
+
+    BASTION_G --> GLOBAL
+    GLOBAL --> PSC_FR
+    PSC_FR --> SQL_G
+
+    style ASIA fill:#e3f2fd
+    style USWEST fill:#f3e5f5
+    style GLOBAL fill:#fff9c4
 ```
 
 ### 설정 방법
@@ -1106,30 +1153,22 @@ nc -zv gcby-live-gdb-m1.delabsgames.internal 3306
 
 ### 아키텍처
 
-```text
-┌─────────────────────────────────────────────────────────────────────┐
-│  gcby-live-vpc (게임 서버 VPC)                                       │
-│  ─────────────────────────────────────────────────────────────────  │
-│  DNS Zone: delabsgames.internal. (gcby 프로젝트 소유)                │
-│                                                                     │
-│  GS01/GS02 → gcby-live-gdb-m1.delabsgames.internal                  │
-│           → 10.10.12.51 (Cloud SQL 내부 IP)                         │
-│                                                                     │
-│  GS01/GS02 → gcby-live-cache.delabsgames.internal                   │
-│           → 10.10.12.3 (Redis Cluster 내부 IP)                      │
-└─────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph GCBY_VPC["gcby-live-vpc (게임 서버 VPC)"]
+        GCBY_DNS["📋 DNS Zone: delabsgames.internal.<br/>(gcby 프로젝트 소유)"]
+        GCBY_SQL["GS01/GS02 → gcby-live-gdb-m1.delabsgames.internal<br/>→ 10.10.12.51 (Cloud SQL 내부 IP)"]
+        GCBY_REDIS["GS01/GS02 → gcby-live-cache.delabsgames.internal<br/>→ 10.10.12.3 (Redis Cluster 내부 IP)"]
+    end
 
-┌─────────────────────────────────────────────────────────────────────┐
-│  mgmt VPC (Jenkins/Bastion VPC)                                     │
-│  ─────────────────────────────────────────────────────────────────  │
-│  DNS Zone: delabsgames.internal. (mgmt 프로젝트 소유)                │
-│                                                                     │
-│  Bastion → gcby-live-gdb-m1.delabsgames.internal                    │
-│         → 10.250.20.51 (PSC Endpoint IP)                            │
-│                                                                     │
-│  Bastion → gcby-live-redis.delabsgames.internal                     │
-│         → 10.250.20.101 (Redis PSC Endpoint IP)                     │
-└─────────────────────────────────────────────────────────────────────┘
+    subgraph MGMT_VPC2["mgmt VPC (Jenkins/Bastion VPC)"]
+        MGMT_DNS["📋 DNS Zone: delabsgames.internal.<br/>(mgmt 프로젝트 소유)"]
+        MGMT_SQL["Bastion → gcby-live-gdb-m1.delabsgames.internal<br/>→ 10.250.20.51 (PSC Endpoint IP)"]
+        MGMT_REDIS["Bastion → gcby-live-redis.delabsgames.internal<br/>→ 10.250.20.101 (Redis PSC Endpoint IP)"]
+    end
+
+    style GCBY_VPC fill:#e3f2fd
+    style MGMT_VPC2 fill:#f3e5f5
 ```
 
 ### 장점
