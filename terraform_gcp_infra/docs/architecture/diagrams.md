@@ -575,21 +575,21 @@ graph LR
 
 ## 참고 자료
 
-- [메인 README](00_README.md)
-- [WORK_HISTORY](04_WORK_HISTORY.md)
-- [CHANGELOG](02_CHANGELOG.md)
-- [QUICK_REFERENCE](03_QUICK_REFERENCE.md)
+- [문서 포털](../README.md)
+- [작업 이력](../changelog/work_history/README.md)
+- [CHANGELOG](../changelog/CHANGELOG.md)
+- [명령어 참조](../getting-started/quick-commands.md)
 
-각 모듈의 상세 아키텍처는 해당 모듈의 README.md를 참조하세요:
+각 모듈의 상세 아키텍처는 해당 모듈 문서를 참조하세요:
 
-- [cloudsql-mysql/README.md](modules/cloudsql-mysql/README.md)
-- [gce-vmset/README.md](modules/gce-vmset/README.md)
-- [gcs-bucket/README.md](modules/gcs-bucket/README.md)
-- [gcs-root/README.md](modules/gcs-root/README.md)
-- [iam/README.md](modules/iam/README.md)
-- [load-balancer/README.md](modules/load-balancer/README.md)
-- [memorystore-redis/README.md](modules/memorystore-redis/README.md)
-- [naming/README.md](modules/naming/README.md)
-- [network-dedicated-vpc/README.md](modules/network-dedicated-vpc/README.md)
-- [observability/README.md](modules/observability/README.md)
-- [project-base/README.md](modules/project-base/README.md)
+- [cloudsql-mysql](../modules/cloudsql-mysql.md)
+- [gce-vmset](../modules/gce-vmset.md)
+- [gcs-bucket](../modules/gcs-bucket.md)
+- [gcs-root](../modules/gcs-root.md)
+- [iam](../modules/iam.md)
+- [load-balancer](../modules/load-balancer.md)
+- [memorystore-redis](../modules/memorystore-redis.md)
+- [naming](../modules/naming.md)
+- [network-dedicated-vpc](../modules/network-dedicated-vpc.md)
+- [observability](../modules/observability.md)
+- [project-base](../modules/project-base.md)

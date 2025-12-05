@@ -1095,7 +1095,7 @@ inputs = merge(
 ## 참고 자료
 
 - [전체 아키텍처](./overview.md)
-- [network-dedicated-vpc 모듈](../../modules/network-dedicated-vpc/README.md)
+- [network-dedicated-vpc 모듈](../modules/network-dedicated-vpc.md)
 - [네트워크 문제 해결](../troubleshooting/network-issues.md)
 - [Work History 2025-12-01](../changelog/work_history/2025-12-01.md) - DNS Peering 및 PSC Endpoint 전환
 - [Work History 2025-12-04](../changelog/work_history/2025-12-04.md) - Per-VPC DNS Zone 패턴

@@ -59,7 +59,7 @@ Internet → LB → DMZ → Private → DB
 
 ## 참고 자료
 
-- [모듈 문서](../../modules/)
+- [모듈 문서](../modules/)
 - [배포 가이드](../getting-started/first-deployment.md)
 - [트러블슈팅](../troubleshooting/)
 
