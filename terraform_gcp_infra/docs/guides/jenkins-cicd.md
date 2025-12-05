@@ -27,12 +27,12 @@ Jenkins는 8개의 Phase로 인프라를 순차 배포하여 의존성을 자동
 |-------|--------|------|--------|----------|
 | **Phase 1** | `00-project` | GCP 프로젝트 생성, API 활성화 | Bootstrap | ❌ |
 | **Phase 2** | `10-network` | VPC 네트워킹 구성 | 00-project | ❌ |
-| **Phase 3** | `20-storage`<br>`30-security` | GCS 버킷, IAM/SA | 10-network | ❌ |
-| **Phase 4** | `40-observability` | Logging/Monitoring/Slack | 20-storage, 30-security | ✅ |
-| **Phase 5** | `50-workloads` | VM 인스턴스 배포 | 10-network, 30-security | ❌ |
-| **Phase 6** | `60-database`<br>`65-cache` | Cloud SQL, Redis 캐시 | 10-network | ❌ |
-| **Phase 7** | `70-loadbalancers/*` | Load Balancers (web/app/lobby) | 50-workloads | ❌ |
-| **Phase 8** | `12-dns` | Cloud DNS (Public/Private) | 10-network | ❌ |
+| **Phase 3** | `12-dns` | Cloud DNS (Public/Private) | 10-network | ❌ |
+| **Phase 4** | `20-storage`<br>`30-security` | GCS 버킷, IAM/SA | 10-network | ❌ |
+| **Phase 5** | `40-observability` | Logging/Monitoring/Slack | 20-storage, 30-security | ✅ |
+| **Phase 6** | `50-workloads` | VM 인스턴스 배포 | 10-network, 30-security | ❌ |
+| **Phase 7** | `60-database`<br>`65-cache` | Cloud SQL, Redis 캐시 | 10-network | ❌ |
+| **Phase 8** | `70-loadbalancers/gs` | Load Balancer (Game Server) | 50-workloads | ❌ |
 
 ### 배포 흐름
 

@@ -164,4 +164,4 @@ gcloud logging read \
 
 - [일반적인 오류](./common-errors.md)
 - [네트워크 아키텍처](../architecture/network-design.md)
-- [network-dedicated-vpc 모듈](../../modules/network-dedicated-vpc/README.md)
+- [network-dedicated-vpc 모듈](../modules/network-dedicated-vpc.md)

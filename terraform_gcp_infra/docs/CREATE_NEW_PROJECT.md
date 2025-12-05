@@ -269,12 +269,12 @@ Jenkinsfile의 Phase 순서대로 배포합니다.
 |-------|--------|------|
 | 1 | 00-project | GCP 프로젝트 생성 |
 | 2 | 10-network | VPC, Subnet, Firewall |
-| 3 | 20-storage, 30-security | Storage, IAM |
-| 4 | 40-observability | Monitoring (선택) |
-| 5 | 60-database, 65-cache | Cloud SQL, Redis |
-| 6 | 12-dns | Private DNS |
-| 7 | 50-workloads | VM 인스턴스 |
-| 8 | 70-loadbalancers | Load Balancer |
+| 3 | 12-dns | Cloud DNS (Public/Private) |
+| 4 | 20-storage, 30-security | Storage, IAM |
+| 5 | 40-observability | Monitoring (선택) |
+| 6 | 50-workloads | VM 인스턴스 |
+| 7 | 60-database, 65-cache | Cloud SQL, Redis |
+| 8 | 70-loadbalancers/gs | Load Balancer |
 
 ### Jenkins 배포 실행
 

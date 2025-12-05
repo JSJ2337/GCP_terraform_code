@@ -143,7 +143,7 @@ environments/LIVE/
 - [Jenkins 초기 설정](../../jenkins_docker/JENKINS_SETUP.md)
 - [GitHub 연동](../../jenkins_docker/GITHUB_INTEGRATION.md)
 - [Terragrunt CI/CD Pipeline](../../jenkins_docker/TERRAGRUNT_PIPELINE.md)
-- [프로젝트 README](../00_README.md)
+- [문서 포털](../README.md)
 
 ---
 
