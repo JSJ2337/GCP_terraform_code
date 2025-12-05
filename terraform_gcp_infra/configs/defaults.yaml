@@ -16,6 +16,10 @@ terraform:
     project: "jsj-system-mgmt"                # State 버킷이 있는 GCP 프로젝트
     location: "US"                            # 버킷 위치
 
+# Jenkins 설정
+jenkins:
+  credential_id: "delabs-terraform-admin"     # Jenkins Credential ID (GCP SA)
+
 # 프로젝트 생성 옵션
 options:
   source_template: "proj-default-templet"     # 복사할 템플릿 디렉토리

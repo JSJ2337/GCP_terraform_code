@@ -32,7 +32,7 @@ DEFAULT_ORG_ID="REDACTED_ORG_ID"
 DEFAULT_BILLING_ACCOUNT="REDACTED_BILLING_ACCOUNT"
 
 # Jenkins Credential ID (GCP 서비스 계정)
-DEFAULT_JENKINS_CREDENTIAL_ID="gcp-jenkins-service-account"
+DEFAULT_JENKINS_CREDENTIAL_ID="delabs-terraform-admin"
 
 # 디렉토리 및 파일명 설정
 CONFIG_FILE_NAME="configs/defaults.yaml"
