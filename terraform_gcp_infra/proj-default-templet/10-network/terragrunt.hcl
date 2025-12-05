@@ -127,34 +127,20 @@ locals {
       description    = "Allow health checks from Google Load Balancer"
     }
   ]
+
+  # ==========================================================================
+  # PSC Service Attachment (placeholder)
+  # 초기 배포 시 mock 값 사용, 60-database/65-cache 배포 후 실제 값으로 업데이트
+  # ==========================================================================
+  cloudsql_service_attachment_placeholder = "projects/placeholder/regions/${local.region_primary}/serviceAttachments/placeholder-cloudsql"
+  redis_service_attachments_placeholder = [
+    "projects/placeholder/regions/${local.region_primary}/serviceAttachments/placeholder-redis-discovery",
+    "projects/placeholder/regions/${local.region_primary}/serviceAttachments/placeholder-redis-shard"
+  ]
 }
 
-# Cloud SQL dependency (Service Attachment 가져오기)
-# skip_outputs = true: 새 환경 배포 시 dependency가 없어도 mock_outputs 사용
-dependency "database" {
-  config_path  = "../60-database"
-  skip_outputs = true
-
-  mock_outputs = {
-    psc_service_attachment_link = "projects/mock/regions/${local.region_primary}/serviceAttachments/mock-cloudsql"
-  }
-  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
-}
-
-# Redis dependency (Service Attachments 가져오기 - Discovery + Shard)
-# skip_outputs = true: 새 환경 배포 시 dependency가 없어도 mock_outputs 사용
-dependency "cache" {
-  config_path  = "../65-cache"
-  skip_outputs = true
-
-  mock_outputs = {
-    psc_service_attachment_links = [
-      "projects/mock/regions/${local.region_primary}/serviceAttachments/mock-redis-discovery",
-      "projects/mock/regions/${local.region_primary}/serviceAttachments/mock-redis-shard"
-    ]
-  }
-  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
-}
+# dependency 블록 제거 - cycle 문제 해결
+# PSC endpoint는 placeholder 값으로 생성 후, DB/Cache 배포 완료 시 실제 값으로 업데이트
 
 inputs = merge(
   local.common_inputs,
@@ -175,9 +161,9 @@ inputs = merge(
     psc_cloudsql_ip = local.psc_cloudsql_ip
     psc_redis_ips   = local.psc_redis_ips
 
-    # Service Attachment를 dependency에서 가져옴
-    cloudsql_service_attachment = dependency.database.outputs.psc_service_attachment_link
-    redis_service_attachments   = dependency.cache.outputs.psc_service_attachment_links
+    # Service Attachment - placeholder 값 사용 (DB/Cache 배포 후 실제 값으로 업데이트 필요)
+    cloudsql_service_attachment = local.cloudsql_service_attachment_placeholder
+    redis_service_attachments   = local.redis_service_attachments_placeholder
 
     # Firewall rules 동적 주입
     firewall_rules = local.firewall_rules
