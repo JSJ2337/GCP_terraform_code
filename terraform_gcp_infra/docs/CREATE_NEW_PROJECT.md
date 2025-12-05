@@ -2,30 +2,31 @@
 
 이 문서는 `proj-default-templet`을 기반으로 신규 GCP 프로젝트를 생성하는 방법을 설명합니다.
 
-## 📋 목차
+## 목차
 
 - [개요](#개요)
 - [사전 요구사항](#사전-요구사항)
-- [방법 1: Jenkins를 통한 생성 (권장)](#방법-1-jenkins를-통한-생성-권장)
-- [방법 2: 로컬에서 스크립트 실행](#방법-2-로컬에서-스크립트-실행)
-- [생성 후 작업](#생성-후-작업)
+- [방법 1: 스크립트 실행 (권장)](#방법-1-스크립트-실행-권장)
+- [방법 2: 수동 생성](#방법-2-수동-생성)
+- [생성 후 필수 설정](#생성-후-필수-설정)
+- [Jenkins Job 생성](#jenkins-job-생성)
+- [초기 배포](#초기-배포)
 - [트러블슈팅](#트러블슈팅)
 
 ---
 
 ## 개요
 
+`proj-default-templet`은 `gcp-gcby` 환경을 기반으로 구성된 템플릿입니다.
+
 신규 프로젝트 생성 시 다음 작업이 자동으로 수행됩니다:
 
-1. ✅ `proj-default-templet` 디렉토리 복사
-2. ✅ 필수 설정 파일 치환:
+1. `proj-default-templet` 디렉토리 복사
+2. 필수 설정 파일 치환:
    - `root.hcl`: Terraform state 설정, GCP org/billing 정보
    - `common.naming.tfvars`: 프로젝트 ID, 이름, 조직, 리전
-   - `Jenkinsfile`: TG_WORKING_DIR 경로
-   - `10-network/terraform.tfvars`: 서브넷 이름
-   - `50-workloads/terraform.tfvars`: 서브넷 self-link 경로
-3. ✅ 현재 브랜치(433_code)에 커밋
-4. ✅ GitHub에 자동 푸시
+   - `Jenkinsfile`: TG_WORKING_DIR 경로, Credential ID
+3. 현재 브랜치에 커밋
 
 ---
 
@@ -33,214 +34,253 @@
 
 ### 필수 정보
 
-신규 프로젝트 생성 전에 다음 정보를 준비하세요:
-
 | 항목 | 설명 | 예시 |
 |------|------|------|
-| **PROJECT_ID** | GCP 프로젝트 ID (6-30자, 소문자/숫자/하이픈) | `jsj-game-n` |
-| **PROJECT_NAME** | 프로젝트 이름 (리소스 네이밍용) | `game-n` |
-| **ORGANIZATION** | 조직명 (리소스 접두어) | `jsj` |
-| **ENVIRONMENT** | 배포 환경 (LIVE/QA/STG) | `LIVE` |
-| **REGION_PRIMARY** | 주 리전 | `asia-northeast3` (서울) |
-| **REGION_BACKUP** | 백업 리전 | `asia-northeast1` (도쿄) |
+| **PROJECT_ID** | GCP 프로젝트 ID (소문자/숫자/하이픈) | `gcp-newgame` |
+| **PROJECT_NAME** | 프로젝트 이름 (리소스 네이밍용) | `newgame` |
+| **ORGANIZATION** | 조직명 (리소스 접두어) | `delabs` |
+| **ENVIRONMENT** | 배포 환경 | `LIVE`, `QA`, `STG` |
+| **REGION_PRIMARY** | 주 리전 | `us-west1`, `asia-northeast3` |
 
-### 고정 설정값 (configs/defaults.yaml)
+### 템플릿 레이어 구조
 
-다음 값들은 `configs/defaults.yaml`에 정의되어 있습니다:
-
-- GCP Organization ID: `REDACTED_ORG_ID`
-- Billing Account: `REDACTED_BILLING_ACCOUNT`
-- Remote State Bucket: `jsj-terraform-state-prod`
-- Remote State Project: `jsj-system-mgmt`
-
-### Jenkins 사용 시 추가 요구사항
-
-**방법 1 (Jenkins)을 사용하려면 다음이 필요합니다:**
-
-1. ✅ **GitHub Personal Access Token** 생성
-2. ✅ **Jenkins Credential** 등록 (ID: `github-pat`)
-3. ✅ Jenkins Job이 **433_code 브랜치**를 checkout하도록 설정
-
-**상세 설정 방법:**
-- 📖 [Jenkins GitHub Credential 설정 가이드](./JENKINS_GITHUB_SETUP.md) 참고
-
-> **참고**: 로컬 스크립트 사용 시 (방법 2)는 Credential 설정 불필요
+```
+proj-default-templet/
+├── root.hcl                    # Terragrunt 루트 설정
+├── common.naming.tfvars        # 공통 변수 (네이밍, 네트워크 등)
+├── Jenkinsfile                 # CI/CD 파이프라인
+├── 00-project/                 # GCP 프로젝트 생성
+├── 10-network/                 # VPC, Subnet, Firewall
+├── 12-dns/                     # Cloud DNS
+├── 20-storage/                 # Cloud Storage
+├── 30-security/                # IAM, Service Account
+├── 40-observability/           # Monitoring, Logging
+├── 50-workloads/               # VM 인스턴스
+├── 60-database/                # Cloud SQL
+├── 65-cache/                   # Memorystore Redis
+└── 70-loadbalancers/gs/        # Load Balancer
+```
 
 ---
 
-## 방법 1: Jenkins를 통한 생성 (권장)
+## 방법 1: 스크립트 실행 (권장)
 
-### 1. Jenkins Job 설정
-
-Jenkins에 `create-terraform-project` Job을 생성합니다:
-
-**Job 설정:**
-- **Type**: Pipeline
-- **Pipeline script from SCM**: Git
-- **Script Path**: `terraform_gcp_infra/Jenkinsfile.create-project`
-- **Branch**: `main`
-
-### 2. Job 실행
-
-1. Jenkins에서 `create-terraform-project` Job 선택
-2. **Build with Parameters** 클릭
-3. 파라미터 입력:
-
-   ```
-   PROJECT_ID: jsj-game-n
-   PROJECT_NAME: game-n
-   ORGANIZATION: jsj
-   ENVIRONMENT: LIVE (드롭다운)
-   REGION_PRIMARY: asia-northeast3 (드롭다운)
-   REGION_BACKUP: asia-northeast1 (드롭다운)
-   ```
-
-4. **Build** 클릭
-
-### 3. 실행 결과 확인
-
-Jenkins Pipeline이 다음 단계를 순차적으로 수행합니다:
-
-```
-✅ Checkout (433_code 브랜치로 전환)
-✅ Validate Parameters
-✅ Check Duplicate
-✅ Install Dependencies
-✅ Create Project (프로젝트 생성 및 커밋)
-✅ Push to Remote (GitHub에 푸시)
-```
-
-성공 시 `terraform_gcp_infra/environments/{ENVIRONMENT}/{PROJECT_ID}` 폴더가 433_code 브랜치에 생성되고 GitHub에 푸시됩니다.
-
-### 4. 로컬 PC에서 받기
-
-```bash
-git checkout 433_code
-git pull origin 433_code
-```
-
-이제 로컬에서 생성된 프로젝트 폴더를 확인할 수 있습니다.
-
----
-
-## 방법 2: 로컬에서 스크립트 실행
-
-### 1. 스크립트 실행
-
-터미널에서 다음 명령어를 실행합니다:
+### 사용법
 
 ```bash
 cd terraform_gcp_infra
 
-bash scripts/create_project.sh \
-    jsj-game-n \
-    game-n \
-    jsj \
-    LIVE \
-    asia-northeast3 \
-    asia-northeast1
+./scripts/create_project.sh <PROJECT_ID> <PROJECT_NAME> <ORGANIZATION> <ENVIRONMENT> <REGION_PRIMARY>
 ```
 
-**사용법:**
+### 예시
+
 ```bash
-./scripts/create_project.sh <PROJECT_ID> <PROJECT_NAME> <ORGANIZATION> <ENVIRONMENT> <REGION_PRIMARY> [REGION_BACKUP]
+./scripts/create_project.sh gcp-newgame newgame delabs LIVE us-west1
 ```
 
-**환경 옵션:**
-- `LIVE`: 운영 환경 (environments/LIVE)
-- `QA`: QA 환경 (environments/QA)
-- `STG`: 스테이징 환경 (environments/STG)
+### 스크립트 동작
 
-### 2. 완료 확인
+1. `proj-default-templet` → `environments/{ENV}/{PROJECT_ID}`로 복사
+2. 플레이스홀더 치환:
+   - `REPLACE_*` → root.hcl (state bucket, org_id, billing 등)
+   - `YOUR_*` → common.naming.tfvars, Jenkinsfile
+3. Git 커밋 생성
 
-스크립트가 완료되면 다음 메시지가 출력됩니다:
+### 완료 메시지
 
 ```
 ✓ 프로젝트 생성 완료!
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  프로젝트 위치: /path/to/environments/LIVE/jsj-game-n
+  프로젝트 위치: environments/LIVE/gcp-newgame
   Git 브랜치: 433_code
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-```
 
-생성된 프로젝트는 현재 브랜치(433_code)에 커밋되어 있습니다.
+⚠ 다음 단계 (수동 설정 필요):
+  1. common.naming.tfvars 수정:
+     - network_config.subnets: 프로젝트별 CIDR 설정
+     - network_config.psc_endpoints: PSC Endpoint IP 설정
+     ...
+```
 
 ---
 
-## 생성 후 작업
+## 방법 2: 수동 생성
 
-### 1. 생성된 프로젝트 확인
+### 1. 템플릿 복사
 
-433_code 브랜치에서 다음 파일들을 확인하세요:
+```bash
+cd terraform_gcp_infra
+cp -r proj-default-templet environments/LIVE/gcp-newgame
+```
 
-1. 필수 설정 파일:
-   - `root.hcl`
-   - `common.naming.tfvars`
-   - `Jenkinsfile`
-   - `10-network/terraform.tfvars`
-   - `50-workloads/terraform.tfvars`
+### 2. root.hcl 수정
 
-2. 필요 시 추가 수정 (선택사항):
-   - VM 인스턴스 이름 변경
-   - Instance Group 이름 변경
-   - Database/Cache 설정 조정
+```hcl
+# environments/LIVE/gcp-newgame/root.hcl
 
-### 2. Jenkins 배포 Job 생성
+locals {
+  # REPLACE_* 플레이스홀더를 실제 값으로 변경
+  remote_state_bucket   = get_env("TG_STATE_BUCKET", "your-terraform-state-bucket")
+  remote_state_project  = get_env("TG_STATE_PROJECT", "your-mgmt-project")
+  remote_state_location = get_env("TG_STATE_LOCATION", "US")
+}
 
-새 프로젝트를 배포하기 위한 Jenkins Job을 생성합니다.
-
-#### 옵션 A: 프로젝트별 전용 Job 생성
-
-**Job 이름**: `terraform-deploy-jsj-game-n`
-
-**Pipeline 설정:**
-```groovy
-pipeline {
-    script path: terraform_gcp_infra/environments/LIVE/jsj-game-n/Jenkinsfile
+inputs = {
+  org_id          = get_env("TG_ORG_ID", "123456789012")
+  billing_account = get_env("TG_BILLING_ACCOUNT", "XXXXXX-XXXXXX-XXXXXX")
 }
 ```
 
-#### 옵션 B: 파라미터화된 단일 Job 사용
+### 3. common.naming.tfvars 수정
 
-기존에 파라미터화된 배포 Job이 있다면, `PROJECT_ID` 파라미터에 `jsj-game-n`을 입력하여 사용합니다.
+```hcl
+# environments/LIVE/gcp-newgame/common.naming.tfvars
 
-### 3. 초기 인프라 배포
+project_id     = "gcp-newgame"
+project_name   = "newgame"
+environment    = "live"
+organization   = "delabs"
+region_primary = "us-west1"
+region_backup  = "us-west2"
 
-배포는 **반드시 순서대로** 수행해야 합니다:
+folder_product = "gcp-newgame"
+folder_region  = "us-west1"
+folder_env     = "LIVE"
 
-```
-1. 00-project       # GCP 프로젝트 생성 및 API 활성화
-   ↓
-2. 10-network       # VPC 및 서브넷 생성
-   ↓
-3. 20-storage       # Cloud Storage 버킷 생성
-   ↓
-4. 30-security      # IAM 및 보안 설정
-   ↓
-5. 40-observability # 모니터링 및 로깅
-   ↓
-6. 50-workloads     # VM 인스턴스 생성
-   ↓
-7. 60-database      # Cloud SQL 생성
-   ↓
-8. 65-cache         # Memorystore Redis 생성
-   ↓
-9. 70-loadbalancers # 로드밸런서 생성
+management_project_id = "your-mgmt-project"
 ```
 
-**Jenkins 배포 단계:**
+### 4. Jenkinsfile 수정
 
-각 레이어별로 다음 작업을 수행합니다:
+```groovy
+environment {
+    TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/gcp-newgame'
+    GOOGLE_APPLICATION_CREDENTIALS = credentials('your-jenkins-credential-id')
+}
+```
 
-1. **Plan 실행** (ACTION=plan, TARGET_LAYER=00-project)
-   - 변경 사항 검토
-2. **Apply 실행** (ACTION=apply, TARGET_LAYER=00-project)
-   - 승인 대기 → 승인 → 배포
-3. **다음 레이어로 진행**
+---
 
-**전체 스택 배포 (권장하지 않음):**
-- `TARGET_LAYER=all`로 한 번에 배포 가능하나, 문제 발생 시 디버깅이 어려움
-- 최초 배포는 레이어별로 수행 권장
+## 생성 후 필수 설정
+
+스크립트로 자동 치환되지 않는 설정들입니다. **반드시 수동으로 설정해야 합니다.**
+
+### 1. common.naming.tfvars - 네트워크 설정
+
+```hcl
+network_config = {
+  # Subnet CIDR - 다른 프로젝트와 중복되지 않게 설계
+  subnets = {
+    dmz     = "10.20.10.0/24"   # 외부 접근 가능 영역
+    private = "10.20.11.0/24"   # 내부 서비스 영역
+    psc     = "10.20.12.0/24"   # Private Service Connect
+  }
+
+  # PSC Endpoint IP (Cloud SQL, Redis용)
+  psc_endpoints = {
+    cloudsql = "10.20.12.51"
+    redis    = ["10.20.12.3", "10.20.12.2"]
+  }
+
+  # VPC Peering 설정
+  peering = {
+    mgmt_project_id  = "your-mgmt-project"
+    mgmt_vpc_name    = "your-mgmt-vpc"
+  }
+}
+```
+
+### 2. common.naming.tfvars - VM 및 DNS 설정
+
+```hcl
+# VM 고정 IP
+vm_static_ips = {
+  gs01 = "10.20.11.3"
+  gs02 = "10.20.11.6"
+}
+
+# DNS 설정
+dns_config = {
+  domain      = "yourdomain.internal."
+  zone_suffix = "yourdomain-internal"
+}
+
+# VM 관리자 계정
+vm_admin_config = {
+  username = "admin-user"
+  password = "SecurePassword123!"
+}
+```
+
+### 3. 50-workloads/workloads.tfvars - VM 인스턴스
+
+```hcl
+instances = {
+  "gs01" = {
+    zone_suffix       = "a"
+    machine_type      = "custom-4-8192"
+    boot_disk_size_gb = 128
+    boot_disk_type    = "pd-ssd"
+    tags              = ["game-server", "ssh-from-iap", "private-zone"]
+    image_family      = "rocky-linux-10-optimized-gcp"
+    image_project     = "rocky-linux-cloud"
+    labels = {
+      role = "game-server"
+      tier = "backend"
+    }
+    startup_script_file = "scripts/lobby.sh"
+    subnet_type         = "private"
+  }
+}
+```
+
+---
+
+## Jenkins Job 생성
+
+### 1. Pipeline Job 생성
+
+Jenkins에서 새 Pipeline Job을 생성합니다:
+
+- **Job 이름**: `terraform-deploy-gcp-newgame`
+- **Pipeline 설정**:
+  - Definition: Pipeline script from SCM
+  - SCM: Git
+  - Script Path: `terraform_gcp_infra/environments/LIVE/gcp-newgame/Jenkinsfile`
+
+### 2. Credential 확인
+
+Jenkinsfile에서 사용하는 Credential ID가 Jenkins에 등록되어 있는지 확인:
+
+```groovy
+GOOGLE_APPLICATION_CREDENTIALS = credentials('your-jenkins-credential-id')
+```
+
+---
+
+## 초기 배포
+
+Jenkinsfile의 Phase 순서대로 배포합니다.
+
+### Phase 순서
+
+| Phase | 레이어 | 설명 |
+|-------|--------|------|
+| 1 | 00-project | GCP 프로젝트 생성 |
+| 2 | 10-network | VPC, Subnet, Firewall |
+| 3 | 20-storage, 30-security | Storage, IAM |
+| 4 | 40-observability | Monitoring (선택) |
+| 5 | 60-database, 65-cache | Cloud SQL, Redis |
+| 6 | 12-dns | Private DNS |
+| 7 | 50-workloads | VM 인스턴스 |
+| 8 | 70-loadbalancers | Load Balancer |
+
+### Jenkins 배포 실행
+
+1. Jenkins Job 실행
+2. **ACTION**: `plan` 선택 → 변경사항 검토
+3. **ACTION**: `apply` 선택 → 배포 실행
 
 ---
 
@@ -248,108 +288,61 @@ pipeline {
 
 ### 문제 1: "프로젝트가 이미 존재합니다"
 
-**원인:** 동일한 PROJECT_ID로 프로젝트가 이미 생성됨
+```
+✗ 프로젝트가 이미 존재합니다: environments/LIVE/gcp-newgame
+```
 
-**해결:**
+**해결**:
 ```bash
 # 기존 프로젝트 삭제 (주의!)
-rm -rf terraform_gcp_infra/environments/LIVE/jsj-game-n
-
-# 또는 다른 PROJECT_ID 사용
+rm -rf environments/LIVE/gcp-newgame
 ```
 
-### 문제 2: "yq가 설치되어 있지 않습니다"
+### 문제 2: sed 명령어 에러 (macOS)
 
-**원인:** YAML 파서 `yq`가 시스템에 설치되지 않음
+스크립트는 macOS와 Linux 모두 지원합니다. `sedi()` 함수가 자동으로 처리합니다.
 
-**해결:**
+문제가 계속되면 GNU sed 설치:
 ```bash
-# Ubuntu/Debian
-sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
-sudo chmod +x /usr/local/bin/yq
+brew install gnu-sed
+```
 
+### 문제 3: yq가 설치되어 있지 않습니다
+
+**해결**: 스크립트가 기본값으로 동작합니다.
+
+yq 설치 (선택):
+```bash
 # macOS
 brew install yq
+
+# Linux
+sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+sudo chmod +x /usr/local/bin/yq
 ```
 
-**또는**: 스크립트는 `yq` 없이도 기본값으로 동작합니다.
+### 문제 4: Terraform state 버킷 접근 오류
 
-### 문제 3: Jenkins에서 detached HEAD 상태
+**원인**: GCP 인증 또는 권한 문제
 
-**원인:** Jenkins가 특정 커밋을 checkout하여 detached HEAD 상태가 됨
-
-**증상:**
-```
-ℹ 현재 브랜치: HEAD
-[detached HEAD 6606944] feat: jsj-game-n 프로젝트 생성
-```
-
-**해결:**
-- 이미 Jenkinsfile에서 자동으로 433_code 브랜치로 전환하도록 수정됨
-- Jenkins Job 설정에서 "Branch Specifier"를 `*/433_code`로 설정 확인
-
-### 문제 4: Git 푸시 실패 (권한 없음)
-
-**원인:** Git 인증 설정 필요
-
-**해결:**
+**해결**:
 ```bash
-# SSH 키 설정 확인
-ssh -T git@github.com
+# 인증 확인
+gcloud auth application-default login
 
-# 또는 Personal Access Token 사용
-git remote set-url origin https://YOUR_TOKEN@github.com/your-org/your-repo.git
-```
-
-### 문제 5: sed 명령어 에러 (macOS)
-
-**원인:** macOS의 BSD sed와 Linux의 GNU sed 차이
-
-**해결:**
-```bash
-# macOS에서 GNU sed 설치
-brew install gnu-sed
-
-# PATH에 추가
-export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"
+# 또는 서비스 계정 키 사용
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json
 ```
 
 ---
 
-## 추가 정보
+## 관련 문서
 
-### 수동으로 수정이 필요할 수 있는 파일
-
-자동 치환되지 않는 선택적 설정들:
-
-1. **50-workloads/terraform.tfvars**
-   - VM 인스턴스 이름: `jsj-lobby-01`, `jsj-web-01` 등
-   - Instance Group 이름: `jsj-web-ig-a` 등
-
-2. **60-database/terraform.tfvars**
-   - Read replica 이름: `default-templet-mysql-read-1`
-
-3. **65-cache/terraform.tfvars**
-   - Display name: `default-templet prod redis`
-   - Labels: `app = "default-templet"`
-
-4. **20-storage/terraform.tfvars**
-   - CORS origin (도메인)
-
-5. **각 레이어의 README.md**
-   - 예시 경로 및 설명
-
-### 관련 문서
-
-- [Terragrunt 사용 가이드](../README.md)
-- [Jenkins Pipeline 설정](./JENKINS_SETUP.md)
-- [네트워크 구성](../10-network/README.md)
-- [워크로드 배포](../50-workloads/README.md)
+- [Terragrunt 사용 가이드](./guides/terragrunt-usage.md)
+- [Jenkins CI/CD 가이드](./guides/jenkins-cicd.md)
+- [네트워크 설계](./architecture/network-design.md)
+- [예제 설정 파일](./examples/)
 
 ---
 
-## 문의
-
-문제가 발생하거나 질문이 있으시면:
-- GitHub Issues 생성
-- DevOps 팀에 문의
+**Last Updated**: 2025-12-05
