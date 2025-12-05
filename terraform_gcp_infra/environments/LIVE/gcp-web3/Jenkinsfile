@@ -34,7 +34,7 @@ pipeline {
         TF_INPUT = 'false'
         TG_NON_INTERACTIVE = 'true'
         // ⚠️ create_project.sh에서 자동 치환됨
-        TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/gcp-nft'
+        TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/gcp-web3'
         // GCP 인증 설정 (Jenkins Credential 사용)
         GOOGLE_APPLICATION_CREDENTIALS = credentials('delabs-terraform-admin')
         // IPv4 강제 사용 (IPv6 unreachable 문제 해결)

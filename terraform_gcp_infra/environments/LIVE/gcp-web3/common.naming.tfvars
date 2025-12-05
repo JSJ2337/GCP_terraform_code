@@ -5,7 +5,7 @@
 # 도메인이 있다면 슬러그 형태로: 예) mycompany.com → mycompany
 # ⚠️ 아래 값들은 create_project.sh에서 자동 치환됨
 
-project_id     = "gcp-nft"
+project_id     = "gcp-web3"
 project_name   = "web3"
 environment    = "live"
 organization   = "delabs"
@@ -14,7 +14,7 @@ region_backup  = "us-west2"
 
 # Bootstrap 폴더 설정 (environment_folder_ids 키 조회용)
 # 형식: product/region/env → "my-project/asia-northeast3/LIVE"
-folder_product = "gcp-nft"
+folder_product = "gcp-web3"
 folder_region  = "us-west1"
 folder_env     = "LIVE"
 
@@ -25,7 +25,7 @@ folder_env     = "LIVE"
 
 base_labels = {
   managed-by  = "terraform"
-  project     = "nft"
+  project     = "web3"
   team        = "system-team"
 }
 
