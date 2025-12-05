@@ -4,23 +4,27 @@ Terraform State의 중앙 집중식 관리 전략입니다.
 
 ## 아키텍처 개요
 
-```text
-┌─────────────────────────────────────────┐
-│   Bootstrap Project (jsj-system-mgmt)   │
-│                                          │
-│  ┌────────────────────────────────────┐ │
-│  │ jsj-terraform-state-prod (GCS)     │ │
-│  │                                    │ │
-│  │  jsj-game-k/                      │ │
-│  │  ├── 00-project/default.tfstate   │ │
-│  │  ├── 10-network/default.tfstate   │ │
-│  │  ├── 20-storage/default.tfstate   │ │
-│  │  └── ...                          │ │
-│  │                                    │ │
-│  │  jsj-game-l/                      │ │
-│  │  └── ...                          │ │
-│  └────────────────────────────────────┘ │
-└─────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph Bootstrap["🏗️ Bootstrap Project (jsj-system-mgmt)"]
+        subgraph GCS["📦 jsj-terraform-state-prod (GCS)"]
+            subgraph GAMEK["jsj-game-k/"]
+                K00["00-project/default.tfstate"]
+                K10["10-network/default.tfstate"]
+                K20["20-storage/default.tfstate"]
+                K_ETC["..."]
+            end
+
+            subgraph GAMEL["jsj-game-l/"]
+                L_ETC["..."]
+            end
+        end
+    end
+
+    style Bootstrap fill:#e3f2fd
+    style GCS fill:#fff3e0
+    style GAMEK fill:#e8f5e9
+    style GAMEL fill:#f3e5f5
 ```
 
 ## 핵심 원칙
