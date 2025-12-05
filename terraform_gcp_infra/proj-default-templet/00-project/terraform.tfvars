@@ -8,9 +8,8 @@ folder_id       = null
 # billing_account = "REDACTED_BILLING_ACCOUNT"
 
 # Labels (only add extra labels here; modules/naming.common_labels will be merged)
-labels = {
-  # team = "dev-team"
-}
+# common.naming.tfvars의 base_labels에 이미 project, team 라벨이 설정되어 있습니다.
+labels = {}
 
 # APIs to enable
 apis = [

@@ -1,19 +1,19 @@
 # Cloud SQL Configuration
 # Instance name format: {project_name}-{environment}-{db_suffix}
-# Example: myproj-live-gdb, myproj-qa-dev-ldb
+# Example: gcby-prod-gdb, gcby-prod-ldb
 
 # DB instance suffix (구분 용도에 따라 변경)
-db_suffix = "mysql"  # gdb (game db), ldb (log db), udb (user db) 등
+db_suffix = "gdb-m1"  # gdb (game db), ldb (log db), udb (user db) 등
 
 # Instance configuration (Terragrunt supplies region_primary by default)
 # region            = "asia-northeast3"
 database_version  = "MYSQL_8_0"
-tier              = "db-n1-standard-1"
-edition           = "ENTERPRISE"  # Cloud SQL Edition (ENTERPRISE, ENTERPRISE_PLUS)
+tier              = "db-n1-standard-4"  # 4 vCPUs, 15GB RAM (N1 시리즈)
+edition           = "ENTERPRISE"        # N1 tier는 ENTERPRISE edition
 availability_type = "REGIONAL" # Live 기본값 (qa-dev 환경 시 ZONAL로 조정)
 
 # Disk configuration
-disk_size       = 20
+disk_size       = 100
 disk_type       = "PD_SSD"
 disk_autoresize = true
 
@@ -59,47 +59,6 @@ enable_general_log    = false  # Log all queries (Live: false, qa-dev: true)
 log_output            = "FILE" # FILE (send to Cloud Logging) or TABLE
 
 # Databases to create
-# Databases to create
-# 자동 생성: {project_name}_gamedb (main.tf의 locals에서 생성)
-# 추가 database가 필요한 경우에만 여기에 명시
-databases = []
-
-# Users to create
-# 자동 생성: root, {project_name}_app_user (main.tf의 locals에서 생성)
-# 추가 user가 필요한 경우에만 여기에 명시
-# IMPORTANT: 비밀번호는 variables.tf에서 관리 (TODO: Secret Manager로 이전)
-users = []
-# Databases to create
-# 자동 생성: {project_name}_gamedb (main.tf의 locals에서 생성)
-# 추가 database가 필요한 경우에만 여기에 명시
-databases = []
-
-# Users to create
-# 자동 생성: root, {project_name}_app_user (main.tf의 locals에서 생성)
-# 추가 user가 필요한 경우에만 여기에 명시
-# IMPORTANT: 비밀번호는 variables.tf에서 관리 (TODO: Secret Manager로 이전)
-users = []
-# Databases to create
-# 자동 생성: {project_name}_gamedb (main.tf의 locals에서 생성)
-# 추가 database가 필요한 경우에만 여기에 명시
-databases = []
-
-# Users to create
-# 자동 생성: root, {project_name}_app_user (main.tf의 locals에서 생성)
-# 추가 user가 필요한 경우에만 여기에 명시
-# IMPORTANT: 비밀번호는 variables.tf에서 관리 (TODO: Secret Manager로 이전)
-users = []
-# Databases to create
-# 자동 생성: {project_name}_gamedb (main.tf의 locals에서 생성)
-# 추가 database가 필요한 경우에만 여기에 명시
-databases = []
-
-# Users to create
-# 자동 생성: root, {project_name}_app_user (main.tf의 locals에서 생성)
-# 추가 user가 필요한 경우에만 여기에 명시
-# IMPORTANT: 비밀번호는 variables.tf에서 관리 (TODO: Secret Manager로 이전)
-users = []
-# Databases to create
 # 자동 생성: {project_name}_gamedb (main.tf의 locals에서 생성)
 # 추가 database가 필요한 경우에만 여기에 명시
 databases = []
@@ -116,7 +75,7 @@ users = []
 read_replicas = {
   replica1 = {
     # region 미지정 시 Master와 같은 리전(region_primary) 자동 사용
-    tier              = "db-n1-standard-1"
+    tier              = "db-n1-standard-4"  # 4 vCPUs, 15GB RAM (Master와 동일)
     availability_type = "ZONAL" # Read Replica는 ZONAL만 가능
     # Optional overrides per replica:
     # region = "asia-northeast1"  # DR용 다른 리전 지정 시

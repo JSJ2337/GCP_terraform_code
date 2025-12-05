@@ -103,12 +103,6 @@ module "net" {
 
   firewall_rules = var.firewall_rules
 
-  # Private Service Connection (VPC Peering)
-  enable_private_service_connection        = var.enable_private_service_connection
-  private_service_connection_address       = var.private_service_connection_address
-  private_service_connection_prefix_length = var.private_service_connection_prefix_length
-  private_service_connection_name          = local.private_service_connection_name
-
   # Ensure all required APIs are enabled and propagated
   depends_on = [time_sleep.wait_servicenetworking_api]
 }
@@ -210,4 +204,83 @@ resource "google_network_connectivity_service_connection_policy" "cloudsql_psc" 
       error_message = "cloudsql_psc_subnet_name must reference an existing subnet in additional_subnets."
     }
   }
+}
+
+# VPC Peering to mgmt VPC for DNS resolution
+resource "google_compute_network_peering" "to_mgmt" {
+  name         = "peering-${var.project_name}-to-mgmt"
+  network      = module.net.vpc_self_link  # Implicit dependency
+  peer_network = var.peer_network_url
+
+  import_custom_routes = true
+  export_custom_routes = true
+}
+
+# -----------------------------------------------------------------------------
+# PSC Forwarding Rule for Cloud SQL (consumer VPC에서 생성)
+# -----------------------------------------------------------------------------
+resource "google_compute_address" "cloudsql_psc" {
+  count = length(var.cloudsql_service_attachment) > 0 ? 1 : 0
+
+  project      = var.project_id
+  name         = "${var.project_name}-${var.environment}-gdb-m1-psc"
+  region       = var.region_primary
+  subnetwork   = local.db_subnet_self_link
+  address_type = "INTERNAL"
+  address      = var.psc_cloudsql_ip
+  purpose      = "GCE_ENDPOINT"
+
+  depends_on = [module.net]
+}
+
+resource "google_compute_forwarding_rule" "cloudsql_psc" {
+  count = length(var.cloudsql_service_attachment) > 0 ? 1 : 0
+
+  project               = var.project_id
+  name                  = "${var.project_name}-${var.environment}-gdb-m1-psc-fr"
+  region                = var.region_primary
+  network               = module.net.vpc_self_link
+  ip_address            = google_compute_address.cloudsql_psc[0].id
+  load_balancing_scheme = ""
+  target                = var.cloudsql_service_attachment
+
+  # Cross-region access 활성화
+  allow_psc_global_access = true
+
+  depends_on = [module.net]
+}
+
+# -----------------------------------------------------------------------------
+# PSC Forwarding Rules for Redis (consumer VPC에서 생성)
+# Redis Cluster는 2개의 Service Attachment (Discovery + Shard)가 있으므로 2개 Endpoint 필요
+# -----------------------------------------------------------------------------
+resource "google_compute_address" "redis_psc" {
+  count = length(var.redis_service_attachments)
+
+  project      = var.project_id
+  name         = "${var.project_name}-${var.environment}-redis-psc-${count.index}"
+  region       = var.region_primary
+  subnetwork   = local.db_subnet_self_link
+  address_type = "INTERNAL"
+  address      = var.psc_redis_ips[count.index]
+  purpose      = "GCE_ENDPOINT"
+
+  depends_on = [module.net]
+}
+
+resource "google_compute_forwarding_rule" "redis_psc" {
+  count = length(var.redis_service_attachments)
+
+  project               = var.project_id
+  name                  = "${var.project_name}-${var.environment}-redis-psc-fr-${count.index}"
+  region                = var.region_primary
+  network               = module.net.vpc_self_link
+  ip_address            = google_compute_address.redis_psc[count.index].id
+  load_balancing_scheme = ""
+  target                = var.redis_service_attachments[count.index]
+
+  # Cross-region access 활성화
+  allow_psc_global_access = true
+
+  depends_on = [module.net]
 }

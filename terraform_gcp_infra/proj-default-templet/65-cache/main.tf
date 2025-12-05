@@ -88,7 +88,6 @@ module "cache" {
   maintenance_window_start_minute = var.maintenance_window_start_minute
 
   # Cross-project PSC 연결 (mgmt VPC에서 접근 허용)
-  # google_redis_cluster_user_created_connections 리소스를 통해 등록됨
   cross_project_psc_connections = var.enable_cross_project_psc && length(local.mgmt_redis_forwarding_rules) > 0 ? [
     {
       project_id = var.mgmt_project_id
@@ -96,7 +95,7 @@ module "cache" {
       forwarding_rules = [
         for fr in local.mgmt_redis_forwarding_rules : {
           psc_connection_id = fr.psc_connection_id
-          forwarding_rule   = fr.forwarding_rule  # Full URL: projects/{project}/regions/{region}/forwardingRules/{name}
+          forwarding_rule   = fr.forwarding_rule
           ip_address        = fr.ip_address
         }
       ]

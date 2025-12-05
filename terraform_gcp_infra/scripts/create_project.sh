@@ -6,13 +6,12 @@ set -eu
 # =============================================================================
 # 사용법: ./create_project.sh <project_id> <project_name> <organization> <environment> <region_primary>
 #
-# 예시: ./create_project.sh jsj-game-n game-n jsj LIVE asia-northeast3
+# 예시: ./create_project.sh my-game-prod game-prod myorg LIVE asia-northeast3
 #
 # 이 스크립트는:
 # 1. proj-default-templet을 복사
 # 2. 필수 설정 파일들의 값을 치환
 # 3. 현재 브랜치에 commit
-# 4. GitHub에 push
 # =============================================================================
 
 # =============================================================================
@@ -31,6 +30,9 @@ DEFAULT_REMOTE_STATE_LOCATION="US"
 # GCP 조직 및 빌링 설정 (yq 없을 때 사용될 기본값)
 DEFAULT_ORG_ID="REDACTED_ORG_ID"
 DEFAULT_BILLING_ACCOUNT="REDACTED_BILLING_ACCOUNT"
+
+# Jenkins Credential ID (GCP 서비스 계정)
+DEFAULT_JENKINS_CREDENTIAL_ID="gcp-jenkins-service-account"
 
 # 디렉토리 및 파일명 설정
 CONFIG_FILE_NAME="configs/defaults.yaml"
@@ -85,7 +87,7 @@ sedi() {
 
 if [ $# -lt 5 ]; then
     log_error "사용법: $0 <project_id> <project_name> <organization> <environment> <region_primary>"
-    log_info "예시: $0 jsj-game-n game-n jsj LIVE asia-northeast3"
+    log_info "예시: $0 my-game-prod game-prod myorg LIVE asia-northeast3"
     log_info "환경: LIVE, QA, STG"
     exit 1
 fi
@@ -137,6 +139,7 @@ if ! command -v yq &> /dev/null; then
     REMOTE_STATE_LOCATION="${DEFAULT_REMOTE_STATE_LOCATION}"
     ORG_ID="${DEFAULT_ORG_ID}"
     BILLING_ACCOUNT="${DEFAULT_BILLING_ACCOUNT}"
+    JENKINS_CREDENTIAL_ID="${DEFAULT_JENKINS_CREDENTIAL_ID}"
 else
     log_info "defaults.yaml에서 설정값 로드 중..."
     REMOTE_STATE_BUCKET=$(yq eval '.terraform.remote_state.bucket' "${CONFIG_FILE}")
@@ -144,6 +147,7 @@ else
     REMOTE_STATE_LOCATION=$(yq eval '.terraform.remote_state.location' "${CONFIG_FILE}")
     ORG_ID=$(yq eval '.gcp.org_id' "${CONFIG_FILE}")
     BILLING_ACCOUNT=$(yq eval '.gcp.billing_account' "${CONFIG_FILE}")
+    JENKINS_CREDENTIAL_ID=$(yq eval '.jenkins.credential_id // "gcp-jenkins-service-account"' "${CONFIG_FILE}")
 fi
 
 log_success "설정값 로드 완료"
@@ -192,14 +196,13 @@ log_info "설정 파일 치환 시작..."
 # -----------------------------------------------------------------------------
 # 1. root.hcl
 # -----------------------------------------------------------------------------
-log_info "[1/5] root.hcl 치환 중..."
+log_info "[1/3] root.hcl 치환 중..."
 ROOT_HCL="${TARGET_DIR}/root.hcl"
 
 # 플레이스홀더를 실제 값으로 치환
 sedi "s|REPLACE_REMOTE_STATE_BUCKET|${REMOTE_STATE_BUCKET}|g" "${ROOT_HCL}"
-sedi "s|REPLACE_REMOTE_STATE_PROJECT|${REMOTE_STATE_PROJECT}|g" "${ROOT_HCL}"
+sedi "s|REPLACE_MANAGEMENT_PROJECT_ID|${REMOTE_STATE_PROJECT}|g" "${ROOT_HCL}"
 sedi "s|REPLACE_REMOTE_STATE_LOCATION|${REMOTE_STATE_LOCATION}|g" "${ROOT_HCL}"
-sedi "s|REPLACE_PROJECT_STATE_PREFIX|${PROJECT_ID}|g" "${ROOT_HCL}"
 sedi "s|REPLACE_ORG_ID|${ORG_ID}|g" "${ROOT_HCL}"
 sedi "s|REPLACE_BILLING_ACCOUNT|${BILLING_ACCOUNT}|g" "${ROOT_HCL}"
 
@@ -208,64 +211,47 @@ log_success "root.hcl 치환 완료"
 # -----------------------------------------------------------------------------
 # 2. common.naming.tfvars
 # -----------------------------------------------------------------------------
-log_info "[2/5] common.naming.tfvars 치환 중..."
+log_info "[2/3] common.naming.tfvars 치환 중..."
 COMMON_TFVARS="${TARGET_DIR}/common.naming.tfvars"
 
 # environment 값 변환 (LIVE -> live, QA -> qa, STG -> stg)
 ENVIRONMENT_LOWER=$(echo "${ENVIRONMENT}" | tr '[:upper:]' '[:lower:]')
 
-sedi "s|^project_id[[:space:]]*=.*|project_id     = \"${PROJECT_ID}\"|g" "${COMMON_TFVARS}"
-sedi "s|^project_name[[:space:]]*=.*|project_name   = \"${PROJECT_NAME}\"|g" "${COMMON_TFVARS}"
-sedi "s|^environment[[:space:]]*=.*|environment    = \"${ENVIRONMENT_LOWER}\"|g" "${COMMON_TFVARS}"
-sedi "s|^organization[[:space:]]*=.*|organization   = \"${ORGANIZATION}\"|g" "${COMMON_TFVARS}"
-sedi "s|^region_primary[[:space:]]*=.*|region_primary = \"${REGION_PRIMARY}\"|g" "${COMMON_TFVARS}"
-sedi "s|^region_backup[[:space:]]*=.*|region_backup  = \"${REGION_BACKUP}\"|g" "${COMMON_TFVARS}"
+# 기본 프로젝트 정보 치환
+sedi "s|YOUR_PROJECT_ID|${PROJECT_ID}|g" "${COMMON_TFVARS}"
+sedi "s|YOUR_PROJECT_NAME|${PROJECT_NAME}|g" "${COMMON_TFVARS}"
+sedi "s|YOUR_ORGANIZATION|${ORGANIZATION}|g" "${COMMON_TFVARS}"
+sedi "s|YOUR_REGION_PRIMARY|${REGION_PRIMARY}|g" "${COMMON_TFVARS}"
+sedi "s|YOUR_REGION_BACKUP|${REGION_BACKUP}|g" "${COMMON_TFVARS}"
 
-# folder 설정 치환 (Bootstrap 폴더 조회용)
-sedi "s|^folder_env[[:space:]]*=.*|folder_env     = \"${ENVIRONMENT}\"|g" "${COMMON_TFVARS}"
+# Bootstrap 폴더 설정 치환
+sedi "s|YOUR_FOLDER_PRODUCT|${PROJECT_ID}|g" "${COMMON_TFVARS}"
+sedi "s|YOUR_FOLDER_REGION|${REGION_PRIMARY}|g" "${COMMON_TFVARS}"
+sedi "s|YOUR_FOLDER_ENV|${ENVIRONMENT}|g" "${COMMON_TFVARS}"
+
+# 관리 프로젝트 정보 치환
+sedi "s|YOUR_MANAGEMENT_PROJECT_ID|${REMOTE_STATE_PROJECT}|g" "${COMMON_TFVARS}"
+sedi "s|YOUR_MGMT_PROJECT_ID|${REMOTE_STATE_PROJECT}|g" "${COMMON_TFVARS}"
+
+# 팀/조직 치환 (기본값으로 organization 사용)
+sedi "s|YOUR_TEAM|${ORGANIZATION}-team|g" "${COMMON_TFVARS}"
 
 log_success "common.naming.tfvars 치환 완료"
 
 # -----------------------------------------------------------------------------
 # 3. Jenkinsfile
 # -----------------------------------------------------------------------------
-log_info "[3/5] Jenkinsfile 치환 중..."
+log_info "[3/3] Jenkinsfile 치환 중..."
 JENKINSFILE="${TARGET_DIR}/Jenkinsfile"
 
 # TG_WORKING_DIR 플레이스홀더 치환
-# 템플릿: terraform_gcp_infra/environments/LIVE/YOUR_PROJECT_NAME
-sedi "s|YOUR_PROJECT_NAME|${PROJECT_ID}|g" "${JENKINSFILE}"
-# LIVE가 아닌 경우 환경 디렉토리도 치환
-sedi "s|/${ENVIRONMENTS_DIR_NAME}/LIVE/|/${ENVIRONMENTS_DIR_NAME}/${ENVIRONMENT}/|g" "${JENKINSFILE}"
+sedi "s|YOUR_FOLDER_ENV|${ENVIRONMENT}|g" "${JENKINSFILE}"
+sedi "s|YOUR_PROJECT_ID|${PROJECT_ID}|g" "${JENKINSFILE}"
+
+# Jenkins Credential ID 치환
+sedi "s|YOUR_JENKINS_CREDENTIAL_ID|${JENKINS_CREDENTIAL_ID}|g" "${JENKINSFILE}"
 
 log_success "Jenkinsfile 치환 완료"
-
-# -----------------------------------------------------------------------------
-# 4. 50-workloads/terraform.tfvars - VM/IG 이름 접두사 치환
-# -----------------------------------------------------------------------------
-log_info "[4/5] 50-workloads/terraform.tfvars 치환 중..."
-WORKLOADS_TFVARS="${TARGET_DIR}/50-workloads/terraform.tfvars"
-
-# VM 및 Instance Group 이름의 "jsj-" 접두사를 organization으로 치환
-# 예: "jsj-lobby-01" → "myorg-lobby-01", ["jsj-web-01"] → ["myorg-web-01"]
-sedi "s|\"jsj-|\"${ORGANIZATION}-|g" "${WORKLOADS_TFVARS}"
-
-log_success "50-workloads/terraform.tfvars 치환 완료"
-
-# -----------------------------------------------------------------------------
-# 5. 70-loadbalancers 하위 terraform.tfvars - IG 이름 접두사 치환
-# -----------------------------------------------------------------------------
-log_info "[5/5] 70-loadbalancers 하위 terraform.tfvars 치환 중..."
-
-# 70-loadbalancers 하위의 모든 terraform.tfvars 파일 치환
-for LB_TFVARS in "${TARGET_DIR}"/70-loadbalancers/*/terraform.tfvars; do
-    if [ -f "${LB_TFVARS}" ]; then
-        sedi "s|\"jsj-|\"${ORGANIZATION}-|g" "${LB_TFVARS}"
-        log_info "  치환 완료: $(basename $(dirname ${LB_TFVARS}))/terraform.tfvars"
-    fi
-done
-
-log_success "70-loadbalancers 치환 완료"
 
 # =============================================================================
 # Git 작업
@@ -289,6 +275,7 @@ git commit -m "feat: ${PROJECT_ID} 프로젝트 생성
 - PROJECT_ID: ${PROJECT_ID}
 - PROJECT_NAME: ${PROJECT_NAME}
 - ORGANIZATION: ${ORGANIZATION}
+- ENVIRONMENT: ${ENVIRONMENT}
 - REGION: ${REGION_PRIMARY}
 
 🤖 Generated with create_project.sh"
@@ -306,7 +293,18 @@ echo "  프로젝트 위치: ${TARGET_DIR}"
 echo "  Git 브랜치: ${CURRENT_BRANCH}"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-log_info "다음 단계:"
-echo "  1. Jenkins에서 terraform-deploy-${PROJECT_ID} Job 생성"
-echo "  2. 초기 배포: 00-project → 10-network → ... 순서로 apply"
+log_warn "다음 단계 (수동 설정 필요):"
+echo "  1. common.naming.tfvars 수정:"
+echo "     - network_config.subnets: 프로젝트별 CIDR 설정"
+echo "     - network_config.psc_endpoints: PSC Endpoint IP 설정"
+echo "     - network_config.peering: VPC Peering 설정"
+echo "     - vm_static_ips: VM 고정 IP 설정"
+echo "     - dns_config: Private DNS 도메인 설정"
+echo "     - vm_admin_config: VM 관리자 계정 설정"
+echo ""
+echo "  2. Jenkins Job 생성:"
+echo "     - Script Path: environments/${ENVIRONMENT}/${PROJECT_ID}/Jenkinsfile"
+echo ""
+echo "  3. 초기 배포:"
+echo "     - 00-project → 10-network → 12-dns → ... 순서로 apply"
 echo ""

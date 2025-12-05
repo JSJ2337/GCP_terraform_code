@@ -11,7 +11,7 @@ variable "project_name" {
 variable "environment" {
   type        = string
   description = "환경 값 (예: prod, stg)"
-  default     = "live"
+  default     = "prod"
 }
 
 variable "organization" {
@@ -175,18 +175,18 @@ variable "enable_cross_project_psc" {
 
 variable "state_bucket" {
   type        = string
-  description = "Terraform State 버킷 이름 (terraform_remote_state용)"
-  default     = "delabs-terraform-state-live"
+  description = "Terraform State 버킷 이름 (terraform_remote_state용) - terragrunt에서 주입"
+  default     = ""
 }
 
 variable "mgmt_project_id" {
   type        = string
-  description = "Management 프로젝트 ID (PSC Endpoint가 있는 프로젝트)"
-  default     = "delabs-gcp-mgmt"
+  description = "Management 프로젝트 ID (PSC Endpoint가 있는 프로젝트) - terragrunt에서 주입"
+  default     = ""
 }
 
 variable "mgmt_vpc_network" {
   type        = string
-  description = "Management VPC Network URL"
-  default     = "projects/delabs-gcp-mgmt/global/networks/delabs-gcp-mgmt-vpc"
+  description = "Management VPC Network URL - terragrunt에서 주입"
+  default     = ""
 }

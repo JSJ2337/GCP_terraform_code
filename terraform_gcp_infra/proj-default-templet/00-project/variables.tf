@@ -70,7 +70,7 @@ variable "bootstrap_state_bucket" {
 
 variable "bootstrap_state_prefix" {
   type        = string
-  default     = "bootstrap/00-foundation"
+  default     = "bootstrap"
   description = "GCS prefix for bootstrap state (root.hcl에서 자동 전달)"
 }
 

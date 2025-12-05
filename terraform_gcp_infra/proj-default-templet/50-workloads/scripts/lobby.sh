@@ -1,16 +1,26 @@
 #!/usr/bin/env bash
-set -euo pipefail
-
 # Rocky Linux 10 startup script for lobby instances
+# Note: set -e 제거 - 메타데이터 조회 실패 시에도 계속 진행하도록
+
+set -uo pipefail
 
 # GCE 메타데이터에서 Admin 사용자 정보 가져오기
 METADATA_URL="http://metadata.google.internal/computeMetadata/v1"
-ADMIN_USER=$(curl -s -H "Metadata-Flavor: Google" "${METADATA_URL}/instance/attributes/admin-username" 2>/dev/null || echo "admin")
-ADMIN_PASSWORD=$(curl -s -H "Metadata-Flavor: Google" "${METADATA_URL}/instance/attributes/admin-password" 2>/dev/null || echo "")
+
+# admin-username 가져오기 (실패 시 기본값 사용)
+ADMIN_USER=$(curl -sf -H "Metadata-Flavor: Google" "${METADATA_URL}/instance/attributes/admin-username" 2>/dev/null) || ADMIN_USER="admin"
+
+# admin-password 가져오기 (실패 시 빈 값)
+ADMIN_PASSWORD=$(curl -sf -H "Metadata-Flavor: Google" "${METADATA_URL}/instance/attributes/admin-password" 2>/dev/null) || ADMIN_PASSWORD=""
+
+echo "Starting startup script with user: ${ADMIN_USER}"
 
 # SSH 비밀번호 인증 활성화
 sed -i 's/^PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
 sed -i 's/^#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+# UsePAM yes 설정 (Rocky Linux 10에서 PAM 인증 필수)
+sed -i 's/^#UsePAM.*/UsePAM yes/' /etc/ssh/sshd_config
 
 # sshd_config.d 디렉토리 파일도 수정 (Rocky Linux)
 if [ -d /etc/ssh/sshd_config.d ]; then
@@ -41,6 +51,6 @@ echo "SSH password authentication enabled for user: ${ADMIN_USER}"
 dnf update -y
 
 # Install basic utilities
-dnf install -y curl wget vim net-tools
+dnf install -y curl wget vim net-tools nmap-ncat bind-utils
 
 echo "Lobby instance initialization complete"

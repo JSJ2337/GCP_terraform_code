@@ -48,7 +48,7 @@ module "project_base" {
   project_id   = var.project_id
   project_name = var.project_name != "" ? var.project_name : module.naming.project_name
   # Prefer dynamic folder from bootstrap remote state when folder_id is not provided
-  # environment_folder_ids 키 형식: "product/region/env" (예: "gcp-gcby/us-west1/LIVE")
+  # environment_folder_ids 키 형식: "product/region/env" (예: "games/kr-region/LIVE")
   folder_id = var.folder_id != null ? var.folder_id : data.terraform_remote_state.bootstrap.outputs.environment_folder_ids["${var.folder_product}/${var.folder_region}/${var.folder_env}"]
   # When using folders, org_id should be null
   org_id          = var.folder_id != null ? var.org_id : null

@@ -11,7 +11,7 @@ variable "project_name" {
 variable "environment" {
   type        = string
   description = "Environment identifier"
-  default     = "live"
+  default     = "prod"
 }
 
 variable "organization" {

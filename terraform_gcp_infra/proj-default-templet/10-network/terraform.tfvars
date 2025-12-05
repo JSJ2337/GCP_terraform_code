@@ -3,80 +3,23 @@
 routing_mode = "GLOBAL"
 
 # Additional dedicated subnets (DMZ/Private zones)
-# name, region은 terragrunt.hcl에서 project_name, region_primary 기반 자동 생성
-# CIDR만 정의 (네트워크 대역 설계)
-additional_subnets = [
-  {
-    cidr = "10.3.0.0/24"  # DMZ subnet
-  },
-  {
-    cidr = "10.3.1.0/24"  # Private subnet
-  }
-]
+# 이제 common.naming.tfvars의 network_config.subnets에서 중앙 관리됩니다.
+# terragrunt.hcl에서 동적으로 생성하므로 여기서는 정의하지 않습니다.
+# additional_subnets = []  # terragrunt.hcl에서 자동 생성
 
-# Subnet 이름은 terragrunt.hcl에서 자동 생성
-# 형식: {project_name}-subnet-dmz, {project_name}-subnet-private
+# Subnet 이름과 CIDR은 terragrunt.hcl에서 자동 생성
+# 형식: {project_name}-subnet-{type} (dmz, private, psc)
 
-# Private Service Connection (VPC Peering 방식)
-# Cloud SQL 등의 관리형 서비스가 사용할 IP 대역
-enable_private_service_connection = true
-private_service_connection_address = "10.3.2.0"
-private_service_connection_prefix_length = 24
+# Private Service Connection (VPC Peering 방식) - PSC 쓰므로 불필요
+enable_private_service_connection = false
 
 # Cloud NAT configuration
 nat_min_ports_per_vm = 1024
 
 # Firewall rules
-firewall_rules = [
-  {
-    name           = "allow-ssh-from-iap"
-    direction      = "INGRESS"
-    ranges         = ["35.235.240.0/20"] # IAP range
-    allow_protocol = "tcp"
-    allow_ports    = ["22"]
-    target_tags    = ["ssh-from-iap"]
-    description    = "Allow SSH from Identity-Aware Proxy"
-  },
-  # DMZ zone internal communication
-  {
-    name           = "allow-dmz-internal"
-    direction      = "INGRESS"
-    ranges         = ["10.3.0.0/24"] # DMZ subnet only
-    allow_protocol = "all"
-    allow_ports    = []
-    target_tags    = ["dmz-zone"]
-    description    = "Allow all traffic within DMZ subnet (10.3.0.0/24)"
-  },
-  # Private zone internal communication
-  {
-    name           = "allow-private-internal"
-    direction      = "INGRESS"
-    ranges         = ["10.3.1.0/24"] # Private subnet only
-    allow_protocol = "all"
-    allow_ports    = []
-    target_tags    = ["private-zone"]
-    description    = "Allow all traffic within Private subnet (10.3.1.0/24)"
-  },
-  # DMZ to Private communication (frontend -> backend)
-  {
-    name           = "allow-dmz-to-private"
-    direction      = "INGRESS"
-    ranges         = ["10.3.0.0/24"] # From DMZ
-    allow_protocol = "tcp"
-    allow_ports    = ["8080", "9090", "3000", "5000"]
-    target_tags    = ["private-zone"]
-    description    = "Allow DMZ to Private zone (frontend to backend APIs)"
-  },
-  {
-    name           = "allow-health-check"
-    direction      = "INGRESS"
-    ranges         = ["130.211.0.0/22", "35.191.0.0/16"] # Health check ranges
-    allow_protocol = "tcp"
-    allow_ports    = ["80", "8080"]
-    target_tags    = ["dmz-zone", "private-zone"]
-    description    = "Allow health checks from Google Load Balancer"
-  }
-]
+# terragrunt.hcl에서 common.naming.tfvars의 network_config를 사용해 동적 생성됩니다.
+# (mgmt_subnet_cidr, dmz, private CIDR 자동 참조)
+firewall_rules = []
 
 # Memorystore Enterprise용 PSC 자동 구성
 enable_memorystore_psc_policy = true

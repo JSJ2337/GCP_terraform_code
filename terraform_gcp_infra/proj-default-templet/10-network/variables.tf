@@ -11,7 +11,7 @@ variable "project_name" {
 variable "environment" {
   type        = string
   description = "환경 값 (예: prod, stg)"
-  default     = "live"
+  default     = "prod"
 }
 
 variable "organization" {
@@ -73,7 +73,7 @@ variable "enable_private_service_connection" {
 
 variable "private_service_connection_address" {
   type        = string
-  description = "사설 서비스 연결용 예약 IP 범위 시작 주소 (예: 10.3.2.0)"
+  description = "사설 서비스 연결용 예약 IP 범위 시작 주소 (예: 10.10.12.0)"
   default     = ""
 }
 
@@ -152,7 +152,6 @@ variable "memorystore_psc_connection_limit" {
   default     = 4
 }
 
-# Cloud SQL PSC Configuration
 variable "enable_cloudsql_psc_policy" {
   type        = bool
   description = "Cloud SQL용 Service Connection Policy 생성 여부"
@@ -181,4 +180,34 @@ variable "cloudsql_psc_connection_limit" {
   type        = number
   description = "Cloud SQL PSC 서비스 연결 정책에서 허용할 최대 연결 수"
   default     = 5
+}
+
+variable "cloudsql_service_attachment" {
+  description = "Cloud SQL PSC Service Attachment (from dependency)"
+  type        = string
+  default     = ""
+}
+
+variable "redis_service_attachments" {
+  description = "Redis PSC Service Attachments list (Discovery + Shard from dependency)"
+  type        = list(string)
+  default     = []
+}
+
+variable "psc_cloudsql_ip" {
+  description = "PSC endpoint IP for Cloud SQL (common.naming.tfvars에서 주입)"
+  type        = string
+  default     = ""  # terragrunt.hcl에서 network_config.psc_endpoints.cloudsql 주입
+}
+
+variable "psc_redis_ips" {
+  description = "PSC endpoint IPs for Redis (Discovery + Shard, common.naming.tfvars에서 주입)"
+  type        = list(string)
+  default     = []  # terragrunt.hcl에서 network_config.psc_endpoints.redis 주입
+}
+
+variable "peer_network_url" {
+  description = "VPC Peering 대상 네트워크 URL (common.naming.tfvars에서 전달)"
+  type        = string
+  default     = ""
 }

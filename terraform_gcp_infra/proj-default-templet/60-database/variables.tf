@@ -10,8 +10,8 @@ variable "project_name" {
 
 variable "environment" {
   type        = string
-  description = "환경 값 (live, qa-dev)"
-  default     = "live"
+  description = "환경 값"
+  default     = "prod"
 }
 
 variable "organization" {
@@ -124,8 +124,20 @@ variable "ipv4_enabled" {
 
 variable "private_network" {
   type        = string
-  description = "VPC 네트워크 셀프 링크"
+  description = "VPC 네트워크 셀프 링크 (VPC Peering 방식)"
   default     = ""
+}
+
+variable "enable_psc" {
+  type        = bool
+  description = "Private Service Connect 활성화 (true: PSC Endpoint, false: VPC Peering)"
+  default     = false
+}
+
+variable "psc_allowed_consumer_projects" {
+  type        = list(string)
+  description = "PSC 엔드포인트 생성을 허용할 프로젝트 ID 목록 (자기 프로젝트 + mgmt 프로젝트 등)"
+  default     = []
 }
 
 # Note: require_ssl is deprecated in Google provider 7.x+
@@ -141,18 +153,6 @@ variable "authorized_networks" {
     cidr = string
   }))
   description = "공개 IP 접근 허용 네트워크"
-  default     = []
-}
-
-variable "enable_psc" {
-  type        = bool
-  description = "Private Service Connect 활성화 (true: PSC Endpoint, false: VPC Peering)"
-  default     = false
-}
-
-variable "psc_allowed_consumer_projects" {
-  type        = list(string)
-  description = "PSC 엔드포인트 생성을 허용할 프로젝트 ID 목록 (자기 프로젝트 + mgmt 프로젝트 등)"
   default     = []
 }
 
@@ -291,12 +291,12 @@ variable "db_root_password" {
   type        = string
   description = "Root 사용자 비밀번호 (TODO: Secret Manager로 관리)"
   sensitive   = true
-  default     = "TempPassword123!ChangeMeLater"
+  default     = "REDACTED_PASSWORD"
 }
 
 variable "db_app_password" {
   type        = string
   description = "Application 사용자 비밀번호 (TODO: Secret Manager로 관리)"
   sensitive   = true
-  default     = "AppPassword456!ChangeMeLater"
+  default     = "REDACTED_PASSWORD"
 }

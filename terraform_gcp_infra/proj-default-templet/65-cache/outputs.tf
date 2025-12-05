@@ -42,8 +42,3 @@ output "cluster_endpoints" {
   description = "Cluster endpoints with PSC connection details"
   value       = module.cache.cluster_endpoints
 }
-
-output "cross_project_psc_connections" {
-  description = "Cross-project PSC user-created connections resource"
-  value       = module.cache.cross_project_psc_connections
-}
