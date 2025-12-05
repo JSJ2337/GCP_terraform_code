@@ -16,7 +16,7 @@
 ## 1. 전체 시스템 구조
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'secondaryTextColor': '#000000', 'tertiaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 graph TB
     subgraph Bootstrap["Bootstrap (중앙 관리)"]
         B[bootstrap/]
@@ -99,7 +99,7 @@ graph TB
 ## 2. State 관리 아키텍처
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'secondaryTextColor': '#000000', 'tertiaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 graph LR
     subgraph LocalEnv["로컬 개발 환경"]
         DEV[개발자 PC]
@@ -263,7 +263,7 @@ graph LR
 ## 5. 실제 GCP 리소스 구조
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'secondaryTextColor': '#000000', 'tertiaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 graph TB
     subgraph GCP_Project["GCP Project"]
         subgraph Network_Layer["Network Layer"]
@@ -381,7 +381,7 @@ graph TB
 ## 6. 네트워크 아키텍처
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'secondaryTextColor': '#000000', 'tertiaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 graph LR
     subgraph Internet_Zone["인터넷"]
         USER[사용자]
@@ -510,7 +510,7 @@ sequenceDiagram
 ## 8. 모듈 재사용 예제
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'secondaryTextColor': '#000000', 'tertiaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 graph TB
     subgraph MODULE_DEF["모듈 정의"]
         MODULE[cloudsql-mysql<br/>main.tf, variables.tf, outputs.tf]

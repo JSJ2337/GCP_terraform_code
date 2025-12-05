@@ -22,7 +22,7 @@
 ### 프로젝트 생성 플로우
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'secondaryTextColor': '#000000', 'tertiaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 flowchart TB
     subgraph Input["📝 입력"]
         PARAMS["PROJECT_ID<br/>PROJECT_NAME<br/>ORGANIZATION<br/>ENVIRONMENT<br/>REGION_PRIMARY"]

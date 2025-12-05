@@ -5,7 +5,7 @@
 ## 시스템 구성
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'secondaryTextColor': '#000000', 'tertiaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 flowchart TB
     subgraph Bootstrap["🏗️ Bootstrap Layer"]
         MGMT["jsj-system-mgmt<br/>+ jsj-terraform-state-prod"]
@@ -57,7 +57,7 @@ flowchart TB
 #### 모듈 관계도
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'secondaryTextColor': '#000000', 'tertiaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 graph TB
     subgraph Core["Core Modules"]
         NAMING[naming]
@@ -185,7 +185,7 @@ environments/LIVE/jsj-game-k/
 ### DMZ / Private / DB 서브넷 구조
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'secondaryTextColor': '#000000', 'tertiaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 flowchart TB
     INET[🌐 Internet]
 
@@ -283,7 +283,7 @@ common_labels = {
 ### 중앙 집중식 + 레이어별 분리
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'secondaryTextColor': '#000000', 'tertiaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 flowchart TB
     subgraph Bootstrap["🏗️ Bootstrap Project (jsj-system-mgmt)"]
         subgraph GCS["📦 jsj-terraform-state-prod (GCS)"]

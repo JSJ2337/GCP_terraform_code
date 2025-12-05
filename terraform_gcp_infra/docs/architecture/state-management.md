@@ -5,7 +5,7 @@ Terraform State의 중앙 집중식 관리 전략입니다.
 ## 아키텍처 개요
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000', 'secondaryTextColor': '#000000', 'tertiaryTextColor': '#000000', 'clusterBkg': '#ffffff', 'clusterBorder': '#333333' }}}%%
 flowchart TB
     subgraph Bootstrap["🏗️ Bootstrap Project (jsj-system-mgmt)"]
         subgraph GCS["📦 jsj-terraform-state-prod (GCS)"]
