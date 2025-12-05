@@ -363,46 +363,28 @@ ${phaseList}
 
 // Phase Plan 실행
 def runPhasePlan(phase, phaseDirs) {
-    def workDir = "${env.WORKSPACE}/${TG_WORKING_DIR}"
-
     phase.dirs.each { dir ->
         sh """
-            rm -rf '${workDir}/${dir}/.terragrunt-cache' || true
-            rm -rf '${workDir}/${dir}/.terraform' || true
-            rm -f '${workDir}/${dir}/tfplan-${phase.id}' || true
+            rm -rf '${env.WORKSPACE}/${TG_WORKING_DIR}/${dir}/.terragrunt-cache' || true
+            rm -rf '${env.WORKSPACE}/${TG_WORKING_DIR}/${dir}/.terraform' || true
+            rm -f '${env.WORKSPACE}/${TG_WORKING_DIR}/${dir}/tfplan-${phase.id}' || true
         """
     }
 
-    // 각 디렉토리를 개별적으로 plan 실행
-    phase.dirs.each { dir ->
-        sh """
-            cd '${workDir}/${dir}' && terragrunt plan -out=tfplan-${phase.id}
-        """
-    }
+    def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
+    sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- plan -out=tfplan-${phase.id}"
 
     archiveArtifacts artifacts: "**/tfplan-${phase.id}", allowEmptyArchive: true
 }
 
 // Phase Apply 실행
 def runPhaseApply(phase, phaseDirs) {
-    def workDir = "${env.WORKSPACE}/${TG_WORKING_DIR}"
-
-    // 각 디렉토리를 개별적으로 apply 실행
-    phase.dirs.each { dir ->
-        sh """
-            cd '${workDir}/${dir}' && terragrunt apply tfplan-${phase.id}
-        """
-    }
+    def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
+    sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- apply tfplan-${phase.id}"
 }
 
 // Phase Destroy 실행
 def runPhaseDestroy(phase, phaseDirs) {
-    def workDir = "${env.WORKSPACE}/${TG_WORKING_DIR}"
-
-    // 각 디렉토리를 개별적으로 destroy 실행
-    phase.dirs.each { dir ->
-        sh """
-            cd '${workDir}/${dir}' && terragrunt destroy -auto-approve
-        """
-    }
+    def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
+    sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- destroy -auto-approve"
 }
