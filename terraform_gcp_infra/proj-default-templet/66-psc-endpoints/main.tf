@@ -29,6 +29,19 @@ module "naming" {
 }
 
 # -----------------------------------------------------------------------------
+# Remote State for Cross-Project PSC Connections
+# -----------------------------------------------------------------------------
+# bootstrap/10-network에서 생성된 mgmt VPC의 Redis PSC Forwarding Rule 정보를 읽어옴
+data "terraform_remote_state" "bootstrap_network" {
+  count   = var.enable_cross_project_psc ? 1 : 0
+  backend = "gcs"
+  config = {
+    bucket = var.state_bucket
+    prefix = "bootstrap/10-network"
+  }
+}
+
+# -----------------------------------------------------------------------------
 # Locals
 # -----------------------------------------------------------------------------
 locals {
@@ -37,6 +50,11 @@ locals {
 
   # VPC self_link
   vpc_self_link = "projects/${var.project_id}/global/networks/${var.vpc_name}"
+
+  # Bootstrap에서 생성된 mgmt Redis PSC Forwarding Rules 정보
+  mgmt_redis_forwarding_rules = var.enable_cross_project_psc ? try(
+    data.terraform_remote_state.bootstrap_network[0].outputs.psc_redis_forwarding_rules, []
+  ) : []
 }
 
 # -----------------------------------------------------------------------------
@@ -98,4 +116,39 @@ resource "google_compute_forwarding_rule" "redis_psc" {
 
   # Cross-region access
   allow_psc_global_access = true
+}
+
+# -----------------------------------------------------------------------------
+# Cross-Project PSC Connections for Redis
+# -----------------------------------------------------------------------------
+# mgmt VPC에서 이 프로젝트의 Redis Cluster에 접근하려면
+# mgmt VPC의 PSC Forwarding Rule을 이 클러스터에 등록해야 함
+#
+# 참고: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/redis_cluster_user_created_connections
+# -----------------------------------------------------------------------------
+resource "google_redis_cluster_user_created_connections" "mgmt_access" {
+  count = var.enable_cross_project_psc && length(var.redis_service_attachments) > 0 && length(local.mgmt_redis_forwarding_rules) > 0 ? 1 : 0
+
+  name    = var.redis_cluster_name
+  region  = var.region_primary
+  project = var.project_id
+
+  # mgmt VPC의 PSC 연결 등록
+  cluster_endpoints {
+    dynamic "connections" {
+      for_each = local.mgmt_redis_forwarding_rules
+      content {
+        psc_connection {
+          psc_connection_id  = connections.value.psc_connection_id
+          address            = connections.value.ip_address
+          forwarding_rule    = connections.value.forwarding_rule
+          network            = var.mgmt_vpc_network
+          project_id         = var.mgmt_project_id
+          service_attachment = var.redis_service_attachments[connections.key]
+        }
+      }
+    }
+  }
+
+  depends_on = [google_compute_forwarding_rule.redis_psc]
 }

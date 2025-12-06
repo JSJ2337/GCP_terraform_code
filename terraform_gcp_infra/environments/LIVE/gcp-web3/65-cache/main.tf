@@ -18,17 +18,9 @@ provider "google" {
 }
 
 # =============================================================================
-# Remote State for Cross-Project PSC Connections
+# Cross-Project PSC Connections는 66-psc-endpoints 레이어로 분리됨
+# GCP Best Practice: Redis Cluster 생성과 PSC 연결 등록을 분리
 # =============================================================================
-# bootstrap/10-network에서 생성된 PSC Forwarding Rule 정보를 읽어옴
-data "terraform_remote_state" "bootstrap_network" {
-  count   = var.enable_cross_project_psc ? 1 : 0
-  backend = "gcs"
-  config = {
-    bucket = var.state_bucket
-    prefix = "bootstrap/10-network"
-  }
-}
 
 module "naming" {
   source         = "../../../../modules/naming"
@@ -59,11 +51,6 @@ locals {
       : ""
     )
   )
-
-  # Bootstrap에서 생성된 Redis PSC Forwarding Rules 정보
-  mgmt_redis_forwarding_rules = var.enable_cross_project_psc ? try(
-    data.terraform_remote_state.bootstrap_network[0].outputs.psc_redis_forwarding_rules, []
-  ) : []
 }
 
 module "cache" {
@@ -87,18 +74,6 @@ module "cache" {
   maintenance_window_start_hour   = var.maintenance_window_start_hour
   maintenance_window_start_minute = var.maintenance_window_start_minute
 
-  # Cross-project PSC 연결 (mgmt VPC에서 접근 허용)
-  cross_project_psc_connections = var.enable_cross_project_psc && length(local.mgmt_redis_forwarding_rules) > 0 ? [
-    {
-      project_id = var.mgmt_project_id
-      network    = var.mgmt_vpc_network
-      forwarding_rules = [
-        for fr in local.mgmt_redis_forwarding_rules : {
-          psc_connection_id = fr.psc_connection_id
-          forwarding_rule   = fr.forwarding_rule
-          ip_address        = fr.ip_address
-        }
-      ]
-    }
-  ] : []
+  # Cross-project PSC 연결은 66-psc-endpoints에서 처리
+  cross_project_psc_connections = []
 }

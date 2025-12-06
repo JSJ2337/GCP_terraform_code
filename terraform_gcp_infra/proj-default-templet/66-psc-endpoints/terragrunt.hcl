@@ -33,6 +33,10 @@ locals {
   # PSC IP 주소 (common.naming.tfvars에서)
   psc_cloudsql_ip = local.network_config.psc_endpoints.cloudsql
   psc_redis_ips   = local.network_config.psc_endpoints.redis
+
+  # Management 프로젝트 정보
+  mgmt_project_id = local.common_inputs.management_project_id
+  state_bucket    = get_env("TG_STATE_BUCKET", "YOUR_STATE_BUCKET")
 }
 
 # 60-database에서 service_attachment 가져오기
@@ -45,12 +49,14 @@ dependency "database" {
   mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
 }
 
-# 65-cache에서 service_attachments 가져오기
+# 65-cache에서 service_attachments 및 cross-project PSC 설정 가져오기
 dependency "cache" {
   config_path = "../65-cache"
 
   mock_outputs = {
+    instance_name                = ""
     psc_service_attachment_links = []
+    enable_cross_project_psc     = false
   }
   mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
 }
@@ -69,5 +75,12 @@ inputs = merge(
     # Service Attachments (dependency에서 가져옴)
     cloudsql_service_attachment = dependency.database.outputs.psc_service_attachment_link
     redis_service_attachments   = dependency.cache.outputs.psc_service_attachment_links
+
+    # Cross-project PSC 설정 (65-cache의 terraform.tfvars에서 가져옴)
+    enable_cross_project_psc = dependency.cache.outputs.enable_cross_project_psc
+    state_bucket             = local.state_bucket
+    redis_cluster_name       = dependency.cache.outputs.instance_name
+    mgmt_project_id          = local.mgmt_project_id
+    mgmt_vpc_network         = "projects/${local.mgmt_project_id}/global/networks/${local.mgmt_project_id}-vpc"
   }
 )

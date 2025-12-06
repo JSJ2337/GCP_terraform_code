@@ -81,3 +81,36 @@ variable "redis_service_attachments" {
   type        = list(string)
   default     = []
 }
+
+# -----------------------------------------------------------------------------
+# Cross-project PSC variables (mgmt VPC access)
+# -----------------------------------------------------------------------------
+variable "enable_cross_project_psc" {
+  description = "Enable cross-project PSC connections from mgmt VPC"
+  type        = bool
+  default     = false
+}
+
+variable "state_bucket" {
+  description = "GCS bucket for Terraform state (for remote_state data source)"
+  type        = string
+  default     = ""
+}
+
+variable "redis_cluster_name" {
+  description = "Redis cluster name (for user-created connections)"
+  type        = string
+  default     = ""
+}
+
+variable "mgmt_project_id" {
+  description = "Management project ID"
+  type        = string
+  default     = ""
+}
+
+variable "mgmt_vpc_network" {
+  description = "Management VPC network self link"
+  type        = string
+  default     = ""
+}
