@@ -59,6 +59,7 @@ dependency "cache" {
     enable_cross_project_psc     = false
   }
   mock_outputs_allowed_terraform_commands = ["init", "validate", "plan", "apply"]
+  mock_outputs_merge_strategy_with_state  = "shallow"
 }
 
 inputs = merge(
