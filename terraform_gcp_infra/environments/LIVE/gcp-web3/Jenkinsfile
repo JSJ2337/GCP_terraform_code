@@ -17,7 +17,8 @@ def PHASES = [
     [id: 'phase5', label: 'Phase 5 - Observability', dirs: ['40-observability'], optional: true],
     [id: 'phase6', label: 'Phase 6 - Workloads (50-workloads)', dirs: ['50-workloads'], optional: false],
     [id: 'phase7', label: 'Phase 7 - Database & Cache', dirs: ['60-database', '65-cache'], optional: false],
-    [id: 'phase8', label: 'Phase 8 - Load Balancers', dirs: ['70-loadbalancers/www', '70-loadbalancers/mint'], optional: false]
+    [id: 'phase8', label: 'Phase 8 - PSC Endpoints', dirs: ['66-psc-endpoints'], optional: false],
+    [id: 'phase9', label: 'Phase 9 - Load Balancers', dirs: ['70-loadbalancers/www', '70-loadbalancers/mint'], optional: false]
 ]
 
 pipeline {
@@ -60,6 +61,7 @@ pipeline {
                 '50-workloads',
                 '60-database',
                 '65-cache',
+                '66-psc-endpoints',
                 '70-loadbalancers/www',
                 '70-loadbalancers/mint'
             ],

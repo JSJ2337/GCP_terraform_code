@@ -9,7 +9,8 @@ def PHASES = [
     [id: 'phase5', label: 'Phase 5 - Observability', dirs: ['40-observability'], optional: true],
     [id: 'phase6', label: 'Phase 6 - Workloads (50-workloads)', dirs: ['50-workloads'], optional: false],
     [id: 'phase7', label: 'Phase 7 - Database & Cache', dirs: ['60-database', '65-cache'], optional: false],
-    [id: 'phase8', label: 'Phase 8 - Load Balancers', dirs: ['70-loadbalancers/gs'], optional: false]
+    [id: 'phase8', label: 'Phase 8 - PSC Endpoints', dirs: ['66-psc-endpoints'], optional: false],
+    [id: 'phase9', label: 'Phase 9 - Load Balancers', dirs: ['70-loadbalancers/gs'], optional: false]
 ]
 
 pipeline {
@@ -54,6 +55,7 @@ pipeline {
                 '50-workloads',
                 '60-database',
                 '65-cache',
+                '66-psc-endpoints',
                 '70-loadbalancers/gs'
             ],
             description: '실행할 레이어 (all = 전체 스택)'
@@ -214,14 +216,14 @@ ${phaseList}
             }
             steps {
                 script {
-                    def phase8 = PHASES.find { it.id == 'phase8' }
+                    def phase9 = PHASES.find { it.id == 'phase9' }
 
-                    stage("${phase8.label} - Apply Cleanup Resources") {
-                        echo "📋 Phase 8만 apply해서 null_resource.backend_cleanup을 state에 추가합니다..."
+                    stage("${phase9.label} - Apply Cleanup Resources") {
+                        echo "📋 Phase 9만 apply해서 null_resource.backend_cleanup을 state에 추가합니다..."
                         echo "⚠️  참고: 이 단계는 Terraform GCP Provider 버그 워크어라운드입니다."
                         echo "⚠️  null_resource provisioner는 state에 있어야 destroy 시 실행됩니다."
 
-                        def includeArgs = phase8.dirs.collect {
+                        def includeArgs = phase9.dirs.collect {
                             "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'"
                         }.join(' ')
 
@@ -272,9 +274,9 @@ ${phaseList}
                                 echo "📋 Re-planning ${phase.label} with latest state..."
                                 runPhasePlan(phase, phaseDirs)
 
-                                // Phase 8 apply 전에 Backend cleanup 스크립트 실행
-                                if (phase.id == 'phase8') {
-                                    echo "🧹 Running backend cleanup script before Phase 8 apply..."
+                                // Phase 9 (Load Balancers) apply 전에 Backend cleanup 스크립트 실행
+                                if (phase.id == 'phase9') {
+                                    echo "🧹 Running backend cleanup script before Phase 9 apply..."
                                     phase.dirs.each { dir ->
                                         def cleanupScript = "${env.WORKSPACE}/${TG_WORKING_DIR}/${dir}/cleanup_backends.sh"
                                         def scriptExists = sh(

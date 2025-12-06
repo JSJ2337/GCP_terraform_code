@@ -1,0 +1,73 @@
+include "root" {
+  path = find_in_parent_folders("root.hcl")
+}
+
+# 60-database, 65-cache 배포 후 실행
+dependencies {
+  paths = [
+    "../00-project",
+    "../10-network",
+    "../60-database",
+    "../65-cache"
+  ]
+}
+
+locals {
+  parent_dir        = abspath("${get_terragrunt_dir()}/..")
+  raw_common_inputs = read_tfvars_file("${local.parent_dir}/common.naming.tfvars")
+  common_inputs     = try(jsondecode(local.raw_common_inputs), local.raw_common_inputs)
+
+  # 프로젝트 정보
+  project_id     = local.common_inputs.project_id
+  project_name   = local.common_inputs.project_name
+  environment    = local.common_inputs.environment
+  region_primary = local.common_inputs.region_primary
+
+  # Network config
+  network_config = try(local.common_inputs.network_config, {})
+
+  # VPC/Subnet 이름
+  vpc_name        = "${local.project_name}-${local.environment}-vpc"
+  psc_subnet_name = "${local.project_name}-${local.environment}-subnet-psc"
+
+  # PSC IP 주소 (common.naming.tfvars에서)
+  psc_cloudsql_ip = local.network_config.psc_endpoints.cloudsql
+  psc_redis_ips   = local.network_config.psc_endpoints.redis
+}
+
+# 60-database에서 service_attachment 가져오기
+dependency "database" {
+  config_path = "../60-database"
+
+  mock_outputs = {
+    psc_service_attachment_link = ""
+  }
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
+}
+
+# 65-cache에서 service_attachments 가져오기
+dependency "cache" {
+  config_path = "../65-cache"
+
+  mock_outputs = {
+    psc_service_attachment_links = []
+  }
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
+}
+
+inputs = merge(
+  local.common_inputs,
+  {
+    # Network 정보
+    vpc_name        = local.vpc_name
+    psc_subnet_name = local.psc_subnet_name
+
+    # PSC IP 주소
+    psc_cloudsql_ip = local.psc_cloudsql_ip
+    psc_redis_ips   = local.psc_redis_ips
+
+    # Service Attachments (dependency에서 가져옴)
+    cloudsql_service_attachment = dependency.database.outputs.psc_service_attachment_link
+    redis_service_attachments   = dependency.cache.outputs.psc_service_attachment_links
+  }
+)
