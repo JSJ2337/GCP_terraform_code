@@ -129,18 +129,15 @@ locals {
   ]
 
   # ==========================================================================
-  # PSC Service Attachment (placeholder)
-  # 초기 배포 시 mock 값 사용, 60-database/65-cache 배포 후 실제 값으로 업데이트
+  # PSC Service Attachment
+  # HashiCorp 권장: 조건부 리소스 생성 (count = var != "" ? 1 : 0)
+  # 초기 배포: 빈 값 → PSC endpoint 생성 건너뜀
+  # 60-database/65-cache 배포 후: 실제 service attachment 값으로 업데이트
   # ==========================================================================
-  cloudsql_service_attachment_placeholder = "projects/placeholder/regions/${local.region_primary}/serviceAttachments/placeholder-cloudsql"
-  redis_service_attachments_placeholder = [
-    "projects/placeholder/regions/${local.region_primary}/serviceAttachments/placeholder-redis-discovery",
-    "projects/placeholder/regions/${local.region_primary}/serviceAttachments/placeholder-redis-shard"
-  ]
 }
 
 # dependency 블록 제거 - cycle 문제 해결
-# PSC endpoint는 placeholder 값으로 생성 후, DB/Cache 배포 완료 시 실제 값으로 업데이트
+# PSC endpoint는 초기 배포 시 생성하지 않음, DB/Cache 배포 완료 후 실제 값으로 업데이트
 
 inputs = merge(
   local.common_inputs,
@@ -161,9 +158,10 @@ inputs = merge(
     psc_cloudsql_ip = local.psc_cloudsql_ip
     psc_redis_ips   = local.psc_redis_ips
 
-    # Service Attachment - placeholder 값 사용 (DB/Cache 배포 후 실제 값으로 업데이트 필요)
-    cloudsql_service_attachment = local.cloudsql_service_attachment_placeholder
-    redis_service_attachments   = local.redis_service_attachments_placeholder
+    # Service Attachment - 초기 배포 시 빈 값 (PSC endpoint 생성 건너뜀)
+    # DB/Cache 배포 후 실제 service attachment 값으로 업데이트 필요
+    cloudsql_service_attachment = ""   # 빈 값 → count = 0 → 리소스 생성 안 함
+    redis_service_attachments   = []   # 빈 배열 → count = 0 → 리소스 생성 안 함
 
     # Firewall rules 동적 주입
     firewall_rules = local.firewall_rules
