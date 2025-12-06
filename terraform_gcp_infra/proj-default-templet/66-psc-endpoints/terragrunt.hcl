@@ -58,7 +58,7 @@ dependency "cache" {
     psc_service_attachment_links = []
     enable_cross_project_psc     = false
   }
-  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan"]
+  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan", "apply"]
 }
 
 inputs = merge(
