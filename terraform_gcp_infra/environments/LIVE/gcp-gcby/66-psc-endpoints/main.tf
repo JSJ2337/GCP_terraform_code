@@ -20,7 +20,6 @@ terraform {
 module "naming" {
   source = "../../../../modules/naming"
 
-  project_id     = var.project_id
   project_name   = var.project_name
   environment    = var.environment
   organization   = var.organization
