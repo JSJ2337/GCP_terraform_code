@@ -36,14 +36,14 @@ labels = {
 
 instances = {
   # =============================================================================
-  # WWW Server (3대) - DMZ 배치
+  # WWW Server (3대) - Private 배치
   # =============================================================================
   "www01" = {
     zone_suffix       = "a"
     machine_type      = "custom-4-8192"
     boot_disk_size_gb = 128
     boot_disk_type    = "pd-ssd"
-    tags              = ["www", "ssh-from-iap", "ssh-from-mgmt", "dmz-zone"]
+    tags              = ["www", "ssh-from-iap", "ssh-from-mgmt", "private-zone"]
     image_family      = "rocky-linux-10-optimized-gcp"
     image_project     = "rocky-linux-cloud"
     labels = {
@@ -51,7 +51,7 @@ instances = {
       tier = "frontend"
     }
     startup_script_file = "scripts/was.sh"
-    subnet_type         = "dmz"
+    subnet_type         = "private"
   }
 
   "www02" = {
@@ -59,7 +59,7 @@ instances = {
     machine_type      = "custom-4-8192"
     boot_disk_size_gb = 128
     boot_disk_type    = "pd-ssd"
-    tags              = ["www", "ssh-from-iap", "ssh-from-mgmt", "dmz-zone"]
+    tags              = ["www", "ssh-from-iap", "ssh-from-mgmt", "private-zone"]
     image_family      = "rocky-linux-10-optimized-gcp"
     image_project     = "rocky-linux-cloud"
     labels = {
@@ -67,7 +67,7 @@ instances = {
       tier = "frontend"
     }
     startup_script_file = "scripts/was.sh"
-    subnet_type         = "dmz"
+    subnet_type         = "private"
   }
 
   "www03" = {
@@ -75,7 +75,7 @@ instances = {
     machine_type      = "custom-4-8192"
     boot_disk_size_gb = 128
     boot_disk_type    = "pd-ssd"
-    tags              = ["www", "ssh-from-iap", "ssh-from-mgmt", "dmz-zone"]
+    tags              = ["www", "ssh-from-iap", "ssh-from-mgmt", "private-zone"]
     image_family      = "rocky-linux-10-optimized-gcp"
     image_project     = "rocky-linux-cloud"
     labels = {
@@ -83,7 +83,7 @@ instances = {
       tier = "frontend"
     }
     startup_script_file = "scripts/was.sh"
-    subnet_type         = "dmz"
+    subnet_type         = "private"
   }
 
   # =============================================================================
