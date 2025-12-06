@@ -124,11 +124,12 @@ output "psc_redis_forwarding_rules" {
   description = "Redis PSC Forwarding Rules (for google_redis_cluster_user_created_connections)"
   value = [
     for key, fr in google_compute_forwarding_rule.psc_endpoints : {
-      psc_connection_id = fr.psc_connection_id
-      forwarding_rule   = fr.id  # Full URL: projects/{project}/regions/{region}/forwardingRules/{name}
-      ip_address        = fr.ip_address
-      name              = fr.name
-      region            = fr.region
+      psc_connection_id  = fr.psc_connection_id
+      forwarding_rule    = fr.id  # Full URL: projects/{project}/regions/{region}/forwardingRules/{name}
+      ip_address         = fr.ip_address
+      name               = fr.name
+      region             = fr.region
+      service_attachment = fr.target  # PSC가 연결된 service attachment
     } if can(regex("-redis-\\d+$", key))  # {project}-{env}-redis-0, {project}-{env}-redis-1 등 매칭
   ]
 }
