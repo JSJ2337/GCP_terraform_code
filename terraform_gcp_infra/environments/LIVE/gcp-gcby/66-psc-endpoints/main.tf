@@ -144,7 +144,7 @@ resource "google_redis_cluster_user_created_connections" "mgmt_access" {
           forwarding_rule    = connections.value.forwarding_rule
           network            = var.mgmt_vpc_network
           project_id         = var.mgmt_project_id
-          service_attachment = connections.value.service_attachment
+          service_attachment = replace(connections.value.service_attachment, "https://www.googleapis.com/compute/v1/", "")
         }
       }
     }
