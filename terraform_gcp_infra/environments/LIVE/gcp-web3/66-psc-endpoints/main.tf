@@ -52,8 +52,9 @@ locals {
   vpc_self_link = "projects/${var.project_id}/global/networks/${var.vpc_name}"
 
   # Bootstrap에서 생성된 mgmt Redis PSC Forwarding Rules 정보
+  # 프로젝트별로 분리된 output 사용 (web3의 forwarding rules만 가져옴)
   mgmt_redis_forwarding_rules = var.enable_cross_project_psc ? try(
-    data.terraform_remote_state.bootstrap_network[0].outputs.psc_redis_forwarding_rules, []
+    data.terraform_remote_state.bootstrap_network[0].outputs.psc_redis_forwarding_rules_by_project[var.project_name], []
   ) : []
 }
 

@@ -133,3 +133,33 @@ output "psc_redis_forwarding_rules" {
     } if can(regex("-redis-\\d+$", key))  # {project}-{env}-redis-0, {project}-{env}-redis-1 등 매칭
   ]
 }
+
+# =============================================================================
+# 프로젝트별 PSC Redis Forwarding Rules (cross-project PSC 연결용)
+# 각 프로젝트는 자기 프로젝트의 forwarding rules만 사용해야 함
+# =============================================================================
+output "psc_redis_forwarding_rules_by_project" {
+  description = "Redis PSC Forwarding Rules by project (for google_redis_cluster_user_created_connections)"
+  value = {
+    gcby = [
+      for key, fr in google_compute_forwarding_rule.psc_endpoints : {
+        psc_connection_id  = fr.psc_connection_id
+        forwarding_rule    = fr.id
+        ip_address         = fr.ip_address
+        name               = fr.name
+        region             = fr.region
+        service_attachment = fr.target
+      } if can(regex("^gcby-.*-redis-\\d+$", key))
+    ]
+    web3 = [
+      for key, fr in google_compute_forwarding_rule.psc_endpoints : {
+        psc_connection_id  = fr.psc_connection_id
+        forwarding_rule    = fr.id
+        ip_address         = fr.ip_address
+        name               = fr.name
+        region             = fr.region
+        service_attachment = fr.target
+      } if can(regex("^web3-.*-redis-\\d+$", key))
+    ]
+  }
+}

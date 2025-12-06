@@ -35,6 +35,26 @@ data "terraform_remote_state" "gcby_cache" {
   }
 }
 
+# web3 프로젝트 - 60-database
+data "terraform_remote_state" "web3_database" {
+  count   = var.enable_psc_endpoints && contains(keys(var.projects), "web3") ? 1 : 0
+  backend = "gcs"
+  config = {
+    bucket = var.state_bucket
+    prefix = "${var.projects.web3.project_id}/60-database"
+  }
+}
+
+# web3 프로젝트 - 65-cache
+data "terraform_remote_state" "web3_cache" {
+  count   = var.enable_psc_endpoints && contains(keys(var.projects), "web3") ? 1 : 0
+  backend = "gcs"
+  config = {
+    bucket = var.state_bucket
+    prefix = "${var.projects.web3.project_id}/65-cache"
+  }
+}
+
 # 새 프로젝트 추가 예시 (주석)
 # data "terraform_remote_state" "abc_database" {
 #   count   = var.enable_psc_endpoints && contains(keys(var.projects), "abc") ? 1 : 0
@@ -92,6 +112,35 @@ locals {
     }
   ) : {}
 
+  # web3 프로젝트 PSC Endpoints
+  web3_project_name = try(split("-", var.projects.web3.project_id)[1], "web3")  # gcp-web3 → web3
+  web3_env = try(var.projects.web3.environment, "live")
+  web3_redis_service_attachments = var.enable_psc_endpoints && contains(keys(var.projects), "web3") ? try(
+    data.terraform_remote_state.web3_cache[0].outputs.psc_service_attachment_links, []
+  ) : []
+
+  web3_psc_endpoints = var.enable_psc_endpoints && contains(keys(var.projects), "web3") ? merge(
+    # Cloud SQL PSC Endpoint (1개)
+    {
+      "${local.web3_project_name}-${local.web3_env}-gdb-m1" = {
+        region                    = local.psc_region
+        ip_address                = try(var.projects.web3.psc_ips.cloudsql, "")
+        target_service_attachment = try(data.terraform_remote_state.web3_database[0].outputs.psc_service_attachment_link, "")
+        allow_global_access       = true
+      }
+    },
+    # Redis PSC Endpoints (2개 - Discovery + Shard)
+    {
+      for idx, sa in local.web3_redis_service_attachments :
+      "${local.web3_project_name}-${local.web3_env}-redis-${idx}" => {
+        region                    = local.psc_region
+        ip_address                = try(var.projects.web3.psc_ips.redis[idx], "")
+        target_service_attachment = sa
+        allow_global_access       = true
+      }
+    }
+  ) : {}
+
   # 새 프로젝트 추가 예시 (주석)
   # abc_project_name = try(split("-", var.projects.abc.project_id)[1], "abc")
   # abc_env = try(var.projects.abc.environment, "live")
@@ -121,6 +170,7 @@ locals {
   # 모든 프로젝트 PSC Endpoints 병합
   psc_endpoints = merge(
     local.gcby_psc_endpoints,
+    local.web3_psc_endpoints,
     # local.abc_psc_endpoints,
   )
 }
