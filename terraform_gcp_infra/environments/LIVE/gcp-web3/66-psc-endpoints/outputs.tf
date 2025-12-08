@@ -11,13 +11,9 @@ output "cloudsql_psc_endpoint" {
   } : null
 }
 
-output "redis_psc_endpoints" {
-  description = "Redis PSC endpoint details"
-  value = [
-    for i, fr in google_compute_forwarding_rule.redis_psc : {
-      name       = fr.name
-      ip_address = google_compute_address.redis_psc[i].address
-      target     = fr.target
-    }
-  ]
+# Redis PSC는 65-cache에서 자동 생성됨 (sca-auto-addr-* 주소)
+# 66-psc-endpoints에서는 Cross-project PSC 등록만 수행
+output "cross_project_psc_registered" {
+  description = "Cross-project PSC 연결 등록 여부"
+  value       = length(google_redis_cluster_user_created_connections.mgmt_access) > 0
 }
