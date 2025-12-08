@@ -406,3 +406,8 @@ variable "static_ip_address" {
   description = "사용할 고정 IP 주소"
   default     = ""
 }
+
+variable "remote_state_bucket" {
+  type        = string
+  description = "Terraform state가 저장된 GCS 버킷 이름 (terraform_remote_state에서 사용)"
+}

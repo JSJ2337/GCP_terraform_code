@@ -5,6 +5,19 @@ provider "google" {
   billing_project       = var.project_id
 }
 
+# =============================================================================
+# 50-workloads state에서 직접 vm_details 가져오기
+# Terragrunt dependency 대신 terraform_remote_state 사용
+# 이유: --queue-include-dir 사용 시 dependency outputs가 전달되지 않는 문제 해결
+# =============================================================================
+data "terraform_remote_state" "workloads" {
+  backend = "gcs"
+  config = {
+    bucket = var.remote_state_bucket
+    prefix = "${var.project_id}/50-workloads"
+  }
+}
+
 module "naming" {
   source         = "../../../../../modules/naming"
   project_name   = var.project_name
@@ -15,6 +28,10 @@ module "naming" {
 }
 
 locals {
+  # Terragrunt dependency (var.vm_details) 또는 remote_state에서 가져오기
+  # 우선순위: var.vm_details가 비어있지 않으면 사용, 아니면 remote_state에서 가져옴
+  effective_vm_details = length(keys(var.vm_details)) > 0 ? var.vm_details : try(data.terraform_remote_state.workloads.outputs.vm_details, {})
+
   network = length(trimspace(var.network)) > 0 ? var.network : (
     var.lb_type == "http" ? "" : "projects/${var.project_id}/global/networks/${module.naming.vpc_name}"
   )
@@ -30,16 +47,17 @@ locals {
   health_check_name = length(trimspace(var.health_check_name)) > 0 ? var.health_check_name : module.naming.health_check_name
 
   # Instance Group 처리 로직 (1단계: 모든 Instance Group 처리)
+  # local.effective_vm_details 사용 (var.vm_details 대신)
   _all_instance_groups = {
     for name, cfg in var.instance_groups :
     name => {
       resolved_instances = [
         for inst_name in cfg.instances : {
           name      = inst_name
-          self_link = var.vm_details[inst_name].self_link
-          zone      = var.vm_details[inst_name].zone
+          self_link = local.effective_vm_details[inst_name].self_link
+          zone      = local.effective_vm_details[inst_name].zone
         }
-        if contains(keys(var.vm_details), inst_name)
+        if contains(keys(local.effective_vm_details), inst_name)
       ]
       # zone 결정 우선순위: 1. zone (직접 지정) 2. zone_suffix (region과 결합) 3. VM의 zone (자동 감지)
       zone = (
@@ -47,8 +65,8 @@ locals {
         cfg.zone :
         try(cfg.zone_suffix, null) != null && length(trimspace(cfg.zone_suffix)) > 0 ?
         "${module.naming.region_primary}-${trimspace(cfg.zone_suffix)}" :
-        length([for inst_name in cfg.instances : inst_name if contains(keys(var.vm_details), inst_name)]) > 0 ?
-        var.vm_details[[for inst_name in cfg.instances : inst_name if contains(keys(var.vm_details), inst_name)][0]].zone :
+        length([for inst_name in cfg.instances : inst_name if contains(keys(local.effective_vm_details), inst_name)]) > 0 ?
+        local.effective_vm_details[[for inst_name in cfg.instances : inst_name if contains(keys(local.effective_vm_details), inst_name)][0]].zone :
         ""
       )
       named_ports = coalesce(cfg.named_ports, [])

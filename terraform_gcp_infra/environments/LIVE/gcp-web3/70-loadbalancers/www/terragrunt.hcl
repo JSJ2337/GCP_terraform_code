@@ -38,6 +38,9 @@ locals {
   raw_layer_inputs = try(read_tfvars_file("${get_terragrunt_dir()}/terraform.tfvars"), tomap({}))
   layer_inputs     = try(jsondecode(local.raw_layer_inputs), local.raw_layer_inputs)
 
+  # Remote state bucket (환경변수 또는 기본값)
+  remote_state_bucket = get_env("TG_STATE_BUCKET", "delabs-terraform-state-live")
+
   project_name = local.common_inputs.project_name
   layer_name   = basename(get_terragrunt_dir())
   lb_prefix    = "${local.project_name}-${local.layer_name}"
@@ -84,10 +87,14 @@ inputs = merge(
   local.layer_inputs,
   local.lb_name_defaults,
   {
-    # 50-workloads에서 VM 정보 가져오기
+    # 50-workloads에서 VM 정보 가져오기 (Terragrunt dependency)
+    # 참고: main.tf에서 terraform_remote_state로도 fallback 처리됨
     vm_details = try(dependency.workloads.outputs.vm_details, {})
 
     # Instance Groups 동적 주입
     instance_groups = local.instance_groups
+
+    # terraform_remote_state에서 사용할 버킷 이름
+    remote_state_bucket = local.remote_state_bucket
   }
 )
