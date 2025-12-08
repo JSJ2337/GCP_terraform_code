@@ -24,12 +24,9 @@ dependency "workloads" {
     vm_details = {}
   }
 
-  # state에서 실제 outputs 읽어서 mock과 병합 (shallow: state 값 우선)
-  # Jenkins --queue-strict-include 실행 시에도 dependency state에서 outputs 참조
-  mock_outputs_merge_strategy_with_state = "shallow"
-
-  # destroy 제외 - plan/apply 시에도 mock + state merge 사용
-  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan", "apply"]
+  # validate/init 시에만 mock 사용
+  # plan/apply 시에는 실제 dependency outputs 사용 (run-all에서 자동 전달)
+  mock_outputs_allowed_terraform_commands = ["init", "validate"]
 }
 
 locals {
