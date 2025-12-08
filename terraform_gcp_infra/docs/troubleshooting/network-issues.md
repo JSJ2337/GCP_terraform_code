@@ -8,11 +8,11 @@
 
 ```bash
 # 기존 VPC 확인
-gcloud compute networks list --project=jsj-game-k
+gcloud compute networks list --project=gcp-gcby
 
 # 충돌 시 Import
 terragrunt import google_compute_network.main \
-    projects/jsj-game-k/global/networks/vpc-name
+    projects/gcp-gcby/global/networks/vpc-name
 ```
 
 ### 서브넷 중복
@@ -21,7 +21,7 @@ terragrunt import google_compute_network.main \
 # 기존 서브넷 확인
 gcloud compute networks subnets list \
     --network=vpc-main \
-    --project=jsj-game-k
+    --project=gcp-gcby
 
 # CIDR 범위 충돌 확인
 ```
@@ -32,14 +32,14 @@ gcloud compute networks subnets list \
 
 ```bash
 # 기존 규칙 확인
-gcloud compute firewall-rules list --project=jsj-game-k
+gcloud compute firewall-rules list --project=gcp-gcby
 
 # 수동 생성된 규칙 삭제
-gcloud compute firewall-rules delete RULE_NAME --project=jsj-game-k
+gcloud compute firewall-rules delete RULE_NAME --project=gcp-gcby
 
 # Import
 terragrunt import google_compute_firewall.rule \
-    projects/jsj-game-k/global/firewalls/RULE_NAME
+    projects/gcp-gcby/global/firewalls/RULE_NAME
 ```
 
 ### 우선순위 문제
@@ -57,7 +57,7 @@ terragrunt import google_compute_firewall.rule \
 # 기존 연결 확인
 gcloud services vpc-peerings list \
     --network=vpc-main \
-    --project=jsj-game-k
+    --project=gcp-gcby
 ```
 
 ### IP 범위 중복
@@ -73,7 +73,7 @@ Error: IP address range is already allocated
 gcloud services vpc-peerings delete \
     --network=vpc-main \
     --service=servicenetworking.googleapis.com \
-    --project=jsj-game-k
+    --project=gcp-gcby
 
 # 다른 IP 범위 사용
 # terraform.tfvars에서 psc_ip_range 변경
@@ -87,8 +87,8 @@ gcloud services vpc-peerings delete \
 # NAT IP 할당 확인
 gcloud compute routers nats describe NAT_NAME \
     --router=ROUTER_NAME \
-    --region=asia-northeast3 \
-    --project=jsj-game-k
+    --region=us-west1 \
+    --project=gcp-gcby
 ```
 
 ### NAT 로그 확인
@@ -97,7 +97,7 @@ gcloud compute routers nats describe NAT_NAME \
 # Cloud Logging에서 NAT 로그 확인
 gcloud logging read \
     "resource.type=nat_gateway" \
-    --project=jsj-game-k \
+    --project=gcp-gcby \
     --limit=50
 ```
 
@@ -108,8 +108,8 @@ gcloud logging read \
 ```bash
 # SSH 접속
 gcloud compute ssh VM_NAME \
-    --project=jsj-game-k \
-    --zone=asia-northeast3-a
+    --project=gcp-gcby \
+    --zone=us-west1-a
 
 # 내부 통신 테스트
 ping INTERNAL_IP
@@ -124,7 +124,7 @@ curl https://www.google.com
 ```bash
 # Private IP 확인
 gcloud sql instances describe INSTANCE_NAME \
-    --project=jsj-game-k
+    --project=gcp-gcby
 
 # VM에서 MySQL 연결
 mysql -h PRIVATE_IP -u USER -p
@@ -145,12 +145,12 @@ enable_flow_logs = true
 # VPC Flow Logs
 gcloud logging read \
     "resource.type=gce_subnetwork" \
-    --project=jsj-game-k \
+    --project=gcp-gcby \
     --limit=50
 
 # 방화벽 로그
 gcloud logging read \
-    "logName=projects/jsj-game-k/logs/compute.googleapis.com%2Ffirewall" \
+    "logName=projects/gcp-gcby/logs/compute.googleapis.com%2Ffirewall" \
     --limit=50
 ```
 

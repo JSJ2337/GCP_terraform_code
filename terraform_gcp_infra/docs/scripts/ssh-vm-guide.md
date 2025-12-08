@@ -60,7 +60,7 @@ GCP IAM 권한:
 ./ssh_vm.sh gcp-gcby
 
 # 여러 프로젝트
-./ssh_vm.sh gcp-gcby jsj-game-n another-project
+./ssh_vm.sh gcp-gcby gcp-web3 another-project
 ```
 
 ### 환경 변수로 커스터마이징
@@ -89,10 +89,10 @@ $ ./ssh_vm.sh
 ║       Dynamic VM Discovery - No Config Required              ║
 ╚═══════════════════════════════════════════════════════════════╝
 
-[INFO] Scanning projects: gcp-gcby jsj-game-n
+[INFO] Scanning projects: gcp-gcby gcp-web3
 [INFO] Discovering VMs across projects...
 [INFO] Scanning project: gcp-gcby
-[INFO] Scanning project: jsj-game-n
+[INFO] Scanning project: gcp-web3
 [SUCCESS] Found 5 VM(s)
 
 ═══════════════════════════════════════════════════════════════
@@ -101,9 +101,9 @@ $ ./ssh_vm.sh
 
 1) delabs-terraform-jenkins [Project: gcp-gcby] [Role: ci-cd] [Purpose: jenkins]
 2) delabs-test [Project: gcp-gcby] [Role: test] [Purpose: testing]
-3) game-server-1 [Project: jsj-game-n] [Role: game] [Purpose: production]
-4) game-server-2 [Project: jsj-game-n] [Role: game] [Purpose: production]
-5) db-server [Project: jsj-game-n] [Role: database] [Purpose: postgresql]
+3) game-server-1 [Project: gcp-web3] [Role: game] [Purpose: production]
+4) game-server-2 [Project: gcp-web3] [Role: game] [Purpose: production]
+5) db-server [Project: gcp-web3] [Role: database] [Purpose: postgresql]
 6) Quit
 
 Select VM to connect (or 'q' to quit): 3
@@ -129,7 +129,7 @@ BASTION_USER="${BASTION_USER:-delabs-adm}"
 VM_USER="${VM_USER:-delabs-adm}"
 
 # 기본 프로젝트 목록 (공백으로 구분)
-DEFAULT_PROJECTS="${DEFAULT_PROJECTS:-gcp-gcby jsj-game-n}"
+DEFAULT_PROJECTS="${DEFAULT_PROJECTS:-gcp-gcby gcp-web3}"
 
 # SSH 키 경로
 SSH_KEY="${SSH_KEY:-$HOME/.ssh/id_rsa}"
@@ -144,7 +144,7 @@ SSH_KEY="${SSH_KEY:-$HOME/.ssh/id_rsa}"
 export BASTION_HOST="delabs-bastion.delabsgames.gg"
 export BASTION_USER="delabs-adm"
 export VM_USER="delabs-adm"
-export DEFAULT_PROJECTS="gcp-gcby jsj-game-n"
+export DEFAULT_PROJECTS="gcp-gcby gcp-web3"
 
 # Alias 추가
 alias sssh='/path/to/terraform_gcp_infra/scripts/ssh_vm.sh'

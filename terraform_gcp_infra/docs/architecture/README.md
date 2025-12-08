@@ -46,9 +46,9 @@ Environments (배포)
 ### 레이어 순서
 
 ```text
-00-project → 10-network → 20-storage → 30-security
+00-project → 10-network → 12-dns → 20-storage → 30-security
 → 40-observability → 50-workloads → 60-database
-→ 65-cache → 70-loadbalancer
+→ 65-cache → 66-psc-endpoints → 70-loadbalancers
 ```
 
 ### 네트워크 흐름

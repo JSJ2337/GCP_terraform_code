@@ -1,18 +1,19 @@
 # Terraform Destroy Guide
 
-이 문서는 jsj-game-* 환경과 템플릿을 안전하게 삭제하는 방법을 정리합니다.
+이 문서는 GCP 환경과 템플릿을 안전하게 삭제하는 방법을 정리합니다.
 
 ## 1. Destroy 실행 방법
 
 ### 옵션 1: 전체 스택 일괄 Destroy (권장)
 
-**환경변수를 설정하여 `run-all destroy` 사용**:
+**환경변수를 설정하여 `run --all -- destroy` 사용** (Terragrunt 0.93+):
 
 ```bash
-cd environments/LIVE/jsj-game-m
+cd environments/LIVE/gcp-gcby
 
 # 환경변수 설정 후 실행
-SKIP_WORKLOADS_DEPENDENCY=true terragrunt run-all destroy --terragrunt-non-interactive
+export TG_NON_INTERACTIVE=true
+SKIP_WORKLOADS_DEPENDENCY=true terragrunt run --all -- destroy
 ```
 
 **장점**:

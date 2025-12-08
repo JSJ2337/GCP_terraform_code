@@ -10,14 +10,14 @@ Terragrunt는 Terraform wrapper로 DRY(Don't Repeat Yourself) 원칙을 따르�
 # 각 레이어마다 backend 블록 중복
 terraform {
   backend "gcs" {
-    bucket = "jsj-terraform-state-prod"
-    prefix = "jsj-game-n/00-project"
+    bucket = "delabs-terraform-state-live"
+    prefix = "gcp-gcby/00-project"
   }
 }
 
 # 공통 변수를 각 레이어에서 반복
-variable "project_id" { default = "jsj-game-n" }
-variable "region" { default = "asia-northeast3" }
+variable "project_id" { default = "gcp-gcby" }
+variable "region" { default = "us-west1" }
 # ... 10개 레이어 × 10개 변수 = 100번 반복
 ```
 
@@ -28,21 +28,21 @@ variable "region" { default = "asia-northeast3" }
 remote_state {
   backend = "gcs"
   config = {
-    bucket = "jsj-terraform-state-prod"
-    prefix = "jsj-game-n/${path_relative_to_include()}"
+    bucket = "delabs-terraform-state-live"
+    prefix = "gcp-gcby/${path_relative_to_include()}"
   }
 }
 
 inputs = {
-  project_id = "jsj-game-n"
-  region     = "asia-northeast3"
+  project_id = "gcp-gcby"
+  region     = "us-west1"
 }
 ```
 
 ## 디렉터리 구조
 
 ```text
-environments/LIVE/jsj-game-n/
+environments/LIVE/gcp-gcby/
 ├── root.hcl                    # 루트 설정 (remote_state, inputs)
 ├── common.naming.tfvars        # 공통 네이밍 변수
 ├── 00-project/
@@ -54,7 +54,7 @@ environments/LIVE/jsj-game-n/
 ├── 10-network/
 │   ├── terragrunt.hcl
 │   └── ...
-└── ... (20-storage ~ 12-dns)
+└── ... (12-dns ~ 70-loadbalancers)
 ```
 
 ## Terragrunt 0.93+ Migration Guide
@@ -69,7 +69,7 @@ Terragrunt 0.93부터 명령어 구문이 변경되었습니다:
 | 디렉토리 포함 | `--terragrunt-include-dir` | `--queue-include-dir` |
 | 디렉토리 제외 | `--terragrunt-exclude-dir` | `--queue-exclude-dir` |
 | Working Directory | `--terragrunt-working-dir` | `--working-dir` |
-| Non-Interactive | `--terragrunt-non-interactive` | (환경변수 사용 권장) |
+| Non-Interactive | `--terragrunt-non-interactive` | `TG_NON_INTERACTIVE=true` 환경변수 |
 
 ### 마이그레이션 예제
 
@@ -77,12 +77,12 @@ Terragrunt 0.93부터 명령어 구문이 변경되었습니다:
 # 구버전 (< 0.93)
 terragrunt run-all plan
 terragrunt run-all apply --terragrunt-include-dir 10-network
-terragrunt run-all --terragrunt-working-dir envs/LIVE/jsj-game-n apply
+terragrunt run-all --terragrunt-working-dir environments/LIVE/gcp-gcby apply
 
 # 신버전 (0.93+)
 terragrunt run --all -- plan
 terragrunt run --all --queue-include-dir 10-network -- apply
-terragrunt run --all --working-dir envs/LIVE/jsj-game-n -- apply
+terragrunt run --all --working-dir environments/LIVE/gcp-gcby -- apply
 ```
 
 **⚠️ 중요**:
@@ -96,7 +96,7 @@ terragrunt run --all --working-dir envs/LIVE/jsj-game-n -- apply
 export TG_NON_INTERACTIVE=true  # 환경변수로 non-interactive 모드 활성화
 
 terragrunt run --all \
-  --working-dir terraform_gcp_infra/environments/LIVE/jsj-game-n \
+  --working-dir terraform_gcp_infra/environments/LIVE/gcp-gcby \
   --queue-include-dir 50-workloads \
   -- apply -- -auto-approve
 ```
@@ -116,19 +116,19 @@ remote_state {
     if_exists = "overwrite_terragrunt"
   }
   config = {
-    project  = "jsj-system-mgmt"
-    location = "asia"
-    bucket   = "jsj-terraform-state-prod"
-    prefix   = "jsj-game-n/${path_relative_to_include()}"
+    project  = "delabs-gcp-mgmt"
+    location = "US"
+    bucket   = "delabs-terraform-state-live"
+    prefix   = "gcp-gcby/${path_relative_to_include()}"
   }
 }
 
 # 모든 레이어에 전달할 공통 입력
 inputs = {
   org_id          = ""
-  billing_account = "01076D-327AD5-FC8922"
-  region_primary  = "asia-northeast3"
-  region_backup   = "asia-northeast1"
+  billing_account = "XXXXXX-XXXXXX-XXXXXX"
+  region_primary  = "us-west1"
+  region_backup   = "us-west2"
 }
 ```
 
@@ -138,8 +138,8 @@ inputs = {
 # 00-project/backend.tf (자동 생성됨)
 terraform {
   backend "gcs" {
-    bucket = "jsj-terraform-state-prod"
-    prefix = "jsj-game-n/00-project"
+    bucket = "delabs-terraform-state-live"
+    prefix = "gcp-gcby/00-project"
   }
 }
 ```
@@ -175,10 +175,10 @@ inputs = {
 ### 단일 레이어 실행
 
 ```bash
-cd environments/LIVE/jsj-game-n/00-project
+cd environments/LIVE/gcp-gcby/00-project
 
 # 초기화 (backend.tf 자동 생성)
-terragrunt init --non-interactive
+terragrunt init
 
 # Plan
 terragrunt plan
@@ -193,7 +193,7 @@ terragrunt destroy
 ### 전체 스택 실행
 
 ```bash
-cd environments/LIVE/jsj-game-n
+cd environments/LIVE/gcp-gcby
 
 # 모든 레이어 Plan (의존 순서대로)
 terragrunt run --all -- plan
@@ -223,29 +223,32 @@ terragrunt run --all --queue-include-dir 00-project -- apply
 # Phase 2 (10-network)
 terragrunt run --all --queue-include-dir 10-network -- apply
 
-# Phase 3 (20-storage + 30-security)
+# Phase 3 (12-dns)
+terragrunt run --all --queue-include-dir 12-dns -- apply
+
+# Phase 4 (20-storage + 30-security)
 terragrunt run --all \
   --queue-include-dir 20-storage \
   --queue-include-dir 30-security \
   -- apply
 
-# Phase 4 (40-observability, Optional)
+# Phase 5 (40-observability, Optional)
 terragrunt run --all --queue-include-dir 40-observability -- apply
 
-# Phase 5 (50-workloads)
+# Phase 6 (50-workloads)
 terragrunt run --all --queue-include-dir 50-workloads -- apply
 
-# Phase 6 (60-database + 65-cache)
+# Phase 7 (60-database + 65-cache)
 terragrunt run --all \
   --queue-include-dir 60-database \
   --queue-include-dir 65-cache \
   -- apply
 
-# Phase 7 (70-loadbalancers)
-terragrunt run --all --queue-include-dir 70-loadbalancers -- apply
+# Phase 8 (66-psc-endpoints)
+terragrunt run --all --queue-include-dir 66-psc-endpoints -- apply
 
-# Phase 8 (12-dns)
-terragrunt run --all --queue-include-dir 12-dns -- apply
+# Phase 9 (70-loadbalancers)
+terragrunt run --all --queue-include-dir 70-loadbalancers -- apply
 ```
 
 ### 비대화식 실행 (CI/CD용)
@@ -257,7 +260,7 @@ terragrunt run --all -- apply
 
 # Working Directory 지정
 terragrunt run --all \
-  --working-dir terraform_gcp_infra/environments/LIVE/jsj-game-n \
+  --working-dir terraform_gcp_infra/environments/LIVE/gcp-gcby \
   -- plan
 ```
 
@@ -271,26 +274,33 @@ Terragrunt는 Phase 기반 배포의 핵심 도구입니다:
 %%{init: {'theme': 'default'}}%%
 graph TD
     P1[Phase 1: 00-project] --> P2[Phase 2: 10-network]
-    P2 --> P3A[Phase 3: 20-storage]
-    P2 --> P3B[Phase 3: 30-security]
-    P3A --> P4[Phase 4: 40-observability]
-    P3B --> P4
-    P2 --> P5[Phase 5: 50-workloads]
-    P5 --> P6A[Phase 6: 60-database]
-    P5 --> P6B[Phase 6: 65-cache]
-    P5 --> P7[Phase 7: 70-loadbalancers]
-    P7 --> P8[Phase 8: 12-dns]
+    P2 --> P3[Phase 3: 12-dns]
+    P2 --> P4A[Phase 4: 20-storage]
+    P2 --> P4B[Phase 4: 30-security]
+    P4A --> P5[Phase 5: 40-observability]
+    P4B --> P5
+    P4B --> P6[Phase 6: 50-workloads]
+    P2 --> P7A[Phase 7: 60-database]
+    P2 --> P7B[Phase 7: 65-cache]
+    P7A --> P8[Phase 8: 66-psc-endpoints]
+    P7B --> P8
+    P6 --> P9[Phase 9: 70-loadbalancers]
 ```
 
 ### Jenkins와의 통합
 
 ```groovy
-// Jenkinsfile에서 Phase 정의
+// Jenkinsfile에서 Phase 정의 (proj-default-templet/Jenkinsfile 참고)
 def PHASES = [
     [id: 'phase1', label: 'Phase 1: Project', dirs: ['00-project']],
     [id: 'phase2', label: 'Phase 2: Network', dirs: ['10-network']],
-    [id: 'phase3', label: 'Phase 3: Storage & Security', dirs: ['20-storage', '30-security']],
-    // ... 나머지 Phases
+    [id: 'phase3', label: 'Phase 3: DNS', dirs: ['12-dns']],
+    [id: 'phase4', label: 'Phase 4: Storage & Security', dirs: ['20-storage', '30-security']],
+    [id: 'phase5', label: 'Phase 5: Observability', dirs: ['40-observability']],
+    [id: 'phase6', label: 'Phase 6: Workloads', dirs: ['50-workloads']],
+    [id: 'phase7', label: 'Phase 7: Database & Cache', dirs: ['60-database', '65-cache']],
+    [id: 'phase8', label: 'Phase 8: PSC Endpoints', dirs: ['66-psc-endpoints']],
+    [id: 'phase9', label: 'Phase 9: Load Balancers', dirs: ['70-loadbalancers/gs']]
 ]
 
 // Phase별 실행
@@ -350,24 +360,24 @@ Terragrunt는 다음 순서로 변수를 병합합니다:
 ```hcl
 # root.hcl
 inputs = {
-  region = "asia-northeast3"  # 1순위
+  region = "us-west1"  # 1순위
 }
 
 # common.naming.tfvars
-project_id = "jsj-game-n"     # 2순위
+project_id = "gcp-gcby"       # 2순위
 
 # 00-project/terragrunt.hcl
 inputs = {
-  project_name = "game-n"     # 3순위
+  project_name = "gcby"       # 3순위
 }
 
 # 00-project/terraform.tfvars
 enable_budget = true          # 4순위
 
 # 최종 결과:
-# region = "asia-northeast3"
-# project_id = "jsj-game-n"
-# project_name = "game-n"
+# region = "us-west1"
+# project_id = "gcp-gcby"
+# project_name = "gcby"
 # enable_budget = true
 ```
 
@@ -494,7 +504,7 @@ skip = get_env("SKIP_OBSERVABILITY", "false") == "true"
 ```hcl
 locals {
   environment = basename(get_terragrunt_dir())
-  region = get_env("REGION", "asia-northeast3")
+  region = get_env("REGION", "us-west1")
 }
 
 inputs = {
@@ -523,10 +533,10 @@ inputs = {
 ```text
 environments/
 ├── LIVE/
-│   ├── jsj-game-n/
-│   │   └── root.hcl  (project_id = "jsj-game-n")
-│   └── jsj-game-m/
-│       └── root.hcl  (project_id = "jsj-game-m")
+│   ├── gcp-gcby/
+│   │   └── root.hcl  (project_id = "gcp-gcby")
+│   └── gcp-web3/
+│       └── root.hcl  (project_id = "gcp-web3")
 ```
 
 ### 2. 공통 설정은 상위에
@@ -534,17 +544,17 @@ environments/
 ```hcl
 # environments/root.hcl
 inputs = {
-  organization = "433"
-  billing_account = "01076D-327AD5-FC8922"
+  organization = "delabs"
+  billing_account = "XXXXXX-XXXXXX-XXXXXX"
 }
 
-# environments/LIVE/jsj-game-n/root.hcl
+# environments/LIVE/gcp-gcby/root.hcl
 include "common" {
   path = find_in_parent_folders("root.hcl")
 }
 
 inputs = {
-  project_id = "jsj-game-n"
+  project_id = "gcp-gcby"
 }
 ```
 
@@ -559,10 +569,10 @@ inputs = {
 ### 4. Phase 기반 배포 사용
 
 ```bash
-# 전체 배포는 Phase 순서대로
-for phase in 00-project 10-network 20-storage 30-security \
+# 전체 배포는 Phase 순서대로 (Jenkinsfile PHASES와 동일)
+for phase in 00-project 10-network 12-dns 20-storage 30-security \
              40-observability 50-workloads 60-database 65-cache \
-             70-loadbalancers 12-dns; do
+             66-psc-endpoints 70-loadbalancers; do
   terragrunt run --all --queue-include-dir $phase -- apply
 done
 ```
@@ -644,5 +654,5 @@ terragrunt plan  # No changes expected
 
 ---
 
-**Last Updated: 2025-11-21**
+**Last Updated: 2025-12-08**
 **Version: Terragrunt 0.93+ Compatible**

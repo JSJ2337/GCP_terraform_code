@@ -49,7 +49,7 @@ roles/monitoring.admin
 cd terraform_gcp_infra
 
 # Slack Webhook URL을 Secret Manager에 저장
-./scripts/setup_slack_webhook.sh jsj-system-mgmt \
+./scripts/setup_slack_webhook.sh delabs-gcp-mgmt \
   "https://hooks.slack.com/services/YOUR/WEBHOOK/URL"
 ```
 
@@ -57,24 +57,24 @@ cd terraform_gcp_infra
 
 ```
 [INFO] Setting up Slack Webhook URL in Secret Manager...
-[INFO] Project: jsj-system-mgmt
+[INFO] Project: delabs-gcp-mgmt
 [INFO] Enabling Secret Manager API...
 [INFO] Creating secret 'slack-webhook-url'...
 [SUCCESS] Secret 'slack-webhook-url' created successfully.
 
 Secret resource name:
-  projects/jsj-system-mgmt/secrets/slack-webhook-url
+  projects/delabs-gcp-mgmt/secrets/slack-webhook-url
 ```
 
 ### 2단계: terraform.tfvars 설정 확인
 
-`environments/LIVE/jsj-game-m/40-observability/terraform.tfvars` 파일이 이미 설정되어 있습니다:
+`environments/LIVE/gcp-gcby/40-observability/terraform.tfvars` 파일이 이미 설정되어 있습니다:
 
 ```hcl
 # Slack Notifications
 enable_slack_notifications    = true
 slack_webhook_secret_name     = "slack-webhook-url"
-slack_webhook_secret_project  = "jsj-system-mgmt"
+slack_webhook_secret_project  = "delabs-gcp-mgmt"
 slack_channel_name            = "#game-alerts"
 slack_channel_display_name    = "Game-M Alerts"
 
@@ -103,7 +103,7 @@ enable_cloudsql_cpu_alert = false  # Cloud SQL 알림 비활성화
 ### 3단계: Terraform Apply
 
 ```bash
-cd environments/LIVE/jsj-game-m
+cd environments/LIVE/gcp-gcby
 
 # 40-observability 레이어만 적용
 cd 40-observability
@@ -197,47 +197,47 @@ lb_5xx_duration  = "300s"  # 5분 지속 시 트리거
 ### VM 인스턴스
 
 ```hcl
-# jsj-game-m으로 시작하는 모든 VM
-vm_instance_filter_regex = "^jsj-game-m-.*"
+# gcp-gcby로 시작하는 모든 VM
+vm_instance_filter_regex = "^gcby-.*"
 
 # 특정 VM만 모니터링
-vm_instance_filter_regex = "^jsj-game-m-(web|api|worker)-.*"
+vm_instance_filter_regex = "^gcby-(web|api|worker)-.*"
 
 # 특정 VM 제외
-vm_instance_filter_regex = "^jsj-game-m-(?!bastion).*"
+vm_instance_filter_regex = "^gcby-(?!bastion).*"
 ```
 
 ### Cloud SQL
 
 ```hcl
 # 형식: project:region:instance
-cloudsql_instance_regex = "^jsj-game-m:asia-northeast3:jsj-game-m-mysql$"
+cloudsql_instance_regex = "^gcp-gcby:us-west1:gcby-live-mysql$"
 
 # 모든 SQL 인스턴스
-cloudsql_instance_regex = "^jsj-game-m:.*:.*$"
+cloudsql_instance_regex = "^gcp-gcby:.*:.*$"
 ```
 
 ### Redis (Memorystore)
 
 ```hcl
 # 형식: projects/{project}/locations/{region}/instances/{name}
-memorystore_instance_regex = "^projects/jsj-game-m/locations/asia-northeast3/instances/jsj-game-m-redis$"
+memorystore_instance_regex = "^projects/gcp-gcby/locations/us-west1/instances/gcby-live-redis$"
 
 # 모든 Redis 인스턴스
-memorystore_instance_regex = "^projects/jsj-game-m/locations/.*/instances/.*$"
+memorystore_instance_regex = "^projects/gcp-gcby/locations/.*/instances/.*$"
 ```
 
 ### Load Balancer
 
 ```hcl
 # HTTP/HTTPS proxy 모두
-lb_target_proxy_regex = "^jsj-game-m-.*-(http|https)-proxy$"
+lb_target_proxy_regex = "^gcby-.*-(http|https)-proxy$"
 
 # HTTP만
-lb_target_proxy_regex = "^jsj-game-m-.*-http-proxy$"
+lb_target_proxy_regex = "^gcby-.*-http-proxy$"
 
 # 특정 LB만
-lb_target_proxy_regex = "^jsj-game-m-(web|api)-.*-proxy$"
+lb_target_proxy_regex = "^gcby-(web|api)-.*-proxy$"
 ```
 
 ## 트러블슈팅
@@ -255,10 +255,10 @@ googleapi: Error 403: Permission 'secretmanager.versions.access' denied
 
 ```bash
 # Terraform Service Account에 권한 부여
-SA_EMAIL="jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com"
+SA_EMAIL="jenkins-terraform-admin@delabs-gcp-mgmt.iam.gserviceaccount.com"
 
 gcloud secrets add-iam-policy-binding slack-webhook-url \
-  --project=jsj-system-mgmt \
+  --project=delabs-gcp-mgmt \
   --member="serviceAccount:${SA_EMAIL}" \
   --role="roles/secretmanager.secretAccessor"
 ```
@@ -270,13 +270,13 @@ gcloud secrets add-iam-policy-binding slack-webhook-url \
 1. **Notification Channel 생성 확인**:
 
    ```bash
-   gcloud alpha monitoring channels list --project=jsj-game-m
+   gcloud alpha monitoring channels list --project=gcp-gcby
    ```
 
 2. **Alert Policy 상태 확인**:
 
    ```bash
-   gcloud alpha monitoring policies list --project=jsj-game-m
+   gcloud alpha monitoring policies list --project=gcp-gcby
    ```
 
 3. **Slack Webhook URL 검증**:
@@ -311,9 +311,9 @@ enable_vm_cpu_alert = false
 
 ```bash
 # 실제 리소스 이름 확인
-gcloud compute instances list --project=jsj-game-m --format="table(name)"
-gcloud sql instances list --project=jsj-game-m --format="value(connectionName)"
-gcloud redis instances list --project=jsj-game-m --region=asia-northeast3
+gcloud compute instances list --project=gcp-gcby --format="table(name)"
+gcloud sql instances list --project=gcp-gcby --format="value(connectionName)"
+gcloud redis instances list --project=gcp-gcby --region=us-west1
 ```
 
 ## 비용 최적화
@@ -343,7 +343,7 @@ gcloud redis instances list --project=jsj-game-m --region=asia-northeast3
 
    ```hcl
    # 모든 VM 대신 특정 VM만
-   vm_instance_filter_regex = "^jsj-game-m-web-.*"  # web 서버만
+   vm_instance_filter_regex = "^gcby-web-.*"  # web 서버만
    ```
 
 ## 참고 자료

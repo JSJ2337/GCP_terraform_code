@@ -103,7 +103,7 @@ find . -type d -name ".terraform" -prune -exec rm -rf {} \;
 
 ```bash
 # Versioning된 이전 버전 복원
-gsutil ls -la gs://jsj-terraform-state-prod/jsj-game-k/00-project/
+gsutil ls -la gs://delabs-terraform-state-live/gcp-gcby/00-project/
 gsutil cp gs://.../default.tfstate#VERSION gs://.../default.tfstate
 ```
 

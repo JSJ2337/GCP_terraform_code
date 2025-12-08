@@ -99,11 +99,11 @@ ghp_1234567890abcdefghijklmnopqrstuvwxyzABCD
 2. **Build with Parameters** 클릭
 3. 테스트 파라미터 입력:
    ```
-   PROJECT_ID: jsj-test-proj
-   PROJECT_NAME: test-proj
-   ORGANIZATION: jsj
-   REGION_PRIMARY: asia-northeast3
-   REGION_BACKUP: asia-northeast1
+   PROJECT_ID: gcp-newgame
+   PROJECT_NAME: newgame
+   ORGANIZATION: delabs
+   REGION_PRIMARY: us-west1
+   REGION_BACKUP: us-west2
    CREATE_PR: ✅
    ```
 4. **Build** 클릭
@@ -113,7 +113,7 @@ ghp_1234567890abcdefghijklmnopqrstuvwxyzABCD
 성공 시 다음 메시지들이 표시됩니다:
 
 ```
-✅ 브랜치 푸시 완료: feature/create-project-jsj-test-proj
+✅ 브랜치 푸시 완료: feature/create-project-gcp-newgame
 ✅ Pull Request 생성 완료!
 ```
 
@@ -122,11 +122,11 @@ ghp_1234567890abcdefghijklmnopqrstuvwxyzABCD
 1. GitHub Repository로 이동
 2. **Pull requests** 탭에서 새로운 PR 확인:
    ```
-   [Infra] jsj-test-proj 프로젝트 생성
+   [Infra] gcp-newgame 프로젝트 생성
    ```
 3. **Branches** 탭에서 새 브랜치 확인:
    ```
-   feature/create-project-jsj-test-proj
+   feature/create-project-gcp-newgame
    ```
 
 ---

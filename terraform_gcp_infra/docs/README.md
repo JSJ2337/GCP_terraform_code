@@ -82,7 +82,8 @@
 |------|------|
 | [CHANGELOG](./changelog/CHANGELOG.md) | 버전별 변경 내역 및 마이그레이션 가이드 |
 | [작업 이력](./changelog/work_history/README.md) | 날짜별 작업 요약 및 마일스톤 |
-| [2025-12-05](./changelog/work_history/2025-12-05.md) | 최신: proj-default-templet 재구성, 문서 정리 |
+| [2025-12-08](./changelog/work_history/2025-12-08.md) | 최신: Instance Group 문제 해결, Redis DNS 수정, 전체 연결 테스트 완료 |
+| [2025-12-05](./changelog/work_history/2025-12-05.md) | proj-default-templet 재구성, 문서 정리 |
 | [2025-12-04](./changelog/work_history/2025-12-04.md) | gcp-gcby 환경 구성 |
 | [전체 이력](./changelog/work_history/README.md) | 전체 작업 이력 조회 |
 
@@ -141,8 +142,8 @@
 
 ## 문서 버전 정보
 
-- **최종 업데이트**: 2025-12-05
-- **문서 버전**: 3.0
+- **최종 업데이트**: 2025-12-08
+- **문서 버전**: 3.1
 - **프로젝트 상태**: 운영 중
 
 ---

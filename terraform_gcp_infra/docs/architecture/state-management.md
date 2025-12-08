@@ -7,16 +7,16 @@ Terraform State의 중앙 집중식 관리 전략입니다.
 ```mermaid
 %%{init: {'theme': 'default'}}%%
 flowchart TB
-    subgraph Bootstrap["🏗️ Bootstrap Project (jsj-system-mgmt)"]
-        subgraph GCS["📦 jsj-terraform-state-prod (GCS)"]
-            subgraph GAMEK["jsj-game-k/"]
+    subgraph Bootstrap["🏗️ Bootstrap Project (delabs-gcp-mgmt)"]
+        subgraph GCS["📦 delabs-terraform-state-live (GCS)"]
+            subgraph GCBY["gcp-gcby/"]
                 K00["00-project/default.tfstate"]
                 K10["10-network/default.tfstate"]
                 K20["20-storage/default.tfstate"]
                 K_ETC["..."]
             end
 
-            subgraph GAMEL["jsj-game-l/"]
+            subgraph WEB3["gcp-web3/"]
                 L_ETC["..."]
             end
         end
@@ -24,8 +24,8 @@ flowchart TB
 
     style Bootstrap fill:#e3f2fd
     style GCS fill:#fff3e0
-    style GAMEK fill:#e8f5e9
-    style GAMEL fill:#f3e5f5
+    style GCBY fill:#e8f5e9
+    style WEB3 fill:#f3e5f5
 ```
 
 ## 핵심 원칙
@@ -35,32 +35,38 @@ flowchart TB
 모든 프로젝트의 State를 단일 버킷에서 관리:
 
 - **장점**: 일관된 관리, 쉬운 백업, 팀 협업
-- **버킷**: `jsj-terraform-state-prod`
-- **프로젝트**: `jsj-system-mgmt`
+- **버킷**: `delabs-terraform-state-live`
+- **프로젝트**: `delabs-gcp-mgmt`
 
 ### 2. 레이어별 분리 (Layer Isolation)
 
 각 레이어는 독립적인 State 파일 보유:
 
 - **장점**: 빠른 Plan/Apply, 독립적 변경, 충돌 방지
-- **예시**: `00-project`, `10-network`, ... `70-loadbalancer`
+- **예시**: `00-project`, `10-network`, ... `70-loadbalancers`
 
 ### 3. 환경별 격리 (Environment Isolation)
 
 프로젝트별로 prefix 분리:
 
 - **장점**: 환경 간 간섭 없음, 독립적 관리
-- **예시**: `jsj-game-k/`, `jsj-game-l/`
+- **예시**: `gcp-gcby/`, `gcp-web3/`
 
 ## State 구조
 
 ### GCS 버킷 구조
 
 ```text
-gs://jsj-terraform-state-prod/
-├── bootstrap/                        # Bootstrap State (복사본)
-│   └── default.tfstate
-├── jsj-game-k/                       # 환경 1
+gs://delabs-terraform-state-live/
+├── bootstrap/                        # Bootstrap State (레이어 구조)
+│   ├── 00-foundation/
+│   │   └── default.tfstate
+│   ├── 10-network/
+│   │   └── default.tfstate
+│   ├── 12-dns/
+│   │   └── default.tfstate
+│   └── ...
+├── gcp-gcby/                         # 환경 1
 │   ├── 00-project/
 │   │   └── default.tfstate
 │   ├── 10-network/
@@ -68,7 +74,7 @@ gs://jsj-terraform-state-prod/
 │   ├── 20-storage/
 │   │   └── default.tfstate
 │   └── ...
-├── jsj-game-l/                       # 환경 2
+├── gcp-web3/                         # 환경 2
 │   └── ...
 └── proj-default-templet/             # 템플릿 (테스트용)
     └── ...
@@ -78,8 +84,8 @@ gs://jsj-terraform-state-prod/
 
 ```hcl
 resource "google_storage_bucket" "terraform_state" {
-  name     = "jsj-terraform-state-prod"
-  location = "ASIA"
+  name     = "delabs-terraform-state-live"
+  location = "US"
 
   versioning {
     enabled = true  # 버전 관리
@@ -120,10 +126,10 @@ remote_state {
     if_exists = "overwrite_terragrunt"
   }
   config = {
-    project  = "jsj-system-mgmt"
-    location = "asia"
-    bucket   = "jsj-terraform-state-prod"
-    prefix   = "jsj-game-k/${path_relative_to_include()}"
+    project  = "delabs-gcp-mgmt"
+    location = "US"
+    bucket   = "delabs-terraform-state-live"
+    prefix   = "gcp-gcby/${path_relative_to_include()}"
   }
 }
 ```
@@ -140,8 +146,8 @@ remote_state {
 # 00-project/backend.tf (자동 생성)
 terraform {
   backend "gcs" {
-    bucket = "jsj-terraform-state-prod"
-    prefix = "jsj-game-k/00-project"
+    bucket = "delabs-terraform-state-live"
+    prefix = "gcp-gcby/00-project"
   }
 }
 ```
@@ -162,8 +168,8 @@ terraform {
 
 # 수동 백업 (중요 변경 전)
 gsutil cp \
-    gs://jsj-terraform-state-prod/jsj-game-k/00-project/default.tfstate \
-    gs://jsj-terraform-state-prod/backup/jsj-game-k-00-project-$(date +%Y%m%d).tfstate
+    gs://delabs-terraform-state-live/gcp-gcby/00-project/default.tfstate \
+    gs://delabs-terraform-state-live/backup/gcp-gcby-00-project-$(date +%Y%m%d).tfstate
 ```
 
 ### Lock 메커니즘
@@ -174,32 +180,41 @@ gsutil cp \
 
 ## Bootstrap State (특별 케이스)
 
-### 로컬 State
+### GCS Backend (기본)
 
-Bootstrap은 의도적으로 로컬 State 사용:
+Bootstrap도 기본적으로 GCS backend를 사용합니다:
 
 ```hcl
-# bootstrap/main.tf
-terraform {
-  # backend 블록 없음 = 로컬 State
+# bootstrap/root.hcl
+remote_state {
+  backend = local.use_local_backend ? "local" : "gcs"  # 기본: GCS
+
+  config = {
+    bucket   = "delabs-terraform-state-live"
+    prefix   = "bootstrap/${path_relative_to_include()}"  # 예: bootstrap/00-foundation
+    project  = "delabs-gcp-mgmt"
+    location = "ASIA"
+  }
 }
 ```
 
-**이유**:
-
-- Bootstrap이 State 버킷을 생성함
-- 순환 의존성 방지
-
-### 백업 필수
+**초기 부트스트랩 시** (State 버킷이 없을 때):
 
 ```bash
-# 로컬 백업
-cd bootstrap
-cp terraform.tfstate ~/backup/bootstrap-$(date +%Y%m%d).tfstate
+# 로컬 백엔드로 먼저 실행
+TG_USE_LOCAL_BACKEND=true terragrunt apply
 
-# GCS 백업 (권장)
-gsutil cp terraform.tfstate \
-    gs://jsj-terraform-state-prod/bootstrap/default.tfstate
+# State 버킷 생성 후 GCS로 마이그레이션
+terragrunt init -migrate-state
+```
+
+### 백업 (GCS Versioning 활용)
+
+```bash
+# GCS에 자동 버전 관리됨
+# 수동 백업이 필요한 경우:
+gsutil cp gs://delabs-terraform-state-live/bootstrap/00-foundation/default.tfstate \
+    gs://delabs-terraform-state-live/backup/bootstrap-00-foundation-$(date +%Y%m%d).tfstate
 ```
 
 ### 참조 방법
@@ -210,8 +225,8 @@ gsutil cp terraform.tfstate \
 data "terraform_remote_state" "bootstrap" {
   backend = "gcs"
   config = {
-    bucket = "jsj-terraform-state-prod"
-    prefix = "bootstrap"
+    bucket = "delabs-terraform-state-live"
+    prefix = "bootstrap/00-foundation"  # Bootstrap 00-foundation 레이어
   }
 }
 
@@ -226,26 +241,28 @@ locals {
 
 ```bash
 # 1. 버전 리스트 확인
-gsutil ls -la gs://jsj-terraform-state-prod/jsj-game-k/00-project/
+gsutil ls -la gs://delabs-terraform-state-live/gcp-gcby/00-project/
 
 # 2. 특정 버전 복원
-STATE_OBJECT="gs://jsj-terraform-state-prod/jsj-game-k/00-project/default.tfstate#1234567890"
+STATE_OBJECT="gs://delabs-terraform-state-live/gcp-gcby/00-project/default.tfstate#1234567890"
 gsutil cp \
     "${STATE_OBJECT}" \
-    gs://jsj-terraform-state-prod/jsj-game-k/00-project/default.tfstate
+    gs://delabs-terraform-state-live/gcp-gcby/00-project/default.tfstate
 ```
 
 ### Bootstrap State 복원
 
+Bootstrap은 GCS backend를 사용하므로, 이전 버전 복원 방법과 동일합니다:
+
 ```bash
-cd bootstrap
+# 1. 버전 리스트 확인 (00-foundation 레이어 예시)
+gsutil ls -la gs://delabs-terraform-state-live/bootstrap/00-foundation/
 
-# 로컬 백업에서
-cp ~/backup/bootstrap-20251112.tfstate terraform.tfstate
-
-# GCS에서
-gsutil cp gs://jsj-terraform-state-prod/bootstrap/default.tfstate \
-    terraform.tfstate
+# 2. 특정 버전 복원
+STATE_OBJECT="gs://delabs-terraform-state-live/bootstrap/00-foundation/default.tfstate#1234567890"
+gsutil cp \
+    "${STATE_OBJECT}" \
+    gs://delabs-terraform-state-live/bootstrap/00-foundation/default.tfstate
 ```
 
 ## State 이동
@@ -281,20 +298,20 @@ terragrunt state mv \
 ### State 크기 확인
 
 ```bash
-gsutil du -sh gs://jsj-terraform-state-prod/jsj-game-k/
+gsutil du -sh gs://delabs-terraform-state-live/gcp-gcby/
 ```
 
 ### 변경 이력
 
 ```bash
 # Versioning 이력
-gsutil ls -la gs://jsj-terraform-state-prod/jsj-game-k/00-project/ | tail -10
+gsutil ls -la gs://delabs-terraform-state-live/gcp-gcby/00-project/ | tail -10
 ```
 
 ### Lock 확인
 
 ```bash
-gsutil ls gs://jsj-terraform-state-prod/jsj-game-k/**/*.tflock
+gsutil ls gs://delabs-terraform-state-live/gcp-gcby/**/*.tflock
 ```
 
 ## 베스트 프랙티스
@@ -309,7 +326,7 @@ gsutil ls gs://jsj-terraform-state-prod/jsj-game-k/**/*.tflock
 
 ### ❌ Don't
 
-1. **로컬 State 사용 금지** (Bootstrap 제외)
+1. **로컬 State 사용 금지** (초기 Bootstrap 시 `TG_USE_LOCAL_BACKEND=true`만 예외)
 2. **State 직접 수정 금지**: `terraform state` 명령 사용
 3. **Lock 무시 금지**: 충돌 위험
 4. **여러 환경 공유 금지**: prefix 분리

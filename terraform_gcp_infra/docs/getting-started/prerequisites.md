@@ -59,10 +59,10 @@ gcloud --version
 gcloud auth application-default login
 
 # 프로젝트 설정 (Bootstrap 프로젝트)
-gcloud config set project jsj-system-mgmt
+gcloud config set project delabs-gcp-mgmt
 
 # Quota Project 설정 (중요!)
-gcloud auth application-default set-quota-project jsj-system-mgmt
+gcloud auth application-default set-quota-project delabs-gcp-mgmt
 ```
 
 ### Billing Account 확인
@@ -121,7 +121,7 @@ ls -la
 - **문제**: `Permission denied` 오류
 - **해결**:
   1. ADC 재설정: `gcloud auth application-default login`
-  2. Quota Project 설정: `gcloud auth application-default set-quota-project jsj-system-mgmt`
+  2. Quota Project 설정: `gcloud auth application-default set-quota-project delabs-gcp-mgmt`
 
 ---
 

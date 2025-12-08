@@ -4,13 +4,13 @@ Bootstrap 프로젝트는 **중앙 집중식 Terraform State 관리**를 위한 
 
 > ⚠️ **중요**: 다른 모든 인프라를 배포하기 전에 반드시 Bootstrap을 먼저 배포해야 합니다.
 >
-> **Backend**: GCS (`gs://jsj-terraform-state-prod/bootstrap`)
+> **Backend**: GCS (`gs://delabs-terraform-state-live/bootstrap`)
 
 ## Bootstrap이 생성하는 리소스
 
 ```text
-jsj-system-mgmt (관리용 프로젝트)
-├── jsj-terraform-state-prod (GCS 버킷)
+delabs-gcp-mgmt (관리용 프로젝트)
+├── delabs-terraform-state-live (GCS 버킷)
 │   ├── Versioning 활성화
 │   ├── Lifecycle 정책 (30일 후 삭제)
 │   └── Uniform bucket-level access
@@ -21,7 +21,7 @@ jsj-system-mgmt (관리용 프로젝트)
 ## 1단계: 변수 파일 확인
 
 ```bash
-cd bootstrap
+cd bootstrap/00-foundation
 cat terraform.tfvars
 ```
 
@@ -29,15 +29,15 @@ cat terraform.tfvars
 
 ```hcl
 # 관리용 프로젝트
-management_project_id   = "jsj-system-mgmt"
-management_project_name = "JSJ System Management"
+management_project_id   = "delabs-gcp-mgmt"
+management_project_name = "Delabs GCP Management"
 
 # State 버킷
-state_bucket_name = "jsj-terraform-state-prod"
-state_bucket_location = "ASIA"
+state_bucket_name = "delabs-terraform-state-live"
+state_bucket_location = "US"
 
 # Billing Account
-billing_account = "01076D-327AD5-FC8922"
+billing_account = "XXXXXX-XXXXXX-XXXXXX"
 
 # 조직 설정 (있는 경우)
 org_id = ""  # 조직 ID 또는 비워두기
@@ -45,18 +45,25 @@ org_id = ""  # 조직 ID 또는 비워두기
 
 ## 2단계: Bootstrap 배포
 
-```bash
-cd bootstrap
+Bootstrap도 Terragrunt를 사용합니다 (레이어 구조: 00-foundation, 10-network, 12-dns 등).
 
-# 1. 초기화
-terraform init
+```bash
+cd bootstrap/00-foundation
+
+# 1. 초기화 (State 버킷이 없는 경우 로컬 백엔드 사용)
+TG_USE_LOCAL_BACKEND=true terragrunt init
 
 # 2. 계획 확인
-terraform plan
+TG_USE_LOCAL_BACKEND=true terragrunt plan
 
-# 3. 적용
-terraform apply
+# 3. 적용 (State 버킷 생성됨)
+TG_USE_LOCAL_BACKEND=true terragrunt apply
+
+# 4. GCS 백엔드로 마이그레이션
+terragrunt init -migrate-state
 ```
+
+> **참고**: 초기 부트스트랩 후에는 `TG_USE_LOCAL_BACKEND` 없이 일반적으로 실행합니다.
 
 **예상 출력**:
 
@@ -65,22 +72,26 @@ Apply complete! Resources: 8 added, 0 changed, 0 destroyed.
 
 Outputs:
 
-jenkins_service_account_email = "jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com"
-management_project_id = "jsj-system-mgmt"
-state_bucket_name = "jsj-terraform-state-prod"
+jenkins_service_account_email = "jenkins-terraform-admin@delabs-gcp-mgmt.iam.gserviceaccount.com"
+management_project_id = "delabs-gcp-mgmt"
+state_bucket_name = "delabs-terraform-state-live"
 ```
 
-## 3단계: State 마이그레이션 (기존 로컬 State가 있는 경우)
+## 3단계: 나머지 Bootstrap 레이어 배포
 
-Bootstrap은 GCS backend를 사용합니다. 기존 로컬 state가 있다면 마이그레이션하세요.
+00-foundation 배포 후, 나머지 Bootstrap 레이어를 순차적으로 배포합니다:
 
 ```bash
-# 로컬 state → GCS 마이그레이션
-terraform init -migrate-state
-# "yes" 입력하면 자동으로 GCS로 복사됨
+# 10-network (VPC Peering, PSC 설정)
+cd ../10-network
+terragrunt apply
+
+# 12-dns (Private DNS)
+cd ../12-dns
+terragrunt apply
 
 # 확인
-gsutil ls gs://jsj-terraform-state-prod/bootstrap/
+gsutil ls gs://delabs-terraform-state-live/bootstrap/
 ```
 
 ## 4단계: 인증 설정
@@ -89,10 +100,10 @@ Bootstrap 배포 후 **반드시** 다음을 실행하세요:
 
 ```bash
 # 1. 프로젝트 설정
-gcloud config set project jsj-system-mgmt
+gcloud config set project delabs-gcp-mgmt
 
 # 2. Quota Project 설정 (매우 중요!)
-gcloud auth application-default set-quota-project jsj-system-mgmt
+gcloud auth application-default set-quota-project delabs-gcp-mgmt
 ```
 
 > ⚠️ 이 단계를 생략하면 "storage: bucket doesn't exist" 오류가 발생합니다!
@@ -103,23 +114,23 @@ gcloud auth application-default set-quota-project jsj-system-mgmt
 
 ```bash
 # Bootstrap output에서 명령어 확인
-cd bootstrap
-terraform output jenkins_key_creation_command
+cd bootstrap/00-foundation
+terragrunt output jenkins_key_creation_command
 
 # 또는 직접 실행
-SA_EMAIL="jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com"
+SA_EMAIL="jenkins-terraform-admin@delabs-gcp-mgmt.iam.gserviceaccount.com"
 gcloud iam service-accounts keys create jenkins-sa-key.json \
     --iam-account="${SA_EMAIL}" \
-    --project=jsj-system-mgmt
+    --project=delabs-gcp-mgmt
 ```
 
 ### 5-2. 필수 권한 부여
 
-**State 버킷 접근** (jsj-system-mgmt 프로젝트):
+**State 버킷 접근** (delabs-gcp-mgmt 프로젝트):
 
 ```bash
 SA_MEMBER="serviceAccount:${SA_EMAIL}"
-gcloud projects add-iam-policy-binding jsj-system-mgmt \
+gcloud projects add-iam-policy-binding delabs-gcp-mgmt \
     --member="${SA_MEMBER}" \
     --role="roles/storage.admin"
 ```
@@ -127,7 +138,7 @@ gcloud projects add-iam-policy-binding jsj-system-mgmt \
 **Billing Account 권한**:
 
 ```bash
-gcloud beta billing accounts add-iam-policy-binding 01076D-327AD5-FC8922 \
+gcloud beta billing accounts add-iam-policy-binding XXXXXX-XXXXXX-XXXXXX \
     --member="${SA_MEMBER}" \
     --role="roles/billing.user"
 ```
@@ -151,18 +162,18 @@ gcloud organizations add-iam-policy-binding YOUR_ORG_ID \
 ### State 버킷 확인
 
 ```bash
-gsutil ls -L gs://jsj-terraform-state-prod/
+gsutil ls -L gs://delabs-terraform-state-live/
 
 # Versioning: Enabled
-# Location: ASIA
+# Location: US
 ```
 
 ### Service Account 확인
 
 ```bash
 gcloud iam service-accounts describe \
-    jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com \
-    --project=jsj-system-mgmt
+    jenkins-terraform-admin@delabs-gcp-mgmt.iam.gserviceaccount.com \
+    --project=delabs-gcp-mgmt
 ```
 
 ## 다음 단계
@@ -176,7 +187,7 @@ gcloud iam service-accounts describe \
 ### "storage: bucket doesn't exist"
 
 - **원인**: Quota Project가 설정되지 않음
-- **해결**: `gcloud auth application-default set-quota-project jsj-system-mgmt`
+- **해결**: `gcloud auth application-default set-quota-project delabs-gcp-mgmt`
 
 ### "billing account binding failed"
 

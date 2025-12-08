@@ -11,7 +11,7 @@ Terraform State 관련 문제 해결 가이드입니다.
 terragrunt force-unlock <LOCK_ID>
 
 # GCS에서 직접 삭제
-gsutil rm gs://jsj-terraform-state-prod/path/to/default.tflock
+gsutil rm gs://delabs-terraform-state-live/path/to/default.tflock
 ```
 
 ### Lock 타임아웃
@@ -27,23 +27,26 @@ terragrunt plan -lock-timeout=10m
 
 ```bash
 # Versioning된 State 리스트
-gsutil ls -la gs://jsj-terraform-state-prod/jsj-game-k/00-project/
+gsutil ls -la gs://delabs-terraform-state-live/gcp-gcby/00-project/
 
 # 이전 버전 복원
-STATE_OBJECT="gs://jsj-terraform-state-prod/jsj-game-k/00-project/default.tfstate#1234567890"
+STATE_OBJECT="gs://delabs-terraform-state-live/gcp-gcby/00-project/default.tfstate#1234567890"
 gsutil cp \
     "${STATE_OBJECT}" \
-    gs://jsj-terraform-state-prod/jsj-game-k/00-project/default.tfstate
+    gs://delabs-terraform-state-live/gcp-gcby/00-project/default.tfstate
 ```
 
 ### Bootstrap State 복원
 
-```bash
-cd bootstrap
-cp ~/backup/bootstrap-20251112.tfstate terraform.tfstate
+Bootstrap도 GCS backend를 사용합니다 (레이어 구조: `bootstrap/00-foundation`, `bootstrap/10-network` 등):
 
-# 또는 GCS에서
-gsutil cp gs://jsj-terraform-state-prod/bootstrap/default.tfstate terraform.tfstate
+```bash
+# 1. 버전 리스트 확인 (00-foundation 레이어 예시)
+gsutil ls -la gs://delabs-terraform-state-live/bootstrap/00-foundation/
+
+# 2. 특정 버전 복원
+STATE_OBJECT="gs://delabs-terraform-state-live/bootstrap/00-foundation/default.tfstate#1234567890"
+gsutil cp "${STATE_OBJECT}" gs://delabs-terraform-state-live/bootstrap/00-foundation/default.tfstate
 ```
 
 ## State 불일치
@@ -61,7 +64,7 @@ terragrunt apply -refresh-only
 ```bash
 # 기존 리소스를 State에 추가
 terragrunt import google_compute_network.main \
-    projects/jsj-game-k/global/networks/vpc-main
+    projects/gcp-gcby/global/networks/vpc-main
 ```
 
 ## State 이동

@@ -26,16 +26,18 @@
 ## 빠른 시작
 
 ```bash
-# 1. Bootstrap 배포
-cd bootstrap
-terraform init && terraform apply
+# 1. Bootstrap 배포 (레이어 구조)
+cd bootstrap/00-foundation
+TG_USE_LOCAL_BACKEND=true terragrunt init
+TG_USE_LOCAL_BACKEND=true terragrunt apply
+terragrunt init -migrate-state  # GCS로 마이그레이션
 
 # 2. 인증 설정
-gcloud auth application-default set-quota-project jsj-system-mgmt
+gcloud auth application-default set-quota-project delabs-gcp-mgmt
 
 # 3. 첫 프로젝트 배포
-cd environments/LIVE/jsj-game-k/00-project
-terragrunt init --non-interactive
+cd environments/LIVE/gcp-gcby/00-project
+terragrunt init
 terragrunt apply
 ```
 

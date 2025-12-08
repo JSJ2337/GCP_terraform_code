@@ -148,8 +148,8 @@ cd 65-cache && terragrunt apply && cd ..
 ```bash
 cd bootstrap
 
-# VPC Peering, PSC Endpoint 생성
-terragrunt run-all apply
+# VPC Peering, PSC Endpoint 생성 (Terragrunt 0.93+ 구문)
+terragrunt run --all -- apply
 ```
 
 ### Phase 3: 프로젝트 나머지 레이어
@@ -157,9 +157,10 @@ terragrunt run-all apply
 ```bash
 cd environments/LIVE/gcp-newgame
 
-# DNS, Workloads, LB
+# DNS, Workloads, PSC, LB
 cd 12-dns && terragrunt apply && cd ..
 cd 50-workloads && terragrunt apply && cd ..
+cd 66-psc-endpoints && terragrunt apply && cd ..
 cd 70-loadbalancers/gs && terragrunt apply && cd ..
 ```
 
@@ -179,7 +180,7 @@ gcloud compute networks peerings list \
 
 ```bash
 gcloud compute forwarding-rules list \
-  --project=your-mgmt-project \
+  --project=delabs-gcp-mgmt \
   --filter="name:newgame"
 ```
 
@@ -187,11 +188,13 @@ gcloud compute forwarding-rules list \
 
 ```bash
 # Cloud SQL
-mysql -h newgame-live-gdb-m1.yourdomain.internal -u root -p
+mysql -h newgame-live-gdb-m1.delabsgames.internal -u root -p
 
 # Redis
-redis-cli -h newgame-live-redis.yourdomain.internal -p 6379
+redis-cli -h newgame-live-redis.delabsgames.internal -p 6379
 ```
+
+> **참고**: Redis Cluster는 자체적으로 PSC를 자동 생성합니다 (`sca-auto-addr-*`). `66-psc-endpoints`에서는 cross-project 등록만 수행합니다.
 
 ---
 
@@ -231,4 +234,4 @@ inputs = {
 
 ---
 
-**Last Updated**: 2025-12-05
+**Last Updated**: 2025-12-08

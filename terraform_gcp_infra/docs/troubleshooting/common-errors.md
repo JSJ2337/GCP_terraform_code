@@ -19,10 +19,10 @@ storage: bucket doesn't exist
 
 ```bash
 # Quota Project 설정
-gcloud auth application-default set-quota-project jsj-system-mgmt
+gcloud auth application-default set-quota-project delabs-gcp-mgmt
 
 # 프로젝트 설정
-gcloud config set project jsj-system-mgmt
+gcloud config set project delabs-gcp-mgmt
 
 # 재시도
 terragrunt init -reconfigure
@@ -36,7 +36,7 @@ terragrunt init -reconfigure
 Error: Error acquiring the state lock
 Lock Info:
   ID: 1761705035859250
-  Path: gs://jsj-terraform-state-prod/...
+  Path: gs://delabs-terraform-state-live/...
 ```
 
 **원인**: 이전 실행이 비정상 종료되어 Lock이 남아있음
@@ -48,7 +48,7 @@ Lock Info:
 terragrunt force-unlock 1761705035859250
 
 # 또는 GCS에서 직접 삭제
-gsutil rm gs://jsj-terraform-state-prod/path/to/default.tflock
+gsutil rm gs://delabs-terraform-state-live/path/to/default.tflock
 ```
 
 ### 3. "backend configuration changed"
@@ -78,8 +78,8 @@ terragrunt init -migrate-state
 
 ```text
 🛡️  Ensuring GCP project prerequisites...
-bash terraform_gcp_infra/scripts/gcp_project_guard.sh ensure 'terraform_gcp_infra/environments/LIVE/jsj-game-m'
-[INFO] Project jsj-game-m already exists.
+bash terraform_gcp_infra/scripts/gcp_project_guard.sh ensure 'terraform_gcp_infra/environments/LIVE/gcp-gcby'
+[INFO] Project gcp-gcby already exists.
 script returned exit code 1
 ```
 
@@ -128,21 +128,21 @@ The caller does not have permission
 
 ```bash
 gcloud auth application-default login
-gcloud auth application-default set-quota-project jsj-system-mgmt
+gcloud auth application-default set-quota-project delabs-gcp-mgmt
 ```
 
 **방법 2**: Service Account 권한 확인
 
 ```bash
 # SA 권한 확인
-gcloud projects get-iam-policy jsj-game-k \
+gcloud projects get-iam-policy gcp-gcby \
     --flatten="bindings[].members" \
     --filter="bindings.members:serviceAccount:jenkins-terraform-admin@*"
 
 # 필요한 권한 부여
-SA_EMAIL="jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com"
+SA_EMAIL="jenkins-terraform-admin@delabs-gcp-mgmt.iam.gserviceaccount.com"
 SA_MEMBER="serviceAccount:${SA_EMAIL}"
-gcloud projects add-iam-policy-binding jsj-game-k \
+gcloud projects add-iam-policy-binding gcp-gcby \
     --member="${SA_MEMBER}" \
     --role="roles/editor"
 ```
@@ -168,9 +168,9 @@ enable_budget = false
 **옵션 2**: Billing User 권한 부여
 
 ```bash
-SA_EMAIL="jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com"
+SA_EMAIL="jenkins-terraform-admin@delabs-gcp-mgmt.iam.gserviceaccount.com"
 SA_MEMBER="serviceAccount:${SA_EMAIL}"
-gcloud beta billing accounts add-iam-policy-binding 01076D-327AD5-FC8922 \
+gcloud beta billing accounts add-iam-policy-binding XXXXXX-XXXXXX-XXXXXX \
     --member="${SA_MEMBER}" \
     --role="roles/billing.user"
 ```
@@ -199,7 +199,7 @@ gcloud services enable \
     redis.googleapis.com \
     cloudbilling.googleapis.com \
     cloudresourcemanager.googleapis.com \
-    --project=jsj-game-k
+    --project=gcp-gcby
 
 # API 활성화 대기 (1-2분)
 sleep 120
@@ -244,7 +244,7 @@ git pull origin main
 **옵션 1**: lock 파일 삭제 후 재생성
 
 ```bash
-cd terraform_gcp_infra/environments/LIVE/jsj-game-n/70-loadbalancers/web
+cd terraform_gcp_infra/environments/LIVE/gcp-gcby/70-loadbalancers/gs
 rm -rf .terraform .terraform.lock.hcl
 terraform init -upgrade
 ```
@@ -252,10 +252,10 @@ terraform init -upgrade
 **옵션 2**: 전체 레이어 lock 파일 정리
 
 ```bash
-cd terraform_gcp_infra/environments/LIVE/jsj-game-n
+cd terraform_gcp_infra/environments/LIVE/gcp-gcby
 find . -name ".terraform.lock.hcl" -delete
 find . -type d -name ".terraform" -prune -exec rm -rf {} +
-terragrunt run-all init -upgrade
+terragrunt run --all -- init -upgrade
 ```
 
 **옵션 3**: Jenkins 파이프라인 수정 (2025-11-25 적용됨)
@@ -284,7 +284,7 @@ Service Networking API may not be enabled
 
 ```bash
 # 1. API 활성화
-gcloud services enable servicenetworking.googleapis.com --project=jsj-game-k
+gcloud services enable servicenetworking.googleapis.com --project=gcp-gcby
 
 # 2. 대기 (중요!)
 sleep 120
@@ -346,7 +346,7 @@ The resource 'projects/xxx/global/networks/xxx' already exists
 ```bash
 # 기존 리소스를 State에 추가
 terragrunt import google_compute_network.main \
-    projects/jsj-game-k/global/networks/vpc-main
+    projects/gcp-gcby/global/networks/gcby-live-vpc
 ```
 
 **옵션 2**: State 확인 및 동기화
@@ -398,10 +398,10 @@ Error: Missing required GCS remote state configuration
 remote_state {
   backend = "gcs"
   config = {
-    project  = "jsj-system-mgmt"  # 추가
-    location = "asia"              # 추가
-    bucket   = "jsj-terraform-state-prod"
-    prefix   = "jsj-game-k/${path_relative_to_include()}"
+    project  = "delabs-gcp-mgmt"  # 추가
+    location = "US"                # 추가
+    bucket   = "delabs-terraform-state-live"
+    prefix   = "gcp-gcby/${path_relative_to_include()}"
   }
 }
 ```
@@ -453,14 +453,14 @@ IP address range is already allocated
 ```bash
 # 기존 연결 확인
 gcloud services vpc-peerings list \
-    --network=vpc-main \
-    --project=jsj-game-k
+    --network=gcby-live-vpc \
+    --project=gcp-gcby
 
 # 연결 삭제 (조심!)
 gcloud services vpc-peerings delete \
-    --network=vpc-main \
+    --network=gcby-live-vpc \
     --service=servicenetworking.googleapis.com \
-    --project=jsj-game-k
+    --project=gcp-gcby
 ```
 
 ### 16. 방화벽 규칙 충돌
@@ -476,14 +476,14 @@ The resource 'projects/xxx/global/firewalls/xxx' already exists
 
 ```bash
 # 기존 규칙 확인
-gcloud compute firewall-rules list --project=jsj-game-k
+gcloud compute firewall-rules list --project=gcp-gcby
 
 # 수동으로 생성된 규칙 삭제
-gcloud compute firewall-rules delete RULE_NAME --project=jsj-game-k
+gcloud compute firewall-rules delete RULE_NAME --project=gcp-gcby
 
 # 또는 Import
 terragrunt import google_compute_firewall.rule_name \
-    projects/jsj-game-k/global/firewalls/RULE_NAME
+    projects/gcp-gcby/global/firewalls/RULE_NAME
 ```
 
 ## Validation 오류
@@ -613,9 +613,10 @@ inputs = merge(
 cd 70-loadbalancers/lobby
 terragrunt apply
 
-# run-all destroy (환경변수 설정)
-cd environments/LIVE/jsj-game-m
-SKIP_WORKLOADS_DEPENDENCY=true terragrunt run-all destroy --terragrunt-non-interactive
+# run-all destroy (환경변수 설정, Terragrunt 0.93+)
+cd environments/LIVE/gcp-gcby
+export TG_NON_INTERACTIVE=true
+SKIP_WORKLOADS_DEPENDENCY=true terragrunt run --all -- destroy
 ```
 
 **효과**:
@@ -680,15 +681,16 @@ resource "google_service_networking_connection" "private_vpc_connection" {
 
 ```bash
 # 옵션 1: State에서 제거 (추천)
-cd terraform_gcp_infra/environments/LIVE/jsj-game-m/10-network
+cd terraform_gcp_infra/environments/LIVE/gcp-gcby/10-network
 terragrunt state rm module.network.google_service_networking_connection.private_vpc_connection[0]
 
 # 옵션 2: 콘솔에서 수동 삭제
 # GCP 콘솔 → VPC Network → VPC network peering → 삭제
 
-# 다시 destroy
+# 다시 destroy (Terragrunt 0.93+)
 cd ..
-terragrunt run-all destroy --terragrunt-non-interactive
+export TG_NON_INTERACTIVE=true
+terragrunt run --all -- destroy
 ```
 
 **참고**:
@@ -719,18 +721,18 @@ deletion_protection = false  # 개발/테스트 환경
 
 ```bash
 # Cluster 확인
-gcloud redis clusters list --region=asia-northeast3 --project=jsj-game-m
+gcloud redis clusters list --region=us-west1 --project=gcp-gcby
 
 # Deletion protection 해제
 gcloud redis clusters update CLUSTER_NAME \
-  --region=asia-northeast3 \
+  --region=us-west1 \
   --no-deletion-protection \
-  --project=jsj-game-m
+  --project=gcp-gcby
 
 # 확인
 gcloud redis clusters describe CLUSTER_NAME \
-  --region=asia-northeast3 \
-  --project=jsj-game-m \
+  --region=us-west1 \
+  --project=gcp-gcby \
   --format="value(deletionProtectionEnabled)"
 ```
 
@@ -999,25 +1001,26 @@ git commit -m "Remove manual vm_details file"
 
 ```bash
 # Versioning된 State 리스트
-gsutil ls -la gs://jsj-terraform-state-prod/jsj-game-k/00-project/
+gsutil ls -la gs://delabs-terraform-state-live/gcp-gcby/00-project/
 
 # 이전 버전 복원
-STATE_OBJECT="gs://jsj-terraform-state-prod/jsj-game-k/00-project/default.tfstate#1234567890"
+STATE_OBJECT="gs://delabs-terraform-state-live/gcp-gcby/00-project/default.tfstate#1234567890"
 gsutil cp \
     "${STATE_OBJECT}" \
-    gs://jsj-terraform-state-prod/jsj-game-k/00-project/default.tfstate
+    gs://delabs-terraform-state-live/gcp-gcby/00-project/default.tfstate
 ```
 
 ### Bootstrap State 복원
 
-```bash
-# 백업에서 복원
-cd bootstrap
-cp ~/backup/bootstrap-20250112.tfstate terraform.tfstate
+Bootstrap도 GCS backend를 사용합니다 (레이어 구조: `bootstrap/00-foundation`, `bootstrap/10-network` 등):
 
-# 또는 GCS에서
-gsutil cp gs://jsj-terraform-state-prod/bootstrap/default.tfstate \
-    terraform.tfstate
+```bash
+# 1. 버전 리스트 확인 (00-foundation 레이어 예시)
+gsutil ls -la gs://delabs-terraform-state-live/bootstrap/00-foundation/
+
+# 2. 특정 버전 복원
+STATE_OBJECT="gs://delabs-terraform-state-live/bootstrap/00-foundation/default.tfstate#1234567890"
+gsutil cp "${STATE_OBJECT}" gs://delabs-terraform-state-live/bootstrap/00-foundation/default.tfstate
 ```
 
 ---

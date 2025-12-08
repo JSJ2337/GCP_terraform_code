@@ -12,7 +12,7 @@ GitHub Push → Jenkins Webhook → Phase-Based Pipeline → Terraform Apply
 
 **핵심 특징:**
 
-- ✅ **Phase 기반 배포**: 8개 Phase로 의존성 자동 해결
+- ✅ **Phase 기반 배포**: 9개 Phase로 의존성 자동 해결
 - ✅ **전체 승인 한 번**: TARGET_LAYER=all 시 모든 Phase를 한 번에 승인
 - ✅ **Stale Plan 방지**: Apply 직전 Re-plan 자동 실행
 - ✅ **Mock Outputs 해결**: Phase 순차 실행으로 순환 참조 문제 근본 해결
@@ -21,7 +21,7 @@ GitHub Push → Jenkins Webhook → Phase-Based Pipeline → Terraform Apply
 
 ### Phase 정의
 
-Jenkins는 8개의 Phase로 인프라를 순차 배포하여 의존성을 자동 해결합니다:
+Jenkins는 9개의 Phase로 인프라를 순차 배포하여 의존성을 자동 해결합니다:
 
 | Phase | 레이어 | 설명 | 의존성 | Optional |
 |-------|--------|------|--------|----------|
@@ -32,7 +32,8 @@ Jenkins는 8개의 Phase로 인프라를 순차 배포하여 의존성을 자동
 | **Phase 5** | `40-observability` | Logging/Monitoring/Slack | 20-storage, 30-security | ✅ |
 | **Phase 6** | `50-workloads` | VM 인스턴스 배포 | 10-network, 30-security | ❌ |
 | **Phase 7** | `60-database`<br>`65-cache` | Cloud SQL, Redis 캐시 | 10-network | ❌ |
-| **Phase 8** | `70-loadbalancers/gs` | Load Balancer (Game Server) | 50-workloads | ❌ |
+| **Phase 8** | `66-psc-endpoints` | Cross-project PSC Endpoints | 60-database, 65-cache | ❌ |
+| **Phase 9** | `70-loadbalancers/gs` | Load Balancer (Game Server) | 50-workloads | ❌ |
 
 ### 배포 흐름
 
@@ -169,7 +170,7 @@ Jenkins Docker 설정:
 각 환경 디렉터리에 Jenkinsfile 배치:
 
 ```text
-environments/LIVE/jsj-game-n/Jenkinsfile
+environments/LIVE/gcp-gcby/Jenkinsfile
 proj-default-templet/Jenkinsfile (템플릿)
 ```
 
@@ -189,7 +190,7 @@ vim environments/LIVE/my-project/Jenkinsfile
 
 - ✅ Plan/Apply/Destroy 파라미터 선택
 - ✅ 전체 스택(all) 또는 개별 레이어 실행
-- ✅ **Phase 기반 순차 배포** (8개 Phase)
+- ✅ **Phase 기반 순차 배포** (9개 Phase)
 - ✅ **전체 승인 한 번** (TARGET_LAYER=all 시)
 - ✅ **Apply 직전 Re-plan** (stale plan 방지)
 - ✅ 30분 승인 타임아웃
@@ -208,7 +209,7 @@ vim environments/LIVE/my-project/Jenkinsfile
    ├─ Phase 1 Plan
    ├─ Phase 2 Plan
    ├─ Phase 3 Plan
-   ├─ ... (Phase 8까지)
+   ├─ ... (Phase 9까지)
    ↓
 5. Review Plan Summary
    ↓
@@ -217,7 +218,7 @@ vim environments/LIVE/my-project/Jenkinsfile
 7. Execute All Phases (순차)
    ├─ Phase 1: Re-plan → Apply
    ├─ Phase 2: Re-plan → Apply
-   ├─ ... (Phase 8까지)
+   ├─ ... (Phase 9까지)
 ```
 
 ### Jenkinsfile 예제 (Phase 기반)
@@ -225,16 +226,17 @@ vim environments/LIVE/my-project/Jenkinsfile
 ```groovy
 @Library('shared-library') _
 
-// Phase 정의
+// Phase 정의 (실제 Jenkinsfile과 동일한 순서)
 def PHASES = [
-    [id: 'phase1', label: 'Phase 1: Project Setup', dirs: ['00-project'], optional: false],
-    [id: 'phase2', label: 'Phase 2: Network', dirs: ['10-network'], optional: false],
-    [id: 'phase3', label: 'Phase 3: Storage & Security', dirs: ['20-storage', '30-security'], optional: false],
-    [id: 'phase4', label: 'Phase 4: Observability', dirs: ['40-observability'], optional: true],
-    [id: 'phase5', label: 'Phase 5: Workloads', dirs: ['50-workloads'], optional: false],
-    [id: 'phase6', label: 'Phase 6: Database & Cache', dirs: ['60-database', '65-cache'], optional: false],
-    [id: 'phase7', label: 'Phase 7: Load Balancers', dirs: ['70-loadbalancers'], optional: false],
-    [id: 'phase8', label: 'Phase 8: DNS', dirs: ['12-dns'], optional: false]
+    [id: 'phase1', label: 'Phase 1 - Bootstrap (00-project)', dirs: ['00-project'], optional: false],
+    [id: 'phase2', label: 'Phase 2 - Network (10-network)', dirs: ['10-network'], optional: false],
+    [id: 'phase3', label: 'Phase 3 - DNS (12-dns)', dirs: ['12-dns'], optional: false],
+    [id: 'phase4', label: 'Phase 4 - Storage & Security', dirs: ['20-storage', '30-security'], optional: false],
+    [id: 'phase5', label: 'Phase 5 - Observability', dirs: ['40-observability'], optional: true],
+    [id: 'phase6', label: 'Phase 6 - Workloads (50-workloads)', dirs: ['50-workloads'], optional: false],
+    [id: 'phase7', label: 'Phase 7 - Database & Cache', dirs: ['60-database', '65-cache'], optional: false],
+    [id: 'phase8', label: 'Phase 8 - PSC Endpoints', dirs: ['66-psc-endpoints'], optional: false],
+    [id: 'phase9', label: 'Phase 9 - Load Balancers', dirs: ['70-loadbalancers/gs'], optional: false]
 ]
 
 pipeline {
@@ -242,7 +244,7 @@ pipeline {
 
     environment {
         GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-jenkins-service-account')
-        TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/jsj-game-n'
+        TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/gcp-gcby'
         TG_NON_INTERACTIVE = 'true'
     }
 
@@ -334,22 +336,22 @@ def runPhaseApply(phase, dirs) {
 Bootstrap에서 자동 생성:
 
 ```bash
-cd bootstrap
-terraform apply  # jenkins-terraform-admin SA 생성
+cd bootstrap/00-foundation
+terragrunt apply  # jenkins-terraform-admin SA 생성
 ```
 
 **생성되는 리소스:**
 
-- SA: `jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com`
+- SA: `jenkins-terraform-admin@delabs-gcp-mgmt.iam.gserviceaccount.com`
 - 조직 레벨 권한 (조직이 있는 경우)
 
 ### Key 파일 생성
 
 ```bash
-SA_EMAIL="jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com"
+SA_EMAIL="jenkins-terraform-admin@delabs-gcp-mgmt.iam.gserviceaccount.com"
 gcloud iam service-accounts keys create jenkins-sa-key.json \
     --iam-account="${SA_EMAIL}" \
-    --project=jsj-system-mgmt
+    --project=delabs-gcp-mgmt
 ```
 
 ### Jenkins Credential 등록
@@ -364,12 +366,12 @@ Jenkins → Manage Jenkins → Credentials → Add Credentials
 
 ### 필수 권한
 
-**State 버킷 (jsj-system-mgmt)**:
+**State 버킷 (delabs-gcp-mgmt)**:
 
 ```bash
-SA_EMAIL="jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com"
+SA_EMAIL="jenkins-terraform-admin@delabs-gcp-mgmt.iam.gserviceaccount.com"
 SA_MEMBER="serviceAccount:${SA_EMAIL}"
-gcloud projects add-iam-policy-binding jsj-system-mgmt \
+gcloud projects add-iam-policy-binding delabs-gcp-mgmt \
     --member="${SA_MEMBER}" \
     --role="roles/storage.admin"
 ```
@@ -377,9 +379,9 @@ gcloud projects add-iam-policy-binding jsj-system-mgmt \
 **Billing Account**:
 
 ```bash
-SA_EMAIL="jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com"
+SA_EMAIL="jenkins-terraform-admin@delabs-gcp-mgmt.iam.gserviceaccount.com"
 SA_MEMBER="serviceAccount:${SA_EMAIL}"
-gcloud beta billing accounts add-iam-policy-binding 01076D-327AD5-FC8922 \
+gcloud beta billing accounts add-iam-policy-binding XXXXXX-XXXXXX-XXXXXX \
     --member="${SA_MEMBER}" \
     --role="roles/billing.user"
 ```
@@ -387,9 +389,9 @@ gcloud beta billing accounts add-iam-policy-binding 01076D-327AD5-FC8922 \
 **워크로드 프로젝트** (각각):
 
 ```bash
-SA_EMAIL="jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com"
+SA_EMAIL="jenkins-terraform-admin@delabs-gcp-mgmt.iam.gserviceaccount.com"
 SA_MEMBER="serviceAccount:${SA_EMAIL}"
-gcloud projects add-iam-policy-binding jsj-game-n \
+gcloud projects add-iam-policy-binding gcp-gcby \
     --member="${SA_MEMBER}" \
     --role="roles/editor"
 ```
@@ -401,7 +403,7 @@ gcloud projects add-iam-policy-binding jsj-game-n \
 ```groovy
 environment {
     GOOGLE_APPLICATION_CREDENTIALS = credentials('gcp-jenkins-service-account')
-    TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/jsj-game-n'
+    TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/gcp-gcby'
     TG_NON_INTERACTIVE = 'true'
 
     // Terragrunt 0.93+ 호환
@@ -449,12 +451,12 @@ parameters {
 Jenkins → New Item → Pipeline
 
 Configuration:
-- Name: terraform-jsj-game-n
+- Name: terraform-gcp-gcby
 - Pipeline script from SCM
 - SCM: Git
 - Repository URL: <your-repo>
 - Branch: main (또는 433_code)
-- Script Path: terraform_gcp_infra/environments/LIVE/jsj-game-n/Jenkinsfile
+- Script Path: terraform_gcp_infra/environments/LIVE/gcp-gcby/Jenkinsfile
 ```
 
 ### Build Triggers
@@ -481,7 +483,7 @@ triggers {
 ### Phase 기반 전체 배포
 
 ```text
-Jenkins Dashboard → terraform-jsj-game-n → Build with Parameters
+Jenkins Dashboard → terraform-gcp-gcby → Build with Parameters
 
 Parameters:
 - ACTION: apply
@@ -567,10 +569,10 @@ Build → Console Output
 
 ```bash
 # State 버킷 백업 확인
-gsutil ls gs://jsj-terraform-state-prod/backup/
+gsutil ls gs://delabs-terraform-state-live/backup/
 
 # 최신 백업 확인
-gsutil ls -l gs://jsj-terraform-state-prod/backup/ | tail -5
+gsutil ls -l gs://delabs-terraform-state-live/backup/ | tail -5
 ```
 
 ### 5. 권한 최소화
@@ -582,7 +584,7 @@ gsutil ls -l gs://jsj-terraform-state-prod/backup/ | tail -5
 ```bash
 # Key 폐기
 gcloud iam service-accounts keys delete KEY_ID \
-    --iam-account=jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com
+    --iam-account=jenkins-terraform-admin@delabs-gcp-mgmt.iam.gserviceaccount.com
 ```
 
 ### 6. Phase별 배포 시간 예상
@@ -591,13 +593,14 @@ gcloud iam service-accounts keys delete KEY_ID \
 |-------|----------|----------|
 | Phase 1 | 5-10분 | 프로젝트 생성, API 활성화 (120초 대기) |
 | Phase 2 | 3-5분 | VPC, 서브넷, Firewall |
-| Phase 3 | 2-3분 | GCS 버킷, IAM |
-| Phase 4 | 2-3분 | Log Sink, Alert (Optional) |
-| Phase 5 | 10-15분 | VM 인스턴스, 부팅 |
-| Phase 6 | 15-20분 | Cloud SQL, Redis |
-| Phase 7 | 5-10분 | Load Balancer |
-| Phase 8 | 2-3분 | Cloud DNS |
-| **전체** | **45-70분** | Phase 1-8 전체 |
+| Phase 3 | 2-3분 | Cloud DNS |
+| Phase 4 | 2-3분 | GCS 버킷, IAM |
+| Phase 5 | 2-3분 | Log Sink, Alert (Optional) |
+| Phase 6 | 10-15분 | VM 인스턴스, 부팅 |
+| Phase 7 | 15-20분 | Cloud SQL, Redis |
+| Phase 8 | 2-3분 | Cross-project PSC Endpoints |
+| Phase 9 | 5-10분 | Load Balancer |
+| **전체** | **50-75분** | Phase 1-9 전체 |
 
 ## 트러블슈팅
 
@@ -609,13 +612,13 @@ gcloud iam service-accounts keys delete KEY_ID \
 
 ```bash
 # 권한 확인
-gcloud projects get-iam-policy jsj-game-n \
+gcloud projects get-iam-policy gcp-gcby \
     --flatten="bindings[].members" \
-    --filter="bindings.members:jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com"
+    --filter="bindings.members:jenkins-terraform-admin@delabs-gcp-mgmt.iam.gserviceaccount.com"
 
 # 권한 추가
-gcloud projects add-iam-policy-binding jsj-game-n \
-    --member="serviceAccount:jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding gcp-gcby \
+    --member="serviceAccount:jenkins-terraform-admin@delabs-gcp-mgmt.iam.gserviceaccount.com" \
     --role="roles/editor"
 ```
 
@@ -636,10 +639,10 @@ gcloud projects add-iam-policy-binding jsj-game-n \
 
 ```groovy
 // ❌ 잘못된 경로 (상대 경로)
-TG_WORKING_DIR = './environments/LIVE/jsj-game-n'
+TG_WORKING_DIR = './environments/LIVE/gcp-gcby'
 
 // ✅ 올바른 경로 (workspace root 기준 절대 경로)
-TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/jsj-game-n'
+TG_WORKING_DIR = 'terraform_gcp_infra/environments/LIVE/gcp-gcby'
 ```
 
 ### Timeout
@@ -716,5 +719,5 @@ sh "sleep 120"
 
 ---
 
-**Last Updated: 2025-11-21**
-**Version: Phase-Based v2.0**
+**Last Updated: 2025-12-08**
+**Version: Phase-Based v2.1 (9 Phases)**

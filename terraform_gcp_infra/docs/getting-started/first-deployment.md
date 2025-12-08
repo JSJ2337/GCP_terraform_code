@@ -4,10 +4,26 @@ Bootstrap 설정이 완료되었다면 이제 실제 워크로드 프로젝트�
 
 ## 배포 순서 개요
 
+Jenkins Phase 기반 배포 순서 (9 Phases):
+
 ```text
-00-project → 10-network → 20-storage → 30-security → 40-observability
-                                   ↓
-                            50-workloads → 60-database → 65-cache → 70-loadbalancer
+Phase 1: 00-project
+    ↓
+Phase 2: 10-network
+    ↓
+Phase 3: 12-dns
+    ↓
+Phase 4: 20-storage + 30-security (병렬 가능)
+    ↓
+Phase 5: 40-observability (Optional)
+    ↓
+Phase 6: 50-workloads
+    ↓
+Phase 7: 60-database + 65-cache (병렬 가능)
+    ↓
+Phase 8: 66-psc-endpoints
+    ↓
+Phase 9: 70-loadbalancers
 ```
 
 > **순서가 중요합니다!** 각 레이어는 이전 레이어에 의존합니다.
@@ -19,9 +35,9 @@ Bootstrap 설정이 완료되었다면 이제 실제 워크로드 프로젝트�
 ```bash
 cd terraform_gcp_infra
 
-# 새 환경 생성
-cp -r proj-default-templet environments/LIVE/my-new-project
-cd environments/LIVE/my-new-project
+# 새 환경 생성 (예: gcp-gcby 기반으로 gcp-newgame 생성)
+cp -r proj-default-templet environments/LIVE/gcp-newgame
+cd environments/LIVE/gcp-newgame
 ```
 
 ### 2단계: 공통 네이밍 설정
@@ -29,12 +45,12 @@ cd environments/LIVE/my-new-project
 `common.naming.tfvars` 파일 수정:
 
 ```hcl
-project_id     = "my-project-id"
-project_name   = "my-new-project"
-environment    = "prod"
-organization   = "myorg"
-region_primary = "asia-northeast3"
-region_backup  = "asia-northeast1"
+project_id     = "gcp-newgame"
+project_name   = "newgame"
+environment    = "live"
+organization   = "delabs"
+region_primary = "us-west1"
+region_backup  = "us-west2"
 ```
 
 ### 3단계: Terragrunt 설정 확인
@@ -49,18 +65,18 @@ remote_state {
     if_exists = "overwrite_terragrunt"
   }
   config = {
-    project  = "jsj-system-mgmt"
-    location = "asia"
-    bucket   = "jsj-terraform-state-prod"
-    prefix   = "my-new-project/${path_relative_to_include()}"
+    project  = "delabs-gcp-mgmt"
+    location = "US"
+    bucket   = "delabs-terraform-state-live"
+    prefix   = "gcp-newgame/${path_relative_to_include()}"
   }
 }
 
 inputs = {
   org_id          = ""  # 조직 ID (있는 경우)
-  billing_account = "01076D-327AD5-FC8922"
-  region_primary  = "asia-northeast3"
-  region_backup   = "asia-northeast1"
+  billing_account = "XXXXXX-XXXXXX-XXXXXX"
+  region_primary  = "us-west1"
+  region_backup   = "us-west2"
 }
 ```
 
@@ -75,7 +91,7 @@ cd 00-project
 cat terraform.tfvars
 
 # 배포
-terragrunt init --non-interactive
+terragrunt init
 terragrunt plan
 terragrunt apply
 ```
@@ -95,7 +111,7 @@ cd ../10-network
 cat terraform.tfvars
 # enable_private_service_connection = true
 
-terragrunt init --non-interactive
+terragrunt init
 terragrunt plan
 terragrunt apply
 ```
@@ -108,12 +124,30 @@ terragrunt apply
 - Cloud NAT (DMZ only)
 - Private Service Connect (DB용)
 
-### 3. 스토리지 생성 (20-storage)
+### 3. DNS 생성 (12-dns)
+
+```bash
+cd ../12-dns
+
+# DNS 설정 확인
+cat terraform.tfvars
+
+terragrunt init
+terragrunt plan
+terragrunt apply
+```
+
+**생성되는 리소스**:
+
+- Cloud DNS Zone (Public/Private)
+- DNS 레코드
+
+### 4. 스토리지 생성 (20-storage)
 
 ```bash
 cd ../20-storage
 
-terragrunt init --non-interactive
+terragrunt init
 terragrunt plan
 terragrunt apply
 ```
@@ -124,7 +158,7 @@ terragrunt apply
 - Lifecycle 정책
 - Versioning 설정
 
-### 4. 보안 설정 (30-security)
+### 5. 보안 설정 (30-security)
 
 ```bash
 cd ../30-security
@@ -133,7 +167,7 @@ cd ../30-security
 cat terraform.tfvars
 # auto_create_service_accounts = true
 
-terragrunt init --non-interactive
+terragrunt init
 terragrunt plan
 terragrunt apply
 ```
@@ -143,12 +177,12 @@ terragrunt apply
 - IAM 바인딩
 - 서비스 계정 (web, app, db)
 
-### 5. 모니터링 설정 (40-observability)
+### 6. 모니터링 설정 (40-observability)
 
 ```bash
 cd ../40-observability
 
-terragrunt init --non-interactive
+terragrunt init
 terragrunt plan
 terragrunt apply
 ```
@@ -158,7 +192,7 @@ terragrunt apply
 - Cloud Logging 싱크
 - 모니터링 알림
 
-### 6. 워크로드 배포 (50-workloads)
+### 7. 워크로드 배포 (50-workloads)
 
 ```bash
 cd ../50-workloads
@@ -166,7 +200,7 @@ cd ../50-workloads
 # VM 인스턴스 설정 확인
 cat terraform.tfvars
 
-terragrunt init --non-interactive
+terragrunt init
 terragrunt plan
 terragrunt apply
 ```
@@ -177,7 +211,7 @@ terragrunt apply
 - 인스턴스 그룹
 - Startup scripts
 
-### 7. 데이터베이스 배포 (60-database)
+### 8. 데이터베이스 배포 (60-database)
 
 ```bash
 cd ../60-database
@@ -186,7 +220,7 @@ cd ../60-database
 cat terraform.tfvars
 # private_ip_only = true
 
-terragrunt init --non-interactive
+terragrunt init
 terragrunt plan
 terragrunt apply
 ```
@@ -198,7 +232,7 @@ terragrunt apply
 - 백업 정책
 - Read Replica (optional)
 
-### 8. 캐시 배포 (65-cache)
+### 9. 캐시 배포 (65-cache)
 
 ```bash
 cd ../65-cache
@@ -206,7 +240,7 @@ cd ../65-cache
 # Redis 설정 확인
 cat terraform.tfvars
 
-terragrunt init --non-interactive
+terragrunt init
 terragrunt plan
 terragrunt apply
 ```
@@ -217,21 +251,43 @@ terragrunt apply
 - Standard HA 구성
 - Private IP 연결
 
-### 9. 로드밸런서 배포 (70-loadbalancers/\<서비스\>)
+### 10. PSC Endpoints 등록 (66-psc-endpoints)
+
+```bash
+cd ../66-psc-endpoints
+
+# PSC 설정 확인
+cat terraform.tfvars
+# Cross-project PSC 등록 (mgmt VPC에서 접근용)
+
+terragrunt init
+terragrunt plan
+terragrunt apply
+```
+
+**생성되는 리소스**:
+
+- Cross-project PSC Endpoint 등록 (Cloud SQL, Redis)
+- mgmt VPC에서 각 프로젝트 DB/Cache 접근 가능
+
+> **참고**: Redis Cluster는 자체적으로 PSC를 자동 생성합니다 (`sca-auto-addr-*`). 66-psc-endpoints에서는 cross-project 등록만 수행합니다.
+
+### 11. 로드밸런서 배포 (70-loadbalancers/\<서비스\>)
 
 | 예시 경로 | 설명 |
 |-----------|------|
-| `70-loadbalancers/lobby` | 로비/인증 등 별도 롤의 LB 전용 |
-| `70-loadbalancers/web`   | 웹 트래픽 전용 LB |
+| `70-loadbalancers/gs` | 게임 서버 LB (gcp-gcby) |
+| `70-loadbalancers/www` | 웹 트래픽 전용 LB (gcp-web3) |
+| `70-loadbalancers/mint` | Mint 서비스 LB (gcp-web3) |
 
 ```bash
-cd ../70-loadbalancers/lobby   # 또는 필요한 서비스 디렉터리
+cd ../70-loadbalancers/gs   # 또는 필요한 서비스 디렉터리
 
 # LB 타입/이름 선택 (각 디렉터리의 terraform.tfvars에서 override 가능)
 cat terraform.tfvars
-# backend_service_name = "game-m-lobby-backend" 등
+# backend_service_name = "gcby-gs-backend" 등
 
-terragrunt init --non-interactive
+terragrunt init
 terragrunt plan
 terragrunt apply
 ```
@@ -245,40 +301,38 @@ terragrunt apply
 
 **자동 Instance Groups 매핑**:
 
-70-loadbalancers는 `50-workloads`의 instance groups를 자동으로 읽어서 백엔드에 연결합니다.
+70-loadbalancers는 `50-workloads`의 vm_details를 자동으로 읽어서 백엔드에 연결합니다.
 
 ```hcl
-# 70-loadbalancers/lobby/terragrunt.hcl
+# 70-loadbalancers/gs/terragrunt.hcl
 dependency "workloads" {
   config_path = "../../50-workloads"
   skip_outputs = get_env("SKIP_WORKLOADS_DEPENDENCY", "false") == "true"
 }
 
 inputs = {
-  auto_instance_groups = {
-    # "lobby"가 포함된 instance groups만 자동 필터링
-    for name, link in try(dependency.workloads.outputs.instance_groups, {}) :
-    name => link
-    if length(regexall("lobby", lower(name))) > 0
-  }
+  vm_details = try(dependency.workloads.outputs.vm_details, {})
 }
 ```
 
 **장점**: VM 추가/제거 시 Load Balancer 설정 자동 업데이트
 
+> **주의**: `terraform.tfvars`에 `instance_groups = {}`를 정의하면 terragrunt inputs를 덮어씁니다. terragrunt에서 동적 주입하는 변수는 tfvars에서 정의하지 마세요.
+
 ## 옵션 2: 일괄 배포
 
 ```bash
-cd environments/LIVE/my-new-project
+cd environments/LIVE/gcp-newgame
 
-# 전체 스택 Plan
-terragrunt run-all plan
+# 전체 스택 Plan (Terragrunt 0.93+ 구문)
+terragrunt run --all -- plan
 
 # 전체 스택 Apply
-terragrunt run-all apply
+terragrunt run --all -- apply
 
 # 비대화식 실행 (CI/CD)
-terragrunt run-all apply --terragrunt-non-interactive
+export TG_NON_INTERACTIVE=true
+terragrunt run --all -- apply
 ```
 
 ## 배포 확인
@@ -287,11 +341,11 @@ terragrunt run-all apply --terragrunt-non-interactive
 
 ```bash
 # State 버킷 확인
-gsutil ls gs://jsj-terraform-state-prod/my-new-project/
+gsutil ls gs://delabs-terraform-state-live/gcp-newgame/
 
 # 출력:
-# gs://jsj-terraform-state-prod/my-new-project/00-project/
-# gs://jsj-terraform-state-prod/my-new-project/10-network/
+# gs://delabs-terraform-state-live/gcp-newgame/00-project/
+# gs://delabs-terraform-state-live/gcp-newgame/10-network/
 # ...
 ```
 
@@ -299,13 +353,13 @@ gsutil ls gs://jsj-terraform-state-prod/my-new-project/
 
 ```bash
 # 프로젝트 확인
-gcloud projects describe my-project-id
+gcloud projects describe gcp-newgame
 
 # 네트워크 확인
-gcloud compute networks list --project=my-project-id
+gcloud compute networks list --project=gcp-newgame
 
 # VM 확인
-gcloud compute instances list --project=my-project-id
+gcloud compute instances list --project=gcp-newgame
 ```
 
 ## 다음 단계

@@ -8,7 +8,7 @@
 %%{init: {'theme': 'default'}}%%
 flowchart TB
     subgraph Bootstrap["🏗️ Bootstrap Layer"]
-        MGMT[jsj-system-mgmt + State Bucket]
+        MGMT[delabs-gcp-mgmt + State Bucket]
         DESC1[중앙 State 관리 + Jenkins SA]
     end
 
@@ -37,8 +37,8 @@ flowchart TB
 
 **구성 요소**:
 
-- `jsj-system-mgmt` 프로젝트
-- `jsj-terraform-state-prod` GCS 버킷
+- `delabs-gcp-mgmt` 프로젝트
+- `delabs-terraform-state-live` GCS 버킷
 - `jenkins-terraform-admin` Service Account
 - 조직/폴더 구조 (optional)
 
@@ -153,30 +153,34 @@ graph TB
 **레이어 구조**:
 
 ```text
-environments/LIVE/jsj-game-k/
+environments/LIVE/gcp-gcby/
 ├── common.naming.tfvars    # 공통 네이밍 변수
 ├── root.hcl                # Terragrunt 루트 설정
 ├── Jenkinsfile             # CI/CD Pipeline
 ├── 00-project/             # 프로젝트 생성
 ├── 10-network/             # 네트워크 구성
+├── 12-dns/                 # Cloud DNS
 ├── 20-storage/             # GCS 버킷
 ├── 30-security/            # IAM 및 SA
 ├── 40-observability/       # Logging/Monitoring
 ├── 50-workloads/           # VM 인스턴스
 ├── 60-database/            # Cloud SQL
 ├── 65-cache/               # Redis
-└── 70-loadbalancer/        # Load Balancer
+├── 66-psc-endpoints/       # Cross-project PSC Endpoints
+└── 70-loadbalancers/       # Load Balancer
 ```
 
 **배포 순서**:
 
 1. **00-project** - 프로젝트 생성, API 활성화
 2. **10-network** - VPC, 서브넷, 방화벽, PSC
-3. **20-storage, 30-security, 40-observability** - 병렬 배포 가능
-4. **50-workloads** - VM 인스턴스
-5. **60-database** - Cloud SQL (Private IP)
-6. **65-cache** - Redis (Private IP)
-7. **70-loadbalancer** - LB 설정
+3. **12-dns** - Cloud DNS (Public/Private)
+4. **20-storage, 30-security, 40-observability** - 병렬 배포 가능
+5. **50-workloads** - VM 인스턴스
+6. **60-database** - Cloud SQL (Private IP)
+7. **65-cache** - Redis (Private IP)
+8. **66-psc-endpoints** - Cross-project PSC 등록 (mgmt VPC에서 접근용)
+9. **70-loadbalancers** - LB 설정
 
 ## 네트워크 아키텍처
 
@@ -244,28 +248,28 @@ flowchart TB
 **입력** (`common.naming.tfvars`):
 
 ```hcl
-project_id     = "jsj-game-k"
-project_name   = "game-k"
-environment    = "prod"
+project_id     = "gcp-gcby"
+project_name   = "gcby"
+environment    = "live"
 organization   = "delabs"
-region_primary = "asia-northeast3"
-region_backup  = "asia-northeast1"
+region_primary = "us-west1"
+region_backup  = "us-west2"
 ```
 
 **출력** (자동 생성):
 
 ```hcl
-vpc_name                = "delabs-prod-game-k-vpc"
-bucket_name_prefix      = "delabs-prod-game-k"
-db_instance_name        = "delabs-prod-game-k-mysql"
-redis_instance_name     = "delabs-prod-game-k-redis"
-sa_name_prefix          = "delabs-prod-game-k"
-forwarding_rule_name    = "delabs-prod-game-k-lb"
+vpc_name                = "gcby-live-vpc"
+bucket_name_prefix      = "delabs-live-gcby"
+db_instance_name        = "gcby-live-gdb-m1"
+redis_instance_name     = "gcby-live-redis"
+sa_name_prefix          = "delabs-live-gcby"
+forwarding_rule_name    = "gcby-gs-lb"
 
 common_labels = {
-  environment   = "prod"
+  environment   = "live"
   managed-by    = "terraform"
-  project       = "game-k"
+  project       = "gcby"
   organization  = "delabs"
 }
 ```
@@ -283,21 +287,23 @@ common_labels = {
 ```mermaid
 %%{init: {'theme': 'default'}}%%
 flowchart TB
-    subgraph Bootstrap["🏗️ Bootstrap Project (jsj-system-mgmt)"]
-        subgraph GCS["📦 jsj-terraform-state-prod (GCS)"]
-            subgraph GAMEK["jsj-game-k/"]
+    subgraph Bootstrap["🏗️ Bootstrap Project (delabs-gcp-mgmt)"]
+        subgraph GCS["📦 delabs-terraform-state-live (GCS)"]
+            subgraph GCBY["gcp-gcby/"]
                 K00["00-project/default.tfstate"]
                 K10["10-network/default.tfstate"]
+                K12["12-dns/default.tfstate"]
                 K20["20-storage/default.tfstate"]
                 K30["30-security/default.tfstate"]
                 K40["40-observability/default.tfstate"]
                 K50["50-workloads/default.tfstate"]
                 K60["60-database/default.tfstate"]
                 K65["65-cache/default.tfstate"]
-                K70["70-loadbalancer/default.tfstate"]
+                K66["66-psc-endpoints/default.tfstate"]
+                K70["70-loadbalancers/default.tfstate"]
             end
 
-            subgraph GAMEL["jsj-game-l/"]
+            subgraph WEB3["gcp-web3/"]
                 L_ETC["..."]
             end
 
@@ -309,8 +315,8 @@ flowchart TB
 
     style Bootstrap fill:#e3f2fd
     style GCS fill:#fff3e0
-    style GAMEK fill:#e8f5e9
-    style GAMEL fill:#f3e5f5
+    style GCBY fill:#e8f5e9
+    style WEB3 fill:#f3e5f5
     style TEMPLET fill:#fce4ec
 ```
 
@@ -334,10 +340,10 @@ remote_state {
     if_exists = "overwrite_terragrunt"
   }
   config = {
-    project  = "jsj-system-mgmt"
-    location = "asia"
-    bucket   = "jsj-terraform-state-prod"
-    prefix   = "jsj-game-k/${path_relative_to_include()}"
+    project  = "delabs-gcp-mgmt"
+    location = "US"
+    bucket   = "delabs-terraform-state-live"
+    prefix   = "gcp-gcby/${path_relative_to_include()}"
   }
 }
 ```
@@ -389,15 +395,15 @@ remote_state {
 proj-default-templet/  (템플릿)
 ├── common.naming.tfvars
 ├── root.hcl
-└── 00-project/ ~ 70-loadbalancer/
+└── 00-project/ ~ 70-loadbalancers/
 
 environments/LIVE/
-├── jsj-game-k/        (환경 1)
-├── jsj-game-l/        (환경 2)
-└── jsj-game-m/        (환경 3)
+├── gcp-gcby/          (환경 1)
+├── gcp-web3/          (환경 2)
+└── gcp-newgame/       (환경 3 - 예시)
     ├── common.naming.tfvars  ← 환경별 설정만 변경
     ├── root.hcl
-    └── 00-project/ ~ 70-loadbalancer/
+    └── 00-project/ ~ 70-loadbalancers/
 ```
 
 **새 환경 추가 시**:
@@ -423,8 +429,8 @@ environments/LIVE/
 `common.naming.tfvars`에서 리전 설정:
 
 ```hcl
-region_primary = "asia-northeast3"  # 서울
-region_backup  = "asia-northeast1"  # 도쿄
+region_primary = "us-west1"    # Oregon
+region_backup  = "us-west2"    # Los Angeles
 ```
 
 ### HA 구성

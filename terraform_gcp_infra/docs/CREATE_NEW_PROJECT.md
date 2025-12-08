@@ -19,6 +19,8 @@
 
 `proj-default-templet`은 `gcp-gcby` 환경을 기반으로 구성된 템플릿입니다.
 
+> **참고**: 예시에서 사용하는 `gcp-newgame`은 설명용 가상 프로젝트입니다. 실제 운영 환경은 `gcp-gcby`, `gcp-web3` 등입니다.
+
 ### 프로젝트 생성 플로우
 
 ```mermaid
@@ -112,6 +114,7 @@ proj-default-templet/
 ├── 50-workloads/               # VM 인스턴스
 ├── 60-database/                # Cloud SQL
 ├── 65-cache/                   # Memorystore Redis
+├── 66-psc-endpoints/           # Cross-project PSC Endpoints
 └── 70-loadbalancers/gs/        # Load Balancer
 ```
 
@@ -328,7 +331,8 @@ Jenkinsfile의 Phase 순서대로 배포합니다.
 | 5 | 40-observability | Monitoring (선택) |
 | 6 | 50-workloads | VM 인스턴스 |
 | 7 | 60-database, 65-cache | Cloud SQL, Redis |
-| 8 | 70-loadbalancers/gs | Load Balancer |
+| 8 | 66-psc-endpoints | Cross-project PSC 등록 |
+| 9 | 70-loadbalancers/gs | Load Balancer |
 
 ### Jenkins 배포 실행
 
@@ -399,4 +403,4 @@ export GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json
 
 ---
 
-**Last Updated**: 2025-12-05
+**Last Updated**: 2025-12-08

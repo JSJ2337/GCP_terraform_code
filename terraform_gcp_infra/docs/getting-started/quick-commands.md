@@ -7,10 +7,10 @@
 ### 단일 레이어 실행
 
 ```bash
-cd environments/LIVE/jsj-game-k/00-project
+cd environments/LIVE/gcp-gcby/00-project
 
 # 초기화
-terragrunt init --non-interactive
+terragrunt init
 
 # 계획
 terragrunt plan
@@ -25,30 +25,31 @@ terragrunt destroy
 ### 전체 스택 실행
 
 ```bash
-cd environments/LIVE/jsj-game-k
+cd environments/LIVE/gcp-gcby
 
-# 전체 Plan
-terragrunt run --all plan
+# 전체 Plan (Terragrunt 0.93+ 구문)
+terragrunt run --all -- plan
 
 # 전체 Apply
-terragrunt run --all apply
+terragrunt run --all -- apply
 
 # 전체 Destroy (위험!)
-terragrunt run --all destroy
+terragrunt run --all -- destroy
 ```
 
 ### 특정 레이어만 실행
 
 ```bash
-cd environments/LIVE/jsj-game-k
+cd environments/LIVE/gcp-gcby
 
-# 00-project만 Plan
-terragrunt run --queue-include-dir '00-project' --all plan
+# 00-project만 Plan (Terragrunt 0.93+ 구문)
+terragrunt run --all --queue-include-dir 00-project -- plan
 
 # 10-network, 20-storage만 Apply
-terragrunt run --queue-include-dir '10-network' \
-               --queue-include-dir '20-storage' \
-               --all apply
+terragrunt run --all \
+  --queue-include-dir 10-network \
+  --queue-include-dir 20-storage \
+  -- apply
 ```
 
 ## State 관리
@@ -145,60 +146,60 @@ terragrunt validate-all
 gcloud projects list
 
 # 프로젝트 상세
-gcloud projects describe jsj-game-k
+gcloud projects describe gcp-gcby
 
 # 활성 프로젝트 설정
-gcloud config set project jsj-game-k
+gcloud config set project gcp-gcby
 ```
 
 ### 리소스 조회
 
 ```bash
 # VPC 네트워크
-gcloud compute networks list --project=jsj-game-k
+gcloud compute networks list --project=gcp-gcby
 
 # 서브넷
-gcloud compute networks subnets list --project=jsj-game-k
+gcloud compute networks subnets list --project=gcp-gcby
 
 # VM 인스턴스
-gcloud compute instances list --project=jsj-game-k
+gcloud compute instances list --project=gcp-gcby
 
 # Cloud SQL
-gcloud sql instances list --project=jsj-game-k
+gcloud sql instances list --project=gcp-gcby
 
 # Redis
-gcloud redis instances list --region=asia-northeast3 --project=jsj-game-k
+gcloud redis instances list --region=us-west1 --project=gcp-gcby
 
 # Load Balancer
-gcloud compute forwarding-rules list --project=jsj-game-k
+gcloud compute forwarding-rules list --project=gcp-gcby
 ```
 
 ### API 관리
 
 ```bash
 # 활성화된 API 확인
-gcloud services list --enabled --project=jsj-game-k
+gcloud services list --enabled --project=gcp-gcby
 
 # API 활성화
 gcloud services enable compute.googleapis.com \
     servicenetworking.googleapis.com \
     sqladmin.googleapis.com \
-    --project=jsj-game-k
+    --project=gcp-gcby
 ```
 
 ### Service Account
 
 ```bash
 # SA 리스트
-gcloud iam service-accounts list --project=jsj-game-k
+gcloud iam service-accounts list --project=gcp-gcby
 
 # SA 상세
 gcloud iam service-accounts describe \
-    jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com
+    jenkins-terraform-admin@delabs-gcp-mgmt.iam.gserviceaccount.com
 
 # Key 생성
 gcloud iam service-accounts keys create key.json \
-    --iam-account=jenkins-terraform-admin@jsj-system-mgmt.iam.gserviceaccount.com
+    --iam-account=jenkins-terraform-admin@delabs-gcp-mgmt.iam.gserviceaccount.com
 ```
 
 ## State 버킷 관리
@@ -207,29 +208,28 @@ gcloud iam service-accounts keys create key.json \
 
 ```bash
 # State 버킷 리스트
-gsutil ls gs://jsj-terraform-state-prod/
+gsutil ls gs://delabs-terraform-state-live/
 
 # 특정 프로젝트 State
-gsutil ls gs://jsj-terraform-state-prod/jsj-game-k/
+gsutil ls gs://delabs-terraform-state-live/gcp-gcby/
 
 # State 파일 내용
-STATE_BUCKET="gs://jsj-terraform-state-prod"
-gsutil cat "${STATE_BUCKET}/jsj-game-k/00-project/default.tfstate" | jq
+STATE_BUCKET="gs://delabs-terraform-state-live"
+gsutil cat "${STATE_BUCKET}/gcp-gcby/00-project/default.tfstate" | jq
 ```
 
 ### 버킷 백업
 
 ```bash
-# Bootstrap State 백업
-cd bootstrap
-STATE_BUCKET="gs://jsj-terraform-state-prod"
-gsutil cp terraform.tfstate \
-    "${STATE_BUCKET}/bootstrap/backup-$(date +%Y%m%d).tfstate"
+# Bootstrap State 백업 (GCS에서 GCS로)
+STATE_BUCKET="gs://delabs-terraform-state-live"
+gsutil cp "${STATE_BUCKET}/bootstrap/00-foundation/default.tfstate" \
+    "${STATE_BUCKET}/bootstrap/backup-00-foundation-$(date +%Y%m%d).tfstate"
 
 # 전체 버킷 백업
 gsutil -m rsync -r \
-    gs://jsj-terraform-state-prod/ \
-    gs://jsj-terraform-state-backup/
+    gs://delabs-terraform-state-live/ \
+    gs://delabs-terraform-state-backup/
 ```
 
 ## 디버깅
@@ -297,7 +297,7 @@ terragrunt force-unlock <LOCK_ID>
 
 ```bash
 # 기존 GCP 리소스를 State에 추가
-terragrunt import google_compute_network.main projects/jsj-game-k/global/networks/vpc-main
+terragrunt import google_compute_network.main projects/gcp-gcby/global/networks/gcby-live-vpc
 ```
 
 ### 특정 리소스만 재생성
@@ -348,7 +348,7 @@ git merge feature/new-module
 #!/bin/bash
 # check-infra.sh
 
-PROJECT="jsj-game-k"
+PROJECT="gcp-gcby"
 
 echo "=== VPC ==="
 gcloud compute networks list --project=$PROJECT
@@ -360,7 +360,7 @@ echo "=== Cloud SQL ==="
 gcloud sql instances list --project=$PROJECT
 
 echo "=== Redis ==="
-gcloud redis instances list --region=asia-northeast3 --project=$PROJECT
+gcloud redis instances list --region=us-west1 --project=$PROJECT
 
 echo "=== Load Balancers ==="
 gcloud compute forwarding-rules list --project=$PROJECT
@@ -370,7 +370,7 @@ gcloud compute forwarding-rules list --project=$PROJECT
 
 ```bash
 # 프로젝트 비용 (최근 30일)
-gcloud billing projects describe jsj-game-k
+gcloud billing projects describe gcp-gcby
 
 # 상세 비용 리포트 (Cloud Console)
 # https://console.cloud.google.com/billing/

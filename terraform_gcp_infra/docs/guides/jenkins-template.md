@@ -64,7 +64,7 @@ cp .jenkins/Jenkinsfile.template environments/LIVE/your-new-project/Jenkinsfile
 
 ### 파라미터
 - **ACTION**: plan, apply, destroy 선택
-- **TARGET_LAYER**: all 또는 개별 레이어 (00-project ~ 70-loadbalancer)
+- **TARGET_LAYER**: all 또는 개별 레이어 (00-project ~ 70-loadbalancers)
 
 ---
 
@@ -124,12 +124,12 @@ choices: [
 
 ```
 environments/LIVE/
-├── jsj-game-g/
-│   ├── Jenkinsfile           # jsj-game-g 전용
+├── gcp-gcby/
+│   ├── Jenkinsfile           # gcp-gcby 전용
 │   ├── 00-project/
 │   └── ...
-├── jsj-game-h/
-│   ├── Jenkinsfile           # jsj-game-h 전용
+├── gcp-web3/
+│   ├── Jenkinsfile           # gcp-web3 전용
 │   └── ...
 └── your-new-project/
     ├── Jenkinsfile           # your-new-project 전용
@@ -148,10 +148,10 @@ environments/LIVE/
 ---
 
 ## ✅ Jenkins Service Account 권한 점검
-- `delabs-system-mgmt` 프로젝트: `roles/storage.admin` (State 버킷 접근)
+- `delabs-gcp-mgmt` 프로젝트: `roles/storage.admin` (State 버킷 접근)
 - 조직/폴더: `roles/resourcemanager.projectCreator`, `roles/editor`
 - Billing Account `01076D-327AD5-FC8922`: `roles/billing.user`
-- Cloud Billing API와 Service Usage API가 `delabs-system-mgmt`에서 활성화되어 있는지 확인하세요.
+- Cloud Billing API와 Service Usage API가 `delabs-gcp-mgmt`에서 활성화되어 있는지 확인하세요.
 
 ---
 

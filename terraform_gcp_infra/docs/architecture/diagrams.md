@@ -20,8 +20,8 @@
 graph TB
     subgraph Bootstrap["Bootstrap (중앙 관리)"]
         B[bootstrap/]
-        B_PROJ[jsj-system-mgmt<br/>관리용 프로젝트]
-        B_BUCKET[jsj-terraform-state-prod<br/>중앙 State 버킷]
+        B_PROJ[delabs-gcp-mgmt<br/>관리용 프로젝트]
+        B_BUCKET[delabs-terraform-state-live<br/>중앙 State 버킷]
         B --> B_PROJ
         B_PROJ --> B_BUCKET
     end
@@ -48,7 +48,7 @@ graph TB
         E5[50-workloads<br/>워크로드]
         E6[60-database<br/>데이터베이스]
         E7[65-cache<br/>캐시]
-        E8[70-loadbalancer<br/>로드밸런서]
+        E8[70-loadbalancers<br/>로드밸런서]
     end
 
     B_BUCKET -.State 저장.-> E0
@@ -105,8 +105,8 @@ graph LR
         DEV[개발자 PC]
     end
 
-    subgraph BootstrapProj["Bootstrap Project (jsj-system-mgmt)"]
-        BUCKET[GCS Bucket<br/>jsj-terraform-state-prod]
+    subgraph BootstrapProj["Bootstrap Project (delabs-gcp-mgmt)"]
+        BUCKET[GCS Bucket<br/>delabs-terraform-state-live]
 
         subgraph StateFiles["State 파일 구조"]
             S1[proj-default-templet/<br/>00-project/default.tfstate]
@@ -117,7 +117,7 @@ graph LR
             S6[proj-default-templet/<br/>50-workloads/default.tfstate]
             S7[proj-default-templet/<br/>60-database/default.tfstate]
             S8[proj-default-templet/<br/>65-cache/default.tfstate]
-            S9[proj-default-templet/<br/>70-loadbalancer/default.tfstate]
+            S9[proj-default-templet/<br/>70-loadbalancers/default.tfstate]
         end
     end
 
@@ -174,7 +174,7 @@ graph TD
 
     E5 --> E7[8. 65-cache<br/>Memorystore Redis]
     E6 --> E7
-    E7 --> E8[9. 70-loadbalancer<br/>Load Balancer]
+    E7 --> E8[9. 70-loadbalancers<br/>Load Balancer]
 
     E8 --> END([완료])
 
@@ -199,7 +199,7 @@ graph TD
 4. **병렬 배포**: 20-storage, 30-security, 40-observability는 병렬 배포 가능
 5. **60-database**: 네트워크 구성 필요 (Private IP)
 6. **65-cache**: 전용 VPC(10-network) 이후 배포, 애플리케이션이 의존하기 전 캐시 엔드포인트 준비
-7. **70-loadbalancer**: VM 인스턴스(백엔드) 필요
+7. **70-loadbalancers**: VM 인스턴스(백엔드) 필요
 
 ---
 

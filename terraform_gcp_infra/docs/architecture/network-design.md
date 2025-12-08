@@ -355,7 +355,7 @@ resource "google_compute_subnetwork" "dmz" {
 ```bash
 gcloud logging read \
     "resource.type=gce_subnetwork" \
-    --project=jsj-game-k \
+    --project=gcp-gcby \
     --limit=50
 ```
 
@@ -384,9 +384,9 @@ VPC:     10.0.0.0/16     (65,536 IPs)
 ```hcl
 # VM을 여러 Zone에 분산
 zones = [
-  "asia-northeast3-a",
-  "asia-northeast3-b",
-  "asia-northeast3-c"
+  "us-west1-a",
+  "us-west1-b",
+  "us-west1-c"
 ]
 ```
 
