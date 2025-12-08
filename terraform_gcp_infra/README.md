@@ -144,12 +144,19 @@ flowchart TD
     W --> LB["1️⃣1️⃣ 70-loadbalancers"]
     N --> LB
 
-    style B fill:#e3f2fd
-    style P fill:#fff3e0
-    style N fill:#f3e5f5
-    style PARA fill:#e8f5e9
-    style PSC fill:#fce4ec
-    style LB fill:#fff9c4
+    style B fill:#e3f2fd,color:#333
+    style P fill:#fff3e0,color:#333
+    style N fill:#f3e5f5,color:#333
+    style PARA fill:#e8f5e9,color:#333
+    style PSC fill:#fce4ec,color:#333
+    style LB fill:#fff9c4,color:#333
+    style DNS fill:#e1bee7,color:#333
+    style S fill:#c8e6c9,color:#333
+    style SEC fill:#ffe0b2,color:#333
+    style OBS fill:#d7ccc8,color:#333
+    style W fill:#b3e5fc,color:#333
+    style DB fill:#f8bbd0,color:#333
+    style C fill:#ffccbc,color:#333
 ```
 
 ### 레이어별 상세
@@ -204,12 +211,17 @@ flowchart TB
     APP --> REDIS
     APP -->|Private IP| SQL
 
-    style INET fill:#e3f2fd
-    style LB fill:#fff3e0
-    style NAT fill:#e8f5e9
-    style DMZ fill:#e3f2fd
-    style Private fill:#f3e5f5
-    style DB fill:#fce4ec
+    style INET fill:#e3f2fd,color:#333
+    style LB fill:#fff3e0,color:#333
+    style NAT fill:#e8f5e9,color:#333
+    style DMZ fill:#e3f2fd,color:#333
+    style Private fill:#f3e5f5,color:#333
+    style DB fill:#fce4ec,color:#333
+    style GCP fill:#fafafa,color:#333
+    style WEB fill:#bbdefb,color:#333
+    style APP fill:#ce93d8,color:#333
+    style REDIS fill:#f48fb1,color:#333
+    style SQL fill:#f8bbd9,color:#333
 ```
 
 ### 보안 원칙
