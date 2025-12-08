@@ -17,7 +17,7 @@ flowchart TB
     end
 
     subgraph Environments["🚀 Environment Deployments"]
-        ENV[9개 레이어]
+        ENV[11개 레이어]
         STATE[환경별 독립 State]
     end
 

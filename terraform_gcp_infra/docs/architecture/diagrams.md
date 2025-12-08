@@ -102,32 +102,32 @@ flowchart TD
     P --> N["2️⃣ 10-network"]
     N --> DNS["3️⃣ 12-dns"]
 
-    DNS --> PARA["⚡ 병렬 배포"]
+    P --> PARA["⚡ 병렬 배포 (00-project 이후)"]
     PARA --> S["4️⃣ 20-storage"]
     PARA --> SEC["5️⃣ 30-security"]
     PARA --> OBS["6️⃣ 40-observability"]
 
-    S & SEC & OBS --> W["7️⃣ 50-workloads"]
+    N & SEC --> W["7️⃣ 50-workloads"]
     N --> DB["8️⃣ 60-database"]
-    W & DB --> C["9️⃣ 65-cache"]
-    C --> PSC["🔟 66-psc-endpoints"]
-    PSC --> LB["1️⃣1️⃣ 70-loadbalancers"]
+    N --> C["9️⃣ 65-cache"]
+    DB & C --> PSC["🔟 66-psc-endpoints"]
+    N & W --> LB["1️⃣1️⃣ 70-loadbalancers"]
 ```
 
-**의존성 요약:**
+**의존성 요약 (실제 terragrunt.hcl 기준):**
 
 | 순서 | 레이어 | 의존 대상 |
 |-----|-------|---------|
 | 0 | Bootstrap | - |
 | 1 | 00-project | Bootstrap |
 | 2 | 10-network | 00-project |
-| 3 | 12-dns | 10-network |
-| 4-6 | 20/30/40 | 12-dns (병렬 가능) |
-| 7 | 50-workloads | 20, 30, 40 |
-| 8 | 60-database | 10-network |
-| 9 | 65-cache | 50, 60 |
-| 10 | 66-psc-endpoints | 65-cache |
-| 11 | 70-loadbalancers | 66-psc-endpoints |
+| 3 | 12-dns | 00-project, 10-network |
+| 4-6 | 20/30/40 | 00-project (병렬 가능) |
+| 7 | 50-workloads | 00-project, 10-network, 30-security |
+| 8 | 60-database | 00-project, 10-network |
+| 9 | 65-cache | 00-project, 10-network |
+| 10 | 66-psc-endpoints | 00-project, 10-network, 60-database, 65-cache |
+| 11 | 70-loadbalancers | 00-project, 10-network, 50-workloads |
 
 ---
 
@@ -502,13 +502,13 @@ graph TB
 ### ✅ 레이어 분리
 
 - **문제**: 하나의 거대한 Terraform 구성은 관리 어려움
-- **해결**: 8개 레이어로 분리 (00-70)
+- **해결**: 11개 레이어로 분리 (00-70)
 - **장점**: 독립적 배포, 빠른 Plan/Apply, 명확한 책임
 
 ### ✅ 모듈화
 
 - **문제**: 환경마다 동일한 코드 반복
-- **해결**: 재사용 가능한 모듈 9개 생성
+- **해결**: 재사용 가능한 모듈 12개 생성
 - **장점**: 코드 재사용, 일관성, 유지보수 용이
 
 ### ✅ Provider 블록 제거
@@ -525,7 +525,7 @@ graph TB
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000' }}}%%
 graph LR
-    CURRENT[현재: 9개 모듈<br/>8개 레이어] --> PHASE1[Phase 1<br/>PostgreSQL<br/>Redis<br/>Secret Manager]
+    CURRENT[현재: 12개 모듈<br/>11개 레이어] --> PHASE1[Phase 1<br/>PostgreSQL<br/>Secret Manager]
 
     PHASE1 --> PHASE2[Phase 2<br/>GKE<br/>Cloud Run<br/>Cloud Functions]
 
@@ -552,6 +552,7 @@ graph LR
 
 각 모듈의 상세 아키텍처는 해당 모듈 문서를 참조하세요:
 
+- [cloud-dns](../modules/cloud-dns.md)
 - [cloudsql-mysql](../modules/cloudsql-mysql.md)
 - [gce-vmset](../modules/gce-vmset.md)
 - [gcs-bucket](../modules/gcs-bucket.md)
