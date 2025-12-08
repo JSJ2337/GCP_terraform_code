@@ -197,6 +197,7 @@ flowchart TB
     INET --> LB
     LB --> WEB
     WEB -.->|Outbound| NAT
+    APP -.->|Outbound| NAT
     NAT -.-> INET
 
     WEB -->|Internal Only| APP
