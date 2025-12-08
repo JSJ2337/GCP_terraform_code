@@ -375,7 +375,9 @@ def runPhasePlan(phase, phaseDirs) {
     }
 
     def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
-    sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- plan -out=tfplan-${phase.id}"
+    // Note: --queue-strict-include 제거 - Terragrunt 버그(#2855)로 dependency outputs 문제 발생
+    // --queue-include-dir만 사용하면 지정된 디렉토리만 실행하면서 dependency outputs는 정상 참조
+    sh "terragrunt run --all ${includeArgs} --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- plan -out=tfplan-${phase.id}"
 
     archiveArtifacts artifacts: "**/tfplan-${phase.id}", allowEmptyArchive: true
 }
@@ -383,11 +385,11 @@ def runPhasePlan(phase, phaseDirs) {
 // Phase Apply 실행
 def runPhaseApply(phase, phaseDirs) {
     def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
-    sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- apply tfplan-${phase.id}"
+    sh "terragrunt run --all ${includeArgs} --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- apply tfplan-${phase.id}"
 }
 
 // Phase Destroy 실행
 def runPhaseDestroy(phase, phaseDirs) {
     def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
-    sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- destroy -auto-approve"
+    sh "terragrunt run --all ${includeArgs} --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- destroy -auto-approve"
 }

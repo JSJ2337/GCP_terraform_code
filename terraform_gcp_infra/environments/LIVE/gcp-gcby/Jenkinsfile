@@ -229,11 +229,11 @@ ${phaseList}
 
                         // Plan
                         echo "📋 Planning Phase 8..."
-                        sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- plan -out=tfplan-prepare-destroy"
+                        sh "terragrunt run --all ${includeArgs} --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- plan -out=tfplan-prepare-destroy"
 
                         // Apply
                         echo "🚀 Applying Phase 8 (cleanup resources only)..."
-                        sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- apply tfplan-prepare-destroy"
+                        sh "terragrunt run --all ${includeArgs} --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- apply tfplan-prepare-destroy"
 
                         echo "✅ Phase 8 cleanup resources added to Terraform state"
                         echo "✅ 이제 'destroy' 액션을 실행하면 Backend Service가 정상적으로 정리됩니다."
@@ -502,7 +502,9 @@ def runPhasePlan(phase, phaseDirs) {
     }
 
     def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
-    sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- plan -out=tfplan-${phase.id}"
+    // Note: --queue-strict-include 제거 - Terragrunt 버그(#2855)로 dependency outputs 문제 발생
+    // --queue-include-dir만 사용하면 지정된 디렉토리만 실행하면서 dependency outputs는 정상 참조
+    sh "terragrunt run --all ${includeArgs} --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- plan -out=tfplan-${phase.id}"
 
     archiveArtifacts artifacts: "**/tfplan-${phase.id}", allowEmptyArchive: true
 }
@@ -510,7 +512,7 @@ def runPhasePlan(phase, phaseDirs) {
 // Phase Apply 실행
 def runPhaseApply(phase, phaseDirs) {
     def includeArgs = phase.dirs.collect { "--queue-include-dir '${env.WORKSPACE}/${TG_WORKING_DIR}/${it}'" }.join(' ')
-    sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- apply tfplan-${phase.id}"
+    sh "terragrunt run --all ${includeArgs} --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- apply tfplan-${phase.id}"
 }
 
 // Phase Destroy 실행
@@ -560,7 +562,7 @@ def runPhaseDestroy(phase, phaseDirs) {
     if (phase.id == 'phase2') {
         retry(3) {
             try {
-                sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- destroy -auto-approve"
+                sh "terragrunt run --all ${includeArgs} --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- destroy -auto-approve"
             } catch (Exception e) {
                 if (e.message.contains("ServiceConnectionPolicy") && e.message.contains("PSC Connections")) {
                     echo "⚠️  PSC connections still exist. Waiting 60 seconds before retry..."
@@ -572,6 +574,6 @@ def runPhaseDestroy(phase, phaseDirs) {
             }
         }
     } else {
-        sh "terragrunt run --all ${includeArgs} --queue-strict-include --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- destroy -auto-approve"
+        sh "terragrunt run --all ${includeArgs} --working-dir '${env.WORKSPACE}/${TG_WORKING_DIR}' -- destroy -auto-approve"
     }
 }
