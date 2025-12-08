@@ -119,23 +119,37 @@ instances = {
 ## 🏗️ 인프라 레이어 (11단계)
 
 ### 의존성 그래프
-```
-Bootstrap (delabs-gcp-mgmt)
-    ↓
-00-project → 10-network → 12-dns
-                ↓           ↓
-                ↓       20-storage
-                ↓           ↓
-                ↓       30-security
-                ↓           ↓
-                ↓       40-observability (Optional)
-                ↓           ↓
-                ↓       50-workloads ─────────────────┐
-                ↓           ↓                        ↓
-                ↓       60-database ──┐    70-loadbalancers/*
-                ↓       65-cache ─────┤
-                ↓                     ↓
-                └────── 66-psc-endpoints
+
+```mermaid
+flowchart TD
+    B["🏗️ Bootstrap<br/>(delabs-gcp-mgmt)"] --> P["1️⃣ 00-project"]
+    P --> N["2️⃣ 10-network"]
+    N --> DNS["3️⃣ 12-dns"]
+
+    P --> PARA["⚡ 병렬 배포"]
+    PARA --> S["4️⃣ 20-storage"]
+    PARA --> SEC["5️⃣ 30-security"]
+
+    SEC --> OBS["6️⃣ 40-observability<br/>(Optional)"]
+
+    N --> W["7️⃣ 50-workloads"]
+    SEC --> W
+
+    N --> DB["8️⃣ 60-database"]
+    N --> C["9️⃣ 65-cache"]
+
+    DB --> PSC["🔟 66-psc-endpoints"]
+    C --> PSC
+
+    W --> LB["1️⃣1️⃣ 70-loadbalancers"]
+    N --> LB
+
+    style B fill:#e3f2fd
+    style P fill:#fff3e0
+    style N fill:#f3e5f5
+    style PARA fill:#e8f5e9
+    style PSC fill:#fce4ec
+    style LB fill:#fff9c4
 ```
 
 ### 레이어별 상세
