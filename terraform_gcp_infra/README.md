@@ -203,12 +203,12 @@ flowchart TB
     APP --> REDIS
     APP -->|Private IP| SQL
 
-    style GCP fill:#fafafa
+    style INET fill:#e3f2fd
+    style LB fill:#fff3e0
+    style NAT fill:#e8f5e9
     style DMZ fill:#e3f2fd
     style Private fill:#f3e5f5
     style DB fill:#fce4ec
-    style LB fill:#fff9c4
-    style NAT fill:#c8e6c9
 ```
 
 ### 보안 원칙
