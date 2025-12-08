@@ -46,13 +46,15 @@
 
 ## 📋 최근 작업 요약
 
-### 2025-12-08: Instance Group 생성 문제 해결 및 ICMP Firewall 추가
+### 2025-12-08: Instance Group 문제 해결, Redis DNS 수정, 전체 연결 테스트 완료
 - ✅ terraform.tfvars가 terragrunt inputs를 덮어쓰는 문제 해결 (instance_groups, firewall_rules)
 - ✅ gcp-gcby Instance Group subnet 불일치 해결 (gcby-subnet-private → gcby-live-subnet-private)
 - ✅ 70-loadbalancers에 instance_group_ids output 추가
 - ✅ 10-network에 ICMP firewall rule 추가 (배스천 ping 테스트용)
-- ✅ gcp-web3, gcp-gcby 배스천 DNS 접속 테스트 완료 (SSH, MySQL, Redis)
-- 🔗 커밋: `9a9275b`
+- ✅ gcp-web3 Redis DNS IP 수정 (10.10.22.101 → 10.10.22.2)
+- ✅ 배스천 → 서버 DNS 접속 테스트 완료 (SSH, MySQL, Redis, ICMP)
+- ✅ 앱 서버 → DB/Redis 연결 테스트 완료 (7개 서버 모두 정상)
+- 🔗 커밋: `9a9275b`, `856a8be`, `c1d1248`
 
 ### 2025-12-03: Cloud SQL 자동 네이밍 및 Password Lifecycle 관리
 - ✅ PSC Global Access 검증 및 Cross-Region 연결 테스트 (asia-northeast3 → us-west1)
