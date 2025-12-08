@@ -24,7 +24,8 @@ dependency "workloads" {
     vm_details = {}
   }
 
-  mock_outputs_allowed_terraform_commands = ["init", "validate", "plan", "destroy"]
+  # plan 제외 - plan 시에도 실제 dependency outputs 사용하여 정확한 변경사항 확인
+  mock_outputs_allowed_terraform_commands = ["init", "validate"]
 }
 
 locals {
