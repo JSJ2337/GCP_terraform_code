@@ -125,6 +125,15 @@ locals {
       allow_ports    = ["80", "8080"]
       target_tags    = ["dmz-zone", "private-zone"]
       description    = "Allow health checks from Google Load Balancer"
+    },
+    {
+      name           = "allow-icmp-from-mgmt"
+      direction      = "INGRESS"
+      ranges         = [local.mgmt_subnet_cidr]
+      allow_protocol = "icmp"
+      allow_ports    = []
+      target_tags    = ["dmz-zone", "private-zone"]
+      description    = "Allow ICMP (ping) from mgmt VPC for monitoring"
     }
   ]
 
