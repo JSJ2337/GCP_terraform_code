@@ -17,9 +17,8 @@ enable_private_service_connection = false
 nat_min_ports_per_vm = 1024
 
 # Firewall rules
-# terragrunt.hcl에서 common.naming.tfvars의 network_config를 사용해 동적 생성됩니다.
-# (mgmt_subnet_cidr, dmz, private CIDR 자동 참조)
-firewall_rules = []
+# ⚠️ firewall_rules는 terragrunt.hcl에서 동적으로 주입됨
+# terraform.tfvars에서 정의하면 terragrunt inputs를 덮어쓰므로 여기서는 정의하지 않음
 
 # Memorystore Enterprise용 PSC 자동 구성
 enable_memorystore_psc_policy = true
