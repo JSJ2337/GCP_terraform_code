@@ -11,7 +11,7 @@ backends = []
 #   - Instance Group 이름: {project_name}-{layer_name}-ig-{zone_suffix}
 #   - VM 이름: {project_name}-{vm_key}
 # 아래는 terraform.tfvars에서는 빈 맵으로 두고, terragrunt.hcl에서 주입
-instance_groups = {}
+# instance_groups는 terragrunt.hcl에서 동적 주입됨 (여기서 정의하면 덮어씀)
 
 auto_backend_balancing_mode  = "UTILIZATION"
 auto_backend_capacity_scaler = 1.0

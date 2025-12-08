@@ -7,11 +7,8 @@ backend_timeout   = 30
 backends = []
 
 # Instance Groups 정의 (50-workloads의 VM을 그룹화)
-# terragrunt.hcl에서 동적으로 이름이 생성됨:
-#   - Instance Group 이름: {project_name}-{layer_name}-ig-{zone_suffix}
-#   - VM 이름: {project_name}-{vm_key}
-# 아래는 terraform.tfvars에서는 빈 맵으로 두고, terragrunt.hcl에서 주입
-instance_groups = {}
+# ⚠️ instance_groups는 terragrunt.hcl에서 동적으로 주입됨
+# terraform.tfvars에서 정의하면 terragrunt inputs를 덮어쓰므로 여기서는 정의하지 않음
 
 auto_backend_balancing_mode  = "UTILIZATION"
 auto_backend_capacity_scaler = 1.0
