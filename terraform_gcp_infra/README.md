@@ -52,7 +52,7 @@ terraform_gcp_infra/
 
 ## 🔄 Phase 기반 배포 시스템
 
-Jenkins CI/CD는 8개 Phase로 인프라를 순차 배포하여 의존성을 자동 해결합니다:
+Jenkins CI/CD는 9개 Phase로 인프라를 순차 배포하여 의존성을 자동 해결합니다:
 
 | Phase | 레이어 | 설명 | Optional |
 |-------|--------|------|----------|
@@ -63,7 +63,8 @@ Jenkins CI/CD는 8개 Phase로 인프라를 순차 배포하여 의존성을 자
 | **Phase 5** | `40-observability` | Logging/Monitoring/Slack 알림 | ✅ |
 | **Phase 6** | `50-workloads` | VM 인스턴스 배포 | ❌ |
 | **Phase 7** | `60-database`<br>`65-cache` | Cloud SQL + Redis 캐시 | ❌ |
-| **Phase 8** | `70-loadbalancers/gs` | 로드밸런서 (Game Server) | ❌ |
+| **Phase 8** | `66-psc-endpoints` | Cross-project PSC 등록 | ❌ |
+| **Phase 9** | `70-loadbalancers/gs` | 로드밸런서 (Game Server) | ❌ |
 
 ### 주요 특징
 - ✅ **전체 승인 한 번**: `TARGET_LAYER=all` 시 모든 Phase를 한 번에 승인
@@ -115,7 +116,7 @@ instances = {
 # 예: project_name="game-n" → "game-n-subnet-dmz", "game-n-web-backend" 등
 ```
 
-## 🏗️ 인프라 레이어 (10단계)
+## 🏗️ 인프라 레이어 (11단계)
 
 ### 의존성 그래프
 ```
@@ -129,10 +130,12 @@ Bootstrap (delabs-gcp-mgmt)
                 ↓           ↓
                 ↓       40-observability (Optional)
                 ↓           ↓
-                ↓       50-workloads → 70-loadbalancers/*
-                ↓           ↓
-                ↓       60-database
-                ↓       65-cache
+                ↓       50-workloads ─────────────────┐
+                ↓           ↓                        ↓
+                ↓       60-database ──┐    70-loadbalancers/*
+                ↓       65-cache ─────┤
+                ↓                     ↓
+                └────── 66-psc-endpoints
 ```
 
 ### 레이어별 상세
@@ -148,6 +151,7 @@ Bootstrap (delabs-gcp-mgmt)
 | `50-workloads` | VM 인스턴스 | GCE VMs, Instance Groups, 부팅 디스크 | 10-network, 30-security |
 | `60-database` | Cloud SQL | MySQL HA, 읽기 복제본, PITR, Private IP | 10-network |
 | `65-cache` | Redis 캐시 | Memorystore Redis (Standard HA / Enterprise) | 10-network |
+| `66-psc-endpoints` | Cross-project PSC | mgmt VPC에서 DB/Redis 접근용 PSC 등록 | 60-database, 65-cache |
 | `70-loadbalancers/gs` | Load Balancer | HTTP LB, Instance Group 자동 처리, Backend cleanup 스크립트 | 50-workloads |
 
 ## 🏛️ 네트워크 아키텍처
@@ -224,7 +228,7 @@ Internet → Global Load Balancer (HTTPS)
 
 ### 프로덕션 레디
 - ✅ 12개 재사용 가능 모듈
-- ✅ Phase 기반 배포 시스템 (8단계)
+- ✅ Phase 기반 배포 시스템 (9단계)
 - ✅ Jenkins CI/CD 통합 (GitOps)
 - ✅ HA 구성 (Cloud SQL Regional, Redis Standard HA)
 - ✅ 자동 백업 (PITR, GCS Lifecycle)
@@ -355,6 +359,7 @@ cd ../40-observability && terragrunt apply
 cd ../50-workloads && terragrunt apply
 cd ../60-database && terragrunt apply
 cd ../65-cache && terragrunt apply
+cd ../66-psc-endpoints && terragrunt apply
 cd ../70-loadbalancers/gs && terragrunt apply
 ```
 
@@ -480,4 +485,4 @@ terragrunt apply       # 안전하게 apply
 ---
 
 **Made by 433 IT_infra_dept**
-**Last Updated: 2025-12-05**
+**Last Updated: 2025-12-09**
