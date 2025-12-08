@@ -16,7 +16,7 @@
 |------|------|---------------|
 | [사전 요구사항](./getting-started/prerequisites.md) | 필수 도구 설치 및 권한 설정 | 5분 |
 | [Bootstrap 구성](./getting-started/bootstrap-setup.md) | 중앙 State 관리 인프라 배포 | 10분 |
-| [첫 번째 환경 배포](./getting-started/first-deployment.md) | 9개 레이어 순차 배포 절차 | 30분 |
+| [첫 번째 환경 배포](./getting-started/first-deployment.md) | 11개 레이어 순차 배포 절차 | 30분 |
 | [명령어 참조](./getting-started/quick-commands.md) | Terragrunt/gcloud 명령어 모음 | - |
 
 ### 2. 아키텍처 설계

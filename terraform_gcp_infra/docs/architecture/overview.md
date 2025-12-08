@@ -130,6 +130,7 @@ graph TB
 | **naming** | 중앙 집중식 네이밍 규칙 | 공통 |
 | **project-base** | GCP 프로젝트 생성 및 API 활성화 | 프로젝트 |
 | **network-dedicated-vpc** | VPC, 서브넷, 방화벽, NAT | 네트워킹 |
+| **cloud-dns** | Public/Private DNS Zone, DNSSEC | 네트워킹 |
 | **gcs-root** | 다중 버킷 관리 | 스토리지 |
 | **gcs-bucket** | 단일 버킷 상세 설정 | 스토리지 |
 | **iam** | IAM 바인딩 및 SA 관리 | 보안 |

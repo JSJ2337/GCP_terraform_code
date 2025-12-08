@@ -7,7 +7,7 @@
 ### [전체 구조](./overview.md)
 
 - 3-Tier 아키텍처 (Bootstrap, Module, Environment)
-- 9개 레이어 설명
+- 11개 레이어 설명
 - 모듈 설계 원칙
 - 보안 및 확장성 전략
 

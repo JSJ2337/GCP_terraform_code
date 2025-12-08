@@ -101,7 +101,7 @@ terraform_gcp_infra/
 |------|------|------|
 | prerequisites.md | 사전 준비 | 도구, 권한, 인증 |
 | bootstrap-setup.md | Bootstrap 배포 | 단계별 가이드, 검증 |
-| first-deployment.md | 첫 프로젝트 배포 | 9개 레이어 순차 배포 |
+| first-deployment.md | 첫 프로젝트 배포 | 11개 레이어 순차 배포 |
 | quick-commands.md | 명령어 치트시트 | 50+ 명령어 |
 
 ### 4. Architecture (4개 파일)
