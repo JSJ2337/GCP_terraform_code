@@ -5,81 +5,67 @@
 ## 아키텍처 다이어그램
 
 ```mermaid
-%%{init: {'theme': 'default'}}%%
-flowchart TB
-    subgraph INPUT["📥 INPUT VARIABLES"]
-        I1["project_name: gcby"]
-        I2["environment: live"]
-        I3["organization: delabs"]
-        I4["region_primary: asia-northeast3"]
-        I5["default_zone_suffix: a"]
+flowchart LR
+    subgraph INPUT["📥 입력"]
+        I["project_name: gcby<br/>environment: live<br/>organization: delabs"]
     end
 
-    subgraph PATTERNS["🔄 NAMING PATTERNS"]
-        P1["project_prefix: {project_name}-{environment}<br/>→ gcby-live"]
-        P2["resource_prefix: {organization}-{project_name}-{environment}<br/>→ delabs-gcby-live"]
-        P3["default_zone: {region_primary}-{default_zone_suffix}<br/>→ asia-northeast3-a"]
+    subgraph PATTERN["🔄 패턴 생성"]
+        P["project_prefix: gcby-live<br/>resource_prefix: delabs-gcby-live"]
     end
 
-    subgraph OUTPUTS["📤 OUTPUT RESOURCE NAMES"]
-        subgraph NET["Network"]
-            N1["vpc_name: gcby-live-vpc"]
-            N2["subnet_name_primary: gcby-live-subnet-primary"]
-            N3["cloud_nat_name: gcby-live-nat"]
-        end
-        subgraph COMPUTE["Compute"]
-            C1["vm_name_prefix: gcby-live-vm"]
-            C2["instance_group_name: gcby-live-ig"]
-        end
-        subgraph DB["Database"]
-            D1["db_instance_name: gcby-live-mysql"]
-            D2["redis_instance_name: gcby-live-redis"]
-        end
-        subgraph LB["Load Balancer"]
-            L1["backend_service_name: gcby-live-backend"]
-            L2["forwarding_rule_name: gcby-live-lb"]
-        end
+    subgraph OUTPUT["📤 리소스 이름"]
+        O1["🌐 gcby-live-vpc"]
+        O2["💻 gcby-live-vm"]
+        O3["🗄️ gcby-live-mysql"]
+        O4["⚡ gcby-live-redis"]
+        O5["⚖️ gcby-live-lb"]
     end
 
-    INPUT --> PATTERNS --> OUTPUTS
-
-    style INPUT fill:#e3f2fd
-    style PATTERNS fill:#fff3e0
-    style OUTPUTS fill:#e8f5e9
+    INPUT --> PATTERN --> OUTPUT
 ```
+
+| 카테고리 | 생성되는 이름 예시 |
+|---------|------------------|
+| Network | `gcby-live-vpc`, `gcby-live-subnet-primary`, `gcby-live-nat` |
+| Compute | `gcby-live-vm`, `gcby-live-ig` |
+| Database | `gcby-live-mysql`, `gcby-live-redis` |
+| Load Balancer | `gcby-live-backend`, `gcby-live-lb` |
 
 ## 레이어별 사용 흐름
 
 ```mermaid
-%%{init: {'theme': 'default'}}%%
-flowchart TB
-    subgraph CONFIG["📄 common.naming.tfvars"]
-        CFG["project_name = gcby<br/>environment = live<br/>organization = delabs"]
+flowchart LR
+    CFG["📄 common.naming.tfvars"]
+
+    subgraph LAYERS["🏗️ 각 레이어에서 사용"]
+        L1["10-network"]
+        L2["50-workloads"]
+        L3["60-database"]
+        L4["65-cache"]
+        L5["70-loadbalancers"]
     end
 
-    subgraph LAYERS["🏗️ Each Layer Uses Naming Module"]
-        L10["10-network/ → vpc_name, subnet_name"]
-        L30["30-storage/ → bucket_name_prefix"]
-        L40["40-iam/ → sa_name_prefix"]
-        L50["50-workloads/ → vm_name_prefix"]
-        L60["60-database/ → db_instance_name"]
-        L65["65-cache/ → redis_instance_name"]
-        L70["70-loadbalancers/ → backend_service_name"]
-    end
+    CFG --> LAYERS
 
-    subgraph RESULT["✅ Consistent Naming Pattern"]
-        R1["gcby-live-vpc"]
-        R2["gcby-live-mysql"]
-        R3["gcby-live-redis"]
-        R4["delabs-gcby-live-assets-bucket"]
-    end
-
-    CONFIG --> LAYERS --> RESULT
-
-    style CONFIG fill:#e3f2fd
-    style LAYERS fill:#fff3e0
-    style RESULT fill:#e8f5e9
+    L1 --> R1["gcby-live-vpc"]
+    L2 --> R2["gcby-live-vm01"]
+    L3 --> R3["gcby-live-mysql"]
+    L4 --> R4["gcby-live-redis"]
+    L5 --> R5["gcby-live-lb"]
 ```
+
+**각 레이어가 사용하는 naming 출력:**
+
+| 레이어 | 사용하는 출력 |
+|-------|-------------|
+| 10-network | `vpc_name`, `subnet_name_*`, `cloud_nat_name` |
+| 20-storage | `bucket_name_prefix` |
+| 30-security | `sa_name_prefix` |
+| 50-workloads | `vm_name_prefix`, `instance_group_name` |
+| 60-database | `db_instance_name` |
+| 65-cache | `redis_instance_name` |
+| 70-loadbalancers | `backend_service_name`, `forwarding_rule_name` |
 
 ## 입력 변수
 

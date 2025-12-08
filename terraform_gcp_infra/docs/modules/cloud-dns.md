@@ -392,30 +392,40 @@ dnssec_key_specs = [
 각 프로젝트/VPC에서 자체 Private DNS Zone을 관리하고, 필요한 경우에만 공유합니다.
 
 ```mermaid
-%%{init: {'theme': 'default'}}%%
-flowchart TB
-    subgraph ORG["GCP Organization"]
-        subgraph MGMT["mgmt Project"]
-            subgraph MGMT_VPC["mgmt-vpc"]
-                MGMT_DNS["DNS Zone: mgmt.internal<br/>- bastion<br/>- jenkins"]
-            end
-            SHARED["Shared DNS Zone:<br/>delabsgames.internal<br/>attached to:<br/>- mgmt-vpc ✓<br/>- game-b-vpc ✓<br/>- game-a-vpc ✗"]
-        end
-
-        subgraph GAMEA["game-a Project"]
-            subgraph GAMEA_VPC["game-a-vpc"]
-                GAMEA_DNS["DNS Zone: game-a.internal<br/>- db-master<br/>- cache"]
-            end
-            NOTE["(has_own_dns_zone)"]
-        end
+flowchart LR
+    subgraph MGMT["🏢 mgmt Project"]
+        direction TB
+        M_VPC["mgmt-vpc"]
+        M_DNS["📋 mgmt.internal"]
+        SHARED["📋 delabsgames.internal<br/>(공유 Zone)"]
     end
 
-    style ORG fill:#f5f5f5
-    style MGMT fill:#e3f2fd
-    style GAMEA fill:#e8f5e9
-    style MGMT_VPC fill:#bbdefb
-    style GAMEA_VPC fill:#c8e6c9
+    subgraph GAMEB["🎮 game-b Project"]
+        direction TB
+        B_VPC["game-b-vpc"]
+        B_NOTE["자체 DNS 없음"]
+    end
+
+    subgraph GAMEA["🎮 game-a Project"]
+        direction TB
+        A_VPC["game-a-vpc"]
+        A_DNS["📋 game-a.internal"]
+        A_NOTE["has_own_dns_zone = true"]
+    end
+
+    %% 연결 관계
+    M_DNS -.->|연결| M_VPC
+    SHARED -.->|연결| M_VPC
+    SHARED -.->|연결| B_VPC
+    SHARED -.-x|제외| A_VPC
+    A_DNS -.->|연결| A_VPC
 ```
+
+**설명:**
+
+- **mgmt Project**: 자체 DNS Zone(`mgmt.internal`) + 공유 Zone(`delabsgames.internal`) 관리
+- **game-b Project**: 자체 DNS 없음 → 공유 Zone 사용
+- **game-a Project**: `has_own_dns_zone = true` → 공유 Zone에서 제외 (DNS 충돌 방지)
 
 ### DNS 충돌 방지 패턴
 

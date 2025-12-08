@@ -16,244 +16,155 @@
 ## 1. 전체 시스템 구조
 
 ```mermaid
-%%{init: {'theme': 'default'}}%%
-graph TB
-    subgraph Bootstrap["Bootstrap (중앙 관리)"]
-        B[bootstrap/]
-        B_PROJ[delabs-gcp-mgmt<br/>관리용 프로젝트]
-        B_BUCKET[delabs-terraform-state-live<br/>중앙 State 버킷]
-        B --> B_PROJ
-        B_PROJ --> B_BUCKET
+flowchart TB
+    subgraph BOOT["🏗️ Bootstrap"]
+        B_BUCKET["📦 delabs-terraform-state-live"]
     end
 
-    subgraph Modules["재사용 가능한 모듈"]
-        M1[gcs-root]
-        M2[gcs-bucket]
-        M3[project-base]
-        M4[network-dedicated-vpc]
-        M5[iam]
-        M6[observability]
-        M7[gce-vmset]
-        M8[cloudsql-mysql]
-        M9[load-balancer]
-        M10[memorystore-redis]
+    subgraph LAYERS["📂 배포 레이어 (11개)"]
+        direction LR
+        L1["00-project"]
+        L2["10-network"]
+        L3["12-dns"]
+        L4["20-storage"]
+        L5["30-security"]
+        L6["40-observability"]
+        L7["50-workloads"]
+        L8["60-database"]
+        L9["65-cache"]
+        L10["66-psc-endpoints"]
+        L11["70-loadbalancers"]
     end
 
-    subgraph Layers["환경별 배포 레이어"]
-        E0[00-project<br/>프로젝트]
-        E1[10-network<br/>네트워크]
-        E1_DNS[12-dns<br/>DNS]
-        E2[20-storage<br/>스토리지]
-        E3[30-security<br/>보안/IAM]
-        E4[40-observability<br/>관찰성]
-        E5[50-workloads<br/>워크로드]
-        E6[60-database<br/>데이터베이스]
-        E7[65-cache<br/>캐시]
-        E7_PSC[66-psc-endpoints<br/>PSC 엔드포인트]
-        E8[70-loadbalancers<br/>로드밸런서]
+    subgraph MODULES["🧩 모듈 (12개)"]
+        direction LR
+        M1["naming"]
+        M2["project-base"]
+        M3["network-dedicated-vpc"]
+        M4["cloud-dns"]
+        M5["gcs-root / gcs-bucket"]
+        M6["iam"]
+        M7["observability"]
+        M8["gce-vmset"]
+        M9["cloudsql-mysql"]
+        M10["memorystore-redis"]
+        M11["load-balancer"]
     end
 
-    B_BUCKET -.State 저장.-> E0
-    B_BUCKET -.State 저장.-> E1
-    B_BUCKET -.State 저장.-> E1_DNS
-    B_BUCKET -.State 저장.-> E2
-    B_BUCKET -.State 저장.-> E3
-    B_BUCKET -.State 저장.-> E4
-    B_BUCKET -.State 저장.-> E5
-    B_BUCKET -.State 저장.-> E6
-    B_BUCKET -.State 저장.-> E7
-    B_BUCKET -.State 저장.-> E7_PSC
-    B_BUCKET -.State 저장.-> E8
-
-    E0 --> M3
-    E1 --> M4
-    E2 --> M1
-    E3 --> M5
-    E4 --> M6
-    E5 --> M7
-    E6 --> M8
-    E7 --> M10
-    E8 --> M9
-
-    style Bootstrap fill:#e1f5ff
-    style Modules fill:#ffffff
-    style Layers fill:#ffffff
-    style B fill:#e1f5ff
-    style B_BUCKET fill:#fff3cd
-    style E0 fill:#d4edda
-    style E1 fill:#d4edda
-    style E2 fill:#d4edda
-    style E3 fill:#d4edda
-    style E4 fill:#d4edda
-    style E5 fill:#d4edda
-    style E6 fill:#d4edda
-    style E7 fill:#d4edda
-    style E8 fill:#d4edda
+    B_BUCKET -.->|State 저장| LAYERS
+    LAYERS -->|모듈 호출| MODULES
 ```
 
-**설명**:
+**구조 요약:**
 
-- **Bootstrap**: 최우선 배포. 중앙 State 관리 인프라
-- **Modules**: 재사용 가능한 Terraform 모듈 (12개)
-- **Environments**: 실제 배포 레이어 (11개: 00-project ~ 70-loadbalancers)
-- **State 관리**: 모든 레이어의 State는 중앙 버킷에 저장
+| 티어 | 설명 | 개수 |
+|-----|------|-----|
+| Bootstrap | 중앙 State 관리 (delabs-gcp-mgmt) | 1 |
+| Layers | 환경별 배포 레이어 (00~70) | 11개 |
+| Modules | 재사용 가능한 Terraform 모듈 | 12개 |
 
 ---
 
 ## 2. State 관리 아키텍처
 
 ```mermaid
-%%{init: {'theme': 'default'}}%%
-graph LR
-    subgraph LocalEnv["로컬 개발 환경"]
-        DEV[개발자 PC]
+flowchart LR
+    DEV["💻 개발자"]
+
+    subgraph GCS["📦 GCS Bucket"]
+        BUCKET["delabs-terraform-state-live"]
     end
 
-    subgraph BootstrapProj["Bootstrap Project (delabs-gcp-mgmt)"]
-        BUCKET[GCS Bucket<br/>delabs-terraform-state-live]
-
-        subgraph StateFiles["State 파일 구조"]
-            S1[proj-default-templet/<br/>00-project/default.tfstate]
-            S2[proj-default-templet/<br/>10-network/default.tfstate]
-            S2_DNS[proj-default-templet/<br/>12-dns/default.tfstate]
-            S3[proj-default-templet/<br/>20-storage/default.tfstate]
-            S4[proj-default-templet/<br/>30-security/default.tfstate]
-            S5[proj-default-templet/<br/>40-observability/default.tfstate]
-            S6[proj-default-templet/<br/>50-workloads/default.tfstate]
-            S7[proj-default-templet/<br/>60-database/default.tfstate]
-            S8[proj-default-templet/<br/>65-cache/default.tfstate]
-            S8_PSC[proj-default-templet/<br/>66-psc-endpoints/default.tfstate]
-            S9[proj-default-templet/<br/>70-loadbalancers/default.tfstate]
-        end
+    subgraph STATE["📁 State 파일 구조"]
+        S["proj-name/00-project/.tfstate<br/>proj-name/10-network/.tfstate<br/>proj-name/12-dns/.tfstate<br/>...<br/>proj-name/70-loadbalancers/.tfstate"]
     end
 
-    DEV -->|terraform init| BUCKET
-    DEV -->|terraform apply| BUCKET
-    BUCKET --> S1
-    BUCKET --> S2
-    BUCKET --> S2_DNS
-    BUCKET --> S3
-    BUCKET --> S4
-    BUCKET --> S5
-    BUCKET --> S6
-    BUCKET --> S7
-    BUCKET --> S8
-    BUCKET --> S8_PSC
-    BUCKET --> S9
-
-    style LocalEnv fill:#e1f5ff
-    style BootstrapProj fill:#ffffff
-    style StateFiles fill:#ffffff
-    style BUCKET fill:#fff3cd
-    style DEV fill:#e1f5ff
+    DEV -->|init/plan/apply| BUCKET
+    BUCKET --> STATE
 ```
 
-**특징**:
+**State 경로 패턴:** `{project-name}/{layer}/default.tfstate`
 
-- ✅ **중앙 집중식**: 모든 State가 한 곳에서 관리
-- ✅ **버전 관리**: 최근 10개 버전 보관
-- ✅ **레이어별 분리**: 각 레이어는 독립적인 State 파일
-- ✅ **자동 정리**: 30일 지난 버전 자동 삭제
+| 특징 | 설명 |
+|-----|------|
+| 중앙 집중식 | 모든 State가 한 GCS 버킷에서 관리 |
+| 버전 관리 | 최근 10개 버전 보관 |
+| 레이어별 분리 | 각 레이어는 독립적인 State 파일 |
+| 자동 정리 | 30일 지난 버전 자동 삭제 |
 
 ---
 
 ## 3. 배포 순서 및 의존성
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000' }}}%%
-graph TD
-    START([시작]) --> B[0. Bootstrap 배포<br/>중앙 State 관리]
+flowchart TD
+    B["0️⃣ Bootstrap"] --> P["1️⃣ 00-project"]
+    P --> N["2️⃣ 10-network"]
+    N --> DNS["3️⃣ 12-dns"]
 
-    B --> E0[1. 00-project<br/>GCP 프로젝트 생성]
+    DNS --> PARA["⚡ 병렬 배포"]
+    PARA --> S["4️⃣ 20-storage"]
+    PARA --> SEC["5️⃣ 30-security"]
+    PARA --> OBS["6️⃣ 40-observability"]
 
-    E0 --> E1[2. 10-network<br/>VPC, 서브넷, 방화벽]
-
-    E1 --> E1_DNS[3. 12-dns<br/>Cloud DNS]
-
-    E1_DNS --> PARALLEL{병렬 배포 가능}
-
-    PARALLEL --> E2[4. 20-storage<br/>GCS 버킷]
-    PARALLEL --> E3[5. 30-security<br/>IAM, 서비스 계정]
-    PARALLEL --> E4[6. 40-observability<br/>로깅, 모니터링]
-
-    E2 --> E5[7. 50-workloads<br/>VM 인스턴스]
-    E3 --> E5
-    E4 --> E5
-
-    E1 --> E6[8. 60-database<br/>Cloud SQL]
-
-    E5 --> E7[9. 65-cache<br/>Memorystore Redis]
-    E6 --> E7
-
-    E7 --> E7_PSC[10. 66-psc-endpoints<br/>PSC 엔드포인트]
-
-    E7_PSC --> E8[11. 70-loadbalancers<br/>Load Balancer]
-
-    E8 --> END([완료])
-
-    style B fill:#e1f5ff
-    style E0 fill:#d4edda
-    style E1 fill:#d4edda
-    style E1_DNS fill:#d4edda
-    style E2 fill:#fff3cd
-    style E3 fill:#fff3cd
-    style E4 fill:#fff3cd
-    style E5 fill:#d4edda
-    style E6 fill:#d4edda
-    style E7 fill:#d4edda
-    style E7_PSC fill:#d4edda
-    style E8 fill:#d4edda
-    style PARALLEL fill:#ffeaa7
+    S & SEC & OBS --> W["7️⃣ 50-workloads"]
+    N --> DB["8️⃣ 60-database"]
+    W & DB --> C["9️⃣ 65-cache"]
+    C --> PSC["🔟 66-psc-endpoints"]
+    PSC --> LB["1️⃣1️⃣ 70-loadbalancers"]
 ```
 
-**의존성 설명**:
+**의존성 요약:**
 
-1. **Bootstrap**: 반드시 최우선 배포
-2. **00-project**: 다른 모든 리소스의 기반
-3. **10-network**: 데이터베이스 Private IP, VM 네트워킹에 필요
-4. **12-dns**: VPC 네트워크에 의존, Private DNS Zone 생성
-5. **병렬 배포**: 20-storage, 30-security, 40-observability는 병렬 배포 가능
-6. **60-database**: 네트워크 구성 필요 (Private IP)
-7. **65-cache**: 전용 VPC(10-network) 이후 배포
-8. **66-psc-endpoints**: Cross-project PSC 엔드포인트 등록 (Cloud SQL, Redis)
-9. **70-loadbalancers**: VM 인스턴스(백엔드) 필요
+| 순서 | 레이어 | 의존 대상 |
+|-----|-------|---------|
+| 0 | Bootstrap | - |
+| 1 | 00-project | Bootstrap |
+| 2 | 10-network | 00-project |
+| 3 | 12-dns | 10-network |
+| 4-6 | 20/30/40 | 12-dns (병렬 가능) |
+| 7 | 50-workloads | 20, 30, 40 |
+| 8 | 60-database | 10-network |
+| 9 | 65-cache | 50, 60 |
+| 10 | 66-psc-endpoints | 65-cache |
+| 11 | 70-loadbalancers | 66-psc-endpoints |
 
 ---
 
 ## 4. 모듈 구조
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000' }}}%%
-graph LR
-    M0[naming<br/>네이밍 규칙]
-    M1[project-base<br/>프로젝트 생성]
-    M2[network-dedicated-vpc<br/>VPC 네트워킹]
-    M2_DNS[cloud-dns<br/>DNS 관리]
-    M3[gcs-root<br/>다중 버킷]
-    M4[gcs-bucket<br/>단일 버킷]
-    M5[iam<br/>IAM 관리]
-    M6[observability<br/>모니터링/로깅]
-    M7[gce-vmset<br/>VM 인스턴스]
-    M8[cloudsql-mysql<br/>MySQL DB]
-    M9[load-balancer<br/>Load Balancer]
-    M10[memorystore-redis<br/>Redis 캐시]
+flowchart LR
+    subgraph COMMON["🔧 공통"]
+        naming
+    end
 
-    M0 -->|네이밍 제공| M1
-    M0 -->|네이밍 제공| M2
-    M3 -->|사용| M4
+    subgraph INFRA["🏗️ 인프라"]
+        project-base
+        network["network-dedicated-vpc"]
+        dns["cloud-dns"]
+    end
 
-    style M0 fill:#e1f5ff,stroke:#333,stroke-width:2px
-    style M1 fill:#e1f5ff,stroke:#333,stroke-width:2px
-    style M2 fill:#d4edda,stroke:#333,stroke-width:2px
-    style M2_DNS fill:#d4edda,stroke:#333,stroke-width:2px
-    style M3 fill:#fff3cd,stroke:#333,stroke-width:2px
-    style M4 fill:#fff3cd,stroke:#333,stroke-width:2px
-    style M5 fill:#ffeaa7,stroke:#333,stroke-width:2px
-    style M6 fill:#dfe6e9,stroke:#333,stroke-width:2px
-    style M7 fill:#fab1a0,stroke:#333,stroke-width:2px
-    style M8 fill:#74b9ff,stroke:#333,stroke-width:2px
-    style M9 fill:#a29bfe,stroke:#333,stroke-width:2px
-    style M10 fill:#ffeaa7,stroke:#333,stroke-width:2px
+    subgraph STORAGE["💾 스토리지"]
+        gcs-root --> gcs-bucket
+    end
+
+    subgraph COMPUTE["💻 컴퓨팅"]
+        gce-vmset
+        lb["load-balancer"]
+    end
+
+    subgraph DATA["🗄️ 데이터"]
+        sql["cloudsql-mysql"]
+        redis["memorystore-redis"]
+    end
+
+    subgraph MGMT["📊 관리"]
+        iam
+        observability
+    end
+
+    naming -.->|이름 패턴| INFRA & COMPUTE & DATA
 ```
 
 **모듈 목록 및 주요 기능**:
