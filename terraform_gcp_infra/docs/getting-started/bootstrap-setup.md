@@ -34,7 +34,7 @@ management_project_name = "Delabs GCP Management"
 
 # State 버킷
 state_bucket_name = "delabs-terraform-state-live"
-state_bucket_location = "US"
+state_bucket_location = "ASIA"
 
 # Billing Account
 billing_account = "XXXXXX-XXXXXX-XXXXXX"
@@ -45,7 +45,7 @@ org_id = ""  # 조직 ID 또는 비워두기
 
 ## 2단계: Bootstrap 배포
 
-Bootstrap도 Terragrunt를 사용합니다 (레이어 구조: 00-foundation, 10-network, 12-dns 등).
+Bootstrap도 Terragrunt를 사용합니다 (레이어 구조: 00-foundation, 10-network, 12-dns, 15-firewall, 20-storage, 50-compute).
 
 ```bash
 cd bootstrap/00-foundation
@@ -88,6 +88,18 @@ terragrunt apply
 
 # 12-dns (Private DNS)
 cd ../12-dns
+terragrunt apply
+
+# 15-firewall (방화벽 규칙)
+cd ../15-firewall
+terragrunt apply
+
+# 20-storage (스토리지 버킷)
+cd ../20-storage
+terragrunt apply
+
+# 50-compute (Compute 리소스)
+cd ../50-compute
 terragrunt apply
 
 # 확인
@@ -165,7 +177,7 @@ gcloud organizations add-iam-policy-binding YOUR_ORG_ID \
 gsutil ls -L gs://delabs-terraform-state-live/
 
 # Versioning: Enabled
-# Location: US
+# Location: ASIA
 ```
 
 ### Service Account 확인

@@ -180,7 +180,7 @@ locals {
   # REPLACE_* 플레이스홀더를 실제 값으로 변경
   remote_state_bucket   = get_env("TG_STATE_BUCKET", "your-terraform-state-bucket")
   remote_state_project  = get_env("TG_STATE_PROJECT", "your-mgmt-project")
-  remote_state_location = get_env("TG_STATE_LOCATION", "US")
+  remote_state_location = get_env("TG_STATE_LOCATION", "ASIA")
 }
 
 inputs = {

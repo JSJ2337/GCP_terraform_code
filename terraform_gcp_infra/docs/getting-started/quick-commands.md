@@ -133,8 +133,8 @@ terraform fmt
 # Terraform 문법 검증
 terraform validate
 
-# Terragrunt 설정 검증
-terragrunt validate-all
+# Terragrunt 설정 검증 (0.93+ 구문)
+terragrunt run --all -- validate
 ```
 
 ## GCP 명령어

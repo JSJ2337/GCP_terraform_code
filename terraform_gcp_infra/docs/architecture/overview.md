@@ -341,7 +341,7 @@ remote_state {
   }
   config = {
     project  = "delabs-gcp-mgmt"
-    location = "US"
+    location = "ASIA"
     bucket   = "delabs-terraform-state-live"
     prefix   = "gcp-gcby/${path_relative_to_include()}"
   }

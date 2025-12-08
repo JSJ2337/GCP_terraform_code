@@ -66,7 +66,7 @@ remote_state {
   }
   config = {
     project  = "delabs-gcp-mgmt"
-    location = "US"
+    location = "ASIA"
     bucket   = "delabs-terraform-state-live"
     prefix   = "gcp-newgame/${path_relative_to_include()}"
   }

@@ -85,7 +85,7 @@ gs://delabs-terraform-state-live/
 ```hcl
 resource "google_storage_bucket" "terraform_state" {
   name     = "delabs-terraform-state-live"
-  location = "US"
+  location = "ASIA"
 
   versioning {
     enabled = true  # 버전 관리
@@ -127,7 +127,7 @@ remote_state {
   }
   config = {
     project  = "delabs-gcp-mgmt"
-    location = "US"
+    location = "ASIA"
     bucket   = "delabs-terraform-state-live"
     prefix   = "gcp-gcby/${path_relative_to_include()}"
   }

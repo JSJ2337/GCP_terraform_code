@@ -117,7 +117,7 @@ remote_state {
   }
   config = {
     project  = "delabs-gcp-mgmt"
-    location = "US"
+    location = "ASIA"
     bucket   = "delabs-terraform-state-live"
     prefix   = "gcp-gcby/${path_relative_to_include()}"
   }
@@ -597,8 +597,8 @@ terragrunt plan
 ### 설정 검증
 
 ```bash
-# 병합된 입력 확인
-terragrunt output-all
+# 병합된 입력 확인 (Terragrunt 0.93+ 구문)
+terragrunt run --all -- output
 
 # Dependency 그래프 확인
 terragrunt graph-dependencies | dot -Tpng > graph.png
