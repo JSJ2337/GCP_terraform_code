@@ -1171,6 +1171,141 @@ instance_groups = {
 
 ---
 
+## terraform.tfvars vs Terragrunt Inputs 우선순위
+
+### terraform.tfvars가 terragrunt inputs를 덮어씀
+
+**증상:**
+
+```text
+# terragrunt plan 결과
++ instance_groups = {}  # 빈 맵으로 계획됨
+# 또는
+No changes. Your infrastructure matches the configuration.
+# 실제로는 Instance Group이 생성되지 않음
+```
+
+**원인:**
+
+- Terraform은 `*.tfvars` 파일을 **자동 로드**하여 변수 설정
+- terragrunt.hcl의 `inputs`로 값을 주입해도 tfvars가 **우선 적용**
+- 빈 값(`{}`, `[]`)도 유효한 값으로 간주되어 terragrunt 값 덮어씀
+
+**문제 패턴:**
+
+```hcl
+# terraform.tfvars (문제!)
+instance_groups = {}  # ❌ terragrunt 주입 값을 덮어씀
+
+# terragrunt.hcl
+inputs = {
+  instance_groups = dependency.workloads.outputs.instance_groups  # 무시됨!
+}
+```
+
+**해결:**
+
+terragrunt에서 동적 주입하는 변수는 terraform.tfvars에서 **정의하지 않음**:
+
+```hcl
+# terraform.tfvars (올바른 방법)
+# ⚠️ instance_groups는 terragrunt.hcl에서 동적으로 주입됨
+# terraform.tfvars에서 정의하면 terragrunt inputs를 덮어쓰므로 여기서는 정의하지 않음
+
+backend_protocol  = "HTTP"
+backend_port_name = "http"
+# ... 다른 변수들
+```
+
+**영향받는 변수들 (주의!):**
+
+| 레이어 | 변수 | terragrunt에서 주입 |
+|--------|------|-------------------|
+| 70-loadbalancers | `instance_groups` | 50-workloads dependency |
+| 10-network | `firewall_rules` | common.naming.tfvars 기반 동적 생성 |
+
+**디버그 방법:**
+
+```bash
+# terragrunt가 실제로 전달하는 값 확인
+cd 70-loadbalancers/www
+terragrunt render-json > debug.json
+cat debug.json | jq '.inputs.instance_groups'
+
+# terraform이 받는 최종 값 확인
+terragrunt plan -out=plan.out
+terraform show -json plan.out | jq '.planned_values.root_module.resources[] | select(.type == "google_compute_instance_group")'
+```
+
+**관련 문서:**
+
+- [작업 이력 (2025-12-08)](../changelog/work_history/2025-12-08.md)
+
+---
+
+### Instance Group wrongSubnetwork 에러
+
+**증상:**
+
+```text
+Error creating InstanceGroup: googleapi: Error 400: Invalid value for field
+'resource.network': '...'. The subnetwork resource '...gcby-subnet-private'
+is not part of the network resource '...gcby-live-vpc'., invalid
+```
+
+또는:
+
+```text
+Error adding instances to instance group: googleapi: Error 400:
+VM 'gcby-gs01' belongs to subnetwork 'gcby-live-subnet-private'
+but instance group expects 'gcby-subnet-private'., wrongSubnetwork
+```
+
+**원인:**
+
+- Instance Group이 잘못된 subnet으로 생성됨
+- VM은 `{project}-live-subnet-private`에 있지만
+- Instance Group은 `{project}-subnet-private` (환경명 빠짐)으로 생성됨
+
+**해결:**
+
+1. **Backend Service에서 Instance Group 연결 해제:**
+
+```bash
+gcloud compute backend-services remove-backend {backend-name} \
+  --instance-group={ig-name} \
+  --instance-group-zone={zone} \
+  --global \
+  --project={project-id}
+```
+
+2. **잘못된 Instance Groups 삭제:**
+
+```bash
+gcloud compute instance-groups unmanaged delete {ig-name} \
+  --zone={zone} \
+  --project={project-id} \
+  --quiet
+```
+
+3. **올바른 subnet으로 재생성 (terragrunt apply):**
+
+```bash
+cd 70-loadbalancers/gs
+terragrunt apply
+```
+
+**예방:**
+
+- `common.naming.tfvars`의 subnet 이름 규칙 확인
+- `{project_name}-{environment}-subnet-{type}` 형식 준수
+
+**관련 문서:**
+
+- [작업 이력 (2025-12-08)](../changelog/work_history/2025-12-08.md)
+
+---
+
 **다른 문제?**
 
 - [State 문제](./state-issues.md)

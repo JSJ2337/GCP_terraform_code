@@ -10,6 +10,9 @@
 
 ### 2025년 12월
 
+- **[2025-12-08](./2025-12-08.md)** - Instance Group 생성 문제 해결 (tfvars 우선순위), ICMP Firewall 추가
+- **[2025-12-05](./2025-12-05.md)** - proj-default-templet 재구성, 문서 구조 개선
+- **[2025-12-04](./2025-12-04.md)** - Cross-Project PSC Redis 연결, DNS Zone 충돌 해결
 - **[2025-12-03](./2025-12-03.md)** - Cloud SQL 자동 네이밍 및 Password Lifecycle 관리 구현
 - **[2025-12-02](./2025-12-02.md)** - Lock 파일 정리, IPv6 문제 해결, Cross-Project PSC 설정
 
@@ -42,6 +45,14 @@
 ---
 
 ## 📋 최근 작업 요약
+
+### 2025-12-08: Instance Group 생성 문제 해결 및 ICMP Firewall 추가
+- ✅ terraform.tfvars가 terragrunt inputs를 덮어쓰는 문제 해결 (instance_groups, firewall_rules)
+- ✅ gcp-gcby Instance Group subnet 불일치 해결 (gcby-subnet-private → gcby-live-subnet-private)
+- ✅ 70-loadbalancers에 instance_group_ids output 추가
+- ✅ 10-network에 ICMP firewall rule 추가 (배스천 ping 테스트용)
+- ✅ gcp-web3, gcp-gcby 배스천 DNS 접속 테스트 완료 (SSH, MySQL, Redis)
+- 🔗 커밋: `9a9275b`
 
 ### 2025-12-03: Cloud SQL 자동 네이밍 및 Password Lifecycle 관리
 - ✅ PSC Global Access 검증 및 Cross-Region 연결 테스트 (asia-northeast3 → us-west1)
@@ -118,8 +129,8 @@
 
 ## 📊 통계
 
-- **총 작업 일수**: 18일
-- **세션 수**: 22개
+- **총 작업 일수**: 20일
+- **세션 수**: 24개
 - **주요 마일스톤**:
   - ✅ 초기 인프라 구축 (10/28)
   - ✅ 9개 레이어 완성 (10/29)
@@ -129,6 +140,7 @@
   - ✅ 문서 재구성 (11/12)
   - ✅ PSC 전면 적용 (12/02)
   - ✅ Cloud SQL 자동화 (12/03)
+  - ✅ gcp-web3/gcp-gcby 인프라 배포 완료 (12/08)
 
 ## 🔙 돌아가기
 
