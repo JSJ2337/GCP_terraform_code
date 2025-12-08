@@ -43,10 +43,11 @@ network_config = {
   }
 
   # PSC Endpoint IP
-  # Redis Cluster PSC는 자동 생성되므로 실제 IP 사용
+  # Redis Cluster PSC는 자동 생성됨 (sca-auto-addr-*)
+  # Discovery endpoint: 10.10.22.2 (gcloud redis clusters describe에서 확인)
   psc_endpoints = {
     cloudsql = "10.10.22.51"
-    redis    = ["10.10.22.101", "10.10.22.102"]
+    redis    = ["10.10.22.2", "10.10.22.3"]  # Redis Cluster auto-created PSC IPs
   }
 
   # VPC Peering
