@@ -89,35 +89,12 @@ resource "google_compute_forwarding_rule" "cloudsql_psc" {
 }
 
 # -----------------------------------------------------------------------------
-# PSC Forwarding Rules for Redis
-# Redis Cluster는 2개의 Service Attachment (Discovery + Shard)
+# PSC Forwarding Rules for Redis - 제거됨
 # -----------------------------------------------------------------------------
-resource "google_compute_address" "redis_psc" {
-  count = length(var.redis_service_attachments)
-
-  project      = var.project_id
-  name         = "${var.project_name}-${var.environment}-redis-psc-${count.index}"
-  region       = var.region_primary
-  subnetwork   = local.psc_subnet_self_link
-  address_type = "INTERNAL"
-  address      = var.psc_redis_ips[count.index]
-  purpose      = "GCE_ENDPOINT"
-}
-
-resource "google_compute_forwarding_rule" "redis_psc" {
-  count = length(var.redis_service_attachments)
-
-  project               = var.project_id
-  name                  = "${var.project_name}-${var.environment}-redis-psc-fr-${count.index}"
-  region                = var.region_primary
-  network               = local.vpc_self_link
-  ip_address            = google_compute_address.redis_psc[count.index].id
-  load_balancing_scheme = ""
-  target                = var.redis_service_attachments[count.index]
-
-  # Cross-region access
-  allow_psc_global_access = true
-}
+# 참고: Redis Cluster는 생성 시 자체적으로 PSC 연결을 자동 생성합니다.
+#       (sca-auto-addr-* 이름의 주소가 자동 할당됨)
+#       따라서 66-psc-endpoints에서 별도로 생성할 필요가 없습니다.
+#       자체 VPC에서의 Redis 접근은 65-cache에서 자동 생성된 PSC를 통해 이루어집니다.
 
 # -----------------------------------------------------------------------------
 # Cross-Project PSC Connections for Redis
@@ -128,7 +105,7 @@ resource "google_compute_forwarding_rule" "redis_psc" {
 # 참고: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/redis_cluster_user_created_connections
 # -----------------------------------------------------------------------------
 resource "google_redis_cluster_user_created_connections" "mgmt_access" {
-  count = var.enable_cross_project_psc && length(var.redis_service_attachments) > 0 && length(local.mgmt_redis_forwarding_rules) > 0 ? 1 : 0
+  count = var.enable_cross_project_psc && var.redis_cluster_name != "" && length(local.mgmt_redis_forwarding_rules) > 0 ? 1 : 0
 
   name    = var.redis_cluster_name
   region  = var.region_primary
@@ -150,6 +127,4 @@ resource "google_redis_cluster_user_created_connections" "mgmt_access" {
       }
     }
   }
-
-  depends_on = [google_compute_forwarding_rule.redis_psc]
 }
