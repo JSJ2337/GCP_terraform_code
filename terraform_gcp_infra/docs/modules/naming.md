@@ -4,104 +4,81 @@
 
 ## 아키텍처 다이어그램
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           Naming Module Flow                                 │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ┌──────────────────────────────────────────────────────────────────────┐   │
-│  │                          INPUT VARIABLES                              │   │
-│  │                                                                       │   │
-│  │  project_name: "gcby"                                                │   │
-│  │  environment: "live"                                                 │   │
-│  │  organization: "delabs"                                              │   │
-│  │  region_primary: "asia-northeast3"                                   │   │
-│  │  region_backup: "asia-northeast3"                                    │   │
-│  │  default_zone_suffix: "a"                                            │   │
-│  └──────────────────────────────────────────────────────────────────────┘   │
-│                                    │                                         │
-│                                    ▼                                         │
-│  ┌──────────────────────────────────────────────────────────────────────┐   │
-│  │                         NAMING PATTERNS                               │   │
-│  │                                                                       │   │
-│  │  project_prefix:   {project_name}-{environment}                      │   │
-│  │                    → gcby-live                                       │   │
-│  │                                                                       │   │
-│  │  resource_prefix:  {organization}-{project_name}-{environment}       │   │
-│  │                    → delabs-gcby-live                                │   │
-│  │                                                                       │   │
-│  │  default_zone:     {region_primary}-{default_zone_suffix}            │   │
-│  │                    → asia-northeast3-a                               │   │
-│  └──────────────────────────────────────────────────────────────────────┘   │
-│                                    │                                         │
-│                                    ▼                                         │
-│  ┌──────────────────────────────────────────────────────────────────────┐   │
-│  │                       OUTPUT RESOURCE NAMES                           │   │
-│  ├──────────────────────────────────────────────────────────────────────┤   │
-│  │                                                                       │   │
-│  │  [Network]                                                           │   │
-│  │  • vpc_name:          gcby-live-vpc                                  │   │
-│  │  • subnet_name_primary: gcby-live-subnet-primary                     │   │
-│  │  • cloud_router_name: gcby-live-router                               │   │
-│  │  • cloud_nat_name:    gcby-live-nat                                  │   │
-│  │                                                                       │   │
-│  │  [Compute]                                                           │   │
-│  │  • vm_name_prefix:    gcby-live-vm                                   │   │
-│  │  • instance_group_name: gcby-live-ig                                 │   │
-│  │                                                                       │   │
-│  │  [Database]                                                          │   │
-│  │  • db_instance_name:  gcby-live-mysql                                │   │
-│  │  • redis_instance_name: gcby-live-redis                              │   │
-│  │                                                                       │   │
-│  │  [Load Balancer]                                                     │   │
-│  │  • backend_service_name: gcby-live-backend                           │   │
-│  │  • forwarding_rule_name: gcby-live-lb                                │   │
-│  │                                                                       │   │
-│  │  [Storage]                                                           │   │
-│  │  • bucket_name_prefix: delabs-gcby-live                              │   │
-│  │                                                                       │   │
-│  │  [IAM/Security]                                                      │   │
-│  │  • sa_name_prefix:    gcby-live                                      │   │
-│  │  • kms_keyring_name:  gcby-live-keyring                              │   │
-│  └──────────────────────────────────────────────────────────────────────┘   │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
+```mermaid
+%%{init: {'theme': 'default'}}%%
+flowchart TB
+    subgraph INPUT["📥 INPUT VARIABLES"]
+        I1["project_name: gcby"]
+        I2["environment: live"]
+        I3["organization: delabs"]
+        I4["region_primary: asia-northeast3"]
+        I5["default_zone_suffix: a"]
+    end
+
+    subgraph PATTERNS["🔄 NAMING PATTERNS"]
+        P1["project_prefix: {project_name}-{environment}<br/>→ gcby-live"]
+        P2["resource_prefix: {organization}-{project_name}-{environment}<br/>→ delabs-gcby-live"]
+        P3["default_zone: {region_primary}-{default_zone_suffix}<br/>→ asia-northeast3-a"]
+    end
+
+    subgraph OUTPUTS["📤 OUTPUT RESOURCE NAMES"]
+        subgraph NET["Network"]
+            N1["vpc_name: gcby-live-vpc"]
+            N2["subnet_name_primary: gcby-live-subnet-primary"]
+            N3["cloud_nat_name: gcby-live-nat"]
+        end
+        subgraph COMPUTE["Compute"]
+            C1["vm_name_prefix: gcby-live-vm"]
+            C2["instance_group_name: gcby-live-ig"]
+        end
+        subgraph DB["Database"]
+            D1["db_instance_name: gcby-live-mysql"]
+            D2["redis_instance_name: gcby-live-redis"]
+        end
+        subgraph LB["Load Balancer"]
+            L1["backend_service_name: gcby-live-backend"]
+            L2["forwarding_rule_name: gcby-live-lb"]
+        end
+    end
+
+    INPUT --> PATTERNS --> OUTPUTS
+
+    style INPUT fill:#e3f2fd
+    style PATTERNS fill:#fff3e0
+    style OUTPUTS fill:#e8f5e9
 ```
 
 ## 레이어별 사용 흐름
 
-```
-┌───────────────────────────────────────────────────────────────────────────┐
-│                        Infrastructure Layers                               │
-├───────────────────────────────────────────────────────────────────────────┤
-│                                                                            │
-│  common.naming.tfvars                                                      │
-│  ├─ project_name = "gcby"                                                 │
-│  ├─ environment  = "live"                                                 │
-│  └─ organization = "delabs"                                               │
-│           │                                                                │
-│           ▼                                                                │
-│  ┌─────────────────────────────────────────────────────────────────────┐  │
-│  │                     Each Layer Uses Naming Module                    │  │
-│  │                                                                      │  │
-│  │  10-network/     → vpc_name, subnet_name_primary, cloud_nat_name    │  │
-│  │  30-storage/     → bucket_name_prefix                               │  │
-│  │  40-iam/         → sa_name_prefix                                   │  │
-│  │  50-workloads/   → vm_name_prefix, instance_group_name              │  │
-│  │  60-database/    → db_instance_name                                 │  │
-│  │  65-cache/       → redis_instance_name                              │  │
-│  │  70-loadbalancers/ → backend_service_name, forwarding_rule_name     │  │
-│  │                                                                      │  │
-│  └─────────────────────────────────────────────────────────────────────┘  │
-│                                                                            │
-│  Result: All resources follow consistent naming pattern                    │
-│  • gcby-live-vpc                                                          │
-│  • gcby-live-subnet-primary                                               │
-│  • gcby-live-mysql                                                        │
-│  • gcby-live-redis                                                        │
-│  • delabs-gcby-live-assets-bucket                                         │
-│                                                                            │
-└───────────────────────────────────────────────────────────────────────────┘
+```mermaid
+%%{init: {'theme': 'default'}}%%
+flowchart TB
+    subgraph CONFIG["📄 common.naming.tfvars"]
+        CFG["project_name = gcby<br/>environment = live<br/>organization = delabs"]
+    end
+
+    subgraph LAYERS["🏗️ Each Layer Uses Naming Module"]
+        L10["10-network/ → vpc_name, subnet_name"]
+        L30["30-storage/ → bucket_name_prefix"]
+        L40["40-iam/ → sa_name_prefix"]
+        L50["50-workloads/ → vm_name_prefix"]
+        L60["60-database/ → db_instance_name"]
+        L65["65-cache/ → redis_instance_name"]
+        L70["70-loadbalancers/ → backend_service_name"]
+    end
+
+    subgraph RESULT["✅ Consistent Naming Pattern"]
+        R1["gcby-live-vpc"]
+        R2["gcby-live-mysql"]
+        R3["gcby-live-redis"]
+        R4["delabs-gcby-live-assets-bucket"]
+    end
+
+    CONFIG --> LAYERS --> RESULT
+
+    style CONFIG fill:#e3f2fd
+    style LAYERS fill:#fff3e0
+    style RESULT fill:#e8f5e9
 ```
 
 ## 입력 변수

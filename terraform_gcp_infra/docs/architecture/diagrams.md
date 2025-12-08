@@ -42,23 +42,27 @@ graph TB
     subgraph Layers["환경별 배포 레이어"]
         E0[00-project<br/>프로젝트]
         E1[10-network<br/>네트워크]
+        E1_DNS[12-dns<br/>DNS]
         E2[20-storage<br/>스토리지]
         E3[30-security<br/>보안/IAM]
         E4[40-observability<br/>관찰성]
         E5[50-workloads<br/>워크로드]
         E6[60-database<br/>데이터베이스]
         E7[65-cache<br/>캐시]
+        E7_PSC[66-psc-endpoints<br/>PSC 엔드포인트]
         E8[70-loadbalancers<br/>로드밸런서]
     end
 
     B_BUCKET -.State 저장.-> E0
     B_BUCKET -.State 저장.-> E1
+    B_BUCKET -.State 저장.-> E1_DNS
     B_BUCKET -.State 저장.-> E2
     B_BUCKET -.State 저장.-> E3
     B_BUCKET -.State 저장.-> E4
     B_BUCKET -.State 저장.-> E5
     B_BUCKET -.State 저장.-> E6
     B_BUCKET -.State 저장.-> E7
+    B_BUCKET -.State 저장.-> E7_PSC
     B_BUCKET -.State 저장.-> E8
 
     E0 --> M3
@@ -90,8 +94,8 @@ graph TB
 **설명**:
 
 - **Bootstrap**: 최우선 배포. 중앙 State 관리 인프라
-- **Modules**: 재사용 가능한 Terraform 모듈 (9개)
-- **Environments**: 실제 배포 레이어 (8개)
+- **Modules**: 재사용 가능한 Terraform 모듈 (12개)
+- **Environments**: 실제 배포 레이어 (11개: 00-project ~ 70-loadbalancers)
 - **State 관리**: 모든 레이어의 State는 중앙 버킷에 저장
 
 ---
@@ -111,12 +115,14 @@ graph LR
         subgraph StateFiles["State 파일 구조"]
             S1[proj-default-templet/<br/>00-project/default.tfstate]
             S2[proj-default-templet/<br/>10-network/default.tfstate]
+            S2_DNS[proj-default-templet/<br/>12-dns/default.tfstate]
             S3[proj-default-templet/<br/>20-storage/default.tfstate]
             S4[proj-default-templet/<br/>30-security/default.tfstate]
             S5[proj-default-templet/<br/>40-observability/default.tfstate]
             S6[proj-default-templet/<br/>50-workloads/default.tfstate]
             S7[proj-default-templet/<br/>60-database/default.tfstate]
             S8[proj-default-templet/<br/>65-cache/default.tfstate]
+            S8_PSC[proj-default-templet/<br/>66-psc-endpoints/default.tfstate]
             S9[proj-default-templet/<br/>70-loadbalancers/default.tfstate]
         end
     end
@@ -125,14 +131,15 @@ graph LR
     DEV -->|terraform apply| BUCKET
     BUCKET --> S1
     BUCKET --> S2
+    BUCKET --> S2_DNS
     BUCKET --> S3
     BUCKET --> S4
     BUCKET --> S5
     BUCKET --> S6
     BUCKET --> S7
     BUCKET --> S8
+    BUCKET --> S8_PSC
     BUCKET --> S9
-    BUCKET --> S8
 
     style LocalEnv fill:#e1f5ff
     style BootstrapProj fill:#ffffff
@@ -161,32 +168,40 @@ graph TD
 
     E0 --> E1[2. 10-network<br/>VPC, 서브넷, 방화벽]
 
-    E1 --> PARALLEL{병렬 배포 가능}
+    E1 --> E1_DNS[3. 12-dns<br/>Cloud DNS]
 
-    PARALLEL --> E2[3. 20-storage<br/>GCS 버킷]
-    PARALLEL --> E3[4. 30-security<br/>IAM, 서비스 계정]
-    PARALLEL --> E4[5. 40-observability<br/>로깅, 모니터링]
+    E1_DNS --> PARALLEL{병렬 배포 가능}
 
-    E2 --> E5[6. 50-workloads<br/>VM 인스턴스]
+    PARALLEL --> E2[4. 20-storage<br/>GCS 버킷]
+    PARALLEL --> E3[5. 30-security<br/>IAM, 서비스 계정]
+    PARALLEL --> E4[6. 40-observability<br/>로깅, 모니터링]
+
+    E2 --> E5[7. 50-workloads<br/>VM 인스턴스]
     E3 --> E5
     E4 --> E5
-    E1 --> E6[7. 60-database<br/>Cloud SQL]
 
-    E5 --> E7[8. 65-cache<br/>Memorystore Redis]
+    E1 --> E6[8. 60-database<br/>Cloud SQL]
+
+    E5 --> E7[9. 65-cache<br/>Memorystore Redis]
     E6 --> E7
-    E7 --> E8[9. 70-loadbalancers<br/>Load Balancer]
+
+    E7 --> E7_PSC[10. 66-psc-endpoints<br/>PSC 엔드포인트]
+
+    E7_PSC --> E8[11. 70-loadbalancers<br/>Load Balancer]
 
     E8 --> END([완료])
 
     style B fill:#e1f5ff
     style E0 fill:#d4edda
     style E1 fill:#d4edda
+    style E1_DNS fill:#d4edda
     style E2 fill:#fff3cd
     style E3 fill:#fff3cd
     style E4 fill:#fff3cd
     style E5 fill:#d4edda
     style E6 fill:#d4edda
     style E7 fill:#d4edda
+    style E7_PSC fill:#d4edda
     style E8 fill:#d4edda
     style PARALLEL fill:#ffeaa7
 ```
@@ -196,10 +211,12 @@ graph TD
 1. **Bootstrap**: 반드시 최우선 배포
 2. **00-project**: 다른 모든 리소스의 기반
 3. **10-network**: 데이터베이스 Private IP, VM 네트워킹에 필요
-4. **병렬 배포**: 20-storage, 30-security, 40-observability는 병렬 배포 가능
-5. **60-database**: 네트워크 구성 필요 (Private IP)
-6. **65-cache**: 전용 VPC(10-network) 이후 배포, 애플리케이션이 의존하기 전 캐시 엔드포인트 준비
-7. **70-loadbalancers**: VM 인스턴스(백엔드) 필요
+4. **12-dns**: VPC 네트워크에 의존, Private DNS Zone 생성
+5. **병렬 배포**: 20-storage, 30-security, 40-observability는 병렬 배포 가능
+6. **60-database**: 네트워크 구성 필요 (Private IP)
+7. **65-cache**: 전용 VPC(10-network) 이후 배포
+8. **66-psc-endpoints**: Cross-project PSC 엔드포인트 등록 (Cloud SQL, Redis)
+9. **70-loadbalancers**: VM 인스턴스(백엔드) 필요
 
 ---
 
@@ -208,8 +225,10 @@ graph TD
 ```mermaid
 %%{init: {'theme': 'base', 'themeVariables': { 'primaryTextColor': '#000000' }}}%%
 graph LR
+    M0[naming<br/>네이밍 규칙]
     M1[project-base<br/>프로젝트 생성]
     M2[network-dedicated-vpc<br/>VPC 네트워킹]
+    M2_DNS[cloud-dns<br/>DNS 관리]
     M3[gcs-root<br/>다중 버킷]
     M4[gcs-bucket<br/>단일 버킷]
     M5[iam<br/>IAM 관리]
@@ -219,10 +238,14 @@ graph LR
     M9[load-balancer<br/>Load Balancer]
     M10[memorystore-redis<br/>Redis 캐시]
 
+    M0 -->|네이밍 제공| M1
+    M0 -->|네이밍 제공| M2
     M3 -->|사용| M4
 
+    style M0 fill:#e1f5ff,stroke:#333,stroke-width:2px
     style M1 fill:#e1f5ff,stroke:#333,stroke-width:2px
     style M2 fill:#d4edda,stroke:#333,stroke-width:2px
+    style M2_DNS fill:#d4edda,stroke:#333,stroke-width:2px
     style M3 fill:#fff3cd,stroke:#333,stroke-width:2px
     style M4 fill:#fff3cd,stroke:#333,stroke-width:2px
     style M5 fill:#ffeaa7,stroke:#333,stroke-width:2px
@@ -238,8 +261,10 @@ graph LR
 <!-- markdownlint-disable MD013 -->
 | 모듈 | 주요 기능 | 카테고리 |
 |------|----------|---------|
+| **naming** | 일관된 리소스 네이밍, 라벨, 태그 생성 | 공통 |
 | **project-base** | 프로젝트 생성, API 활성화, 예산 알림, 삭제 정책 | 프로젝트 관리 |
 | **network-dedicated-vpc** | VPC, 서브넷, 방화벽, Cloud NAT, Cloud Router, Service Networking | 네트워킹 |
+| **cloud-dns** | Public/Private DNS Zone, DNSSEC, Forwarding, Peering | 네트워킹 |
 | **gcs-root** | 다중 버킷 관리, 공통 설정 중앙화 | 스토리지 |
 | **gcs-bucket** | 단일 버킷 상세 설정, 수명주기, 암호화, IAM | 스토리지 |
 | **iam** | IAM 바인딩, 서비스 계정 관리 | 보안 & IAM |

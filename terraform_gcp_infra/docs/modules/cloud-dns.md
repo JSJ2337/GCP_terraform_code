@@ -391,31 +391,30 @@ dnssec_key_specs = [
 
 각 프로젝트/VPC에서 자체 Private DNS Zone을 관리하고, 필요한 경우에만 공유합니다.
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        GCP Organization                         │
-│                                                                 │
-│  ┌──────────────────────┐    ┌──────────────────────┐         │
-│  │    mgmt Project      │    │    game-a Project    │         │
-│  │                      │    │                      │         │
-│  │  ┌────────────────┐  │    │  ┌────────────────┐  │         │
-│  │  │   mgmt-vpc     │  │    │  │  game-a-vpc    │  │         │
-│  │  │                │  │    │  │                │  │         │
-│  │  │  DNS Zone:     │  │    │  │  DNS Zone:     │  │         │
-│  │  │  mgmt.internal │  │    │  │  game-a.internal│ │         │
-│  │  │                │  │    │  │                │  │         │
-│  │  │  - bastion     │  │    │  │  - db-master   │  │         │
-│  │  │  - jenkins     │  │    │  │  - cache       │  │         │
-│  │  └────────────────┘  │    │  └────────────────┘  │         │
-│  │                      │    │                      │         │
-│  │  Shared DNS Zone:    │    │  (has_own_dns_zone)  │         │
-│  │  delabsgames.internal│    │                      │         │
-│  │  attached to:        │    │                      │         │
-│  │  - mgmt-vpc ✓        │    │                      │         │
-│  │  - game-b-vpc ✓      │    │                      │         │
-│  │  - game-a-vpc ✗      │    │                      │         │
-│  └──────────────────────┘    └──────────────────────┘         │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+%%{init: {'theme': 'default'}}%%
+flowchart TB
+    subgraph ORG["GCP Organization"]
+        subgraph MGMT["mgmt Project"]
+            subgraph MGMT_VPC["mgmt-vpc"]
+                MGMT_DNS["DNS Zone: mgmt.internal<br/>- bastion<br/>- jenkins"]
+            end
+            SHARED["Shared DNS Zone:<br/>delabsgames.internal<br/>attached to:<br/>- mgmt-vpc ✓<br/>- game-b-vpc ✓<br/>- game-a-vpc ✗"]
+        end
+
+        subgraph GAMEA["game-a Project"]
+            subgraph GAMEA_VPC["game-a-vpc"]
+                GAMEA_DNS["DNS Zone: game-a.internal<br/>- db-master<br/>- cache"]
+            end
+            NOTE["(has_own_dns_zone)"]
+        end
+    end
+
+    style ORG fill:#f5f5f5
+    style MGMT fill:#e3f2fd
+    style GAMEA fill:#e8f5e9
+    style MGMT_VPC fill:#bbdefb
+    style GAMEA_VPC fill:#c8e6c9
 ```
 
 ### DNS 충돌 방지 패턴
