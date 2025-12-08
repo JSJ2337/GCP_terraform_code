@@ -171,17 +171,44 @@ flowchart TD
 ## 🏛️ 네트워크 아키텍처
 
 ### 3-Tier 보안 분리
-```
-Internet → Global Load Balancer (HTTPS)
-              ↓
-         DMZ Subnet (10.0.1.0/24)
-         [Web VMs + Cloud NAT + Public IP]
-              ↓ (Internal Only)
-         Private Subnet (10.0.2.0/24)
-         [App VMs + Redis (No External Access)]
-              ↓ (Private IP Only)
-         DB Subnet (10.0.3.0/24)
-         [Cloud SQL MySQL (VPC Peering)]
+
+```mermaid
+flowchart TB
+    INET["🌐 Internet"]
+
+    subgraph GCP["GCP Project"]
+        LB["⚖️ Global Load Balancer<br/>(HTTPS)"]
+        NAT["🔀 Cloud NAT"]
+
+        subgraph DMZ["DMZ Subnet (10.0.1.0/24)"]
+            WEB["🖥️ Web VMs<br/>+ Public IP"]
+        end
+
+        subgraph Private["Private Subnet (10.0.2.0/24)"]
+            APP["⚙️ App VMs"]
+            REDIS["🔴 Redis Cache"]
+        end
+
+        subgraph DB["DB Subnet (10.0.3.0/24)"]
+            SQL["🐬 Cloud SQL<br/>(Private IP Only)"]
+        end
+    end
+
+    INET --> LB
+    LB --> WEB
+    WEB -.->|Outbound| NAT
+    NAT -.-> INET
+
+    WEB -->|Internal Only| APP
+    APP --> REDIS
+    APP -->|Private IP| SQL
+
+    style GCP fill:#fafafa
+    style DMZ fill:#e3f2fd
+    style Private fill:#f3e5f5
+    style DB fill:#fce4ec
+    style LB fill:#fff9c4
+    style NAT fill:#c8e6c9
 ```
 
 ### 보안 원칙
