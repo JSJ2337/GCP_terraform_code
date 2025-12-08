@@ -24,7 +24,10 @@ dependency "workloads" {
     vm_details = {}
   }
 
-  # plan 제외 - plan 시에도 실제 dependency outputs 사용하여 정확한 변경사항 확인
+  # state에서 실제 outputs 읽어서 mock과 병합 (shallow: state 값 우선)
+  mock_outputs_merge_strategy_with_state = "shallow"
+
+  # init/validate만 mock 허용 - plan/apply는 실제 outputs 사용
   mock_outputs_allowed_terraform_commands = ["init", "validate"]
 }
 
