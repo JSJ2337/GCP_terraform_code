@@ -24,9 +24,10 @@ dependency "workloads" {
     vm_details = {}
   }
 
-  # validate/init 시에만 mock 사용
-  # plan/apply 시에는 실제 dependency outputs 사용 (run-all에서 자동 전달)
-  mock_outputs_allowed_terraform_commands = ["init", "validate"]
+  # validate 시에만 mock 사용
+  # init/plan/apply 시에는 실제 dependency outputs 사용
+  # 주의: Terragrunt는 init 단계에서 dependency outputs를 계산하므로 init도 제외 필요
+  mock_outputs_allowed_terraform_commands = ["validate"]
 }
 
 locals {
