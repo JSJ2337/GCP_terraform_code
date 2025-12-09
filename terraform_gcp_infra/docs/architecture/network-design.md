@@ -241,6 +241,8 @@ flowchart TB
     %% Egress Flow
     WEB1 -.->|Outbound| NAT
     WEB2 -.->|Outbound| NAT
+    APP1 -.->|Outbound| NAT
+    APP2 -.->|Outbound| NAT
     NAT -.->|HTTPS| API
 
     style Internet fill:#fafafa
