@@ -10,16 +10,19 @@ flowchart TB
     INET[🌐 Internet]
     LB[⚖️ Load Balancer]
 
-    subgraph DMZ["DMZ Subnet - 10.10.10.0/24"]
+    subgraph DMZ["DMZ Subnet"]
+        DMZ_C[10.10.10.0/24]
         DMZ_WEB[Web VMs]
         DMZ_NAT[Cloud NAT]
     end
 
-    subgraph Private["Private Subnet - 10.10.11.0/24"]
+    subgraph Private["Private Subnet"]
+        PRIV_C[10.10.11.0/24]
         PRIV_APP[Application VMs]
     end
 
-    subgraph PSC["PSC Subnet - 10.10.12.0/24"]
+    subgraph PSC["PSC Subnet"]
+        PSC_C[10.10.12.0/24]
         PSC_SQL[Cloud SQL MySQL]
         PSC_REDIS[Redis Cache]
     end
@@ -34,6 +37,9 @@ flowchart TB
     style DMZ fill:#e3f2fd
     style Private fill:#f3e5f5
     style PSC fill:#fce4ec
+    style DMZ_C fill:#fff,stroke:#999
+    style PRIV_C fill:#fff,stroke:#999
+    style PSC_C fill:#fff,stroke:#999
 ```
 
 ## 서브넷 설계
@@ -202,17 +208,20 @@ flowchart TB
         LB[⚖️ Global Load Balancer<br/>Public IP]
         NAT[🔀 Cloud NAT]
 
-        subgraph DMZ["DMZ Subnet (10.10.10.0/24)"]
+        subgraph DMZ["DMZ Subnet"]
+            DMZ_CIDR[10.10.10.0/24]
             WEB1[🖥️ Web VM 1]
             WEB2[🖥️ Web VM 2]
         end
 
-        subgraph Private["Private Subnet (10.10.11.0/24)"]
+        subgraph Private["Private Subnet"]
+            PRIV_CIDR[10.10.11.0/24]
             APP1[⚙️ App VM 1]
             APP2[⚙️ App VM 2]
         end
 
-        subgraph PSC["PSC Subnet (10.10.12.0/24)"]
+        subgraph PSC["PSC Subnet"]
+            PSC_CIDR[10.10.12.0/24]
             SQL[(🐬 Cloud SQL)]
             REDIS[(🔴 Redis)]
         end
@@ -241,6 +250,9 @@ flowchart TB
     style PSC fill:#fce4ec
     style LB fill:#fff9c4
     style NAT fill:#c8e6c9
+    style DMZ_CIDR fill:#fff,stroke:#999
+    style PRIV_CIDR fill:#fff,stroke:#999
+    style PSC_CIDR fill:#fff,stroke:#999
 ```
 
 ### 보안 경계 다이어그램 (Firewall Rules)
