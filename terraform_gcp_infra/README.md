@@ -187,16 +187,19 @@ flowchart TB
         LB["⚖️ Global Load Balancer<br/>(HTTPS)"]
         NAT["🔀 Cloud NAT"]
 
-        subgraph DMZ["DMZ Subnet<br/>10.10.10.0/24"]
+        subgraph DMZ["DMZ Subnet"]
+            DMZ_CIDR["10.10.10.0/24"]
             WEB["🖥️ Web VMs<br/>+ Public IP"]
         end
 
-        subgraph Private["Private Subnet<br/>10.10.11.0/24"]
+        subgraph Private["Private Subnet"]
+            PRIV_CIDR["10.10.11.0/24"]
             APP["⚙️ App VMs"]
             REDIS["🔴 Redis Cache"]
         end
 
-        subgraph PSC["PSC Subnet<br/>10.10.12.0/24"]
+        subgraph PSC["PSC Subnet"]
+            PSC_CIDR["10.10.12.0/24"]
             SQL["🐬 Cloud SQL<br/>(Private IP Only)"]
         end
     end
@@ -222,6 +225,9 @@ flowchart TB
     style APP fill:#ce93d8,color:#333
     style REDIS fill:#f48fb1,color:#333
     style SQL fill:#f8bbd9,color:#333
+    style DMZ_CIDR fill:#fff,color:#333,stroke:#999
+    style PRIV_CIDR fill:#fff,color:#333,stroke:#999
+    style PSC_CIDR fill:#fff,color:#333,stroke:#999
 ```
 
 ### 보안 원칙
