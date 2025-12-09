@@ -195,12 +195,12 @@ flowchart TB
         subgraph Private["Private Subnet"]
             PRIV_CIDR["10.10.11.0/24"]
             APP["⚙️ App VMs"]
-            REDIS["🔴 Redis Cache"]
         end
 
         subgraph PSC["PSC Subnet"]
             PSC_CIDR["10.10.12.0/24"]
-            SQL["🐬 Cloud SQL<br/>(Private IP Only)"]
+            SQL["🐬 Cloud SQL"]
+            REDIS["🔴 Redis Cache"]
         end
     end
 
