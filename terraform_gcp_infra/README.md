@@ -187,16 +187,16 @@ flowchart TB
         LB["⚖️ Global Load Balancer<br/>(HTTPS)"]
         NAT["🔀 Cloud NAT"]
 
-        subgraph DMZ["DMZ Subnet (10.10.10.0/24)"]
+        subgraph DMZ["DMZ Subnet<br/>10.10.10.0/24"]
             WEB["🖥️ Web VMs<br/>+ Public IP"]
         end
 
-        subgraph Private["Private Subnet (10.10.11.0/24)"]
+        subgraph Private["Private Subnet<br/>10.10.11.0/24"]
             APP["⚙️ App VMs"]
             REDIS["🔴 Redis Cache"]
         end
 
-        subgraph PSC["PSC Subnet (10.10.12.0/24)"]
+        subgraph PSC["PSC Subnet<br/>10.10.12.0/24"]
             SQL["🐬 Cloud SQL<br/>(Private IP Only)"]
         end
     end
