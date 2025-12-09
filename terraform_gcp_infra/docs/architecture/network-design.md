@@ -10,30 +10,30 @@ flowchart TB
     INET[🌐 Internet]
     LB[⚖️ Load Balancer]
 
-    subgraph DMZ["DMZ Subnet - 10.0.1.0/24"]
+    subgraph DMZ["DMZ Subnet - 10.10.10.0/24"]
         DMZ_WEB[Web VMs]
         DMZ_NAT[Cloud NAT]
     end
 
-    subgraph Private["Private Subnet - 10.0.2.0/24"]
+    subgraph Private["Private Subnet - 10.10.11.0/24"]
         PRIV_APP[Application VMs]
-        PRIV_REDIS[Redis Cache]
     end
 
-    subgraph DB["DB Subnet - 10.0.3.0/24"]
-        DB_SQL[Cloud SQL MySQL]
+    subgraph PSC["PSC Subnet - 10.10.12.0/24"]
+        PSC_SQL[Cloud SQL MySQL]
+        PSC_REDIS[Redis Cache]
     end
 
     INET --> LB
     LB --> DMZ_WEB
     DMZ_WEB --> PRIV_APP
-    PRIV_APP --> PRIV_REDIS
-    PRIV_APP --> DB_SQL
+    PRIV_APP --> PSC_REDIS
+    PRIV_APP --> PSC_SQL
     DMZ_WEB -.-> DMZ_NAT
 
     style DMZ fill:#e3f2fd
     style Private fill:#f3e5f5
-    style DB fill:#fce4ec
+    style PSC fill:#fce4ec
 ```
 
 ## 서브넷 설계
@@ -44,7 +44,7 @@ flowchart TB
 
 **특징**:
 
-- CIDR: `10.0.1.0/24`
+- CIDR: `10.10.10.0/24`
 - VM: Public IP 없음 (LB 경유)
 - Outbound: Cloud NAT 사용
 - 용도: Web 서버, API Gateway
@@ -61,10 +61,10 @@ flowchart TB
 
 **특징**:
 
-- CIDR: `10.0.2.0/24`
+- CIDR: `10.10.11.0/24`
 - VM: Public IP 없음
-- Outbound: NAT 미사용 (필요 시 DMZ 경유)
-- 용도: App 서버, Worker, Redis
+- Outbound: Cloud NAT 사용
+- 용도: App 서버, Worker
 
 **보안**:
 
@@ -72,16 +72,16 @@ flowchart TB
 - 외부 노출 없음
 - Internal Load Balancer 사용
 
-### 3. DB Subnet (Data Tier)
+### 3. PSC Subnet (Data Tier)
 
-**목적**: 데이터 저장 및 관리
+**목적**: 데이터 저장 및 관리 (PSC Endpoint)
 
 **특징**:
 
-- CIDR: `10.0.3.0/24`
-- Cloud SQL: Private IP only
-- Private Service Connect 연결
-- 용도: MySQL, Redis (선택)
+- CIDR: `10.10.12.0/24`
+- Cloud SQL: PSC Endpoint (10.10.12.51)
+- Redis Cache: PSC Endpoint (10.10.12.3, 10.10.12.2)
+- 용도: MySQL, Redis
 
 **보안**:
 
@@ -169,27 +169,20 @@ ingress {
 ```hcl
 # DMZ → Private (App)
 ingress {
-  source_ranges = ["10.0.1.0/24"]  # DMZ
+  source_ranges = ["10.10.10.0/24"]  # DMZ
   protocol      = "tcp"
   ports         = ["8080", "9090"]
 }
-
-# Private → Redis
-ingress {
-  source_ranges = ["10.0.2.0/24"]  # Private
-  protocol      = "tcp"
-  ports         = ["6379"]
-}
 ```
 
-### DB 규칙
+### PSC 규칙
 
 ```hcl
-# Private → DB (MySQL)
+# Private → PSC (MySQL, Redis)
 ingress {
-  source_ranges = ["10.0.2.0/24"]  # Private only
+  source_ranges = ["10.10.11.0/24"]  # Private only
   protocol      = "tcp"
-  ports         = ["3306"]
+  ports         = ["3306", "6379"]
 }
 ```
 
@@ -209,19 +202,19 @@ flowchart TB
         LB[⚖️ Global Load Balancer<br/>Public IP]
         NAT[🔀 Cloud NAT]
 
-        subgraph DMZ["DMZ Subnet (10.0.1.0/24)"]
+        subgraph DMZ["DMZ Subnet (10.10.10.0/24)"]
             WEB1[🖥️ Web VM 1]
             WEB2[🖥️ Web VM 2]
         end
 
-        subgraph Private["Private Subnet (10.0.2.0/24)"]
+        subgraph Private["Private Subnet (10.10.11.0/24)"]
             APP1[⚙️ App VM 1]
             APP2[⚙️ App VM 2]
-            REDIS[(🔴 Redis)]
         end
 
-        subgraph DB["DB Subnet (10.0.3.0/24)"]
-            SQL[(🐬 Cloud SQL<br/>MySQL)]
+        subgraph PSC["PSC Subnet (10.10.12.0/24)"]
+            SQL[(🐬 Cloud SQL)]
+            REDIS[(🔴 Redis)]
         end
     end
 
@@ -245,7 +238,7 @@ flowchart TB
     style GCP fill:#fafafa
     style DMZ fill:#e3f2fd
     style Private fill:#f3e5f5
-    style DB fill:#fce4ec
+    style PSC fill:#fce4ec
     style LB fill:#fff9c4
     style NAT fill:#c8e6c9
 ```
@@ -267,7 +260,7 @@ flowchart LR
         R2[/"Allow TCP:22<br/>from IAP"/]
     end
 
-    subgraph DMZ["🟦 DMZ (10.0.1.0/24)"]
+    subgraph DMZ["🟦 DMZ (10.10.10.0/24)"]
         WEB[Web VMs]
     end
 
@@ -277,19 +270,19 @@ flowchart LR
         R4[/"Deny all<br/>from External"/]
     end
 
-    subgraph Private["🟪 Private (10.0.2.0/24)"]
+    subgraph Private["🟪 Private (10.10.11.0/24)"]
         APP[App VMs]
-        REDIS[Redis]
     end
 
     subgraph FW3["🔥 Firewall Layer 3"]
         direction TB
-        R5[/"Allow TCP:3306<br/>from Private"/]
+        R5[/"Allow TCP:3306,6379<br/>from Private"/]
         R6[/"Deny all<br/>from DMZ"/]
     end
 
-    subgraph DB_Zone["🟥 DB (10.0.3.0/24)"]
+    subgraph PSC_Zone["🟥 PSC (10.10.12.0/24)"]
         SQL[Cloud SQL]
+        REDIS[Redis]
     end
 
     INET --> LB_RANGE
@@ -301,12 +294,12 @@ flowchart LR
     R3 --> APP
     APP --> R5
     R5 --> SQL
-    APP --> REDIS
+    R5 --> REDIS
 
     style External fill:#ffebee
     style DMZ fill:#e3f2fd
     style Private fill:#f3e5f5
-    style DB_Zone fill:#fce4ec
+    style PSC_Zone fill:#fce4ec
     style FW1 fill:#fff3e0
     style FW2 fill:#fff3e0
     style FW3 fill:#fff3e0
@@ -316,23 +309,24 @@ flowchart LR
 
 ```text
 User → Internet → LB (Public IP)
-  → DMZ (10.0.1.x) → Private (10.0.2.x)
-  → DB (10.0.3.x)
+  → DMZ (10.10.10.x) → Private (10.10.11.x)
+  → PSC (10.10.12.x)
 ```
 
 ### 내부 → 외부 (Egress)
 
 ```text
-DMZ (10.0.1.x) → Cloud NAT → Internet
-Private/DB → ❌ (차단)
+DMZ (10.10.10.x) → Cloud NAT → Internet
+Private (10.10.11.x) → Cloud NAT → Internet
+PSC → ❌ (Outbound 없음)
 ```
 
 ### 내부 통신
 
 ```text
-DMZ ↔ Private: 직접 통신 (10.0.0.0/16)
-Private ↔ DB: 직접 통신 (Private IP)
-DMZ ↔ DB: 차단 (방화벽)
+DMZ ↔ Private: 직접 통신 (10.10.x.0/24)
+Private → PSC: 직접 통신 (PSC Endpoint)
+DMZ → PSC: 차단 (네트워크 레벨 격리)
 ```
 
 ## VPC Flow Logs
@@ -364,18 +358,18 @@ gcloud logging read \
 ### CIDR 할당
 
 ```text
-VPC:     10.0.0.0/16     (65,536 IPs)
-├─ DMZ:      10.0.1.0/24  (256 IPs)
-├─ Private:  10.0.2.0/24  (256 IPs)
-├─ DB:       10.0.3.0/24  (256 IPs)
-└─ Reserved: 10.0.4.0/22  (1,024 IPs, 확장용)
+VPC:     10.10.0.0/16     (65,536 IPs)
+├─ DMZ:      10.10.10.0/24  (256 IPs)
+├─ Private:  10.10.11.0/24  (256 IPs)
+├─ PSC:      10.10.12.0/24  (256 IPs)
+└─ Reserved: 10.10.13.0/22  (1,024 IPs, 확장용)
 ```
 
 ### IP 사용량
 
 - **DMZ**: 10-50 VMs (80% 여유)
 - **Private**: 20-100 VMs (60% 여유)
-- **DB**: 5-10 instances (95% 여유)
+- **PSC**: 5-20 endpoints (90% 여유)
 
 ## 고가용성 (HA)
 
