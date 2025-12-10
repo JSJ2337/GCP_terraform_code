@@ -114,6 +114,9 @@ resource "google_compute_instance" "vm" {
 
   deletion_protection = coalesce(each.value.deletion_protection, var.deletion_protection)
 
+  # Service Account 변경 시 VM 중지 허용
+  allow_stopping_for_update = true
+
   lifecycle {
     ignore_changes = [
       metadata_startup_script,
