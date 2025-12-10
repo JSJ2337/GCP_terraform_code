@@ -190,7 +190,16 @@ ingress {
   protocol      = "tcp"
   ports         = ["3306", "6379"]
 }
+
+# Management VPC → PSC (Redis) - Bastion 접속용
+ingress {
+  source_ranges = ["10.250.10.0/24"]  # Management VPC
+  protocol      = "tcp"
+  ports         = ["6379"]
+}
 ```
+
+> **참고**: Management VPC에서 Redis 접속은 Bastion 호스트에서 `redis-cli`를 통한 관리 목적으로만 사용됩니다.
 
 ## 트래픽 흐름
 

@@ -7,6 +7,49 @@
 
 <!-- markdownlint-disable MD005 MD007 MD013 MD024 -->
 
+## [미배포] - 2025-12-10
+
+### 추가 (Added)
+
+- **Bastion 호스트용 Service Account 및 DNS Reader 권한**
+  - `bastion-host@delabs-gcp-mgmt.iam.gserviceaccount.com` 서비스 계정 생성
+  - `roles/dns.reader`: Cloud DNS 레코드 자동 조회 권한
+  - `roles/compute.viewer`: VM 정보 조회 권한
+  - 파일: `bootstrap/00-foundation/main.tf`, `outputs.tf`
+  - 커밋: cf0b0e5
+
+- **Management VPC에서 Redis 접근 허용 방화벽 규칙**
+  - `allow-redis-from-mgmt`: TCP 6379 포트 허용
+  - Source: Management VPC (10.250.10.0/24)
+  - Destination: 모든 리소스 (PSC subnet 포함)
+  - 파일: `gcp-gcby/10-network/terragrunt.hcl`, `gcp-web3/10-network/terragrunt.hcl`, `proj-default-templet/10-network/terragrunt.hcl`
+  - 커밋: 3c13610
+
+- **ssh_vm.sh 스크립트 Redis 접속 기능**
+  - Redis Cluster 자동 감지 및 메뉴 표시
+  - redis-cli 자동 실행 (`redis-cli -h {hostname}.delabsgames.internal -p 6379`)
+  - Hybrid DNS 조회 (gcloud API → fallback dig/nslookup)
+  - 배포 위치: `delabs-bastion:/home/delabs-adm/ssh_vm.sh`
+
+### 개선 (Improved)
+
+- **ssh_vm.sh 서버 감지 자동화**
+  - Cloud DNS API 활용: 새 VM/Redis 추가 시 자동 감지
+  - Fallback 모드: gcloud 권한 없을 때 패턴 기반 조회
+  - 스크립트 수정 최소화
+
+- **Bastion 인스턴스 Service Account 연결**
+  - 기본 Compute Engine SA → 전용 `bastion-host` SA 변경
+  - Cloud DNS API 인증 자동화
+  - 파일: `bootstrap/50-compute/layer.hcl`
+  - 커밋: cf0b0e5
+
+### 문서화 (Documentation)
+
+- 2025-12-10: Bastion SA, 방화벽 규칙, ssh_vm.sh 업데이트 전체 과정 기록
+
+---
+
 ## [미배포] - 2025-12-04
 
 ### 수정 (Fixed)

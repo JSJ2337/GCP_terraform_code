@@ -15,6 +15,12 @@ delabs-gcp-mgmt (관리용 프로젝트)
 │   ├── Lifecycle 정책 (30일 후 삭제)
 │   └── Uniform bucket-level access
 ├── jenkins-terraform-admin (Service Account)
+│   ├── roles/resourcemanager.projectCreator
+│   ├── roles/billing.user
+│   └── roles/editor
+├── bastion-host (Service Account) ← **신규 추가**
+│   ├── roles/dns.reader (Cloud DNS 조회)
+│   └── roles/compute.viewer (VM 정보 조회)
 └── 필수 API 활성화
 ```
 
@@ -68,10 +74,11 @@ terragrunt init -migrate-state
 **예상 출력**:
 
 ```text
-Apply complete! Resources: 8 added, 0 changed, 0 destroyed.
+Apply complete! Resources: 10 added, 0 changed, 0 destroyed.
 
 Outputs:
 
+bastion_service_account_email = "bastion-host@delabs-gcp-mgmt.iam.gserviceaccount.com"
 jenkins_service_account_email = "jenkins-terraform-admin@delabs-gcp-mgmt.iam.gserviceaccount.com"
 management_project_id = "delabs-gcp-mgmt"
 state_bucket_name = "delabs-terraform-state-live"
