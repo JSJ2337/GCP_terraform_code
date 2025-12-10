@@ -134,6 +134,15 @@ locals {
       allow_ports    = []
       target_tags    = ["dmz-zone", "private-zone"]
       description    = "Allow ICMP (ping) from mgmt VPC for monitoring"
+    },
+    {
+      name           = "allow-redis-from-mgmt"
+      direction      = "INGRESS"
+      ranges         = [local.mgmt_subnet_cidr]
+      allow_protocol = "tcp"
+      allow_ports    = ["6379"]
+      target_tags    = []
+      description    = "Allow Redis access from mgmt VPC (bastion) to PSC subnet"
     }
   ]
 
