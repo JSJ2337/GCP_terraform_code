@@ -67,15 +67,16 @@ EOT
 
     # Bastion Host (점프 서버)
     "delabs-bastion" = {
-      hostname            = "delabs-bastion.delabsgames.gg"
-      zone                = "asia-northeast3-a"
-      machine_type        = "e2-small"  # 2 vCPU, 2GB RAM
-      boot_disk_size_gb   = 100
-      boot_disk_type      = "pd-ssd"
-      enable_public_ip    = true
-      create_static_ip    = true  # 고정 IP 사용
-      deletion_protection = false # 삭제 방지 비활성화
-      tags                = ["bastion", "ssh-iap", "allow-internal"]
+      hostname                 = "delabs-bastion.delabsgames.gg"
+      zone                     = "asia-northeast3-a"
+      machine_type             = "e2-small"  # 2 vCPU, 2GB RAM
+      boot_disk_size_gb        = 100
+      boot_disk_type           = "pd-ssd"
+      enable_public_ip         = true
+      create_static_ip         = true  # 고정 IP 사용
+      deletion_protection      = false # 삭제 방지 비활성화
+      tags                     = ["bastion", "ssh-iap", "allow-internal"]
+      service_account_email    = "bastion-host@delabs-gcp-mgmt.iam.gserviceaccount.com"  # Bastion SA 사용
       labels = {
         role    = "bastion"
         purpose = "jump-server"

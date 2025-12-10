@@ -200,7 +200,37 @@ resource "google_billing_account_iam_member" "jenkins_billing_user_on_account" {
 }
 
 # -----------------------------------------------------------------------------
-# 7) IAP 터널 접근 권한 (관리자용)
+# 7) Bastion 호스트용 Service Account 생성
+# -----------------------------------------------------------------------------
+resource "google_service_account" "bastion" {
+  project      = local.mgmt_project_id
+  account_id   = "bastion-host"
+  display_name = "Bastion Host Service Account"
+  description  = "Service Account for Bastion host to access Cloud DNS and other services"
+
+  depends_on = [google_project_service.apis]
+}
+
+# Bastion SA에 DNS Reader 권한 부여 (Cloud DNS 조회용)
+resource "google_project_iam_member" "bastion_dns_reader" {
+  project = local.mgmt_project_id
+  role    = "roles/dns.reader"
+  member  = "serviceAccount:${google_service_account.bastion.email}"
+
+  depends_on = [google_service_account.bastion]
+}
+
+# Bastion SA에 Compute Viewer 권한 부여 (VM 정보 조회용)
+resource "google_project_iam_member" "bastion_compute_viewer" {
+  project = local.mgmt_project_id
+  role    = "roles/compute.viewer"
+  member  = "serviceAccount:${google_service_account.bastion.email}"
+
+  depends_on = [google_service_account.bastion]
+}
+
+# -----------------------------------------------------------------------------
+# 8) IAP 터널 접근 권한 (관리자용)
 # -----------------------------------------------------------------------------
 resource "google_project_iam_member" "iap_tunnel_user" {
   for_each = var.iap_tunnel_members

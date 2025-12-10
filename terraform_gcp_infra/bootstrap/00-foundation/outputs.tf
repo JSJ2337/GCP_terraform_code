@@ -24,6 +24,16 @@ output "jenkins_service_account_id" {
   value       = google_service_account.jenkins_terraform.id
 }
 
+output "bastion_service_account_email" {
+  description = "Bastion Host SA 이메일"
+  value       = google_service_account.bastion.email
+}
+
+output "bastion_service_account_id" {
+  description = "Bastion Host SA ID"
+  value       = google_service_account.bastion.id
+}
+
 # 폴더 정보
 output "product_folder_ids" {
   description = "최상위 제품 폴더 ID 맵"
