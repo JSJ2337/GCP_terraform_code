@@ -16,37 +16,55 @@
   - `roles/dns.reader`: Cloud DNS 레코드 자동 조회 권한
   - `roles/compute.viewer`: VM 정보 조회 권한
   - 파일: `bootstrap/00-foundation/main.tf`, `outputs.tf`
-  - 커밋: cf0b0e5
 
-- **Management VPC에서 Redis 접근 허용 방화벽 규칙**
-  - `allow-redis-from-mgmt`: TCP 6379 포트 허용
-  - Source: Management VPC (10.250.10.0/24)
-  - Destination: 모든 리소스 (PSC subnet 포함)
-  - 파일: `gcp-gcby/10-network/terragrunt.hcl`, `gcp-web3/10-network/terragrunt.hcl`, `proj-default-templet/10-network/terragrunt.hcl`
-  - 커밋: 3c13610
+- **66-psc-endpoints 레이어 배포 (Cross-Project PSC)**
+  - Management VPC에서 각 프로젝트 Redis Cluster로 PSC Endpoint 생성
+  - gcby: `10.250.20.101`, `10.250.20.102` (us-west1)
+  - web3: `10.250.20.111`, `10.250.20.112` (us-west1)
+  - PSC 연결 상태: `ACCEPTED` (정상)
+  - 파일: `gcp-gcby/66-psc-endpoints/`, `gcp-web3/66-psc-endpoints/`
 
-- **ssh_vm.sh 스크립트 Redis 접속 기능**
-  - Redis Cluster 자동 감지 및 메뉴 표시
-  - redis-cli 자동 실행 (`redis-cli -h {hostname}.delabsgames.internal -p 6379`)
-  - Hybrid DNS 조회 (gcloud API → fallback dig/nslookup)
+- **ssh_vm.sh 스크립트 고도화**
+  - **Cloud DNS API 자동 탐색**: `gcloud dns record-sets list`로 모든 A 레코드 자동 조회
+  - **Redis Cluster 지원**: redis-cli로 TLS 연결 (`--tls --insecure`)
+  - **Database 제외**: PSC Endpoint는 목록에서 자동 제외
+  - **redis-cli 경로 자동 감지**: PATH, /usr/local/bin, ~/redis-7.2.6/src 순서로 탐색
+  - **Fallback 메커니즘**: Cloud DNS API 실패 시 dig/nslookup + 패턴 기반 조회
+  - **서버 역할 자동 분류**: game, web, api, database, redis-cluster 등
   - 배포 위치: `delabs-bastion:/home/delabs-adm/ssh_vm.sh`
+
+### 수정 (Fixed)
+
+- **allow_stopping_for_update 추가**
+  - Bastion VM에 Service Account 변경 시 자동 중지 허용
+  - 파일: `bootstrap/50-compute/main.tf`
+  - 에러 해결: "Changing service_account requires stopping instance"
+
+- **Redis TLS 암호화 지원**
+  - 문제: GCP Memorystore Redis Cluster는 `TRANSIT_ENCRYPTION_MODE_SERVER_AUTHENTICATION` 사용
+  - 해결: redis-cli에 `--tls --insecure` 옵션 추가
+  - 테스트 결과: gcby, web3 Redis 모두 `PONG` 응답 성공
+
+- **10-network 방화벽 규칙 수정**
+  - 기존: gcp-gcby VPC에만 추가 시도 (잘못된 접근)
+  - 수정: Management VPC 내부 통신은 기본 `default-allow-internal` 사용
+  - PSC 연결은 66-psc-endpoints에서 처리
 
 ### 개선 (Improved)
 
 - **ssh_vm.sh 서버 감지 자동화**
-  - Cloud DNS API 활용: 새 VM/Redis 추가 시 자동 감지
-  - Fallback 모드: gcloud 권한 없을 때 패턴 기반 조회
-  - 스크립트 수정 최소화
+  - 하드코딩된 패턴 불필요 (Fallback용으로만 유지)
+  - 새 서버 추가 시 DNS에만 등록하면 자동 인식
+  - 유지보수 부담 최소화
 
 - **Bastion 인스턴스 Service Account 연결**
   - 기본 Compute Engine SA → 전용 `bastion-host` SA 변경
   - Cloud DNS API 인증 자동화
   - 파일: `bootstrap/50-compute/layer.hcl`
-  - 커밋: cf0b0e5
 
 ### 문서화 (Documentation)
 
-- 2025-12-10: Bastion SA, 방화벽 규칙, ssh_vm.sh 업데이트 전체 과정 기록
+- 2025-12-10: Bastion SA, PSC Endpoints, Redis TLS, ssh_vm.sh 고도화 전체 과정 기록
 
 ---
 

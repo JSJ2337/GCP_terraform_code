@@ -164,50 +164,47 @@ gcloud logging read \
 
 **증상**: `Connection reset by peer` 또는 `Connection refused`
 
-#### 1. 방화벽 규칙 확인
+#### 1. PSC Endpoint 상태 확인
+
+**중요**: Management VPC에서 Redis Cluster로 접근하려면 **66-psc-endpoints 레이어가 배포**되어 있어야 합니다.
 
 ```bash
-# Management VPC → Redis 방화벽 규칙 확인
-gcloud compute firewall-rules describe allow-redis-from-mgmt \
-    --project=gcp-gcby \
-    --format="table(name,sourceRanges,allowed)"
-```
-
-**예상 출력**:
-
-```text
-NAME                   SOURCE_RANGES      ALLOWED
-allow-redis-from-mgmt  10.250.10.0/24     tcp:6379
-```
-
-**없는 경우**: `gcp-gcby/10-network` Terragrunt 적용 필요
-
-#### 2. Redis Cluster 상태 확인
-
-```bash
-# Redis Cluster 조회
-gcloud redis clusters list --region=us-west1 --project=gcp-gcby
-
-# Discovery Endpoint 확인
-gcloud redis clusters describe gcby-live-redis \
-    --region=us-west1 \
-    --project=gcp-gcby \
-    --format="value(discoveryEndpoints[0].address)"
-```
-
-#### 3. VPC Peering 확인
-
-```bash
-# Management VPC → Project VPC 피어링 확인
-gcloud compute networks peerings list \
-    --network=delabs-gcp-mgmt-vpc \
+# PSC Endpoint IP 주소 확인
+gcloud compute addresses list \
     --project=delabs-gcp-mgmt \
-    | grep gcby
+    --filter="name~gcby-live-redis" \
+    --format="table(name,address,status)"
+
+# 예상 출력:
+# NAME                   ADDRESS        STATUS
+# gcby-live-redis-0-psc  10.250.20.101  IN_USE
+# gcby-live-redis-1-psc  10.250.20.102  IN_USE
 ```
 
-**예상**: `peering-mgmt-to-gcby` 상태가 `ACTIVE`
+**없는 경우**:
 
-#### 4. DNS 확인
+```bash
+cd environments/LIVE/gcp-gcby/66-psc-endpoints
+terragrunt apply
+```
+
+#### 2. PSC Forwarding Rule 확인
+
+```bash
+# PSC 연결 상태 확인
+gcloud compute forwarding-rules list \
+    --project=delabs-gcp-mgmt \
+    --filter="name~gcby-live-redis" \
+    --format="table(name,IPAddress,pscConnectionStatus)"
+
+# 예상 출력:
+# NAME                      IP_ADDRESS     PSC_CONNECTION_STATUS
+# gcby-live-redis-0-psc-fr  10.250.20.101  ACCEPTED
+```
+
+**상태가 ACCEPTED가 아닌 경우**: 66-psc-endpoints 재배포 필요
+
+#### 3. DNS 확인
 
 ```bash
 # Bastion에서 DNS 조회
@@ -215,11 +212,41 @@ gcloud compute ssh delabs-bastion \
     --project=delabs-gcp-mgmt \
     --zone=asia-northeast3-a \
     --command="dig +short gcby-live-redis.delabsgames.internal"
+
+# 예상: PSC Endpoint IP 반환 (예: 10.250.20.101)
 ```
 
-**예상**: Redis Discovery Endpoint IP 반환 (예: `10.10.12.3`)
+**잘못된 IP가 반환되는 경우**: 12-dns 레이어 확인 필요
+
+#### 4. Redis TLS 암호화 확인
+
+GCP Memorystore Redis Cluster는 **TLS 암호화가 필수**입니다.
+
+```bash
+# Redis Cluster TLS 설정 확인
+gcloud redis clusters describe gcby-live-redis \
+    --region=us-west1 \
+    --project=gcp-gcby \
+    --format="value(transitEncryptionMode)"
+
+# 예상 출력: TRANSIT_ENCRYPTION_MODE_SERVER_AUTHENTICATION
+```
+
+**redis-cli 접속 시 `--tls --insecure` 옵션 필수**:
+
+```bash
+# TLS 없이 접속 (실패)
+redis-cli -h gcby-live-redis.delabsgames.internal -p 6379 PING
+# Error: Connection reset by peer
+
+# TLS와 함께 접속 (성공)
+redis-cli -h gcby-live-redis.delabsgames.internal -p 6379 --tls --insecure PING
+# PONG
+```
 
 #### 5. ssh_vm.sh 스크립트 사용
+
+`ssh_vm.sh`는 자동으로 TLS 옵션을 추가하여 Redis에 접속합니다.
 
 ```bash
 # Bastion 접속
@@ -233,25 +260,65 @@ sudo su - delabs-adm
 # 스크립트 실행
 ./ssh_vm.sh
 
-# Redis 선택 → redis-cli 자동 실행
+# Redis 선택 → redis-cli 자동 실행 (TLS 자동 적용)
 ```
 
-**참고**: `ssh_vm.sh`는 Cloud DNS API를 사용하여 자동으로 Redis Cluster를 감지합니다. Bastion에 `bastion-host` Service Account가 연결되어 있어야 합니다.
+**스크립트 특징**:
+
+- Cloud DNS API로 자동 서버 탐색
+- Database (PSC Endpoint)는 목록에서 자동 제외
+- Redis는 자동으로 `--tls --insecure` 옵션 추가
+- redis-cli 경로 자동 감지 (PATH, /usr/local/bin, ~/redis-7.2.6/src)
+
+#### 6. 네트워크 경로 확인
+
+```bash
+# Bastion에서 PSC Endpoint 포트 테스트
+gcloud compute ssh delabs-bastion \
+    --project=delabs-gcp-mgmt \
+    --zone=asia-northeast3-a \
+    --command="timeout 3 bash -c '</dev/tcp/10.250.20.101/6379' && echo 'Port OPEN' || echo 'Port CLOSED'"
+
+# 예상: Port OPEN
+```
+
+**Port CLOSED인 경우**: Management VPC 내부 방화벽 확인 (`default-allow-internal`)
 
 ### Redis CLI 명령어
 
 ```bash
-# 직접 접속
-redis-cli -h gcby-live-redis.delabsgames.internal -p 6379
+# 직접 접속 (TLS 필수)
+redis-cli -h gcby-live-redis.delabsgames.internal -p 6379 --tls --insecure
 
 # 주요 명령어
-INFO                    # 서버 정보
-PING                    # 연결 테스트
-KEYS *                  # 모든 키 조회 (운영 환경 주의!)
+PING                    # 연결 테스트 → PONG
+INFO server             # 서버 정보 (버전, 모드 등)
+INFO memory             # 메모리 사용량
+DBSIZE                  # 전체 키 개수
+CLUSTER NODES           # 클러스터 노드 정보 (Cluster 모드)
 GET key_name            # 값 조회
 SET key_name value      # 값 설정
 DEL key_name            # 키 삭제
+KEYS *                  # 모든 키 조회 (⚠️ 운영 환경에서 사용 금지!)
 ```
+
+### 아키텍처 이해
+
+**Management VPC에서 Redis Cluster 접근 경로**:
+
+```text
+Bastion (10.250.10.6, asia-northeast3)
+  ↓ [Management VPC 내부 통신]
+PSC Endpoint (10.250.20.101, us-west1)
+  ↓ [Private Service Connect]
+Redis Cluster (10.10.12.x, gcp-gcby VPC, us-west1)
+```
+
+**중요**:
+
+- **10.10.x.x**: 각 프로젝트 내부 통신용 (gcp-gcby, gcp-web3 내부)
+- **10.250.20.x**: Management VPC에서 외부 프로젝트 접근용 PSC Endpoint IP
+- **VPC Peering 불필요**: PSC를 통해 프로젝트 간 통신
 
 ---
 
