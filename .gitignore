@@ -7,6 +7,7 @@ crash.*.log
 override.tf
 *_override.tf
 .terraform.tfstate.lock.info
+CLAUDE.md
 .claude/
 
 # terraform_gcp_infra와 jenkins_docker만 푸시

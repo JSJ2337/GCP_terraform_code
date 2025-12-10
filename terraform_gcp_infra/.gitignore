@@ -1,6 +1,7 @@
 jenkins-sa-key.json
 backend.hcl
 .DS_Store
+CLAUDE.md
 
 # Terraform/Terragrunt generated files
 .terraform/
