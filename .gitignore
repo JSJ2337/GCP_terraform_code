@@ -1,24 +1,56 @@
+# Claude AI 설정
+.claude/
+CLAUDE.md
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
 # Terraform artifacts (do NOT commit)
 **/.terraform/
 *.tfstate
 *.tfstate.*
+*.tfplan
+*.tfvars
+!terraform.tfvars.example
 crash.log
 crash.*.log
 override.tf
 *_override.tf
 .terraform.tfstate.lock.info
-CLAUDE.md
-.claude/
 
-# terraform_gcp_infra와 jenkins_docker만 푸시
-.DS_Store
+# Terragrunt
+**/.terragrunt-cache/
+.terragrunt-source-version
+
+# 환경 변수 및 인증 정보
+.env
+*.key
+*.pem
+*.json
+!terraform_gcp_infra/**/*.json
+credentials/
+secrets/
+
+# 로그 파일
+*.log
+
+# 백업 파일
+*.bak
+*.backup
+*~
+*\ 2.sh
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Jenkins
+webhook-test.txt
+
+# 기타
 .markdownlintignore
 AGENTS.md
-AWS_script/
-LGTM/
-README.md
-ec2menu_script/
-terraform_training/
-terragrunt
-webhook-test.txt
 
