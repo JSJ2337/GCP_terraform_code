@@ -40,7 +40,8 @@ secrets/
 *.bak
 *.backup
 *~
-*\ 2.sh
+*\ 2.*
+*\ 2
 
 # IDE
 .vscode/
