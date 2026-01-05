@@ -4,10 +4,10 @@
 # 신규 프로젝트 생성 시 공통으로 사용되는 고정값 정의
 # 프로젝트별로 변경되는 값(project_id, environment 등)은 Jenkins 파라미터로 입력
 
-# GCP 조직 설정
+# GCP 조직 설정 (환경변수로 관리 필요)
 gcp:
-  org_id: "REDACTED_ORG_ID"                      # GCP Organization ID
-  billing_account: "REDACTED_BILLING_ACCOUNT"     # GCP Billing Account ID
+  org_id: ""                                  # GCP Organization ID (환경변수 GCP_ORG_ID로 설정)
+  billing_account: ""                         # GCP Billing Account ID (환경변수 GCP_BILLING_ACCOUNT로 설정)
 
 # Terraform Remote State 설정
 terraform:

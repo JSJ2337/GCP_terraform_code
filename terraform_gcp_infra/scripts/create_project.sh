@@ -27,9 +27,9 @@ DEFAULT_REMOTE_STATE_BUCKET="jsj-terraform-state-prod"
 DEFAULT_REMOTE_STATE_PROJECT="jsj-system-mgmt"
 DEFAULT_REMOTE_STATE_LOCATION="US"
 
-# GCP 조직 및 빌링 설정 (yq 없을 때 사용될 기본값)
-DEFAULT_ORG_ID="REDACTED_ORG_ID"
-DEFAULT_BILLING_ACCOUNT="REDACTED_BILLING_ACCOUNT"
+# GCP 조직 및 빌링 설정 (환경변수에서 읽음, 없으면 빈 값)
+DEFAULT_ORG_ID="${GCP_ORG_ID:-}"
+DEFAULT_BILLING_ACCOUNT="${GCP_BILLING_ACCOUNT:-}"
 
 # Jenkins Credential ID (GCP 서비스 계정)
 DEFAULT_JENKINS_CREDENTIAL_ID="delabs-terraform-admin"

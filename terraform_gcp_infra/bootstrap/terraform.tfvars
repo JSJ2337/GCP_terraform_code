@@ -1,7 +1,7 @@
 # Management Project Configuration
 project_id      = "jsj-system-mgmt"
 project_name    = "jsj-system-mgmt"
-billing_account = "REDACTED_BILLING_ACCOUNT"
+billing_account = ""  # 환경변수 TF_VAR_billing_account 또는 별도 파일로 관리
 folder_id       = null # No folder
 
 # Labels
@@ -20,9 +20,8 @@ bucket_location  = "US"
 # Dev 버킷 생성 여부 (필요하면 true로 변경)
 create_dev_bucket = false
 
-# GCP 조직 ID (Service Account 권한 부여 시 필요)
-# 조직 ID: REDACTED_ORG_ID (jsj-dev.com)
-organization_id = "REDACTED_ORG_ID"
+# GCP 조직 ID (환경변수 TF_VAR_organization_id 또는 별도 파일로 관리)
+organization_id = ""
 
 # Bootstrap 옵션 플래그
 manage_folders = true

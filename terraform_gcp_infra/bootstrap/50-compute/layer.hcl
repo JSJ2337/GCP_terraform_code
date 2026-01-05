@@ -31,11 +31,12 @@ fi
 # SSH 서비스 재시작
 systemctl restart sshd
 
-# 기본 사용자 생성 및 비밀번호 설정
-# 사용자명: delabs-adm, 비밀번호: 초기 배포 후 반드시 변경 필요!
+# 기본 사용자 생성 (비밀번호는 Secret Manager 또는 수동 설정 필요)
+# 보안: 하드코딩된 비밀번호 사용 금지 - OS Login 또는 SSH 키 사용 권장
 if ! id "delabs-adm" &>/dev/null; then
   useradd -m -s /bin/bash -G wheel delabs-adm
-  echo "delabs-adm:REDACTED_PASSWORD" | chpasswd
+  # 비밀번호는 VM 생성 후 수동으로 설정하거나 OS Login 사용
+  # gcloud compute os-login describe-profile 명령으로 OS Login 확인
 fi
 
 # sudo 비밀번호 없이 사용 가능하도록 설정

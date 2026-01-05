@@ -635,7 +635,6 @@ SKIP_WORKLOADS_DEPENDENCY=true terragrunt run --all -- destroy
 
 ```text
 Error: Unable to remove Service Networking Connection, err: Error waiting for Delete Service Networking Connection: Error code 9, message: Failed to delete connection; Producer services (e.g. CloudSQL, Cloud Memstore, etc.) are still using this connection.
-Help Token: REDACTED_HELP_TOKEN
 ```
 
 **원인**:

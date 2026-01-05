@@ -289,14 +289,14 @@ variable "management_project_id" {
 
 variable "db_root_password" {
   type        = string
-  description = "Root 사용자 비밀번호 (TODO: Secret Manager로 관리)"
+  description = "Root 사용자 비밀번호 (Secret Manager 또는 환경변수로 관리 필요)"
   sensitive   = true
-  default     = "REDACTED_PASSWORD"
+  # 주의: 기본값 없음 - terragrunt.hcl 또는 환경변수로 전달 필요
 }
 
 variable "db_app_password" {
   type        = string
-  description = "Application 사용자 비밀번호 (TODO: Secret Manager로 관리)"
+  description = "Application 사용자 비밀번호 (Secret Manager 또는 환경변수로 관리 필요)"
   sensitive   = true
-  default     = "REDACTED_PASSWORD"
+  # 주의: 기본값 없음 - terragrunt.hcl 또는 환경변수로 전달 필요
 }
